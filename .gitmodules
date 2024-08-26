@@ -1,0 +1,24 @@
+[submodule "pvlogger-k8s"]
+	path = pvlogger-k8s
+	url = <email>:/mnt/data/bziswiler/git-repos/pvlogger-k8s.git
+[submodule "pvlogger-database"]
+	path = pvlogger-database
+	url = <email>:/mnt/data/bziswiler/git-repos/pvlogger-database.git
+[submodule "pvlogger-heartbeat"]
+	path = pvlogger-heartbeat
+	url = <email>:/mnt/data/bziswiler/git-repos/pvlogger-heartbeat.git
+[submodule "pvlogger-masterdata-server"]
+	path = pvlogger-masterdata-server
+	url = <email>:/mnt/data/bziswiler/git-repos/pvlogger-masterdata-server.git
+[submodule "pvlogger-message-queue"]
+	path = pvlogger-message-queue
+	url = <email>:/mnt/data/bziswiler/git-repos/pvlogger-message-queue.git
+[submodule "pvlogger-modbus-data-accessor"]
+	path = pvlogger-modbus-data-accessor
+	url = <email>:/mnt/data/bziswiler/git-repos/pvlogger-modbus-data-accessor.git
+[submodule "pvlogger-modbus-data-collector"]
+	path = pvlogger-modbus-data-collector
+	url = <email>:/mnt/data/bziswiler/git-repos/pvlogger-modbus-data-collector.git
+[submodule "pvlogger-shared"]
+	path = pvlogger-shared
+	url = <email>:/mnt/data/bziswiler/git-repos/pvlogger-shared.git
