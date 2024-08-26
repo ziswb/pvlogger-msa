@@ -1,0 +1,31 @@
+FROM eclipse-temurin:21-jdk-ubi9-minimal AS build
+
+ENV GRADLE_USER_HOME="/workspace/gradle_home"
+ADD . /workspace
+
+WORKDIR /workspace
+RUN ./gradlew clean shadowJar pvlogger-heartbeat
+
+FROM eclipse-temurin:21-jre-ubi9-minimal
+
+LABEL author="Bruno Ziswiler"
+LABEL description="Job Trigger for PV Logger"
+LABEL version="1.0.4"
+
+RUN mkdir -p "/opt/pvlogger/"
+COPY --from=build "/workspace/build/libs/pvlogger-heartbeat-all.jar" "/opt/pvlogger/heartbeat.jar"
+RUN useradd -u 1000 bziswiler
+USER bziswiler
+
+ENV PG_HOST="postgres-service.postgresql.svc.cluster.local"
+ENV PG_PORT="5432"
+ENV MQ_HOST="activemq.activemq.svc.cluster.local"
+ENV MQ_PORT="61616"
+ENV TZ="Europe/Zurich"
+
+ENTRYPOINT [ \
+    "java", \
+    "-jar", \
+    "/opt/pvlogger/heartbeat.jar", \
+    "-config=application-prod.conf" \
+]
