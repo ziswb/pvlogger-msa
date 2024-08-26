@@ -1,10 +1,10 @@
-FROM eclipse-temurin:21-jdk-ubi9-minimal AS build
+FROM eclipse-temurin:21-jdk AS build
 
 ENV GRADLE_USER_HOME="/workspace/gradle_home"
 ADD . /workspace
 
 WORKDIR /workspace
-RUN ./gradlew clean shadowJar
+RUN ./gradlew :pvlogger-heartbeat:clean :pvlogger-heartbeat:shadowJar
 
 FROM eclipse-temurin:21-jre-ubi9-minimal
 
@@ -13,7 +13,7 @@ LABEL description="Job Trigger for PV Logger"
 LABEL version="1.0.4"
 
 RUN mkdir -p "/opt/pvlogger/"
-COPY --from=build "/workspace/build/libs/pvlogger-heartbeat-all.jar" "/opt/pvlogger/heartbeat.jar"
+COPY --from=build "/workspace/pvlogger-heartbeat/build/libs/pvlogger-heartbeat-all.jar" "/opt/pvlogger/heartbeat.jar"
 RUN useradd -u 1000 bziswiler
 USER bziswiler
 
