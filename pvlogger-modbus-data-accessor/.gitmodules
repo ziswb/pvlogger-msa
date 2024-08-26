@@ -1,0 +1,3 @@
+[submodule "pvlogger-shared"]
+	path = pvlogger-shared
+	url = node01.local:/mnt/data/bziswiler/git-repos/pvlogger-shared.git

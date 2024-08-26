@@ -1,0 +1,93 @@
+package ch.bziswiler.pvlogger.datacollector.services.messaging.impl
+
+import ch.bziswiler.pvlogger.datacollector.config.AppConfig
+import ch.bziswiler.pvlogger.datacollector.services.messaging.MqListener
+import ch.bziswiler.pvlogger.datacollector.services.messaging.MqService
+import ch.bziswiler.pvlogger.messaging.job.naming.QueueName.JOB_SCHEDULER
+import ch.bziswiler.pvlogger.messaging.job.naming.QueueName.PERSIST_MODBUS
+import ch.bziswiler.pvlogger.messaging.job.status.JobStatusMessage
+import ch.bziswiler.pvlogger.modbus.tcp.response.ModbusResponse
+import mu.KotlinLogging
+import org.apache.activemq.ActiveMQConnectionFactory
+import javax.jms.Connection
+import javax.jms.MessageProducer
+import javax.jms.Queue
+import javax.jms.Session
+import javax.jms.Session.AUTO_ACKNOWLEDGE
+
+/*
+ * see https://codenotfound.com/jms-publish-subscribe-messaging-example-activemq-maven.html for examples
+ * see https://github.com/code-not-found/jms for code
+ */
+class MqServiceImpl(private val appConfig: AppConfig) : MqService {
+
+    private val logger = KotlinLogging.logger {}
+
+    private val clientId = appConfig.mqConfig.clientId
+    private val user = appConfig.mqConfig.user
+    private val passwd = appConfig.mqConfig.passwd
+
+    // see https://activemq.apache.org/components/classic/documentation/connection-configuration-uri for details
+    private val session: Session
+    private val messageProducer: MessageProducer
+    private val ingressQueue: Queue
+
+    init {
+        val connection = connection()
+        this.session = connection.createSession(false, AUTO_ACKNOWLEDGE)
+        this.messageProducer = setUpEgressQueue()
+        this.ingressQueue = session.createQueue(JOB_SCHEDULER.value)
+        connection.start()
+    }
+
+    override fun addListener(listener: MqListener) {
+        val messageConsumer = session.createConsumer(ingressQueue, listener.messageSelector)
+        messageConsumer.setMessageListener {
+            logger.debug {
+                """
+RECEIVED #########################################################################
+${listener.messageSelector}: message received()
+RECEIVED #########################################################################
+""""
+            }
+            listener.messageReceived()
+        }
+    }
+
+    private fun setUpEgressQueue(): MessageProducer {
+        val egressQueue = session.createQueue(PERSIST_MODBUS.value)
+        return session.createProducer(egressQueue)
+    }
+
+    private fun connection(): Connection {
+        val connectionFactory = ActiveMQConnectionFactory(appConfig.mqConfig.brokerUrl)
+        connectionFactory.userName = user
+        connectionFactory.password = passwd
+        connectionFactory.clientID = clientId
+        return connectionFactory.createConnection()
+    }
+
+    override fun sendMessage(message: ModbusResponse) {
+        logger.debug { "Sending message ..." }
+        messageProducer.send(session.createObjectMessage(message))
+        logger.debug {
+            """
+SEND #########################################################################
+$clientId: sent message with text='$message'
+SEND #########################################################################
+""""
+        }
+    }
+
+    override fun sendJobStatusMessage(message: JobStatusMessage) {
+        logger.debug { "Sending job finished message ..." }
+        messageProducer.send(session.createObjectMessage(message))
+        logger.debug {
+            """
+SEND #########################################################################
+$clientId: sent job finished message with job ID = '$message'
+SEND #########################################################################
+""""
+        }
+    }
+}

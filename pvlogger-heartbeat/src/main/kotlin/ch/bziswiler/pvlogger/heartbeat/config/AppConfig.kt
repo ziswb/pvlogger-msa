@@ -1,0 +1,34 @@
+package ch.bziswiler.pvlogger.heartbeat.config
+
+class AppConfig {
+    lateinit var serverConfig: ServerConfig
+    lateinit var mqConfig: MqConfig
+    lateinit var databaseConfig: DatabaseConfig
+    lateinit var jobConfig: JobConfig
+}
+
+data class ServerConfig(
+    val isProd: Boolean,
+)
+
+data class DatabaseConfig(
+    val driverClass: String,
+    val driverDelegateClass: String,
+    val dbServerUrl: String,
+    val dbName: String,
+    val dbServerCanonicalUrl: String,
+    val user: String,
+    val password: String,
+    val maxPoolSize: Int,
+)
+
+data class MqConfig(
+    val clientId: String,
+    val user: String,
+    val passwd: String,
+    val brokerUrl: String,
+)
+
+data class JobConfig(
+    var lateEvening: String
+)

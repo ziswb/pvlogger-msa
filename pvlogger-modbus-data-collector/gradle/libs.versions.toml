@@ -1,0 +1,44 @@
+[versions]
+activemqCoreVersion = "5.7.0"
+activemqClientVersion = "6.0.1"
+koinVersion = "3.5.3"
+kotlinVersion = "1.9.23"
+kotlinxVersion = "1.6.3"
+ktorVersion = "2.3.8"
+logbackVersion = "1.4.14"
+loggingVersion = "3.0.5"
+prometheusVersion = "1.12.2"
+
+[libraries]
+activemq-core = { module = "org.apache.activemq:activemq-core", version.ref = "activemqCoreVersion" }
+activemq-client = { module = "org.apache.activemq:activemq-client", version.ref = "activemqClientVersion" }
+
+koin-ktor = { module = "io.insert-koin:koin-ktor", version.ref = "koinVersion" }
+koin-logger-slf4j = { module = "io.insert-koin:koin-logger-slf4j", version.ref = "koinVersion" }
+
+kotlin-logging = { module = "io.github.microutils:kotlin-logging", version.ref = "loggingVersion" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxVersion" }
+
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktorVersion" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktorVersion" }
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktorVersion" }
+ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktorVersion" }
+
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktorVersion" }
+
+ktor-server-call-logging = { module = "io.ktor:ktor-server-call-logging", version.ref = "ktorVersion" }
+ktor-server-config-yaml = { module = "io.ktor:ktor-server-config-yaml", version.ref = "ktorVersion" }
+ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktorVersion" }
+ktor-server-metrics-micrometer = { module = "io.ktor:ktor-server-metrics-micrometer", version.ref = "ktorVersion" }
+ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktorVersion" }
+
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logbackVersion" }
+micrometer-registry-prometheus = { module = "io.micrometer:micrometer-registry-prometheus", version.ref = "prometheusVersion" }
+
+kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlinVersion" }
+ktor-server-tests = { module = "io.ktor:ktor-server-tests", version.ref = "ktorVersion" }
+
+[plugins]
+jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlinVersion" }
+ktor = { id = "io.ktor.plugin", version.ref = "ktorVersion" }
+serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinVersion" }

@@ -1,0 +1,56 @@
+package ch.bziswiler.pvlogger.masterdata.server.database
+
+import ch.bziswiler.pvlogger.masterdata.server.config.AppConfig
+import ch.bziswiler.pvlogger.masterdata.server.modbus.schema.MasterDataTable
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
+import javax.sql.DataSource
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.transactions.transaction
+
+class DatabaseFactoryImpl(
+    appConfig: AppConfig,
+) : DatabaseFactory {
+    private val dbConfig = appConfig.databaseConfig
+
+    override fun connect() {
+        assertDatabaseExists(Database.connect(hikari(dbConfig.dbServerUrl)))
+        assertSchemaComplete(Database.connect(hikari(dbConfig.dbServerCanonicalUrl)))
+    }
+
+    private fun assertSchemaComplete(database: Database) {
+        transaction(database) {
+            SchemaUtils.create(MasterDataTable)
+        }
+    }
+
+    private fun assertDatabaseExists(database: Database) {
+        transaction(database) {
+            if (SchemaUtils.listDatabases().find { it == dbConfig.dbName }.isNullOrEmpty()) {
+                connection.autoCommit = true
+                SchemaUtils.createDatabase(databases = arrayOf(dbConfig.dbName), inBatch = true)
+                connection.autoCommit = false
+            }
+        }
+    }
+
+    override fun close() {
+        // not needed
+    }
+
+    private fun hikari(dbServerUrl: String): DataSource {
+        val config =
+            HikariConfig().apply {
+                driverClassName = dbConfig.driverClass
+                jdbcUrl = dbServerUrl
+                username = dbConfig.user
+                password = dbConfig.password
+                maximumPoolSize = dbConfig.maxPoolSize
+                isAutoCommit = false
+                transactionIsolation = "TRANSACTION_REPEATABLE_READ"
+                validate()
+            }
+        return HikariDataSource(config)
+    }
+}

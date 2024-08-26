@@ -1,0 +1,184 @@
+﻿No.,Signal Name,Read/ Write,Type,Unit,Gain,Address,Quantit y,Scope,Category
+1,Model,RO,STR,N/A,1,30000,15,"For details, see 1.1 .",STATIC
+2,SN,RO,STR,N/A,1,30015,10,N/A,STATIC
+3,PN,RO,STR,N/A,1,30025,10,N/A,STATIC
+4,Model ID,RO,U16,N/A,1,30070,1,"For details, see 1.1 .",STATIC
+5,Number of PV strings,RO,U16,N/A,1,30071,1,N/A,STATIC
+6,Number of MPP trackers,RO,U16,N/A,1,30072,1,N/A,STATIC
+7,Rated power (Pn),RO,U32,kW,1000,30073,2,N/A,STATIC
+8,Maximum active power (Pmax),RO,U32,kW,1000,30075,2,N/A,DYNAMIC
+9,Maximum apparent power (Smax),RO,U32,kVA,1000,30077,2,N/A,DYNAMIC
+10,"Maximum reactive power (Qmax, fed to the power grid)",RO,I32,kVar,1000,30079,2,N/A,DYNAMIC
+11,"Maximum reactive power (Qmax, absorbed from the power grid)",RO,I32,kVar,1000,30081,2,N/A,DYNAMIC
+12,State 1,RO,Bitfield16,N/A,1,32000,1,"Bit 0: standby
+Bit 1: gridconnected
+Bit 2: gridconnected normally
+Bit 3: grid connection with derating due to power rationing
+Bit 4: grid connection with derating due to internal causes of the solar inverter
+Bit 5: normal stop
+Bit 6: stop due to faults
+Bit 7: stop due to power rationing
+Bit 8: shutdown
+Bit 9: spot check",DYNAMIC
+13,State 2,RO,Bitfield16,N/A,1,32002,1,"Bit 0: locking status (0: locked; 1: unlocked)
+Bit 1: PV connection status (0: disconnected; 1: connected)
+Bit 2: DSP data collection (0: no; 1: yes)",DYNAMIC
+14,State 3,RO,Bitfield32,N/A,1,32003,2,"Bit 0: off-grid (0: on-grid; 1: offgrid)
+Bit 1: off-grid switch (0: disable; 1: enable)",DYNAMIC
+15,Alarm 1,RO,Bitfield16,N/A,1,32008,1,"For details, see 5.1 .",ALARM
+16,Alarm 2,RO,Bitfield16,N/A,1,32009,1,"For details, see 5.1 .",ALARM
+17,Alarm 3,RO,Bitfield16,N/A,1,32010,1,"For details, see 5.1 .",ALARM
+18,PV1 voltage,RO,I16,V,10,32016,1,"A maximum of
+24 PV strings are supported. The number of PV strings read by the host is defined by the Number of PV strings signal.
+The voltage and current register addresses for each PV string are as follows: PVn voltage: 32014 + 2n
+PVn current: 32015 + 2n
+n indicates the PV string number, which ranges from 1 to 24.",DYNAMIC
+19,PV1 current,RO,I16,A,100,32017,1,"A maximum of
+24 PV strings are supported. The number of PV strings read by the host is defined by the Number of PV strings signal.
+The voltage and current register addresses for each PV string are as follows: PVn voltage: 32014 + 2n
+PVn current: 32015 + 2n
+n indicates the PV string number, which ranges from 1 to 24.",DYNAMIC
+20,PV2 voltage,RO,I16,V,10,32018,1,"A maximum of
+24 PV strings are supported. The number of PV strings read by the host is defined by the Number of PV strings signal.
+The voltage and current register addresses for each PV string are as follows: PVn voltage: 32014 + 2n
+PVn current: 32015 + 2n
+n indicates the PV string number, which ranges from 1 to 24.",DYNAMIC
+21,PV2 current,RO,I16,A,100,32019,1,"A maximum of
+24 PV strings are supported. The number of PV strings read by the host is defined by the Number of PV strings signal.
+The voltage and current register addresses for each PV string are as follows: PVn voltage: 32014 + 2n
+PVn current: 32015 + 2n
+n indicates the PV string number, which ranges from 1 to 24.",DYNAMIC
+22,PV3 voltage,RO,I16,V,10,32020,1,"A maximum of
+24 PV strings are supported. The number of PV strings read by the host is defined by the Number of PV strings signal.
+The voltage and current register addresses for each PV string are as follows: PVn voltage: 32014 + 2n
+PVn current: 32015 + 2n
+n indicates the PV string number, which ranges from 1 to 24.",DYNAMIC
+23,PV3 current,RO,I16,A,100,32021,1,"A maximum of
+24 PV strings are supported. The number of PV strings read by the host is defined by the Number of PV strings signal.
+The voltage and current register addresses for each PV string are as follows: PVn voltage: 32014 + 2n
+PVn current: 32015 + 2n
+n indicates the PV string number, which ranges from 1 to 24.",DYNAMIC
+24,PV4 voltage,RO,I16,V,10,32022,1,"A maximum of
+24 PV strings are supported. The number of PV strings read by the host is defined by the Number of PV strings signal.
+The voltage and current register addresses for each PV string are as follows: PVn voltage: 32014 + 2n
+PVn current: 32015 + 2n
+n indicates the PV string number, which ranges from 1 to 24.",DYNAMIC
+25,PV4 current,RO,I16,A,100,32023,1,,DYNAMIC
+26,Input power,RO,I32,kW,1000,32064,2,N/A,DYNAMIC
+27,Power grid voltage/Line voltage between phases A and B,RO,U16,V,10,32066,1,"When the output mode is L/N, L1/L2/N, or L1/L2, Power grid voltage is used.",DYNAMIC
+28,Line voltage between phases B and C,RO,U16,V,10,32067,1,"When the output mode is L/N, L1/L2/N, or L1/L2, the information is invalid.",DYNAMIC
+29,Line voltage between phases C and A,RO,U16,V,10,32068,1,"When the output mode is L/N, L1/L2/N, or L1/L2, the information is invalid.",DYNAMIC
+30,Phase A voltage,RO,U16,V,10,32069,1,"When the output mode is L/N, L1/L2/N, or L1/L2, the information is invalid.",DYNAMIC
+31,Phase B voltage,RO,U16,V,10,32070,1,"When the output mode is L/N, L1/L2/N, or L1/L2, the information is invalid.",DYNAMIC
+32,Phase C voltage,RO,U16,V,10,32071,1,"When the output mode is L/N, L1/L2/N, or L1/L2, the information is invalid.",DYNAMIC
+33,"Power grid current/Phase
+A current",RO,I32,A,1000,32072,2,"When the output mode is L/N, L1/L2/N, or L1/L2, Power grid current is used.",DYNAMIC
+34,Phase B current,RO,I32,A,1000,32074,2,"When the output mode is L/N, L1/L2/N, or L1/L2, the information is invalid.",DYNAMIC
+35,Phase C current,RO,I32,A,1000,32076,2,"When the output mode is L/N, L1/L2/N, or L1/L2, the information is invalid.",DYNAMIC
+36,Peak active power of current day,RO,I32,kW,1000,32078,2,N/A,DYNAMIC
+37,Active power,RO,I32,kW,1000,32080,2,N/A,DYNAMIC
+38,Reactive power,RO,I32,kVar,1000,32082,2,N/A,DYNAMIC
+39,Power factor,RO,I16,N/A,1000,32084,1,N/A,DYNAMIC
+40,Grid frequency,RO,U16,Hz,100,32085,1,N/A,DYNAMIC
+41,Efficiency,RO,U16,%,100,32086,1,N/A,DYNAMIC
+42,Internal temperature,RO,I16,°C,10,32087,1,N/A,DYNAMIC
+43,Insulation resistance,RO,U16,MΩ,1000,32088,1,N/A,DYNAMIC
+44,Device status,RO,U16,N/A,1,32089,1,"0x0000 Standby: initializing
+0x0001 Standby: detecting insulation resistance
+0x0002 Standby: detecting irradiation
+0x0003 Standby: drid detecting
+0x0100 Starting
+0x0200 On-grid (Off-grid mode: running)
+0x0201 Grid connection: power limited (Off-grid mode: running: power limited)
+0x0202 Grid connection: selfderating (Off-grid mode: running: selfderating) 0x0203 Off-grid Running
+0x0300 Shutdown: fault
+0x0301 Shutdown: command
+0x0302 Shutdown: OVGR
+0x0303 Shutdown: communication disconnected
+0x0304 Shutdown: power limited 0x0305 Shutdown: manual startup required
+0xA000 Standby: no irradiation
+0x0306 Shutdown: DC switches disconnected
+0x0307 Shutdown: rapid cutoff
+0x0308 Shutdown: input underpower
+0x0401 Grid scheduling: cosφ-P curve
+0x0402 Grid scheduling: Q-U curve
+0x0403 Grid scheduling: PF-U curve
+0x0404 Grid scheduling: dry contact
+0x0405 Grid scheduling: Q-P curve
+0x0500 Spotcheck ready 0x0501 Spotchecking
+0x0600 Inspecting
+0X0700 AFCI self check
+0X0800 I-V scanning
+0X0900 DC input detection
+0X0A00 Running: off-grid charging",DYNAMIC
+45,Fault code,RO,U16,N/A,1,32090,1,N/A,DYNAMIC
+46,Startup time,RO,U32,N/A,1,32091,2,"Epoch seconds, local time",DYNAMIC
+47,Shutdown time,RO,U32,N/A,1,32093,2,"Epoch seconds, local time",DYNAMIC
+48,Accumulated energy yield,RO,U32,kWh,100,32106,2,N/A,DYNAMIC
+49,Daily energy yield,RO,U32,kWh,100,32114,2,N/A,DYNAMIC
+50,"[Active]
+Adjustment mode",RO,U16,N/A,1,35300,1,"0: percentage
+1: fixed value
+NOTICE
+Addresses 35300 to 35303 need to be read at a time.",CONFIG
+51,"[Active]
+Adjustment value",RO,U32,N/A,*,35301,2,"Percentage: 0.1%
+Fixed value: 0.001 kW
+Note: For details about the adjustment value precision,
+see the corresponding adjustment command precision.",CONFIG
+52,"[Active]
+Adjustment command",RO,U16,N/A,1,35303,1,"40125: active power derating by percentage (0.1%) 40120: active power derating by fixed value
+40126: active power derating
+by fixed value
+(W) 42178: maximum active power",CONFIG
+53,[Reactive] Adjustment mode,RO,U16,N/A,1,35304,1,"0: power factor
+1: absolute value
+2: Q/S
+3: Q-U characteristic curve (command ID: 0)
+4: cosφ-P/Pn characteristic curve (command ID: 0)
+5: PF-U characteristic curve (command ID: 0) 6: Q-P characteristic curve (command ID: 0)
+NOTICE: Addresses 35304 to 35306 need to be read at a time.",CONFIG
+54,[Reactive] Adjustment value,RO,U32,N/A,*,35305,2,"Power factor: 0.001
+Absolute value: 0.001 kVar
+Q/S: 0.001 Q-U
+characteristic curve: 0 cosφ-P/Pn
+characteristic curve: 0 PF-U
+characteristic curve: 0 Q-P
+characteristic curve: 0",CONFIG
+55,[Reactive] Adjustment command,RO,U16,N/A,1,35307,1,"40122: power factor
+40123: Q/S adjustment
+40129: reactive power compensation at night (kVar)
+42809: reactive power at night Q/S",CONFIG
+56,[Power meter collection] Active power*,RO,I32,W,1,37113,2,> 0: feeding power to the power grid < 0: obtaining power from the power grid,DYNAMIC
+57,"[Optimizer]
+Total number of optimizers*",RO,U16,N/A,1,37200,1,N/A,STATIC
+58,[Optimizer] Number of online optimizers*,RO,U16,N/A,1,37201,1,N/A,STATIC
+59,"[Optimizer]
+Feature data*",RO,U16,N/A,1,37202,1,N/A,STATIC
+60,System time,RW,U32,N/A,1,40000,2,"[946684800, 3155759999] Epoch seconds, local time",DYNAMIC
+61,"[Power grid scheduling]
+Q-U
+characteristic curve mode*",RW,U16,N/A,1,40037,1,"0: non-hysteresis
+1: hysteresis",CONFIG
+62,[Power grid scheduling] Q-U dispatch trigger power (%)*,RW,U16,%,1,40038,1,"[0, 100]",CONFIG
+63,[Power grid scheduling] Fixed active power derated,RW,U16,kW,10,40120,1,"Scope: [0, Pmax]",CONFIG
+64,[Power grid scheduling] Reactive power compensatio n (PF),RW,I16,N/A,1000,40122,1,"(–1, –0.8]U[0.8, 1]",CONFIG
+65,[Power grid scheduling] Reactive power compensatio n (Q/S),RW,I16,N/A,1000,40123,1,"[–1, 1] The device converts the value to a fixed value of Q for reactive power control. S indicates Smax.",CONFIG
+66,[Power grid scheduling] Active power percentage derating (0.1%),RW,U16,%,10,40125,1,"Scope: [0, 100]
+Interface for fine adjustment of active power",CONFIG
+67,[Power grid scheduling] Fixed active power derated (W),RW,U32,W,1,40126,2,"Scope: [0, Pmax]",CONFIG
+68,[Power grid scheduling] Reactive power compensatio n at night (kVar),RW,I32,kVar,1000,40129,2,"[–Qmax, Qmax]",CONFIG
+69,[Power grid scheduling] cosφ-P/Pn characteristic curve,RW,MLD,N/A,1,40133,21,"For details, see 5.2 .",CONFIG
+70,"[Power grid scheduling]
+Q-U characteristic curve",RW,MLD,N/A,1,40154,21,"For details, see 5.2 .",CONFIG
+71,"[Power grid scheduling]
+PF-U characteristic curve",RW,MLD,N/A,1,40175,21,"For details, see 5.2 .",CONFIG
+72,[Power grid scheduling] Reactive power adjustment time,RW,U16,s,1,40196,1,"[1, 120]. The default value is 10.",CONFIG
+73,[Power grid scheduling] Q-U power percentage to exit scheduling*,RW,U16,%,1,40198,1,"[0, 100]",CONFIG
+74,Startup,WO,U16,N/A,1,40200,1,N/A,CONFIG
+75,Shutdown,WO,U16,N/A,1,40201,1,N/A,CONFIG
+76,Grid code,RW,U16,NA,1,42000,1,"For details, see 5.3 .",CONFIG
+77,[Power grid scheduling] Reactive power change gradient,RW,U32,%/s,1000,42015,2,"[0.1, 1000]",CONFIG
+78,[Power grid scheduling] Active power change gradient,RW,U32,%/s,1000,42017,2,"[0.1, 1000]",CONFIG
+79,[Power grid scheduling] Schedule instruction valid duration,RW,U32,s,1,42019,2,"[0, 86400] The value 0 indicates that the command is valid permanently.",CONFIG
+80,Time zone,RW,I16,min,1,43006,1,"[–720, 840]",CONFIG

@@ -1,0 +1,29 @@
+﻿No.,Signal Name,Read/ Write,Type,Unit,Gain,Address,Quantit y,Scope,Category
+1,Meter status,RO,UINT16,N/A,1,37100,1,0: offline 1: normal,DYNAMIC
+2,Grid voltage (A phase),RO,INT32,V,10,37101,2,,DYNAMIC
+3,B phase voltage,RO,INT32,V,10,37103,2,,DYNAMIC
+4,C phase voltage,RO,INT32,V,10,37105,2,,DYNAMIC
+5,Grid current(A phase),RO,INT32,A,100,37107,2,,DYNAMIC
+6,B phase current,RO,INT32,A,100,37109,2,,DYNAMIC
+7,C phase current,RO,INT32,A,100,37111,2,,DYNAMIC
+8,Active power,RO,INT32,W,1,37113,2,">0: feed-in to the power grid.
+<0: supply from the power grid.",DYNAMIC
+9,Reactive power,RO,INT32,Var,1,37115,2,,DYNAMIC
+10,Power factor,RO,INT16,NA,1000,37117,1,,DYNAMIC
+11,Grid frequency,RO,INT16,Hz,100,37118,1,,DYNAMIC
+12,Positive active electricity,RO,INT32,kWh,100,37119,2,Electricity fed by the inverter to the power grid.,DYNAMIC
+13,Reverse active power,RO,INT32,kWh,100,37121,2,Power supplied to a distributed system from the power grid.,DYNAMIC
+14,Accumulated reactive power,RO,INT32,kVar h,100,37123,2,,DYNAMIC
+15,Meter type,RO,UINT16,N/A,1,37125,1,0: single-phase. 1: three-phase.,DYNAMIC
+16,A-B line voltage,RO,INT32,V,10,37126,2,,DYNAMIC
+17,B-C line voltage,RO,INT32,V,10,37128,2,,DYNAMIC
+18,CA line voltage,RO,INT32,V,10,37130,2,,DYNAMIC
+19,A phase active power,RO,INT32,W,1,37132,2,"> 0: feed-in to the power grid.
+<0: supply from the power grid",DYNAMIC
+20,B phase active power,RO,INT32,W,1,37134,2,"> 0: feed-in to the power grid.
+<0: supply from the power grid",DYNAMIC
+21,C phase active power,RO,INT32,W,1,37136,2,"> 0: feed-in to the power grid.
+<0: supply from the power grid",DYNAMIC
+22,Meter model detection result,RO,UINT16,N/A,1,37138,1,"0: being identified
+1: The selected model is the same as the actual model of the connected meter.
+2: The selected model is different from the actual model of the connected meter.",DYNAMIC
