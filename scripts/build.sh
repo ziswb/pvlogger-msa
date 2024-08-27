@@ -59,6 +59,6 @@ $DOCKER_CMD build \
 -t "registry.local:5000/bziswiler/${PV_LOGGER_COMPONENT}:latest" \
 -t "registry.local:5000/bziswiler/${PV_LOGGER_COMPONENT}:${version}" \
 -f "${SCRIPT_DIR}/../${PV_LOGGER_COMPONENT}/docker/Dockerfile" \
-"../"
+"${SCRIPT_DIR}/../"
 $DOCKER_CMD image push "registry.local:5000/bziswiler/${PV_LOGGER_COMPONENT}:latest"
 $DOCKER_CMD image push "registry.local:5000/bziswiler/${PV_LOGGER_COMPONENT}:${version}"
