@@ -13,7 +13,7 @@ LABEL description="PV Logger Data Accessor"
 LABEL version="1.0.0"
 
 RUN mkdir -p "/opt/pvlogger/"
-COPY "pvlogger-modbus-data-accessor-all.jar" "/opt/pvlogger/data-accessor.jar"
+COPY --from=build "/workspace/pvlogger-modbus-data-accessor/build/libs/pvlogger-modbus-data-accessor-all.jar" "/opt/pvlogger/data-accessor.jar"
 RUN useradd -u 1000 bziswiler
 USER bziswiler
 

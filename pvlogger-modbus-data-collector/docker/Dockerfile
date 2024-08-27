@@ -13,7 +13,7 @@ LABEL description="PV Logger Data Collector"
 LABEL version="1.0.0"
 
 RUN mkdir -p "/opt/pvlogger/"
-COPY "pvlogger-modbus-data-collector-all.jar" "/opt/pvlogger/data-collector.jar"
+COPY --from=build "/workspace/pvlogger-modbus-data-collector/build/libs/pvlogger-modbus-data-collector-all.jar" "/opt/pvlogger/data-collector.jar"
 RUN useradd -u 1000 bziswiler
 USER bziswiler
 
