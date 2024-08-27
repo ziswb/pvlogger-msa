@@ -1,0 +1,17 @@
+version: '3.9'
+services:
+  database:
+    image: postgres:16.2
+    container_name: 'pvlogger_db'
+    restart: unless-stopped
+    shm_size: 2gb
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: 'postgres'
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: 'postgres'
+      TZ: 'Europe/Zurich'
+    volumes:
+      - ${DB_DATA_PATH}/dumps:/dumps
+      - ${DB_DATA_PATH}/postgres-data:/var/lib/postgresql/data

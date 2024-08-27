@@ -1,15 +1,2 @@
-.gradle
-/gradle_home
-build/
-!gradle/wrapper/gradle-wrapper.jar
 /docker/dumps
 /docker/postgres-data
-
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/

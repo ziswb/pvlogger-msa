@@ -9,6 +9,7 @@ set -o pipefail
 
 OP_CMD=""
 DOCKER_CMD=""
+POSTGRES_IMAGE="postgres:16.2"
 
 if hash op 2>/dev/null; then
   OP_CMD=$(command -v op)
@@ -33,8 +34,8 @@ DB_PGSQL_PATH="${SCRIPT_DIR}/../docker/postgres-data:/var/lib/postgresql/data"
 
 if [ $# -eq 1 ] && [ "${1}" == "prod" ]; then
   echo "Running in prod mode";
-  $DOCKER_CMD run -p 5432:5432 --restart unless-stopped -v "${DB_DUMPS_PATH}" -v "${DB_PGSQL_PATH}" --name pvlogger_db -it --shm-size=2gb -e POSTGRES_PASSWORD="${DB_PASSWORD}" pvlogger-database;
+  $DOCKER_CMD run -p 5432:5432 --restart unless-stopped -v "${DB_DUMPS_PATH}" -v "${DB_PGSQL_PATH}" --name pvlogger_db -it --shm-size=2gb -e POSTGRES_PASSWORD="${DB_PASSWORD}" $POSTGRES_IMAGE;
 else
   echo "Running in dev mode";
-  $DOCKER_CMD run -p 5432:5432 --rm                     -v "${DB_DUMPS_PATH}" -v "${DB_PGSQL_PATH}" --name pvlogger_db -it --shm-size=2gb -e POSTGRES_PASSWORD="${DB_PASSWORD}" pvlogger-database;
+  $DOCKER_CMD run -p 5432:5432 --rm                     -v "${DB_DUMPS_PATH}" -v "${DB_PGSQL_PATH}" --name pvlogger_db -it --shm-size=2gb -e POSTGRES_PASSWORD="${DB_PASSWORD}" $POSTGRES_IMAGE;
 fi

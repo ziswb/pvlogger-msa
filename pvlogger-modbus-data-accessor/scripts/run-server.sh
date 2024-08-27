@@ -26,3 +26,6 @@ DB_PWD=$(${OP_CMD} read "op://Personal/PV Logger Postgres DB/password")
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 DB_PASSWORD="${DB_PWD}" POSTGRESQL_HOST="${PG_HOST}" POSTGRESQL_PORT="${PG_PORT}" ACTIVEMQ_HOST="${MQ_HOST}" ACTIVEMQ_PORT="${MQ_PORT}" "${SCRIPT_DIR}"/../gradlew run --args="-config=application-prod.conf"
+
+# Pass arguments alternatively:
+# ./gradlew run --args="-P:database.password='${DB_PASSWORD}'"

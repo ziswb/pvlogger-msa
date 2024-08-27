@@ -1,14 +1,1 @@
-.gradle
-/gradle_home
-build/
-!gradle/wrapper/gradle-wrapper.jar
 /activemq-data
-
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/

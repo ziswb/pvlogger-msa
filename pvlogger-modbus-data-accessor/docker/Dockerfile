@@ -1,4 +1,12 @@
-FROM eclipse-temurin:17.0.3_7-jdk
+FROM eclipse-temurin:21-jdk AS build
+
+ENV GRADLE_USER_HOME="/workspace/gradle_home"
+ADD . /workspace
+
+WORKDIR /workspace
+RUN ./gradlew :pvlogger-modbus-data-accessor:clean :pvlogger-modbus-data-accessor:shadowJar
+
+FROM eclipse-temurin:21-jre-ubi9-minimal
 
 LABEL author="Bruno Ziswiler"
 LABEL description="PV Logger Data Accessor"
