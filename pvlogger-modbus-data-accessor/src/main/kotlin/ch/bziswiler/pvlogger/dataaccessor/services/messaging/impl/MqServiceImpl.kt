@@ -3,6 +3,7 @@ package ch.bziswiler.pvlogger.dataaccessor.services.messaging.impl
 import ch.bziswiler.pvlogger.dataaccessor.config.AppConfig
 import ch.bziswiler.pvlogger.dataaccessor.services.messaging.MqListener
 import ch.bziswiler.pvlogger.dataaccessor.services.messaging.MqService
+import ch.bziswiler.pvlogger.messaging.job.naming.QueueName
 import ch.bziswiler.pvlogger.modbus.tcp.response.ModbusResponse
 import mu.KotlinLogging
 import org.apache.activemq.ActiveMQConnectionFactory
@@ -35,7 +36,7 @@ class MqServiceImpl(private val appConfig: AppConfig) : MqService {
     }
 
     override fun setListener(listener: MqListener) {
-        val ingressQueue = session.createQueue(appConfig.mqConfig.ingressQueueName)
+        val ingressQueue = session.createQueue(QueueName.PERSIST_MODBUS.value)
         val messageConsumer = session.createConsumer(ingressQueue)
         messageConsumer.messageListener = MessageListener { message: Message? ->
             if (message is ObjectMessage && message.`object` is ModbusResponse) {
