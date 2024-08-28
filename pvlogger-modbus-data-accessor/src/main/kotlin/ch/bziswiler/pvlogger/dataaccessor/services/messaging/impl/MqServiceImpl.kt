@@ -45,7 +45,7 @@ class MqServiceImpl(private val appConfig: AppConfig) : MqService {
 RECEIVED #########################################################################
 $clientId: message received()
 RECEIVED #########################################################################
-""""
+"""
                 }
                 listener.messageReceived(message.`object` as ModbusResponse)
             } else {

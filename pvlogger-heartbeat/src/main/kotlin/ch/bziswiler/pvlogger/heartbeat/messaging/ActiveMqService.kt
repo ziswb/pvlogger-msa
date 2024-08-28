@@ -49,7 +49,7 @@ class ActiveMqService(private val appConfig: AppConfig) : MqService {
 SEND #########################################################################
 ${appConfig.mqConfig.clientId}: sent message with properties 'job' = ${msg.getStringProperty("job")} and 'timestamp' = ${msg.getLongProperty("timestamp")}
 SEND #########################################################################
-""""
+"""
         }
     }
 
