@@ -29,33 +29,40 @@ class MqServiceImpl(private val appConfig: AppConfig) : MqService {
 
     // see https://activemq.apache.org/components/classic/documentation/connection-configuration-uri for details
     private val session: Session
-    private val messageProducer: MessageProducer
-    private val ingressQueue: Queue
+    private val persistEgressQueue: MessageProducer
+    private val schedulerIngressQueue: Queue
+    private val schedulerEgressQueue: MessageProducer
 
     init {
         val connection = connection()
         this.session = connection.createSession(false, AUTO_ACKNOWLEDGE)
-        this.messageProducer = setUpEgressQueue()
-        this.ingressQueue = session.createQueue(JOB_SCHEDULER.value)
+        this.persistEgressQueue = setUpPersistEgressQueue()
+        this.schedulerIngressQueue = session.createQueue(JOB_SCHEDULER.value)
+        this.schedulerEgressQueue = setUpSchedulerEgressQueue()
         connection.start()
     }
 
     override fun addListener(listener: MqListener) {
-        val messageConsumer = session.createConsumer(ingressQueue, listener.messageSelector)
+        val messageConsumer = session.createConsumer(schedulerIngressQueue, listener.messageSelector)
         messageConsumer.setMessageListener {
             logger.debug {
                 """
 RECEIVED #########################################################################
 ${listener.messageSelector}: message received()
 RECEIVED #########################################################################
-""""
+"""
             }
             listener.messageReceived()
         }
     }
 
-    private fun setUpEgressQueue(): MessageProducer {
+    private fun setUpPersistEgressQueue(): MessageProducer {
         val egressQueue = session.createQueue(PERSIST_MODBUS.value)
+        return session.createProducer(egressQueue)
+    }
+
+    private fun setUpSchedulerEgressQueue(): MessageProducer {
+        val egressQueue = session.createQueue(JOB_SCHEDULER.value)
         return session.createProducer(egressQueue)
     }
 
@@ -69,25 +76,25 @@ RECEIVED #######################################################################
 
     override fun sendMessage(message: ModbusResponse) {
         logger.debug { "Sending message ..." }
-        messageProducer.send(session.createObjectMessage(message))
+        persistEgressQueue.send(session.createObjectMessage(message))
         logger.debug {
             """
 SEND #########################################################################
 $clientId: sent message with text='$message'
 SEND #########################################################################
-""""
+"""
         }
     }
 
     override fun sendJobStatusMessage(message: JobStatusMessage) {
         logger.debug { "Sending job finished message ..." }
-        messageProducer.send(session.createObjectMessage(message))
+        schedulerEgressQueue.send(session.createObjectMessage(message))
         logger.debug {
             """
 SEND #########################################################################
 $clientId: sent job finished message with job ID = '$message'
 SEND #########################################################################
-""""
+"""
         }
     }
 }
