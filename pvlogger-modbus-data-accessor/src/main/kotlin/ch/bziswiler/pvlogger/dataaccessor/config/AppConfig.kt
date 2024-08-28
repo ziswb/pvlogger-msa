@@ -24,6 +24,5 @@ data class MqConfig(
     val clientId: String,
     val user: String,
     val passwd: String,
-    val brokerUrl: String,
-    val ingressQueueName: String,
+    val brokerUrl: String
 )

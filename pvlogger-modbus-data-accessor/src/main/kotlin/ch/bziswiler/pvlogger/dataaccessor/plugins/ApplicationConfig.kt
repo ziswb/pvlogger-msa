@@ -44,11 +44,9 @@ private fun Application.readDbConfig(appConfig: AppConfig) {
 
 private fun Application.readMqConfig(appConfig: AppConfig) {
     val mqObject = environment.config.config("messagequeue")
-    val ingressObject = mqObject.config("ingress")
     val clientId = mqObject.property("clientId").getString()
     val user = mqObject.property("user").getString()
     val passwd = mqObject.property("passwd").getString()
     val brokerUrl = mqObject.property("brokerUrl").getString()
-    val ingressQueueName = ingressObject.property("queueName").getString()
-    appConfig.mqConfig = MqConfig(clientId, user, passwd, brokerUrl, ingressQueueName)
+    appConfig.mqConfig = MqConfig(clientId, user, passwd, brokerUrl)
 }
