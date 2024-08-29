@@ -10,6 +10,7 @@ import java.time.LocalDateTime
 
 data class ModbusRegisterValueResponse(
     override var jobId: String,
+    override val requestId: UShort,
     override var requestTime: LocalDateTime,
     override var responseTime: LocalDateTime,
     override var header: MbapHeader,

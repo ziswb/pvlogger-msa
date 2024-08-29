@@ -9,10 +9,10 @@ import ch.bziswiler.pvlogger.modbus.tcp.frame.FunctionCode.Companion.from
 import ch.bziswiler.pvlogger.modbus.tcp.frame.FunctionCode.ReadDeviceIdentifiers
 import ch.bziswiler.pvlogger.modbus.tcp.frame.MbapHeader
 import ch.bziswiler.pvlogger.modbus.tcp.frame.UByteData
-import ch.bziswiler.pvlogger.modbus.tcp.response.ModbusResponse
 import ch.bziswiler.pvlogger.modbus.tcp.response.ReadDeviceIdentifiersResponse
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.ByteWriteChannel
+import mu.KotlinLogging
 import java.time.LocalDateTime
 import java.time.LocalDateTime.now
 
@@ -27,6 +27,9 @@ open class ReadDeviceIdentifiersRequest(
     readDevIdCode: UByte = 0x01u,
     objectId: UByte = 0x00u,
 ) : ModbusRequest {
+
+    private val logger = KotlinLogging.logger {}
+
     private val frame =
         AduFrame(
             MbapHeader(requestId, dataLength = dataLength, logicDeviceId = logicDeviceId),
@@ -36,31 +39,34 @@ open class ReadDeviceIdentifiersRequest(
 
     override suspend fun encode(channel: ByteWriteChannel) = frame.encode(channel)
 
-    override suspend fun decode(channel: ByteReadChannel): ModbusResponse {
-        val header = readHeader(channel)
-        val functionCode = from(channel.readUByte())
-        val meiType = channel.readUByte()
-        val readDevId = channel.readUByte()
-        val consistencyLevel = channel.readUByte()
-        val more = channel.readUByte()
-        val nextObjectId = channel.readUByte()
-        val numberOfObjects = channel.readUByte()
-        val objectList = mutableListOf<ModbusObject>()
-        repeat(numberOfObjects.toInt()) { objectList.add(decodeModbusObject(channel)) }
-        return ReadDeviceIdentifiersResponse(
-            jobId,
-            requestTime,
-            now(),
-            header,
-            functionCode,
-            numberOfBytes = 0x0u,
-            meiType,
-            readDevId,
-            consistencyLevel,
-            more,
-            nextObjectId,
-            numberOfObjects,
-            objectList,
-        )
-    }
+    override suspend fun decode(channel: ByteReadChannel): ReadDeviceIdentifiersResponse =
+        run {
+            logger.debug("ReadDeviceIdentifiersRequest.decode()")
+            val header = readHeader(channel)
+            val functionCode = from(channel.readUByte())
+            val meiType = channel.readUByte()
+            val readDevId = channel.readUByte()
+            val consistencyLevel = channel.readUByte()
+            val more = channel.readUByte()
+            val nextObjectId = channel.readUByte()
+            val numberOfObjects = channel.readUByte()
+            val objectList = mutableListOf<ModbusObject>()
+            repeat(numberOfObjects.toInt()) { objectList.add(decodeModbusObject(channel)) }
+            ReadDeviceIdentifiersResponse(
+                jobId = jobId,
+                requestId = requestId,
+                requestTime = requestTime,
+                responseTime = now(),
+                header = header,
+                functionCode = functionCode,
+                numberOfBytes = header.dataLength.toInt().minus(3).toUByte(),
+                meiType = meiType,
+                readDevIdCode = readDevId,
+                consistencyLevel = consistencyLevel,
+                more = more,
+                nextObjectId = nextObjectId,
+                numberOfObjects = numberOfObjects,
+                objectList = objectList,
+            )
+        }
 }

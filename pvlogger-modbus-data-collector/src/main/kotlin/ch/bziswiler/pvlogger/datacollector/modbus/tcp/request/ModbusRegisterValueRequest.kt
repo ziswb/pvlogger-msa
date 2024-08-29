@@ -14,13 +14,14 @@ abstract class ModbusRegisterValueRequest : ModbusRequest {
 
     private val logger = KotlinLogging.logger {}
 
-    override suspend fun decode(channel: ByteReadChannel) =
+    override suspend fun decode(channel: ByteReadChannel) : ModbusRegisterValueResponse =
         run {
             logger.debug("ModbusRegisterValueRequest.decode()")
             val header = readHeader(channel)
             val functionCode = from(channel.readUByte())
             ModbusRegisterValueResponse(
                 jobId = jobId,
+                requestId = requestId,
                 requestTime = requestTime,
                 responseTime = now(),
                 header = header,

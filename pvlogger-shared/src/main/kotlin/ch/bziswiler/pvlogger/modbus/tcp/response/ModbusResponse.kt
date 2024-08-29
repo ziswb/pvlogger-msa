@@ -12,6 +12,7 @@ private const val ONE_BYTE = 0xFF
 
 interface ModbusResponse : Serializable {
     var jobId: String
+    val requestId: UShort
     var requestTime: LocalDateTime
     var responseTime: LocalDateTime
     var header: MbapHeader

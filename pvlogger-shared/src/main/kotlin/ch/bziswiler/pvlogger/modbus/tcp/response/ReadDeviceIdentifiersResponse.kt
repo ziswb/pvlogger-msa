@@ -12,6 +12,7 @@ private const val ONE_BYTE = 0xFF
 
 data class ReadDeviceIdentifiersResponse(
     override var jobId: String,
+    override val requestId: UShort,
     override var requestTime: LocalDateTime,
     override var responseTime: LocalDateTime,
     override var header: MbapHeader,
