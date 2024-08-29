@@ -2,7 +2,7 @@ package ch.bziswiler.pvlogger.dataaccessor.services.messaging.impl
 
 import ch.bziswiler.pvlogger.dataaccessor.config.AppConfig
 import ch.bziswiler.pvlogger.dataaccessor.services.messaging.MqService
-import ch.bziswiler.pvlogger.dataaccessor.services.persistence.ModbusDao.store
+import ch.bziswiler.pvlogger.dataaccessor.services.persistence.ModbusDao
 import ch.bziswiler.pvlogger.messaging.meta.QueueName
 import ch.bziswiler.pvlogger.modbus.tcp.response.ModbusRegisterValueResponse
 import ch.bziswiler.pvlogger.modbus.tcp.response.ModbusResponse
@@ -25,39 +25,42 @@ class MqServiceImpl(private val appConfig: AppConfig) : MqService {
     private val clientId = appConfig.mqConfig.clientId
     private val user = appConfig.mqConfig.user
     private val passwd = appConfig.mqConfig.passwd
-
-    // see https://activemq.apache.org/components/classic/documentation/connection-configuration-uri for details
-
-    override fun start() {
-        val connection = connection()
-        val session = connection.createSession(false, AUTO_ACKNOWLEDGE)
-        connection.start()
-        val ingressQueue = session.createQueue(QueueName.PERSIST_MODBUS.value)
-        val messageConsumer = session.createConsumer(ingressQueue)
-        messageConsumer.messageListener = MessageListener { message: Message? ->
-            if (message is ObjectMessage && message.`object` is ModbusResponse) {
-                logger.debug {
-                    """
+    private val msgListener = MessageListener { message: Message? ->
+        logger.debug {
+            """
 RECEIVED #########################################################################
-$clientId: message received()
+$clientId: message received: $message
 RECEIVED #########################################################################
 """
-                }
-                when (message.`object`) {
-                    is ModbusRegisterValueResponse -> {
-                        store(message.`object` as ModbusRegisterValueResponse)
-                        sendRegisterValuesSavedMessage()
-                    }
-                }
-            } else {
-                // TODO log error!
-                error("message is no object message! -> $message")
-            }
+        }
+        if (message is ObjectMessage) {
+            handleObjectMessage(message)
+        } else {
+            logger.info { "message is no object message! -> $message" }
         }
     }
 
-    override fun sendRegisterValuesSavedMessage() {
-        logger.warn { "TODO('Not yet implemented')" }
+    private fun handleObjectMessage(message: ObjectMessage) {
+        val obj = message.`object`
+        if (obj is ModbusRegisterValueResponse) {
+            ModbusDao.store(obj)
+            sendRegisterValuesSavedMessage(obj)
+        } else {
+            logger.info { "message.object is no modbus register value response! -> $obj" }
+        }
+    }
+
+    override fun start() {
+        with(connection()) {
+            with(createSession(false, AUTO_ACKNOWLEDGE)) {
+                with(createConsumer(createQueue(QueueName.PERSIST_MODBUS.value))) { messageListener = msgListener }
+            }
+            start()
+        }
+    }
+
+    override fun sendRegisterValuesSavedMessage(message: ModbusResponse) {
+        logger.warn { "TODO('Not yet implemented') -> jobId: ${message.jobId.id}, requestId: ${message.requestId}" }
     }
 
     private fun connection(): Connection {
