@@ -4,6 +4,7 @@ import ch.bziswiler.pvlogger.datacollector.modbus.tcp.decodeModbusObject
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.frame.AduFrame
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.readUByte
 import ch.bziswiler.pvlogger.messaging.meta.JobId
+import ch.bziswiler.pvlogger.messaging.meta.RequestId
 import ch.bziswiler.pvlogger.modbus.ModbusObject
 import ch.bziswiler.pvlogger.modbus.tcp.frame.FunctionCode
 import ch.bziswiler.pvlogger.modbus.tcp.frame.FunctionCode.Companion.from
@@ -55,7 +56,7 @@ open class ReadDeviceIdentifiersRequest(
             repeat(numberOfObjects.toInt()) { objectList.add(decodeModbusObject(channel)) }
             ReadDeviceIdentifiersResponse(
                 jobId = JobId(jobId),
-                requestId = requestId,
+                requestId = RequestId(requestId),
                 requestTime = requestTime,
                 responseTime = now(),
                 header = header,

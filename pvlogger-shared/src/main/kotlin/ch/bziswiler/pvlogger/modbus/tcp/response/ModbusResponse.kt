@@ -1,6 +1,7 @@
 package ch.bziswiler.pvlogger.modbus.tcp.response
 
 import ch.bziswiler.pvlogger.messaging.meta.JobId
+import ch.bziswiler.pvlogger.messaging.meta.RequestId
 import ch.bziswiler.pvlogger.modbus.tcp.frame.FunctionCode
 import ch.bziswiler.pvlogger.modbus.tcp.frame.MbapHeader
 import java.io.IOException
@@ -13,7 +14,7 @@ private const val ONE_BYTE = 0xFF
 
 interface ModbusResponse : Serializable {
     var jobId: JobId
-    val requestId: UShort
+    val requestId: RequestId
     var requestTime: LocalDateTime
     var responseTime: LocalDateTime
     var header: MbapHeader
