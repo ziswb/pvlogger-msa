@@ -9,6 +9,7 @@ import ch.bziswiler.pvlogger.datacollector.services.modbus.ModbusBatchedDataColl
 import ch.bziswiler.pvlogger.masterdata.modbus.Category.CONFIG
 import ch.bziswiler.pvlogger.masterdata.modbus.Category.STATIC
 import ch.bziswiler.pvlogger.messaging.job.status.JobStatusMessageFactory.staticDataCollectionJobFinishedMessage
+import ch.bziswiler.pvlogger.messaging.meta.JobId
 import ch.bziswiler.pvlogger.modbus.tcp.response.ModbusRegisterValueResponse
 import ch.bziswiler.pvlogger.modbus.tcp.response.ModbusResponse
 import io.micrometer.core.instrument.Counter
@@ -46,7 +47,7 @@ class ModbusBatchedStaticDataCollectionJob(
         }
     }
 
-    override fun jobFinished(jobId: String) {
+    override fun jobFinished(jobId: JobId) {
         mqService.sendJobStatusMessage(staticDataCollectionJobFinishedMessage(jobId))
     }
 }

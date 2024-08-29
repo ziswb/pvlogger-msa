@@ -1,5 +1,6 @@
 package ch.bziswiler.pvlogger.modbus.tcp.response
 
+import ch.bziswiler.pvlogger.messaging.meta.JobId
 import ch.bziswiler.pvlogger.modbus.ModbusObject
 import ch.bziswiler.pvlogger.modbus.tcp.frame.FunctionCode
 import ch.bziswiler.pvlogger.modbus.tcp.frame.MbapHeader
@@ -11,7 +12,7 @@ import java.time.LocalDateTime
 private const val ONE_BYTE = 0xFF
 
 data class ReadDeviceIdentifiersResponse(
-    override var jobId: String,
+    override var jobId: JobId,
     override val requestId: UShort,
     override var requestTime: LocalDateTime,
     override var responseTime: LocalDateTime,

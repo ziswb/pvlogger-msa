@@ -1,6 +1,7 @@
 package ch.bziswiler.pvlogger.datacollector.modbus.tcp.request
 
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.readUByte
+import ch.bziswiler.pvlogger.messaging.meta.JobId
 import ch.bziswiler.pvlogger.modbus.ModbusRegisterValue
 import ch.bziswiler.pvlogger.modbus.tcp.frame.FunctionCode
 import ch.bziswiler.pvlogger.modbus.tcp.frame.FunctionCode.Companion.from
@@ -20,7 +21,7 @@ abstract class ModbusRegisterValueRequest : ModbusRequest {
             val header = readHeader(channel)
             val functionCode = from(channel.readUByte())
             ModbusRegisterValueResponse(
-                jobId = jobId,
+                jobId = JobId(jobId),
                 requestId = requestId,
                 requestTime = requestTime,
                 responseTime = now(),

@@ -1,5 +1,6 @@
 package ch.bziswiler.pvlogger.modbus.tcp.response
 
+import ch.bziswiler.pvlogger.messaging.meta.JobId
 import ch.bziswiler.pvlogger.modbus.ModbusRegisterValue
 import ch.bziswiler.pvlogger.modbus.tcp.frame.FunctionCode
 import ch.bziswiler.pvlogger.modbus.tcp.frame.MbapHeader
@@ -9,7 +10,7 @@ import java.io.ObjectOutputStream
 import java.time.LocalDateTime
 
 data class ModbusRegisterValueResponse(
-    override var jobId: String,
+    override var jobId: JobId,
     override val requestId: UShort,
     override var requestTime: LocalDateTime,
     override var responseTime: LocalDateTime,

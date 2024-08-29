@@ -1,5 +1,6 @@
 package ch.bziswiler.pvlogger.modbus.tcp.response
 
+import ch.bziswiler.pvlogger.messaging.meta.JobId
 import ch.bziswiler.pvlogger.modbus.tcp.frame.FunctionCode
 import ch.bziswiler.pvlogger.modbus.tcp.frame.MbapHeader
 import java.io.IOException
@@ -11,7 +12,7 @@ import java.time.LocalDateTime
 private const val ONE_BYTE = 0xFF
 
 interface ModbusResponse : Serializable {
-    var jobId: String
+    var jobId: JobId
     val requestId: UShort
     var requestTime: LocalDateTime
     var responseTime: LocalDateTime
@@ -33,7 +34,7 @@ interface ModbusResponse : Serializable {
     @Throws(IOException::class)
     @Suppress("unused")
     fun readObject(ois: ObjectInputStream) {
-        this.jobId = ois.readObject() as String
+        this.jobId = ois.readObject() as JobId
         this.requestTime = ois.readObject() as LocalDateTime
         this.responseTime = ois.readObject() as LocalDateTime
         this.header = MbapHeader.readObject(ois)

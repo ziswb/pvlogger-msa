@@ -102,7 +102,7 @@ object ModbusDao {
     private fun storeHeader(data: ModbusResponse): EntityID<Int> {
         logger.debug { "Storing header '${data}" }
         return ResponseTable.insertAndGetId {
-            it[job_id] = data.jobId
+            it[job_id] = data.jobId.id
             it[request_time] = data.responseTime
             it[response_time] = data.responseTime
             it[request_id] = data.header.protocolIdentifier

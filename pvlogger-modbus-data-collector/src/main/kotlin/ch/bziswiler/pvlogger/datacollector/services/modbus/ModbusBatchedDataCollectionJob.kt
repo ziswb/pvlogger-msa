@@ -9,6 +9,7 @@ import ch.bziswiler.pvlogger.masterdata.modbus.DeviceType
 import ch.bziswiler.pvlogger.masterdata.modbus.DeviceType.INVERTER
 import ch.bziswiler.pvlogger.masterdata.modbus.DeviceType.METER
 import ch.bziswiler.pvlogger.masterdata.modbus.dto.ModbusRegisterDefinition
+import ch.bziswiler.pvlogger.messaging.meta.JobId
 import ch.bziswiler.pvlogger.modbus.tcp.response.ModbusResponse
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.Timer
@@ -43,19 +44,19 @@ abstract class ModbusBatchedDataCollectionJob(
 
     abstract fun storeResponse(response: ModbusResponse)
 
-    abstract fun jobFinished(jobId: String)
+    abstract fun jobFinished(jobId: JobId)
 
     final override fun execute() {
         metricCounter.increment()
         metricTimer.recordCallable {
             logger.debug("ModbusInverterBatchedDataCollectionJobScaffold.execute()")
-            val jobId = idProvider.nextJobId
+            val jobId = JobId(idProvider.nextJobId)
             deviceIdToDeviceTypesMap.forEach { fetchRegisterValues(jobId, it.key, it.value) }
             jobFinished(jobId)
         }
     }
 
-    private fun fetchRegisterValues(jobId: String, deviceId: UByte, deviceTypes: List<DeviceType>) {
+    private fun fetchRegisterValues(jobId: JobId, deviceId: UByte, deviceTypes: List<DeviceType>) {
         logger.debug("ModbusInverterBatchedDataCollectionJobScaffold.readAndStoreRegisterValues()")
         listOfRegisterDefinitionLists(deviceTypes).forEach { registerDefinitions ->
             runCatching {
@@ -101,10 +102,10 @@ abstract class ModbusBatchedDataCollectionJob(
     }
 
     private fun buildRequest(
-        jobId: String,
+        jobId: JobId,
         deviceId: UByte,
         registerDefinitions: List<ModbusRegisterDefinition>,
-    ) = ReadHoldingRegistersValueRequest(jobId, now(), idProvider.nextRequestId, deviceId, registerDefinitions)
+    ) = ReadHoldingRegistersValueRequest(jobId.id, now(), idProvider.nextRequestId, deviceId, registerDefinitions)
 
     private fun registerDefinitionList(
         deviceTypes: List<DeviceType>, categories: List<Category>

@@ -3,6 +3,7 @@ package ch.bziswiler.pvlogger.datacollector.modbus.tcp.request
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.decodeModbusObject
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.frame.AduFrame
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.readUByte
+import ch.bziswiler.pvlogger.messaging.meta.JobId
 import ch.bziswiler.pvlogger.modbus.ModbusObject
 import ch.bziswiler.pvlogger.modbus.tcp.frame.FunctionCode
 import ch.bziswiler.pvlogger.modbus.tcp.frame.FunctionCode.Companion.from
@@ -53,7 +54,7 @@ open class ReadDeviceIdentifiersRequest(
             val objectList = mutableListOf<ModbusObject>()
             repeat(numberOfObjects.toInt()) { objectList.add(decodeModbusObject(channel)) }
             ReadDeviceIdentifiersResponse(
-                jobId = jobId,
+                jobId = JobId(jobId),
                 requestId = requestId,
                 requestTime = requestTime,
                 responseTime = now(),
