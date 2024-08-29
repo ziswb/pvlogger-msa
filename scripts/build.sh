@@ -15,8 +15,6 @@ DOCKER_CMD=$(${REQUIRE_COMMAND} docker)
 GREP_CMD=$(${REQUIRE_COMMAND} grep)
 SED_CMD=$(${REQUIRE_COMMAND} sed)
 
-PV_LOGGER_COMPONENT="$*"
-
 help()
 {
    echo "This script builds a docker image for pvlogger."
@@ -30,16 +28,24 @@ help()
 
 version=""
 
+OPTIND=1
+
 while getopts v:h: flag
 do
   case "${flag}" in
     v) version=${OPTARG}
        ;;
     h) help
+       exit 0
        ;;
-    *) echo "Invalid option: -$flag" ;;
+    *) echo "Invalid option: -$flag"
+       ;;
   esac
 done
+
+shift $((OPTIND-1))
+
+PV_LOGGER_COMPONENT="$*"
 
 if [ -z "${version}" ]; then
   version="$(${GREP_CMD} -e 'LABEL version=\"\([0-9.]*\)\"' "${SCRIPT_DIR}/../${PV_LOGGER_COMPONENT}/docker/Dockerfile" | ${SED_CMD} -e 's/LABEL version=\"\([0-9.]*\)\"/\1/')";
@@ -47,12 +53,12 @@ fi
 
 if [ -z "${version// }" ]; then
   echo "Version not set"
-  exit
+  exit 1
 fi
 
 if [ -z "$(curl -s --unix-socket /var/run/docker.sock http/_ping 2>&1 /dev/null)" ]; then
   echo "Docker is not running";
-  exit;
+  exit 1;
 fi
 
 $DOCKER_CMD build \
