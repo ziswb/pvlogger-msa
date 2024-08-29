@@ -1,7 +1,7 @@
 package ch.bziswiler.pvlogger.heartbeat.jobs
 
 import ch.bziswiler.pvlogger.heartbeat.messaging.MqService
-import ch.bziswiler.pvlogger.messaging.job.tag.JobTag
+import ch.bziswiler.pvlogger.messaging.meta.JobTag
 import org.koin.java.KoinJavaComponent.inject
 import org.quartz.Job
 

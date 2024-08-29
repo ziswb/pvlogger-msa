@@ -1,12 +1,12 @@
 package ch.bziswiler.pvlogger.messaging.job.status
 
-import ch.bziswiler.pvlogger.messaging.job.naming.JobName
-import ch.bziswiler.pvlogger.messaging.job.naming.JobName.DEVICE_IDS_JOB
-import ch.bziswiler.pvlogger.messaging.job.naming.JobName.DEVICE_LIST_JOB
-import ch.bziswiler.pvlogger.messaging.job.naming.JobName.DYNAMIC_DATA_JOB
-import ch.bziswiler.pvlogger.messaging.job.naming.JobName.STATIC_DATA_JOB
+import ch.bziswiler.pvlogger.messaging.meta.JobName
+import ch.bziswiler.pvlogger.messaging.meta.JobName.DEVICE_IDS_JOB
+import ch.bziswiler.pvlogger.messaging.meta.JobName.DEVICE_LIST_JOB
+import ch.bziswiler.pvlogger.messaging.meta.JobName.DYNAMIC_DATA_JOB
+import ch.bziswiler.pvlogger.messaging.meta.JobName.STATIC_DATA_JOB
 import ch.bziswiler.pvlogger.messaging.job.status.JobStatus.FINISHED
-import ch.bziswiler.pvlogger.messaging.job.tag.JobTag
+import ch.bziswiler.pvlogger.messaging.meta.JobTag
 
 object JobStatusMessageFactory {
 

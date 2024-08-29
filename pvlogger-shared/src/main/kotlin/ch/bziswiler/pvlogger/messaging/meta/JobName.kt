@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.messaging.job.naming
+package ch.bziswiler.pvlogger.messaging.meta
 
 enum class JobName(val value: String) {
     DYNAMIC_DATA_JOB("modbus.dynamic.run"),

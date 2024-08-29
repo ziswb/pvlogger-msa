@@ -1,6 +1,6 @@
 package ch.bziswiler.pvlogger.heartbeat.messaging
 
-import ch.bziswiler.pvlogger.messaging.job.tag.JobTag
+import ch.bziswiler.pvlogger.messaging.meta.JobTag
 
 interface MqService {
 

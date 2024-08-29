@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.messaging.job.naming
+package ch.bziswiler.pvlogger.messaging.meta
 
 enum class QueueName(val value: String) {
     JOB_SCHEDULER("job.scheduler"),

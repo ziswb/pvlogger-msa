@@ -3,8 +3,8 @@ package ch.bziswiler.pvlogger.datacollector.services.messaging.impl
 import ch.bziswiler.pvlogger.datacollector.config.AppConfig
 import ch.bziswiler.pvlogger.datacollector.services.messaging.MqListener
 import ch.bziswiler.pvlogger.datacollector.services.messaging.MqService
-import ch.bziswiler.pvlogger.messaging.job.naming.QueueName.JOB_SCHEDULER
-import ch.bziswiler.pvlogger.messaging.job.naming.QueueName.PERSIST_MODBUS
+import ch.bziswiler.pvlogger.messaging.meta.QueueName.JOB_SCHEDULER
+import ch.bziswiler.pvlogger.messaging.meta.QueueName.PERSIST_MODBUS
 import ch.bziswiler.pvlogger.messaging.job.status.JobStatusMessage
 import ch.bziswiler.pvlogger.modbus.tcp.response.ModbusResponse
 import mu.KotlinLogging

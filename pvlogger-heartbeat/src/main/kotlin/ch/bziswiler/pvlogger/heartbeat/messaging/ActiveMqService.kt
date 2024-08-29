@@ -1,8 +1,8 @@
 package ch.bziswiler.pvlogger.heartbeat.messaging
 
 import ch.bziswiler.pvlogger.heartbeat.config.AppConfig
-import ch.bziswiler.pvlogger.messaging.job.naming.QueueName.JOB_SCHEDULER
-import ch.bziswiler.pvlogger.messaging.job.tag.JobTag
+import ch.bziswiler.pvlogger.messaging.meta.QueueName.JOB_SCHEDULER
+import ch.bziswiler.pvlogger.messaging.meta.JobTag
 import mu.KotlinLogging
 import org.apache.activemq.ActiveMQConnectionFactory
 import java.time.Instant.now

@@ -3,7 +3,7 @@ package ch.bziswiler.pvlogger.dataaccessor.services.messaging.impl
 import ch.bziswiler.pvlogger.dataaccessor.config.AppConfig
 import ch.bziswiler.pvlogger.dataaccessor.services.messaging.MqListener
 import ch.bziswiler.pvlogger.dataaccessor.services.messaging.MqService
-import ch.bziswiler.pvlogger.messaging.job.naming.QueueName
+import ch.bziswiler.pvlogger.messaging.meta.QueueName
 import ch.bziswiler.pvlogger.modbus.tcp.response.ModbusResponse
 import mu.KotlinLogging
 import org.apache.activemq.ActiveMQConnectionFactory
