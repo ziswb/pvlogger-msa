@@ -28,7 +28,7 @@ import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.ByteWriteChannel
 import java.time.LocalDateTime
 
-class ReadHoldingRegistersValueRequest(
+class ReadRegistersValueRequest(
     override val jobId: String,
     override val requestTime: LocalDateTime,
     override val requestId: UShort,
@@ -52,27 +52,20 @@ class ReadHoldingRegistersValueRequest(
 
     override suspend fun readRegisters(channel: ByteReadChannel) =
         registers.fold(listOf<ModbusRegisterValue>()) { list, register ->
-            list.plus(
-                readRegisterValue(
-                    register,
-                    channel,
-                ),
-            )
+            list.plus(readRegisterValue(register, channel))
         }
 
-    private suspend fun readRegisterValue(
-        register: ModbusRegisterDefinition,
-        channel: ByteReadChannel,
-    ) = when (register.type) {
-        U16 -> ModbusRegisterUShortValue(register, channel.readUShort())
-        U32 -> ModbusRegisterUIntValue(register, channel.readUInt())
-        I16 -> ModbusRegisterShortValue(register, channel.readShort())
-        I32 -> ModbusRegisterIntValue(register, channel.readInt())
-        STR -> ModbusRegisterStringValue(register, channel.readString(toNOfBytes(register.quantity.value)))
-        MLD -> ModbusRegisterShortArrayValue(register, channel.readMld(register.quantity.value))
-        BITFIELD_16 -> ModbusRegisterUShortValue(register, channel.readUShort())
-        BITFIELD_32 -> ModbusRegisterUIntValue(register, channel.readUInt())
-    }
+    private suspend fun readRegisterValue(register: ModbusRegisterDefinition, channel: ByteReadChannel) =
+        when (register.type) {
+            U16 -> ModbusRegisterUShortValue(register, channel.readUShort())
+            U32 -> ModbusRegisterUIntValue(register, channel.readUInt())
+            I16 -> ModbusRegisterShortValue(register, channel.readShort())
+            I32 -> ModbusRegisterIntValue(register, channel.readInt())
+            STR -> ModbusRegisterStringValue(register, channel.readString(toNOfBytes(register.quantity.value)))
+            MLD -> ModbusRegisterShortArrayValue(register, channel.readMld(register.quantity.value))
+            BITFIELD_16 -> ModbusRegisterUShortValue(register, channel.readUShort())
+            BITFIELD_32 -> ModbusRegisterUIntValue(register, channel.readUInt())
+        }
 
     private fun toNOfBytes(nOfShorts: Int) = 2 * nOfShorts
 }

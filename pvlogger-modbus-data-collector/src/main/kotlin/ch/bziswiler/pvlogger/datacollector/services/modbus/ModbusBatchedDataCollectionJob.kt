@@ -2,7 +2,7 @@ package ch.bziswiler.pvlogger.datacollector.services.modbus
 
 import ch.bziswiler.pvlogger.datacollector.config.AppConfig
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.ModbusTcpChannel
-import ch.bziswiler.pvlogger.datacollector.modbus.tcp.request.ReadHoldingRegistersValueRequest
+import ch.bziswiler.pvlogger.datacollector.modbus.tcp.request.ReadRegistersValueRequest
 import ch.bziswiler.pvlogger.datacollector.services.IdProvider
 import ch.bziswiler.pvlogger.masterdata.modbus.Category
 import ch.bziswiler.pvlogger.masterdata.modbus.DeviceType
@@ -96,7 +96,7 @@ abstract class ModbusBatchedDataCollectionJob(
         return (lastRegister.registerAddress.value + lastRegister.quantity.value) != nextRegister.registerAddress.value
     }
 
-    private fun requestRegisterValues(request: ReadHoldingRegistersValueRequest): ModbusResponse = runBlocking {
+    private fun requestRegisterValues(request: ReadRegistersValueRequest): ModbusResponse = runBlocking {
         logger.debug("ModbusInverterBatchedDataCollectionJobScaffold.requestRegisterValues()")
         channel.request(request)
     }
@@ -105,7 +105,7 @@ abstract class ModbusBatchedDataCollectionJob(
         jobId: JobId,
         deviceId: UByte,
         registerDefinitions: List<ModbusRegisterDefinition>,
-    ) = ReadHoldingRegistersValueRequest(jobId.id, now(), idProvider.nextRequestId, deviceId, registerDefinitions)
+    ) = ReadRegistersValueRequest(jobId.id, now(), idProvider.nextRequestId, deviceId, registerDefinitions)
 
     private fun registerDefinitionList(
         deviceTypes: List<DeviceType>, categories: List<Category>
