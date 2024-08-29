@@ -1,9 +1,10 @@
 package ch.bziswiler.pvlogger.dataaccessor.services.messaging.impl
 
 import ch.bziswiler.pvlogger.dataaccessor.config.AppConfig
-import ch.bziswiler.pvlogger.dataaccessor.services.messaging.MqListener
 import ch.bziswiler.pvlogger.dataaccessor.services.messaging.MqService
+import ch.bziswiler.pvlogger.dataaccessor.services.persistence.ModbusDao.store
 import ch.bziswiler.pvlogger.messaging.meta.QueueName
+import ch.bziswiler.pvlogger.modbus.tcp.response.ModbusRegisterValueResponse
 import ch.bziswiler.pvlogger.modbus.tcp.response.ModbusResponse
 import mu.KotlinLogging
 import org.apache.activemq.ActiveMQConnectionFactory
@@ -11,7 +12,6 @@ import javax.jms.Connection
 import javax.jms.Message
 import javax.jms.MessageListener
 import javax.jms.ObjectMessage
-import javax.jms.Session
 import javax.jms.Session.AUTO_ACKNOWLEDGE
 
 /*
@@ -27,15 +27,11 @@ class MqServiceImpl(private val appConfig: AppConfig) : MqService {
     private val passwd = appConfig.mqConfig.passwd
 
     // see https://activemq.apache.org/components/classic/documentation/connection-configuration-uri for details
-    private val session: Session
 
-    init {
+    override fun start() {
         val connection = connection()
-        this.session = connection.createSession(false, AUTO_ACKNOWLEDGE)
+        val session = connection.createSession(false, AUTO_ACKNOWLEDGE)
         connection.start()
-    }
-
-    override fun setListener(listener: MqListener) {
         val ingressQueue = session.createQueue(QueueName.PERSIST_MODBUS.value)
         val messageConsumer = session.createConsumer(ingressQueue)
         messageConsumer.messageListener = MessageListener { message: Message? ->
@@ -47,7 +43,12 @@ $clientId: message received()
 RECEIVED #########################################################################
 """
                 }
-                listener.messageReceived(message.`object` as ModbusResponse)
+                when (message.`object`) {
+                    is ModbusRegisterValueResponse -> {
+                        store(message.`object` as ModbusRegisterValueResponse)
+                        sendRegisterValuesSavedMessage()
+                    }
+                }
             } else {
                 // TODO log error!
                 error("message is no object message! -> $message")

@@ -6,7 +6,7 @@ import ch.bziswiler.pvlogger.dataaccessor.plugins.configureMonitoring
 import ch.bziswiler.pvlogger.dataaccessor.plugins.configureRouting
 import ch.bziswiler.pvlogger.dataaccessor.plugins.configureSerialization
 import ch.bziswiler.pvlogger.dataaccessor.plugins.setupConfig
-import ch.bziswiler.pvlogger.dataaccessor.services.messaging.MqListener
+import ch.bziswiler.pvlogger.dataaccessor.services.messaging.MqService
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.netty.EngineMain
@@ -29,6 +29,10 @@ fun Application.module(testing: Boolean = false) {
     configureSerialization()
     configureDatabases()
     configureRouting()
-    val mqListener by inject<MqListener>()
-    println(mqListener)
+    startServices()
+}
+
+fun Application.startServices() {
+    val mqService by inject<MqService>()
+    mqService.start()
 }
