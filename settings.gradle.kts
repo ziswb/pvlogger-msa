@@ -3,7 +3,7 @@ include(
     "pvlogger-database",
     "pvlogger-heartbeat",
     "pvlogger-k8s",
-    "pvlogger-kpi-service",
+    "pvlogger-kpi-aggregator",
     "pvlogger-masterdata-server",
     "pvlogger-message-queue",
     "pvlogger-modbus-data-accessor",
