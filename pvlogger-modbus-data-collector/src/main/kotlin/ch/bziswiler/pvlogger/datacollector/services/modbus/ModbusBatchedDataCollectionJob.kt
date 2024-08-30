@@ -24,21 +24,28 @@ abstract class ModbusBatchedDataCollectionJob(
     private val idProvider: IdProvider,
     private val masterDataService: MasterDataService
 ) : ModbusDataCollectionJob {
+
     private val logger = KotlinLogging.logger {}
     private val meterDeviceIds = config.modbusTcpConfig.meterDeviceIds
     private val inverterDeviceIds = config.modbusTcpConfig.inverterDeviceIds
     private val deviceIdToDeviceTypesMap = mutableMapOf<UByte, List<DeviceType>>()
+
     protected abstract val metricTimer: Timer
     protected abstract val metricCounter: Counter
     protected abstract val categories: List<Category>
 
-
     init {
-        meterDeviceIds.intersect(inverterDeviceIds).toSet().associateWith { listOf(INVERTER, METER) }
+        meterDeviceIds
+            .intersect(inverterDeviceIds).toSet()
+            .associateWith { listOf(INVERTER, METER) }
             .forEach { entry -> deviceIdToDeviceTypesMap[entry.key] = entry.value }
-        inverterDeviceIds.minus(meterDeviceIds).toSet().associateWith { listOf(INVERTER) }
+        inverterDeviceIds
+            .minus(meterDeviceIds).toSet()
+            .associateWith { listOf(INVERTER) }
             .forEach { entry -> deviceIdToDeviceTypesMap[entry.key] = entry.value }
-        meterDeviceIds.minus(inverterDeviceIds).toSet().associateWith { listOf(METER) }
+        meterDeviceIds
+            .minus(inverterDeviceIds).toSet()
+            .associateWith { listOf(METER) }
             .forEach { entry -> deviceIdToDeviceTypesMap[entry.key] = entry.value }
     }
 
