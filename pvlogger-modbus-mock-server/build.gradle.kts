@@ -39,6 +39,8 @@ dependencies {
     implementation(libs.logback.classic)
     implementation(libs.kotlin.logging)
 
+    implementation(":pvlogger-shared")
+
     // Testing
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test)
