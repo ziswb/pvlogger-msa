@@ -8,5 +8,6 @@ include(
     "pvlogger-message-queue",
     "pvlogger-modbus-data-accessor",
     "pvlogger-modbus-data-collector",
+    "pvlogger-modbus-mock-server",
     "pvlogger-shared"
 )
