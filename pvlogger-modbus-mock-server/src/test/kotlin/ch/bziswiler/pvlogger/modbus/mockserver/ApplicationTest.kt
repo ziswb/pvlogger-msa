@@ -1,25 +1,16 @@
 package ch.bziswiler.pvlogger.modbus.mockserver
 
 import ch.bziswiler.pvlogger.masterdata.modbus.Type
-import ch.bziswiler.pvlogger.masterdata.modbus.Type.I16
-import ch.bziswiler.pvlogger.masterdata.modbus.Type.I32
-import ch.bziswiler.pvlogger.masterdata.modbus.Type.U16
-import ch.bziswiler.pvlogger.modbus.ModbusRegisterValue
-import ch.bziswiler.pvlogger.modbus.tcp.frame.FunctionCode
-import ch.bziswiler.pvlogger.modbus.tcp.frame.MbapHeader
+import ch.bziswiler.pvlogger.modbus.mockserver.utils.MockDataBuilder.buildData
+import ch.bziswiler.pvlogger.modbus.mockserver.utils.MockDataBuilder.buildFunctionCode
+import ch.bziswiler.pvlogger.modbus.mockserver.utils.MockDataBuilder.buildHeader
+import ch.bziswiler.pvlogger.modbus.mockserver.utils.MockDataReader
+import ch.bziswiler.pvlogger.modbus.mockserver.utils.MockDataWriter
 import io.ktor.network.selector.SelectorManager
 import io.ktor.network.sockets.aSocket
 import io.ktor.network.sockets.openReadChannel
 import io.ktor.network.sockets.openWriteChannel
 import io.ktor.server.testing.testApplication
-import io.ktor.utils.io.ByteWriteChannel
-import io.ktor.utils.io.core.writeInt
-import io.ktor.utils.io.core.writeShort
-import io.ktor.utils.io.core.writeUByte
-import io.ktor.utils.io.core.writeUShort
-import io.ktor.utils.io.readUTF8Line
-import io.ktor.utils.io.writePacket
-import io.ktor.utils.io.writeStringUtf8
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
@@ -34,91 +25,49 @@ class ApplicationTest {
             runBlocking {
                 val selectorManager = SelectorManager(Dispatchers.IO)
                 val socket = aSocket(selectorManager).tcp().connect("127.0.0.1", 8502)
-                val receiveChannel = socket.openReadChannel()
-                val sendChannel = socket.openWriteChannel(autoFlush = true)
-                writeData(sendChannel, buildHeader(), buildFunctionCode(), buildData())
-//                sendChannel.writeStringUtf8("King\n")
-                val greeting2 = receiveChannel.readUTF8Line()
+                val reader = MockDataReader(socket.openReadChannel())
+                val writer = MockDataWriter(socket.openWriteChannel(autoFlush = true))
+                writer.writeData(buildHeader(), buildFunctionCode(), buildData())
+                reader.readData(mockValueTypes())
                 socket.close()
-                assertEquals("Hello, King!", greeting2)
+                assertEquals(0u, reader.protocolIdentifier)
+                assertEquals(0u, reader.protocolType)
+                assertEquals(81u, reader.dataLength)
+                assertEquals(1u, reader.logicDeviceId)
+                assertEquals(mockValueTypes().size, reader.values.size)
+                assertEquals(1u, reader.values.get(0) as UShort)
+                assertEquals(2333, reader.values.get(1) as Int)
             }
         }
     }
-}
 
-fun buildHeader(
-    protocolIdentifier: UShort = 0u,
-    protocolType: UShort = 0u,
-    dataLength: UShort = 81u,
-    logicDeviceId: UByte = 1u
-) = MbapHeader(
-    protocolIdentifier = protocolIdentifier,
-    protocolType = protocolType,
-    dataLength = dataLength,
-    logicDeviceId = logicDeviceId
-)
-
-fun buildFunctionCode(code: UByte = 0x03u) = FunctionCode.from(code)
-
-fun buildData() = listOf(
-    RegisterUShortValue(value = 1u),
-    RegisterIntValue(value = 2333),
-    RegisterIntValue(value = 2416),
-    RegisterIntValue(value = 2366),
-    RegisterIntValue(value = -257),
-    RegisterIntValue(value = -246),
-    RegisterIntValue(value = -622),
-    RegisterIntValue(value = -2401),
-    RegisterIntValue(value = -968),
-    RegisterShortValue(value = 896),
-    RegisterShortValue(value = 4997),
-    RegisterIntValue(value = 1295013),
-    RegisterIntValue(value = 798831),
-    RegisterIntValue(value = 0),
-    RegisterUShortValue(value = 1u),
-    RegisterIntValue(value = 4113),
-    RegisterIntValue(value = 4142),
-    RegisterIntValue(value = 4071),
-    RegisterIntValue(value = -427),
-    RegisterIntValue(value = -569),
-    RegisterIntValue(value = -1405),
-    RegisterUShortValue(value = 1u)
-)
-
-@OptIn(ExperimentalUnsignedTypes::class)
-suspend fun writeData(
-    channel: ByteWriteChannel,
-    header: MbapHeader,
-    functionCode: FunctionCode,
-    data: List<RegisterValue<*>> = emptyList()
-) {
-    channel.writePacket {
-        writeUShort(header.protocolIdentifier)
-        writeUShort(header.protocolType)
-        writeUShort(header.dataLength)
-        writeUByte(header.logicDeviceId)
-    }
-    channel.writePacket { writeUByte(functionCode.value) }
-    channel.writePacket {
-        data.forEach {
-            when (it.type) {
-                U16 -> writeUShort(it.value as UShort)
-                I16 -> writeShort(it.value as Short)
-                I32 -> writeInt(it.value as Int)
-                else -> UnsupportedOperationException("Unknown type: ${it.type}")
-            }
-        }
+    private fun mockValueTypes(): MutableList<Type> {
+        val valueTypes = mutableListOf<Type>()
+        valueTypes.add(Type.U16)
+        valueTypes.add(Type.I32)
+        valueTypes.add(Type.I32)
+        valueTypes.add(Type.I32)
+        valueTypes.add(Type.I32)
+        valueTypes.add(Type.I32)
+        valueTypes.add(Type.I32)
+        valueTypes.add(Type.I32)
+        valueTypes.add(Type.I32)
+        valueTypes.add(Type.I16)
+        valueTypes.add(Type.I16)
+        valueTypes.add(Type.I32)
+        valueTypes.add(Type.I32)
+        valueTypes.add(Type.I32)
+        valueTypes.add(Type.U16)
+        valueTypes.add(Type.I32)
+        valueTypes.add(Type.I32)
+        valueTypes.add(Type.I32)
+        valueTypes.add(Type.I32)
+        valueTypes.add(Type.I32)
+        valueTypes.add(Type.I32)
+        valueTypes.add(Type.U16)
+        return valueTypes
     }
 }
-
-interface RegisterValue<T> {
-    val type: Type
-    val value: T
-}
-
-data class RegisterShortValue(override val type: Type = I16, override val value: Short) : RegisterValue<Short>
-data class RegisterUShortValue(override val type: Type = U16, override val value: UShort) : RegisterValue<UShort>
-data class RegisterIntValue(override val type: Type = I32, override val value: Int) : RegisterValue<Int>
 
 /*
 ID  DevType no  name            r/w type    unit    gain   address  quantity    scope                                                               category
