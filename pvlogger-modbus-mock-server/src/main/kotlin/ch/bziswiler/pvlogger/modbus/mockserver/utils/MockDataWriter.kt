@@ -27,7 +27,7 @@ class MockDataWriter(private val channel: ByteWriteChannel) {
                     Type.U16 -> writeUShort(it.value as UShort)
                     Type.I16 -> writeShort(it.value as Short)
                     Type.I32 -> writeInt(it.value as Int)
-                    else -> UnsupportedOperationException("Unknown type: ${it.type}")
+                    else -> throw UnsupportedOperationException("Unknown type: ${it.type}")
                 }
             }
         }
