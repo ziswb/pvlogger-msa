@@ -6,7 +6,7 @@ exposedVersion = "0.46.0"
 hikaricpVersion = "5.1.0"
 h2Version = "2.2.224"
 koinVersion = "3.5.3"
-kotlinVersion = "1.9.23"
+kotlinVersion = "1.9.25"
 kotlinxVersion = "1.6.3"
 ktorVersion = "2.3.8"
 logbackVersion = "1.4.14"
@@ -49,6 +49,7 @@ ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negoti
 ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktorVersion" }
 ktor-server-metrics-micrometer = { module = "io.ktor:ktor-server-metrics-micrometer", version.ref = "ktorVersion" }
 ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktorVersion" }
+ktor-network = { module = "io.ktor:ktor-network", version.ref = "ktorVersion" }
 
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logbackVersion" }
 micrometer-registry-prometheus = { module = "io.micrometer:micrometer-registry-prometheus", version.ref = "prometheusVersion" }
@@ -57,6 +58,8 @@ quartz = { module = "org.quartz-scheduler:quartz", version.ref = "quartzVersion"
 
 koin-test = { module = "io.insert-koin:koin-test", version.ref = "koinVersion" }
 koin-test-junit5 = { module = "io.insert-koin:koin-test-junit5", version.ref = "koinVersion" }
+
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlinVersion" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlinVersion" }
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktorVersion" }
 ktor-server-tests = { module = "io.ktor:ktor-server-tests", version.ref = "ktorVersion" }
