@@ -5,7 +5,6 @@ import io.ktor.network.sockets.aSocket
 import io.ktor.network.sockets.openReadChannel
 import io.ktor.network.sockets.openWriteChannel
 import io.ktor.server.application.Application
-import io.ktor.utils.io.readUTF8Line
 import io.ktor.utils.io.writeStringUtf8
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -30,10 +29,14 @@ fun startSocketServer() {
                 val sendChannel = socket.openWriteChannel(autoFlush = true)
                 try {
                     while (true) {
-                        val name = receiveChannel.readUTF8Line()
-                        sendChannel.writeStringUtf8("Hello, $name!\n")
+                        while (receiveChannel.availableForRead > 0) {
+                            receiveChannel.readByte()
+                        }
+                        sendChannel.writeStringUtf8("Hello, King!\n")
                     }
                 } catch (e: Throwable) {
+                    println("ups: $e")
+                } finally {
                     socket.close()
                 }
             }
