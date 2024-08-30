@@ -11,27 +11,23 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
-fun main(args: Array<String>) {
-    println("go")
-    startSocketServer()
-}
+fun Application.main(args: Array<String>) = startSocketServer()
 
-fun Application.module() {
-    println("module")
+fun Application.module(testing: Boolean = false) {
+    if (testing) {
+        launch { startSocketServer() }
+    }
 }
 
 fun startSocketServer() {
     runBlocking {
         val selectorManager = SelectorManager(Dispatchers.IO)
         val serverSocket = aSocket(selectorManager).tcp().bind("127.0.0.1", 8502)
-        println("Server is listening at ${serverSocket.localAddress}")
         while (true) {
             val socket = serverSocket.accept()
-            println("Accepted $socket")
             launch {
                 val receiveChannel = socket.openReadChannel()
                 val sendChannel = socket.openWriteChannel(autoFlush = true)
-                sendChannel.writeStringUtf8("Please enter your name\n")
                 try {
                     while (true) {
                         val name = receiveChannel.readUTF8Line()
