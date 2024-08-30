@@ -18,7 +18,7 @@ idea {
 }
 
 application {
-    mainClass.set("io.ktor.server.netty.EngineMain")
+    mainClass.set("ch.bziswiler.pvlogger.modbus.mockserver.ApplicationKt")
 
     val isDevelopment: Boolean = project.ext.has("development")
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
@@ -33,7 +33,6 @@ dependencies {
     // Ktor
     implementation(libs.ktor.network)
     implementation(libs.ktor.server.core)
-    implementation(libs.ktor.server.netty)
 
     // Logging
     implementation(libs.logback.classic)
