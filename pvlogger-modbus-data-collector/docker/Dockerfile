@@ -17,10 +17,6 @@ COPY --from=build "/workspace/pvlogger-modbus-data-collector/build/libs/pvlogger
 RUN useradd -u 1000 bziswiler
 USER bziswiler
 
-ENV MASTERDATA_HOST="pvlogger-masterdata-server-service.postgresql.svc.cluster.local"
-ENV MASTERDATA_PORT="8081"
-ENV ACTIVEMQ_HOST="activemq.activemq.svc.cluster.local"
-ENV ACTIVEMQ_PORT="61616"
 ENV TZ="Europe/Zurich"
 
 ENTRYPOINT [ \
