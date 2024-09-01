@@ -12,39 +12,37 @@ import io.ktor.server.application.Application
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import mu.KotlinLogging
 
 fun main(args: Array<String>) {
-    args.forEach {
-        println(it)
-    }
-    var port = 8080
-    if (args.isNotEmpty()) {
-        port = args[0].toInt()
-    }
-    startSocketServer(port)
+    io.ktor.server.netty.EngineMain.main(args)
 }
 
 fun Application.module(testing: Boolean = false) {
-    if (testing) {
-        launch { startSocketServer(getPort()) }
-    }
+    launch { startSocketServer() }
 }
 
-fun startSocketServer(port: Int) {
-    println("starting socket server at port $port")
+fun Application.startSocketServer() {
+    val logger = KotlinLogging.logger {}
+    val port = environment.config.propertyOrNull("ktor.socket-server.tcp-port")?.getString()?.toInt() ?: 502
+    logger.info { "socket server: starting at port $port" }
     runBlocking {
         val selectorManager = SelectorManager(Dispatchers.IO)
-        val serverSocket = aSocket(selectorManager).tcp().bind("127.0.0.1", port)
+        val serverSocket = aSocket(selectorManager).tcp().bind("0.0.0.0", port)
         while (true) {
+            logger.info { "socket server: waiting for connections" }
             val socket = serverSocket.accept()
+            logger.info { "socket server: accepting ${socket.remoteAddress}" }
             launch {
                 val receiveChannel = socket.openReadChannel()
                 val sendChannel = socket.openWriteChannel(autoFlush = true)
                 socket.use {
+                    logger.info { "socket server: reading request" }
                     while (receiveChannel.availableForRead > 0) {
                         receiveChannel.readByte()
                     }
                     val writer = MockDataWriter(sendChannel)
+                    logger.info { "socket server: writing response" }
                     writer.writeData(buildHeader(), buildFunctionCode(), buildData())
                 }
             }
@@ -52,4 +50,3 @@ fun startSocketServer(port: Int) {
     }
 }
 
-private fun Application.getPort() = environment.config.propertyOrNull("ktor.server.port")?.getString()?.toInt() ?: 8080

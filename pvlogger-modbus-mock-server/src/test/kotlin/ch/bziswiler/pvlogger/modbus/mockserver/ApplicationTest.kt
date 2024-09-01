@@ -21,7 +21,6 @@ class ApplicationTest {
     @Test
     fun test() = testApplication {
         application {
-            module(testing = true)
             runBlocking {
                 val selectorManager = SelectorManager(Dispatchers.IO)
                 val socket = aSocket(selectorManager).tcp().connect("127.0.0.1", 8502)

@@ -78,3 +78,6 @@ k8s_yaml('pvlogger-k8s/pvlogger-setup/roles/pvlogger_modbus_data_accessor_instal
 
 k8s_yaml('pvlogger-k8s/pvlogger-setup/roles/pvlogger_modbus_data_collector_install/files/pvlogger-modbus-data-collector-deployment.yaml')
 k8s_yaml('pvlogger-k8s/pvlogger-setup/roles/pvlogger_modbus_data_collector_install/files/pvlogger-modbus-data-collector-service.yaml')
+
+k8s_yaml('pvlogger-k8s/pvlogger-setup/roles/pvlogger_modbus_mock_server_install/files/pvlogger-modbus-mock-server-deployment.yaml')
+k8s_yaml('pvlogger-k8s/pvlogger-setup/roles/pvlogger_modbus_mock_server_install/files/pvlogger-modbus-mock-server-service.yaml')

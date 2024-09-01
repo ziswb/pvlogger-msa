@@ -33,6 +33,7 @@ dependencies {
     // Ktor
     implementation(libs.ktor.network)
     implementation(libs.ktor.server.core)
+    implementation(libs.ktor.server.netty)
 
     // Logging
     implementation(libs.logback.classic)
