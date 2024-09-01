@@ -33,6 +33,7 @@ class ModbusTcpChannel(config: AppConfig) {
             connect()
             doRequest(request, socket.openWriteChannel(autoFlush = false))
         } catch (th: Throwable) {
+            logger.error("ModbusTcpChannel is unable to execute the request", th)
             throw th
         } finally {
             disconnect()
@@ -42,14 +43,19 @@ class ModbusTcpChannel(config: AppConfig) {
     private suspend fun connect(): ModbusTcpChannel {
         logger.debug("ModbusTcpChannel.connect()")
         selectorManager = SelectorManager(Dispatchers.IO)
+        logger.debug("ModbusTcpChannel connecting to $peerHost:$port")
         socket = aSocket(selectorManager).tcp().connect(peerHost, port)
         return this
     }
 
     private fun disconnect() {
         logger.debug("ModbusTcpChannel.disconnect()")
-        socket.close()
-        selectorManager.close()
+        if (this::socket.isInitialized) {
+            socket.close()
+        }
+        if (this::selectorManager.isInitialized) {
+            selectorManager.close()
+        }
     }
 
     private suspend fun doRequest(request: ModbusRequest, sendChannel: ByteWriteChannel): ModbusResponse {

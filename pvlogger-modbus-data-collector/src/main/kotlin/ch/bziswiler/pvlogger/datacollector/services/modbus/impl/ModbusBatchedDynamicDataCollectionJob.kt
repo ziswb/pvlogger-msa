@@ -50,6 +50,10 @@ class ModbusBatchedDynamicDataCollectionJob(
     override fun jobFinished(jobId: JobId) {
         mqService.sendJobStatusMessage(dynamicDataCollectionJobFinishedMessage(jobId))
     }
+
+    override fun jobFailed(jobId: JobId) {
+        mqService.sendJobStatusMessage(dynamicDataCollectionJobFinishedMessage(jobId))
+    }
 }
 
 //    private val smartMeterDeviceId = 1

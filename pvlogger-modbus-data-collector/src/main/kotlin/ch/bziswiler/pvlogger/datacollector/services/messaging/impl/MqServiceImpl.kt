@@ -10,6 +10,7 @@ import ch.bziswiler.pvlogger.modbus.tcp.response.ModbusResponse
 import mu.KotlinLogging
 import org.apache.activemq.ActiveMQConnectionFactory
 import javax.jms.Connection
+import javax.jms.MessageListener
 import javax.jms.MessageProducer
 import javax.jms.Queue
 import javax.jms.Session
@@ -44,11 +45,11 @@ class MqServiceImpl(private val appConfig: AppConfig) : MqService {
 
     override fun addListener(listener: MqListener) {
         val messageConsumer = session.createConsumer(schedulerIngressQueue, listener.messageSelector)
-        messageConsumer.setMessageListener {
+        messageConsumer.messageListener = MessageListener { message ->
             logger.debug {
                 """
 RECEIVED #########################################################################
-${listener.messageSelector}: message received()
+${listener.messageSelector}: message received: $message
 RECEIVED #########################################################################
 """
             }

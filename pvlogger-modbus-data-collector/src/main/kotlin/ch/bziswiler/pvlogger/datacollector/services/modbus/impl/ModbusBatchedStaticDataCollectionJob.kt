@@ -8,6 +8,7 @@ import ch.bziswiler.pvlogger.datacollector.services.modbus.MasterDataService
 import ch.bziswiler.pvlogger.datacollector.services.modbus.ModbusBatchedDataCollectionJob
 import ch.bziswiler.pvlogger.masterdata.modbus.Category.CONFIG
 import ch.bziswiler.pvlogger.masterdata.modbus.Category.STATIC
+import ch.bziswiler.pvlogger.messaging.job.status.JobStatusMessageFactory.staticDataCollectionJobFailedMessage
 import ch.bziswiler.pvlogger.messaging.job.status.JobStatusMessageFactory.staticDataCollectionJobFinishedMessage
 import ch.bziswiler.pvlogger.messaging.meta.JobId
 import ch.bziswiler.pvlogger.modbus.tcp.response.ModbusRegisterValueResponse
@@ -49,5 +50,9 @@ class ModbusBatchedStaticDataCollectionJob(
 
     override fun jobFinished(jobId: JobId) {
         mqService.sendJobStatusMessage(staticDataCollectionJobFinishedMessage(jobId))
+    }
+
+    override fun jobFailed(jobId: JobId) {
+        mqService.sendJobStatusMessage(staticDataCollectionJobFailedMessage(jobId))
     }
 }

@@ -53,13 +53,21 @@ abstract class ModbusBatchedDataCollectionJob(
 
     abstract fun jobFinished(jobId: JobId)
 
+    abstract fun jobFailed(jobId: JobId)
+
     final override fun execute() {
         metricCounter.increment()
         metricTimer.recordCallable {
-            logger.debug("ModbusInverterBatchedDataCollectionJobScaffold.execute()")
             val jobId = JobId(idProvider.nextJobId)
-            deviceIdToDeviceTypesMap.forEach { fetchRegisterValues(jobId, it.key, it.value) }
-            jobFinished(jobId)
+            runCatching {
+                logger.debug("ModbusInverterBatchedDataCollectionJobScaffold.execute()")
+                deviceIdToDeviceTypesMap.forEach { fetchRegisterValues(jobId, it.key, it.value) }
+            }.onSuccess {
+                jobFinished(jobId)
+            }.onFailure {
+                jobFailed(jobId)
+                throw it
+            }
         }
     }
 
@@ -72,6 +80,7 @@ abstract class ModbusBatchedDataCollectionJob(
                 storeResponse(it)
             }.onFailure {
                 logger.error(it) { "Fetching modbus data failed" }
+                throw it
             }
         }
     }
@@ -80,9 +89,9 @@ abstract class ModbusBatchedDataCollectionJob(
         deviceTypes,
         categories
     ).fold(mutableListOf<MutableList<ModbusRegisterDefinition>>()) { list, definition ->
-            updateListOfRegisterDefinitions(list, definition)
-            list
-        }
+        updateListOfRegisterDefinitions(list, definition)
+        list
+    }
 
     private fun updateListOfRegisterDefinitions(
         list: MutableList<MutableList<ModbusRegisterDefinition>>,
