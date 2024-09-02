@@ -6,6 +6,7 @@ import ch.bziswiler.pvlogger.datacollector.services.messaging.MqService
 import ch.bziswiler.pvlogger.messaging.job.status.JobStatusMessage
 import ch.bziswiler.pvlogger.messaging.meta.QueueName.JOB_SCHEDULER
 import ch.bziswiler.pvlogger.messaging.meta.QueueName.PERSIST_MODBUS
+import ch.bziswiler.pvlogger.messaging.meta.StoreModbusRegisterValuesMessageTag
 import ch.bziswiler.pvlogger.modbus.tcp.response.ModbusResponse
 import mu.KotlinLogging
 import org.apache.activemq.ActiveMQConnectionFactory
@@ -91,7 +92,8 @@ SEND #########################################################################
 
     private fun taggedMessage(message: ModbusResponse): ObjectMessage? =
         with(session.createObjectMessage(message)) {
-            setStringProperty("tag", "store.modbus.register-values")
+            val msgTag = StoreModbusRegisterValuesMessageTag
+            setStringProperty(msgTag.key(), msgTag.value())
             this
         }
 

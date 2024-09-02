@@ -4,6 +4,7 @@ import ch.bziswiler.pvlogger.dataaccessor.config.AppConfig
 import ch.bziswiler.pvlogger.dataaccessor.services.messaging.MqService
 import ch.bziswiler.pvlogger.dataaccessor.services.persistence.ModbusDao
 import ch.bziswiler.pvlogger.messaging.meta.QueueName
+import ch.bziswiler.pvlogger.messaging.meta.StoreModbusRegisterValuesMessageTag
 import ch.bziswiler.pvlogger.modbus.tcp.response.ModbusRegisterValueResponse
 import ch.bziswiler.pvlogger.modbus.tcp.response.ModbusResponse
 import mu.KotlinLogging
@@ -56,7 +57,7 @@ RECEIVED #######################################################################
                 with(
                     createConsumer(
                         createQueue(QueueName.PERSIST_MODBUS.value),
-                        "tag = 'store.modbus.register-values'"
+                        StoreModbusRegisterValuesMessageTag.toSelector()
                     )
                 ) { messageListener = msgListener }
             }
