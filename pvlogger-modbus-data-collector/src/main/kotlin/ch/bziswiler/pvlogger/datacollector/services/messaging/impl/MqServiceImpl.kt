@@ -3,15 +3,16 @@ package ch.bziswiler.pvlogger.datacollector.services.messaging.impl
 import ch.bziswiler.pvlogger.datacollector.config.AppConfig
 import ch.bziswiler.pvlogger.datacollector.services.messaging.MqListener
 import ch.bziswiler.pvlogger.datacollector.services.messaging.MqService
+import ch.bziswiler.pvlogger.messaging.job.status.JobStatusMessage
 import ch.bziswiler.pvlogger.messaging.meta.QueueName.JOB_SCHEDULER
 import ch.bziswiler.pvlogger.messaging.meta.QueueName.PERSIST_MODBUS
-import ch.bziswiler.pvlogger.messaging.job.status.JobStatusMessage
 import ch.bziswiler.pvlogger.modbus.tcp.response.ModbusResponse
 import mu.KotlinLogging
 import org.apache.activemq.ActiveMQConnectionFactory
 import javax.jms.Connection
 import javax.jms.MessageListener
 import javax.jms.MessageProducer
+import javax.jms.ObjectMessage
 import javax.jms.Queue
 import javax.jms.Session
 import javax.jms.Session.AUTO_ACKNOWLEDGE
@@ -77,15 +78,22 @@ RECEIVED #######################################################################
 
     override fun sendMessage(message: ModbusResponse) {
         logger.debug { "Sending message ..." }
-        persistEgressQueue.send(session.createObjectMessage(message))
+        val taggedMessage = taggedMessage(message)
+        persistEgressQueue.send(taggedMessage)
         logger.debug {
             """
 SEND #########################################################################
-$clientId: sent message with text='$message'
+$clientId: sent message with text='$taggedMessage'
 SEND #########################################################################
 """
         }
     }
+
+    private fun taggedMessage(message: ModbusResponse): ObjectMessage? =
+        with(session.createObjectMessage(message)) {
+            setStringProperty("tag", "store.modbus.register-values")
+            this
+        }
 
     override fun sendJobStatusMessage(message: JobStatusMessage) {
         logger.debug { "Sending job finished message ..." }

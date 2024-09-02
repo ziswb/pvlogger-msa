@@ -53,7 +53,12 @@ RECEIVED #######################################################################
     override fun start() {
         with(connection()) {
             with(createSession(false, AUTO_ACKNOWLEDGE)) {
-                with(createConsumer(createQueue(QueueName.PERSIST_MODBUS.value))) { messageListener = msgListener }
+                with(
+                    createConsumer(
+                        createQueue(QueueName.PERSIST_MODBUS.value),
+                        "tag = 'store.modbus.register-values'"
+                    )
+                ) { messageListener = msgListener }
             }
             start()
         }
