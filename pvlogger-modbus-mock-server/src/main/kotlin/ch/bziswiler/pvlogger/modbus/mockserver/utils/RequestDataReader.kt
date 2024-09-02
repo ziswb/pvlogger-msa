@@ -10,9 +10,11 @@ class RequestDataReader(private val channel: ByteReadChannel) {
         val dataLength = channel.readUShort()
         val logicDeviceId = channel.readUByte()
         val functionCode = channel.readUByte()
-        val registerAddresses = mutableListOf<UByte>()
+        val registerAddress = channel.readUShort()
+        val numberOfRegisters = channel.readUShort()
+        var overflow = 0u
         while (channel.availableForRead > 0) {
-            registerAddresses.add(channel.readUByte())
+            overflow += channel.readUByte()
         }
         return """Values:
         protocolIdentifier = '$protocolIdentifier'
@@ -20,8 +22,9 @@ class RequestDataReader(private val channel: ByteReadChannel) {
         dataLength = '$dataLength'
         logicDeviceId = '$logicDeviceId'
         functionCode = '$functionCode'
-        registerAddresses = 
-        - ${registerAddresses.joinToString("\n- ")}
+        registerAddress = '$registerAddress'
+        numberOfRegisters = '$numberOfRegisters'
+        overflow = '$overflow'
         """.trimIndent()
     }
 }
