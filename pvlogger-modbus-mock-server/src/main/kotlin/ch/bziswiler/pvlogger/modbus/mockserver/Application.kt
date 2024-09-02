@@ -4,6 +4,7 @@ import ch.bziswiler.pvlogger.modbus.mockserver.utils.MockDataBuilder.buildData
 import ch.bziswiler.pvlogger.modbus.mockserver.utils.MockDataBuilder.buildFunctionCode
 import ch.bziswiler.pvlogger.modbus.mockserver.utils.MockDataBuilder.buildHeader
 import ch.bziswiler.pvlogger.modbus.mockserver.utils.MockDataWriter
+import ch.bziswiler.pvlogger.modbus.mockserver.utils.RequestDataReader
 import io.ktor.network.selector.SelectorManager
 import io.ktor.network.sockets.aSocket
 import io.ktor.network.sockets.openReadChannel
@@ -38,9 +39,8 @@ fun Application.startSocketServer() {
                 val sendChannel = socket.openWriteChannel(autoFlush = true)
                 socket.use {
                     logger.info { "socket server: reading request" }
-                    while (receiveChannel.availableForRead > 0) {
-                        receiveChannel.readByte()
-                    }
+                    val request = RequestDataReader(receiveChannel).readRequest()
+                    logger.info { "received request: $request" }
                     val writer = MockDataWriter(sendChannel)
                     logger.info { "socket server: writing response" }
                     writer.writeData(buildHeader(), buildFunctionCode(), buildData())
