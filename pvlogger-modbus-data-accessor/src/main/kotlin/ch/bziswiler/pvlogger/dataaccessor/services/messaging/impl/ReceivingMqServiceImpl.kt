@@ -1,10 +1,8 @@
 package ch.bziswiler.pvlogger.dataaccessor.services.messaging.impl
 
 import ch.bziswiler.pvlogger.dataaccessor.config.AppConfig
-import ch.bziswiler.pvlogger.dataaccessor.services.messaging.MqService
+import ch.bziswiler.pvlogger.dataaccessor.services.messaging.ReceivingMqService
 import ch.bziswiler.pvlogger.messaging.meta.QueueName
-import ch.bziswiler.pvlogger.modbus.tcp.response.ModbusResponse
-import mu.KotlinLogging
 import org.apache.activemq.ActiveMQConnectionFactory
 import javax.jms.Connection
 import javax.jms.Session.AUTO_ACKNOWLEDGE
@@ -13,15 +11,16 @@ import javax.jms.Session.AUTO_ACKNOWLEDGE
  * see https://codenotfound.com/jms-publish-subscribe-messaging-example-activemq-maven.html for examples
  * see https://github.com/code-not-found/jms for code
  */
-class MqServiceImpl(private val appConfig: AppConfig) : MqService {
-
-    private val logger = KotlinLogging.logger {}
+class ReceivingMqServiceImpl(
+    private val appConfig: AppConfig,
+    private val msgListener: StoreModbusValuesMessageListener
+) : ReceivingMqService {
 
     private val clientId = appConfig.mqConfig.clientId
     private val user = appConfig.mqConfig.user
     private val passwd = appConfig.mqConfig.passwd
 
-    override fun start(msgListener: StoreModbusValuesMessageListener) {
+    override fun start() {
         with(connection()) {
             with(createSession(false, AUTO_ACKNOWLEDGE)) {
                 with(
@@ -33,10 +32,6 @@ class MqServiceImpl(private val appConfig: AppConfig) : MqService {
             }
             start()
         }
-    }
-
-    override fun sendRegisterValuesSavedMessage(message: ModbusResponse) {
-        logger.warn { "TODO('Not yet implemented') -> jobId: ${message.jobId.id}, requestId: ${message.requestId}" }
     }
 
     private fun connection(): Connection {

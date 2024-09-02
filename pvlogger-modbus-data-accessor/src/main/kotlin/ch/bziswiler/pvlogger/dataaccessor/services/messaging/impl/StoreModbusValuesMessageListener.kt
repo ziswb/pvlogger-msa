@@ -1,6 +1,6 @@
 package ch.bziswiler.pvlogger.dataaccessor.services.messaging.impl
 
-import ch.bziswiler.pvlogger.dataaccessor.services.messaging.MqService
+import ch.bziswiler.pvlogger.dataaccessor.services.messaging.SendingMqService
 import ch.bziswiler.pvlogger.dataaccessor.services.persistence.ModbusDao
 import ch.bziswiler.pvlogger.messaging.meta.StoreModbusRegisterValuesMessageTag
 import ch.bziswiler.pvlogger.modbus.tcp.response.ModbusRegisterValueResponse
@@ -9,7 +9,7 @@ import javax.jms.Message
 import javax.jms.MessageListener
 import javax.jms.ObjectMessage
 
-class StoreModbusValuesMessageListener(private val mqService: MqService) : MessageListener {
+class StoreModbusValuesMessageListener(private val mqService: SendingMqService) : MessageListener {
 
     val messageSelector = StoreModbusRegisterValuesMessageTag.toSelector()
 
