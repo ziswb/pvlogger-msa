@@ -7,6 +7,7 @@ import ch.bziswiler.pvlogger.dataaccessor.plugins.configureRouting
 import ch.bziswiler.pvlogger.dataaccessor.plugins.configureSerialization
 import ch.bziswiler.pvlogger.dataaccessor.plugins.setupConfig
 import ch.bziswiler.pvlogger.dataaccessor.services.messaging.MqService
+import ch.bziswiler.pvlogger.dataaccessor.services.messaging.impl.StoreModbusValuesMessageListener
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.netty.EngineMain
@@ -34,5 +35,6 @@ fun Application.module(testing: Boolean = false) {
 
 fun Application.startServices() {
     val mqService by inject<MqService>()
-    mqService.start()
+    val listener = StoreModbusValuesMessageListener(mqService)
+    mqService.start(listener)
 }
