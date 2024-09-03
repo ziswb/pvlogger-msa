@@ -16,29 +16,23 @@ class ReceivingMqServiceImpl(
     private val msgListener: StoreModbusValuesMessageListener
 ) : ReceivingMqService {
 
-    private val clientId = appConfig.mqConfig.clientId
-    private val user = appConfig.mqConfig.user
-    private val passwd = appConfig.mqConfig.passwd
-
     override fun start() {
         with(connection()) {
             with(createSession(false, AUTO_ACKNOWLEDGE)) {
-                with(
-                    createConsumer(
-                        createQueue(QueueName.PERSIST_MODBUS.value),
-                        msgListener.messageSelector
-                    )
-                ) { messageListener = msgListener }
+                with(createConsumer(createQueue(QueueName.PERSIST_MODBUS.value), msgListener.messageSelector)) {
+                    messageListener = msgListener
+                }
             }
             start()
         }
     }
 
     private fun connection(): Connection {
-        val connectionFactory = ActiveMQConnectionFactory(appConfig.mqConfig.brokerUrl)
-        connectionFactory.userName = user
-        connectionFactory.password = passwd
-        connectionFactory.clientID = clientId
-        return connectionFactory.createConnection()
+        with(ActiveMQConnectionFactory(appConfig.mqConfig.brokerUrl)) {
+            userName = appConfig.mqConfig.user
+            password = appConfig.mqConfig.passwd
+            clientID = appConfig.mqConfig.clientId
+            return createConnection()
+        }
     }
 }

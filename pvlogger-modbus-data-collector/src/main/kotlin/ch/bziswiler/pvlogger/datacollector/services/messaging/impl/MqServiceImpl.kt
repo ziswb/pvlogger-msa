@@ -32,10 +32,6 @@ class MqServiceImpl(private val appConfig: AppConfig) : MqService {
 
     private val logger = KotlinLogging.logger {}
 
-    private val clientId = appConfig.mqConfig.clientId
-    private val user = appConfig.mqConfig.user
-    private val passwd = appConfig.mqConfig.passwd
-
     // see https://activemq.apache.org/components/classic/documentation/connection-configuration-uri for details
     private val session: Session
     private val persistEgressQueue: MessageProducer
@@ -43,12 +39,15 @@ class MqServiceImpl(private val appConfig: AppConfig) : MqService {
     private val schedulerEgressQueue: MessageProducer
 
     init {
-        val connection = connection()
-        this.session = connection.createSession(false, AUTO_ACKNOWLEDGE)
-        this.persistEgressQueue = setUpPersistEgressQueue()
-        this.schedulerIngressQueue = session.createQueue(JOB_SCHEDULER.value)
-        this.schedulerEgressQueue = setUpSchedulerEgressQueue()
-        connection.start()
+        with(connection()) {
+            session = createSession(false, AUTO_ACKNOWLEDGE)
+            with(session) {
+                persistEgressQueue = setUpPersistEgressQueue()
+                schedulerIngressQueue = createQueue(JOB_SCHEDULER.value)
+                schedulerEgressQueue = setUpSchedulerEgressQueue()
+            }
+            start()
+        }
     }
 
     override fun addListener(listener: MqListener) {
@@ -78,11 +77,12 @@ RECEIVED #######################################################################
     }
 
     private fun connection(): Connection {
-        val connectionFactory = ActiveMQConnectionFactory(appConfig.mqConfig.brokerUrl)
-        connectionFactory.userName = user
-        connectionFactory.password = passwd
-        connectionFactory.clientID = clientId
-        return connectionFactory.createConnection()
+        with(ActiveMQConnectionFactory(appConfig.mqConfig.brokerUrl)) {
+            userName = appConfig.mqConfig.user
+            password = appConfig.mqConfig.passwd
+            clientID = appConfig.mqConfig.clientId
+            return createConnection()
+        }
     }
 
     override fun sendMessage(message: ModbusResponse) {
@@ -92,7 +92,7 @@ RECEIVED #######################################################################
         logger.debug {
             """
 SEND #########################################################################
-$clientId: sent message with text='$taggedMessage'
+${appConfig.mqConfig.clientId}: sent message with text='$taggedMessage'
 SEND #########################################################################
 """
         }
@@ -106,7 +106,7 @@ SEND #########################################################################
         logger.debug {
             """
 SEND #########################################################################
-$clientId: sent job finished message with job ID = '$taggedMessage'
+${appConfig.mqConfig.clientId}: sent job finished message with job ID = '$taggedMessage'
 SEND #########################################################################
 """
         }

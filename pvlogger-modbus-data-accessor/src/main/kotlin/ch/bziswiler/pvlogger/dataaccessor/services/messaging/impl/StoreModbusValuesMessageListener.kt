@@ -33,10 +33,14 @@ RECEIVED #######################################################################
     private fun handleObjectMessage(message: ObjectMessage) {
         val obj = message.`object`
         if (obj is ModbusRegisterValueResponse) {
-            ModbusDao.store(obj)
-            mqService.sendRegisterValuesSavedMessage(obj)
+            handleModbusResponse(obj)
         } else {
             logger.info { "message.object is no modbus register value response! -> $obj" }
         }
+    }
+
+    private fun handleModbusResponse(obj: ModbusRegisterValueResponse) {
+        ModbusDao.store(obj)
+        mqService.sendRegisterValuesSavedMessage(obj)
     }
 }
