@@ -3,7 +3,7 @@ package ch.bziswiler.pvlogger.heartbeat.jobs.modbus
 import ch.bziswiler.pvlogger.heartbeat.jobs.management.ConfigurableJobConfigurationHolder
 import ch.bziswiler.pvlogger.heartbeat.jobs.management.JobConfiguration
 import ch.bziswiler.pvlogger.messaging.meta.JobName.DEVICE_LIST_JOB
-import ch.bziswiler.pvlogger.messaging.meta.JobTag
+import ch.bziswiler.pvlogger.messaging.meta.JobStartMessageTag
 import io.micrometer.core.instrument.Metrics
 import mu.KotlinLogging
 import org.quartz.JobExecutionContext
@@ -30,6 +30,6 @@ class ModbusDeviceListCollectionJob : ModbusDeviceIdentifiersCollectionJob() {
         counter.increment()
         logger.debug("ModbusDeviceListCollectionJob.execute()")
         super.execute(context)
-        super.sendMessage(listOf(JobTag(DEVICE_LIST_JOB)))
+        super.sendMessage(listOf(JobStartMessageTag(DEVICE_LIST_JOB)))
     }
 }

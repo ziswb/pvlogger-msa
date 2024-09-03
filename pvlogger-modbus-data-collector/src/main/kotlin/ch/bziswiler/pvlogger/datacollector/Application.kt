@@ -13,7 +13,7 @@ import ch.bziswiler.pvlogger.messaging.meta.JobName.DEVICE_IDS_JOB
 import ch.bziswiler.pvlogger.messaging.meta.JobName.DEVICE_LIST_JOB
 import ch.bziswiler.pvlogger.messaging.meta.JobName.DYNAMIC_DATA_JOB
 import ch.bziswiler.pvlogger.messaging.meta.JobName.STATIC_DATA_JOB
-import ch.bziswiler.pvlogger.messaging.meta.JobTag
+import ch.bziswiler.pvlogger.messaging.meta.JobStartMessageTag
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import org.koin.ktor.ext.inject
@@ -42,8 +42,8 @@ fun Application.start() {
     val devIdsJob by inject<ModbusDeviceIdentifiersCollectionJob>()
     val devLstJob by inject<ModbusDeviceListCollectionJob>()
     val mqService by inject<MqService>()
-    mqService.addListener(JobTriggeringMqListener(JobTag(DYNAMIC_DATA_JOB).toSelector(), dynDataJob))
-    mqService.addListener(JobTriggeringMqListener(JobTag(STATIC_DATA_JOB).toSelector(), stcDataJob))
-    mqService.addListener(JobTriggeringMqListener(JobTag(DEVICE_IDS_JOB).toSelector(), devIdsJob))
-    mqService.addListener(JobTriggeringMqListener(JobTag(DEVICE_LIST_JOB).toSelector(), devLstJob))
+    mqService.addListener(JobTriggeringMqListener(JobStartMessageTag(DYNAMIC_DATA_JOB).toSelector(), dynDataJob))
+    mqService.addListener(JobTriggeringMqListener(JobStartMessageTag(STATIC_DATA_JOB).toSelector(), stcDataJob))
+    mqService.addListener(JobTriggeringMqListener(JobStartMessageTag(DEVICE_IDS_JOB).toSelector(), devIdsJob))
+    mqService.addListener(JobTriggeringMqListener(JobStartMessageTag(DEVICE_LIST_JOB).toSelector(), devLstJob))
 }

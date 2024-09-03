@@ -1,5 +1,6 @@
 package ch.bziswiler.pvlogger.messaging.meta
 
-object StoreModbusRegisterValuesMessageTag : MessageTag {
-    override fun value() = "store.modbus.register-values"
-}
+data class StoreModbusRegisterValuesMessageTag(
+    override val key: String = "tag",
+    override val value: String = "store.modbus.register-values"
+) : MessageTag

@@ -4,7 +4,7 @@ import ch.bziswiler.pvlogger.heartbeat.jobs.MessageProducingJob
 import ch.bziswiler.pvlogger.heartbeat.jobs.management.JobConfiguration
 import ch.bziswiler.pvlogger.heartbeat.jobs.management.JobConfigurationHolder
 import ch.bziswiler.pvlogger.messaging.meta.JobName.DYNAMIC_DATA_JOB
-import ch.bziswiler.pvlogger.messaging.meta.JobTag
+import ch.bziswiler.pvlogger.messaging.meta.JobStartMessageTag
 import io.micrometer.core.instrument.Metrics.counter
 import mu.KotlinLogging
 import org.quartz.JobExecutionContext
@@ -30,6 +30,6 @@ class ModbusInverterBatchedDynamicDataCollectionJob : MessageProducingJob() {
     override fun execute(context: JobExecutionContext?) {
         counter.increment()
         logger.debug { "ModbusInverterBatchedDynamicDataCollectionJob.execute()" }
-        super.sendMessage(listOf(JobTag(DYNAMIC_DATA_JOB)))
+        super.sendMessage(listOf(JobStartMessageTag(DYNAMIC_DATA_JOB)))
     }
 }

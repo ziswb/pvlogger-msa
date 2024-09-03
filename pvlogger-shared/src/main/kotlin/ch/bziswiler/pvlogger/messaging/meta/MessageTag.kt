@@ -1,10 +1,9 @@
 package ch.bziswiler.pvlogger.messaging.meta
 
-interface MessageTag {
+import java.io.Serializable
 
-    fun key() = "key"
-
-    fun value(): String
-
-    fun toSelector() = "${key()} = '${value()}'"
+interface MessageTag : Serializable {
+    val key: String
+    val value: String
+    fun toSelector() = "$key = '${value}'"
 }

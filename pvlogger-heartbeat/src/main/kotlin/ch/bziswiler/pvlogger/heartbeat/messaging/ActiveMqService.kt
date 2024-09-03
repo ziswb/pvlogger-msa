@@ -1,15 +1,16 @@
 package ch.bziswiler.pvlogger.heartbeat.messaging
 
 import ch.bziswiler.pvlogger.heartbeat.config.AppConfig
+import ch.bziswiler.pvlogger.messaging.meta.JobStartMessageTag
 import ch.bziswiler.pvlogger.messaging.meta.QueueName.JOB_SCHEDULER
-import ch.bziswiler.pvlogger.messaging.meta.JobTag
 import mu.KotlinLogging
 import org.apache.activemq.ActiveMQConnectionFactory
-import java.time.Instant.now
-import javax.jms.Connection
 import javax.jms.MessageProducer
 import javax.jms.Session
 import javax.jms.Session.AUTO_ACKNOWLEDGE
+
+private const val SECONDS_PER_MINUTE = 60
+private const val TWO = 2L
 
 /*
  * see https://codenotfound.com/jms-publish-subscribe-messaging-example-activemq-maven.html for examples
@@ -20,42 +21,39 @@ class ActiveMqService(private val appConfig: AppConfig) : MqService {
     private val logger = KotlinLogging.logger {}
 
     private val messageProducer: MessageProducer
-    private val connection: Connection
     private val session: Session
 
     init {
         // see https://activemq.apache.org/components/classic/documentation/connection-configuration-uri for details
-        val connectionFactory = ActiveMQConnectionFactory(appConfig.mqConfig.brokerUrl)
-        connectionFactory.userName = appConfig.mqConfig.user
-        connectionFactory.password = appConfig.mqConfig.passwd
-        connectionFactory.clientID = appConfig.mqConfig.clientId
-        connection = connectionFactory.createConnection()
-        this.session = connection.createSession(false, AUTO_ACKNOWLEDGE)
-        val destination = session.createQueue(JOB_SCHEDULER.value)
-        this.messageProducer = session.createProducer(destination)
-        connection.start()
+        with(ActiveMQConnectionFactory(appConfig.mqConfig.brokerUrl)) {
+            userName = appConfig.mqConfig.user
+            password = appConfig.mqConfig.passwd
+            clientID = appConfig.mqConfig.clientId
+            with(createConnection()) {
+                session = createSession(false, AUTO_ACKNOWLEDGE)
+                val destination = session.createQueue(JOB_SCHEDULER.value)
+                messageProducer = session.createProducer(destination)
+                messageProducer.timeToLive = TWO.minutes()
+                start()
+            }
+        }
     }
 
-    override fun sendMessage(tags: List<JobTag>) {
+    override fun sendMessage(tags: List<JobStartMessageTag>) {
         logger.debug { "Sending message ..." }
         val msg = session.createMessage()
         tags.forEach {
-            msg.setStringProperty(it.key, it.value.value)
+            msg.setStringProperty(it.key, it.value)
         }
-        msg.setLongProperty("timestamp", now().toEpochMilli())
         messageProducer.send(msg)
         logger.debug {
             """
 SEND #########################################################################
-${appConfig.mqConfig.clientId}: sent message with properties 'job' = ${msg.getStringProperty("job")} and 'timestamp' = ${msg.getLongProperty("timestamp")}
+${appConfig.mqConfig.clientId}: sent message: $msg
 SEND #########################################################################
 """
         }
     }
-
-    override fun close() {
-        logger.debug { "Closing connection ..." }
-        this.connection.close()
-        logger.debug { "Connection closed!" }
-    }
 }
+
+fun Long.minutes() = this.times(SECONDS_PER_MINUTE)

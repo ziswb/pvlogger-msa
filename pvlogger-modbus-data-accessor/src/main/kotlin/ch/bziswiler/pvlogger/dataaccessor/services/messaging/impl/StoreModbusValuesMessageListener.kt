@@ -11,7 +11,7 @@ import javax.jms.ObjectMessage
 
 class StoreModbusValuesMessageListener(private val mqService: SendingMqService) : MessageListener {
 
-    val messageSelector = StoreModbusRegisterValuesMessageTag.toSelector()
+    val messageSelector = StoreModbusRegisterValuesMessageTag().toSelector()
 
     private val logger = KotlinLogging.logger {}
 
