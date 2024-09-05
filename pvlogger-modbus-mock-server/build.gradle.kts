@@ -19,7 +19,6 @@ idea {
 
 application {
     mainClass.set("ch.bziswiler.pvlogger.modbus.mockserver.ApplicationKt")
-
     val isDevelopment: Boolean = project.ext.has("development")
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
