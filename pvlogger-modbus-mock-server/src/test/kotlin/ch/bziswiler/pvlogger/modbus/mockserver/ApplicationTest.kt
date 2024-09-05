@@ -10,20 +10,33 @@ import io.ktor.network.selector.SelectorManager
 import io.ktor.network.sockets.aSocket
 import io.ktor.network.sockets.openReadChannel
 import io.ktor.network.sockets.openWriteChannel
+import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.testApplication
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import java.lang.Thread.sleep
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class ApplicationTest {
 
+    private val hostname = "127.0.0.1"
+
     @Test
     fun test() = testApplication {
+        environment {
+            config =
+                MapApplicationConfig(
+                    "ktor.socket-server.tcp-port" to "9090",
+                    "ktor.socket-server.ip" to hostname,
+                )
+        }
         application {
+            module()
+            sleep(1000) // TODO: this is definitely not the way to do it. Also the 'application'-block should be closed before the testing code starts
             runBlocking {
                 val selectorManager = SelectorManager(Dispatchers.IO)
-                val socket = aSocket(selectorManager).tcp().connect("127.0.0.1", 8502)
+                val socket = aSocket(selectorManager).tcp().connect(hostname, 9090)
                 val reader = MockDataReader(socket.openReadChannel())
                 val writer = MockDataWriter(socket.openWriteChannel(autoFlush = true))
                 writer.writeData(buildHeader(), buildFunctionCode(), buildData())
