@@ -19,17 +19,18 @@ fun main(args: Array<String>) {
     io.ktor.server.netty.EngineMain.main(args)
 }
 
-fun Application.module(testing: Boolean = false) {
+fun Application.module() {
     launch { startSocketServer() }
 }
 
 fun Application.startSocketServer() {
     val logger = KotlinLogging.logger {}
-    val port = environment.config.propertyOrNull("ktor.socket-server.tcp-port")?.getString()?.toInt() ?: 502
-    logger.info { "socket server: starting at port $port" }
+    val port = environment.config.propertyOrNull("ktor.socket-server.tcp-port")?.getString()?.toInt() ?: 8502
+    val ip = environment.config.propertyOrNull("ktor.socket-server.ip")?.getString()?: "0.0.0.0"
+    logger.info { "socket server: starting at  $ip:$port" }
     runBlocking {
         val selectorManager = SelectorManager(Dispatchers.IO)
-        val serverSocket = aSocket(selectorManager).tcp().bind("0.0.0.0", port)
+        val serverSocket = aSocket(selectorManager).tcp().bind(ip, port)
         while (true) {
             logger.info { "socket server: waiting for connections" }
             val socket = serverSocket.accept()
