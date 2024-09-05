@@ -30,6 +30,6 @@ class ModbusDeviceListCollectionJob : ModbusDeviceIdentifiersCollectionJob() {
         counter.increment()
         logger.debug("ModbusDeviceListCollectionJob.execute()")
         super.execute(context)
-        super.sendMessage(listOf(JobStartMessageTag(DEVICE_LIST_JOB)))
+        super.sendTagsAsMessage(listOf(JobStartMessageTag(DEVICE_LIST_JOB)))
     }
 }

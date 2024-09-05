@@ -3,8 +3,8 @@ package ch.bziswiler.pvlogger.heartbeat.plugins
 import ch.bziswiler.pvlogger.heartbeat.config.AppConfig
 import ch.bziswiler.pvlogger.heartbeat.config.DatabaseConfig
 import ch.bziswiler.pvlogger.heartbeat.config.JobConfig
-import ch.bziswiler.pvlogger.heartbeat.config.MqConfig
 import ch.bziswiler.pvlogger.heartbeat.config.ServerConfig
+import ch.bziswiler.pvlogger.messaging.meta.MqConfig
 import io.ktor.server.application.Application
 import org.koin.ktor.ext.inject
 

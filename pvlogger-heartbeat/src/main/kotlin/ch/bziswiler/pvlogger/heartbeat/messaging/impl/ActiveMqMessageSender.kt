@@ -1,10 +1,12 @@
-package ch.bziswiler.pvlogger.heartbeat.messaging
+package ch.bziswiler.pvlogger.heartbeat.messaging.impl
 
-import ch.bziswiler.pvlogger.heartbeat.config.AppConfig
-import ch.bziswiler.pvlogger.messaging.meta.JobStartMessageTag
-import ch.bziswiler.pvlogger.messaging.meta.QueueName.JOB_SCHEDULER
+import ch.bziswiler.pvlogger.heartbeat.messaging.MessageSender
+import ch.bziswiler.pvlogger.messaging.meta.MessageTag
+import ch.bziswiler.pvlogger.messaging.meta.MqConfig
+import ch.bziswiler.pvlogger.messaging.meta.QueueName
 import mu.KotlinLogging
 import org.apache.activemq.ActiveMQConnectionFactory
+import javax.jms.Message
 import javax.jms.MessageProducer
 import javax.jms.Session
 import javax.jms.Session.AUTO_ACKNOWLEDGE
@@ -16,7 +18,7 @@ private const val TWO = 2L
  * see https://codenotfound.com/jms-publish-subscribe-messaging-example-activemq-maven.html for examples
  * see https://github.com/code-not-found/jms for code
  */
-class ActiveMqService(private val appConfig: AppConfig) : MqService {
+class ActiveMqMessageSender(override val queueName: QueueName, private val mqConfig: MqConfig) : MessageSender {
 
     private val logger = KotlinLogging.logger {}
 
@@ -25,13 +27,13 @@ class ActiveMqService(private val appConfig: AppConfig) : MqService {
 
     init {
         // see https://activemq.apache.org/components/classic/documentation/connection-configuration-uri for details
-        with(ActiveMQConnectionFactory(appConfig.mqConfig.brokerUrl)) {
-            userName = appConfig.mqConfig.user
-            password = appConfig.mqConfig.passwd
-            clientID = appConfig.mqConfig.clientId
+        with(ActiveMQConnectionFactory(mqConfig.brokerUrl)) {
+            userName = mqConfig.user
+            password = mqConfig.passwd
+            clientID = mqConfig.clientId
             with(createConnection()) {
                 session = createSession(false, AUTO_ACKNOWLEDGE)
-                val destination = session.createQueue(JOB_SCHEDULER.value)
+                val destination = session.createQueue(queueName.value)
                 messageProducer = session.createProducer(destination)
                 messageProducer.timeToLive = TWO.minutes()
                 start()
@@ -39,7 +41,7 @@ class ActiveMqService(private val appConfig: AppConfig) : MqService {
         }
     }
 
-    override fun sendMessage(tags: List<JobStartMessageTag>) {
+    override fun sendTagsAsMessage(tags: List<MessageTag>) {
         logger.debug { "Sending message ..." }
         val msg = session.createMessage()
         tags.forEach {
@@ -49,10 +51,14 @@ class ActiveMqService(private val appConfig: AppConfig) : MqService {
         logger.debug {
             """
 SEND #########################################################################
-${appConfig.mqConfig.clientId}: sent message: $msg
+${mqConfig.clientId}: sent message: $msg
 SEND #########################################################################
 """
         }
+    }
+
+    override fun sendTaggedMessage(message: Message, tags: List<MessageTag>) {
+        throw UnsupportedOperationException("Not implemented yet")
     }
 }
 

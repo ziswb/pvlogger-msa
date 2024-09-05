@@ -1,5 +1,7 @@
 package ch.bziswiler.pvlogger.heartbeat.config
 
+import ch.bziswiler.pvlogger.messaging.meta.MqConfig
+
 class AppConfig {
     lateinit var serverConfig: ServerConfig
     lateinit var mqConfig: MqConfig
@@ -20,13 +22,6 @@ data class DatabaseConfig(
     val user: String,
     val password: String,
     val maxPoolSize: Int,
-)
-
-data class MqConfig(
-    val clientId: String,
-    val user: String,
-    val passwd: String,
-    val brokerUrl: String,
 )
 
 data class JobConfig(

@@ -5,12 +5,15 @@ import ch.bziswiler.pvlogger.heartbeat.jobs.management.ConfigurableJobConfigurat
 import ch.bziswiler.pvlogger.heartbeat.jobs.management.JobConfiguration
 import ch.bziswiler.pvlogger.messaging.meta.JobName.DEVICE_IDS_JOB
 import ch.bziswiler.pvlogger.messaging.meta.JobStartMessageTag
+import ch.bziswiler.pvlogger.messaging.meta.QueueName
 import io.micrometer.core.instrument.Metrics.counter
 import mu.KotlinLogging
 import org.quartz.JobExecutionContext
 import java.time.ZonedDateTime
 
-open class ModbusDeviceIdentifiersCollectionJob : MessageProducingJob() {
+open class ModbusDeviceIdentifiersCollectionJob() : MessageProducingJob() {
+
+    override val queueName = QueueName.JOB_SCHEDULER
 
     private val logger = KotlinLogging.logger {}
     private val counter = counter("modbus-device-identifiers-collection-job-execution")
@@ -30,6 +33,6 @@ open class ModbusDeviceIdentifiersCollectionJob : MessageProducingJob() {
     override fun execute(context: JobExecutionContext?) {
         counter.increment()
         logger.debug { "ModbusInverterBatchedDynamicDataCollectionJob.execute()" }
-        super.sendMessage(listOf(JobStartMessageTag(DEVICE_IDS_JOB)))
+        super.sendTagsAsMessage(listOf(JobStartMessageTag(DEVICE_IDS_JOB)))
     }
 }
