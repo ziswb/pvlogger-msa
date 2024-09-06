@@ -44,7 +44,6 @@ open class ActiveMqMessageSender(override val queueName: QueueName, private val 
     }
 
     override fun sendTagsAsMessage(tags: List<MessageTag>) {
-        logger.debug { "Sending message ..." }
         val msg = session.createMessage()
         tags.forEach {
             msg.setStringProperty(it.key, it.value)

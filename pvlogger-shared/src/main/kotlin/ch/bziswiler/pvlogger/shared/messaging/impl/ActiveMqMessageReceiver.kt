@@ -1,7 +1,7 @@
-package ch.bziswiler.pvlogger.dataaccessor.services.messaging.impl
+package ch.bziswiler.pvlogger.shared.messaging.impl
 
-import ch.bziswiler.pvlogger.dataaccessor.services.messaging.MessageHandler
-import ch.bziswiler.pvlogger.dataaccessor.services.messaging.MessageReceiver
+import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
+import ch.bziswiler.pvlogger.shared.messaging.MessageReceiver
 import ch.bziswiler.pvlogger.shared.messaging.meta.MqConfig
 import ch.bziswiler.pvlogger.shared.messaging.meta.QueueName
 import org.apache.activemq.ActiveMQConnectionFactory
@@ -15,8 +15,7 @@ import javax.jms.Session.AUTO_ACKNOWLEDGE
  * see https://github.com/code-not-found/jms for code
  */
 class ActiveMqMessageReceiver(
-    private val mqConfig: MqConfig,
-    private val queueName: QueueName
+    private val mqConfig: MqConfig, private val queueName: QueueName
 ) : MessageReceiver {
 
     private var session: Session
@@ -36,12 +35,10 @@ class ActiveMqMessageReceiver(
         messageListener = listener
     }
 
-    private fun connection(): Connection {
-        with(ActiveMQConnectionFactory(mqConfig.brokerUrl)) {
-            userName = mqConfig.user
-            password = mqConfig.passwd
-            clientID = mqConfig.clientId
-            return createConnection()
-        }
+    private fun connection(): Connection = with(ActiveMQConnectionFactory(mqConfig.brokerUrl)) {
+        userName = mqConfig.user
+        password = mqConfig.passwd
+        clientID = mqConfig.clientId
+        createConnection()
     }
 }

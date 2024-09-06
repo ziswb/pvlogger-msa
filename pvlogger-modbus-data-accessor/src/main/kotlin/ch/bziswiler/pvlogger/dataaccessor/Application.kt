@@ -6,8 +6,8 @@ import ch.bziswiler.pvlogger.dataaccessor.plugins.configureMonitoring
 import ch.bziswiler.pvlogger.dataaccessor.plugins.configureRouting
 import ch.bziswiler.pvlogger.dataaccessor.plugins.configureSerialization
 import ch.bziswiler.pvlogger.dataaccessor.plugins.setupConfig
-import ch.bziswiler.pvlogger.dataaccessor.services.messaging.MessageHandler
-import ch.bziswiler.pvlogger.dataaccessor.services.messaging.MessageReceiver
+import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
+import ch.bziswiler.pvlogger.shared.messaging.MessageReceiver
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.netty.EngineMain

@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.dataaccessor.services.messaging
+package ch.bziswiler.pvlogger.shared.messaging
 
 interface MessageReceiver {
 
