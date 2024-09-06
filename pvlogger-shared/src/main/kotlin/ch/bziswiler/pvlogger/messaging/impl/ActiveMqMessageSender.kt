@@ -6,6 +6,7 @@ import ch.bziswiler.pvlogger.messaging.meta.MqConfig
 import ch.bziswiler.pvlogger.messaging.meta.QueueName
 import mu.KotlinLogging
 import org.apache.activemq.ActiveMQConnectionFactory
+import javax.jms.Connection
 import javax.jms.MessageProducer
 import javax.jms.Session
 import javax.jms.Session.AUTO_ACKNOWLEDGE
@@ -26,18 +27,20 @@ open class ActiveMqMessageSender(override val queueName: QueueName, private val 
 
     init {
         // see https://activemq.apache.org/components/classic/documentation/connection-configuration-uri for details
-        with(ActiveMQConnectionFactory(mqConfig.brokerUrl)) {
-            userName = mqConfig.user
-            password = mqConfig.passwd
-            clientID = mqConfig.clientId
-            with(createConnection()) {
-                session = createSession(false, AUTO_ACKNOWLEDGE)
-                val destination = session.createQueue(queueName.value)
-                messageProducer = session.createProducer(destination)
-                messageProducer.timeToLive = TWO.minutes()
-                start()
-            }
+        with(connection()) {
+            session = createSession(false, AUTO_ACKNOWLEDGE)
+            val destination = session.createQueue(queueName.value)
+            messageProducer = session.createProducer(destination)
+            messageProducer.timeToLive = TWO.minutes()
+            start()
         }
+    }
+
+    private fun connection(): Connection = with(ActiveMQConnectionFactory(mqConfig.brokerUrl)) {
+        userName = mqConfig.user
+        password = mqConfig.passwd
+        clientID = mqConfig.clientId
+        createConnection()
     }
 
     override fun sendTagsAsMessage(tags: List<MessageTag>) {

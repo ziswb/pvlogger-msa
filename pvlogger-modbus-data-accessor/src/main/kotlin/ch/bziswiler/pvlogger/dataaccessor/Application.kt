@@ -6,7 +6,8 @@ import ch.bziswiler.pvlogger.dataaccessor.plugins.configureMonitoring
 import ch.bziswiler.pvlogger.dataaccessor.plugins.configureRouting
 import ch.bziswiler.pvlogger.dataaccessor.plugins.configureSerialization
 import ch.bziswiler.pvlogger.dataaccessor.plugins.setupConfig
-import ch.bziswiler.pvlogger.dataaccessor.services.messaging.ReceivingMqService
+import ch.bziswiler.pvlogger.dataaccessor.services.messaging.MessageHandler
+import ch.bziswiler.pvlogger.dataaccessor.services.messaging.MessageReceiver
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.netty.EngineMain
@@ -33,6 +34,7 @@ fun Application.module(testing: Boolean = false) {
 }
 
 fun Application.startServices() {
-    val receivingMqService by inject<ReceivingMqService>()
-    receivingMqService.start()
+    val messageReceiver by inject<MessageReceiver>()
+    val messageHandler by inject<MessageHandler>()
+    messageReceiver.addMessageListener(messageHandler)
 }

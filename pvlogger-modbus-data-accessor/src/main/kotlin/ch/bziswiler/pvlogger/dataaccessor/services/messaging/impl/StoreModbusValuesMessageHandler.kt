@@ -1,17 +1,16 @@
 package ch.bziswiler.pvlogger.dataaccessor.services.messaging.impl
 
-import ch.bziswiler.pvlogger.dataaccessor.services.messaging.SendingMqService
+import ch.bziswiler.pvlogger.dataaccessor.services.messaging.MessageHandler
 import ch.bziswiler.pvlogger.dataaccessor.services.persistence.ModbusDao
 import ch.bziswiler.pvlogger.messaging.meta.StoreModbusRegisterValuesMessageTag
 import ch.bziswiler.pvlogger.modbus.tcp.response.ModbusRegisterValueResponse
 import mu.KotlinLogging
 import javax.jms.Message
-import javax.jms.MessageListener
 import javax.jms.ObjectMessage
 
-class StoreModbusValuesMessageListener(private val mqService: SendingMqService) : MessageListener {
+class StoreModbusValuesMessageHandler : MessageHandler {
 
-    val messageSelector = StoreModbusRegisterValuesMessageTag().toSelector()
+    override val messageSelector = StoreModbusRegisterValuesMessageTag().toSelector()
 
     private val logger = KotlinLogging.logger {}
 
@@ -33,14 +32,9 @@ RECEIVED #######################################################################
     private fun handleObjectMessage(message: ObjectMessage) {
         val obj = message.`object`
         if (obj is ModbusRegisterValueResponse) {
-            handleModbusResponse(obj)
+            ModbusDao.store(obj)
         } else {
             logger.info { "message.object is no modbus register value response! -> $obj" }
         }
-    }
-
-    private fun handleModbusResponse(obj: ModbusRegisterValueResponse) {
-        ModbusDao.store(obj)
-        mqService.sendRegisterValuesSavedMessage(obj)
     }
 }
