@@ -32,7 +32,7 @@ class ActiveMqMessageReceiver(
         }
     }
 
-    override fun addMessageListener(listener: MessageHandler) = with(session.createConsumer(queue, listener.messageSelector)) {
+    override fun addMessageHandler(listener: MessageHandler) = with(session.createConsumer(queue, listener.messageSelector)) {
         messageListener = listener
     }
 

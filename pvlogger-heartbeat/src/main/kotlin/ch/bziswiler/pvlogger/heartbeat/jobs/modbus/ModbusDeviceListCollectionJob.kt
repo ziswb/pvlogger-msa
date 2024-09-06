@@ -2,15 +2,15 @@ package ch.bziswiler.pvlogger.heartbeat.jobs.modbus
 
 import ch.bziswiler.pvlogger.heartbeat.jobs.management.ConfigurableJobConfigurationHolder
 import ch.bziswiler.pvlogger.heartbeat.jobs.management.JobConfiguration
+import ch.bziswiler.pvlogger.messaging.SimpleMessageSender
 import ch.bziswiler.pvlogger.messaging.meta.JobName.DEVICE_LIST_JOB
 import ch.bziswiler.pvlogger.messaging.meta.JobStartMessageTag
-import ch.bziswiler.pvlogger.messaging.meta.MqConfig
 import io.micrometer.core.instrument.Metrics
 import mu.KotlinLogging
 import org.quartz.JobExecutionContext
 import java.time.ZonedDateTime
 
-class ModbusDeviceListCollectionJob(mqConfig: MqConfig) : ModbusDeviceIdentifiersCollectionJob(mqConfig) {
+class ModbusDeviceListCollectionJob(messageSender: SimpleMessageSender) : ModbusDeviceIdentifiersCollectionJob(messageSender) {
 
     private val logger = KotlinLogging.logger {}
     private val counter = Metrics.counter("modbus-device-list-collection-job-execution")
@@ -31,6 +31,6 @@ class ModbusDeviceListCollectionJob(mqConfig: MqConfig) : ModbusDeviceIdentifier
         counter.increment()
         logger.debug("ModbusDeviceListCollectionJob.execute()")
         super.execute(context)
-        super.sendTagsAsMessage(listOf(JobStartMessageTag(DEVICE_LIST_JOB)))
+        super.sendTagAsMessage(JobStartMessageTag(DEVICE_LIST_JOB))
     }
 }

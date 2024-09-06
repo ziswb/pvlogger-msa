@@ -36,5 +36,5 @@ fun Application.module(testing: Boolean = false) {
 fun Application.startServices() {
     val messageReceiver by inject<MessageReceiver>()
     val messageHandler by inject<MessageHandler>()
-    messageReceiver.addMessageListener(messageHandler)
+    messageReceiver.addMessageHandler(messageHandler)
 }

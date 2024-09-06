@@ -1,8 +1,11 @@
 package ch.bziswiler.pvlogger.heartbeat.jobs
 
-import ch.bziswiler.pvlogger.messaging.impl.ActiveMqMessageSender
-import ch.bziswiler.pvlogger.messaging.meta.MqConfig
-import ch.bziswiler.pvlogger.messaging.meta.QueueName.JOB_SCHEDULER
+import ch.bziswiler.pvlogger.messaging.SimpleMessageSender
+import ch.bziswiler.pvlogger.messaging.meta.MessageTag
 import org.quartz.Job
 
-abstract class MessageProducingJob(mqConfig: MqConfig) : ActiveMqMessageSender(JOB_SCHEDULER, mqConfig), Job
+abstract class MessageProducingJob(private val messageSender: SimpleMessageSender) : Job {
+    fun sendTagAsMessage(tag: MessageTag) {
+        messageSender.sendTagsAsMessage(listOf(tag))
+    }
+}
