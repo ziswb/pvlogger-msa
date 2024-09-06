@@ -2,8 +2,8 @@ package ch.bziswiler
 
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
-import org.junit.jupiter.api.Assertions
-import kotlin.test.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 class ApplicationTest : BaseApplicationTest() {
 
@@ -13,7 +13,7 @@ class ApplicationTest : BaseApplicationTest() {
     fun testRoot() =
         withApp {
             client.get(rootPath).apply {
-                Assertions.assertEquals(HttpStatusCode.NotFound, status)
+                assertEquals(HttpStatusCode.NotFound, status)
             }
         }
 }
