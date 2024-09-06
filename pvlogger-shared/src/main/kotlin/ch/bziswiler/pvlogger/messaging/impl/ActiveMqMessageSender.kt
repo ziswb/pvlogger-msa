@@ -1,6 +1,6 @@
-package ch.bziswiler.pvlogger.heartbeat.messaging.impl
+package ch.bziswiler.pvlogger.messaging.impl
 
-import ch.bziswiler.pvlogger.heartbeat.messaging.SimpleMessageSender
+import ch.bziswiler.pvlogger.messaging.SimpleMessageSender
 import ch.bziswiler.pvlogger.messaging.meta.MessageTag
 import ch.bziswiler.pvlogger.messaging.meta.MqConfig
 import ch.bziswiler.pvlogger.messaging.meta.QueueName

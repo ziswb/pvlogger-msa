@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.heartbeat.messaging
+package ch.bziswiler.pvlogger.messaging
 
 import ch.bziswiler.pvlogger.messaging.meta.MessageTag
 import ch.bziswiler.pvlogger.messaging.meta.QueueName

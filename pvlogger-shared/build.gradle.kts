@@ -13,6 +13,9 @@ repositories {
 dependencies {
     implementation(libs.kotlinx.serialization.json)
 
+    // Logging
+    implementation(libs.kotlin.logging)
+
     // Messaging
     implementation(libs.activemq.core)
 
