@@ -12,10 +12,7 @@ import org.quartz.spi.JobFactory
 import org.quartz.spi.TriggerFiredBundle
 import kotlin.reflect.jvm.jvmName
 
-class PvLoggerJobFactory(
-    private val appConfig: AppConfig,
-    private val jobScheduler: JobScheduler,
-) : JobFactory {
+class PvLoggerJobFactory(private val appConfig: AppConfig) : JobFactory {
 
     private val logger = KotlinLogging.logger {}
 
@@ -25,10 +22,10 @@ class PvLoggerJobFactory(
         }
         logger.info { "creating new job '${bundle.jobDetail.jobClass.name}'" }
         return when (bundle.jobDetail.jobClass.name) {
-            ModbusInverterBatchedDynamicDataCollectionJob::class.jvmName -> ModbusInverterBatchedDynamicDataCollectionJob()
-            ModbusInverterBatchedStaticDataCollectionJob::class.jvmName -> ModbusInverterBatchedStaticDataCollectionJob()
-            ModbusDeviceIdentifiersCollectionJob::class.jvmName -> ModbusDeviceIdentifiersCollectionJob()
-            ModbusDeviceListCollectionJob::class.jvmName -> ModbusDeviceListCollectionJob()
+            ModbusInverterBatchedDynamicDataCollectionJob::class.jvmName -> ModbusInverterBatchedDynamicDataCollectionJob(appConfig.mqConfig)
+            ModbusInverterBatchedStaticDataCollectionJob::class.jvmName -> ModbusInverterBatchedStaticDataCollectionJob(appConfig.mqConfig)
+            ModbusDeviceIdentifiersCollectionJob::class.jvmName -> ModbusDeviceIdentifiersCollectionJob(appConfig.mqConfig)
+            ModbusDeviceListCollectionJob::class.jvmName -> ModbusDeviceListCollectionJob(appConfig.mqConfig)
             else -> throw NotImplementedError("Job Factory error: No factory found for '${bundle.jobDetail?.jobClass?.name}'")
         }
     }

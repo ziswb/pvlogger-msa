@@ -13,6 +13,9 @@ repositories {
 dependencies {
     implementation(libs.kotlinx.serialization.json)
 
+    // Messaging
+    implementation(libs.activemq.core)
+
     // This dependency is exported to consumers, that is to say found on their compile classpath.
     // api(libs.commons.math3)
     // This dependency is used internally, and not exposed to consumers on their own compile classpath.

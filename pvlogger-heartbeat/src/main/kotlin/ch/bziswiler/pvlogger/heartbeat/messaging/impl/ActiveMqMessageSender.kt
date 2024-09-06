@@ -1,12 +1,11 @@
 package ch.bziswiler.pvlogger.heartbeat.messaging.impl
 
-import ch.bziswiler.pvlogger.heartbeat.messaging.MessageSender
+import ch.bziswiler.pvlogger.heartbeat.messaging.SimpleMessageSender
 import ch.bziswiler.pvlogger.messaging.meta.MessageTag
 import ch.bziswiler.pvlogger.messaging.meta.MqConfig
 import ch.bziswiler.pvlogger.messaging.meta.QueueName
 import mu.KotlinLogging
 import org.apache.activemq.ActiveMQConnectionFactory
-import javax.jms.Message
 import javax.jms.MessageProducer
 import javax.jms.Session
 import javax.jms.Session.AUTO_ACKNOWLEDGE
@@ -18,7 +17,7 @@ private const val TWO = 2L
  * see https://codenotfound.com/jms-publish-subscribe-messaging-example-activemq-maven.html for examples
  * see https://github.com/code-not-found/jms for code
  */
-class ActiveMqMessageSender(override val queueName: QueueName, private val mqConfig: MqConfig) : MessageSender {
+open class ActiveMqMessageSender(override val queueName: QueueName, private val mqConfig: MqConfig) : SimpleMessageSender {
 
     private val logger = KotlinLogging.logger {}
 
@@ -55,10 +54,6 @@ ${mqConfig.clientId}: sent message: $msg
 SEND #########################################################################
 """
         }
-    }
-
-    override fun sendTaggedMessage(message: Message, tags: List<MessageTag>) {
-        throw UnsupportedOperationException("Not implemented yet")
     }
 }
 

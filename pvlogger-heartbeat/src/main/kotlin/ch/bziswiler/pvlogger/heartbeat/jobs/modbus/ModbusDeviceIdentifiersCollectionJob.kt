@@ -5,15 +5,13 @@ import ch.bziswiler.pvlogger.heartbeat.jobs.management.ConfigurableJobConfigurat
 import ch.bziswiler.pvlogger.heartbeat.jobs.management.JobConfiguration
 import ch.bziswiler.pvlogger.messaging.meta.JobName.DEVICE_IDS_JOB
 import ch.bziswiler.pvlogger.messaging.meta.JobStartMessageTag
-import ch.bziswiler.pvlogger.messaging.meta.QueueName
+import ch.bziswiler.pvlogger.messaging.meta.MqConfig
 import io.micrometer.core.instrument.Metrics.counter
 import mu.KotlinLogging
 import org.quartz.JobExecutionContext
 import java.time.ZonedDateTime
 
-open class ModbusDeviceIdentifiersCollectionJob() : MessageProducingJob() {
-
-    override val queueName = QueueName.JOB_SCHEDULER
+open class ModbusDeviceIdentifiersCollectionJob(mqConfig: MqConfig) : MessageProducingJob(mqConfig) {
 
     private val logger = KotlinLogging.logger {}
     private val counter = counter("modbus-device-identifiers-collection-job-execution")
