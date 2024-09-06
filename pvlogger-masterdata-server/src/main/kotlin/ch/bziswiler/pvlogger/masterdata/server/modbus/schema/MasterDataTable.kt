@@ -1,11 +1,11 @@
 package ch.bziswiler.pvlogger.masterdata.server.modbus.schema
 
-import ch.bziswiler.pvlogger.masterdata.modbus.Category
-import ch.bziswiler.pvlogger.masterdata.modbus.DeviceType
-import ch.bziswiler.pvlogger.masterdata.modbus.Gain
-import ch.bziswiler.pvlogger.masterdata.modbus.ReadWrite
-import ch.bziswiler.pvlogger.masterdata.modbus.Type
-import ch.bziswiler.pvlogger.masterdata.modbus.Unit
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.Gain
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.ReadWrite
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.Type
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.Unit
 import kotlin.enums.EnumEntries
 import kotlin.reflect.KClass
 import org.jetbrains.exposed.dao.id.IntIdTable

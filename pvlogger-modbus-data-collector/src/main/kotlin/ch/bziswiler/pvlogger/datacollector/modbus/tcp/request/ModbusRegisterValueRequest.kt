@@ -1,13 +1,13 @@
 package ch.bziswiler.pvlogger.datacollector.modbus.tcp.request
 
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.readUByte
-import ch.bziswiler.pvlogger.messaging.meta.JobId
-import ch.bziswiler.pvlogger.messaging.meta.RequestId
-import ch.bziswiler.pvlogger.modbus.ModbusRegisterValue
-import ch.bziswiler.pvlogger.modbus.tcp.frame.FunctionCode
-import ch.bziswiler.pvlogger.modbus.tcp.frame.FunctionCode.Companion.from
-import ch.bziswiler.pvlogger.modbus.tcp.frame.FunctionCode.ReadRegisters
-import ch.bziswiler.pvlogger.modbus.tcp.response.ModbusRegisterValueResponse
+import ch.bziswiler.pvlogger.shared.messaging.meta.JobId
+import ch.bziswiler.pvlogger.shared.messaging.meta.RequestId
+import ch.bziswiler.pvlogger.shared.modbus.ModbusRegisterValue
+import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.FunctionCode
+import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.FunctionCode.Companion.from
+import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.FunctionCode.ReadRegisters
+import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusRegisterValueResponse
 import io.ktor.utils.io.ByteReadChannel
 import mu.KotlinLogging
 import java.time.LocalDateTime.now

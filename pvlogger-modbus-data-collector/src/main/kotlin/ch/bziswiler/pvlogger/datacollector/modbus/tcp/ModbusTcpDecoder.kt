@@ -1,6 +1,6 @@
 package ch.bziswiler.pvlogger.datacollector.modbus.tcp
 
-import ch.bziswiler.pvlogger.modbus.ModbusObject
+import ch.bziswiler.pvlogger.shared.modbus.ModbusObject
 import io.ktor.utils.io.ByteReadChannel
 
 @OptIn(ExperimentalUnsignedTypes::class)

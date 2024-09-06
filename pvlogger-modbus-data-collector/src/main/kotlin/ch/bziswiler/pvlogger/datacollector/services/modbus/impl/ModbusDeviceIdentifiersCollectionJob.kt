@@ -6,7 +6,7 @@ import ch.bziswiler.pvlogger.datacollector.modbus.tcp.request.ReadDeviceIdentifi
 import ch.bziswiler.pvlogger.datacollector.services.IdProvider
 import ch.bziswiler.pvlogger.datacollector.services.messaging.MqService
 import ch.bziswiler.pvlogger.datacollector.services.modbus.ModbusDataCollectionJob
-import ch.bziswiler.pvlogger.modbus.tcp.response.ReadDeviceIdentifiersResponse
+import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ReadDeviceIdentifiersResponse
 import io.micrometer.core.instrument.Metrics
 import io.micrometer.core.instrument.Timer
 import kotlinx.coroutines.runBlocking

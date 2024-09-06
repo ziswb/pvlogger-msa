@@ -1,6 +1,6 @@
 package ch.bziswiler.pvlogger.modbus.mockserver
 
-import ch.bziswiler.pvlogger.masterdata.modbus.Type
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.Type
 import ch.bziswiler.pvlogger.modbus.mockserver.utils.MockDataBuilder.buildData
 import ch.bziswiler.pvlogger.modbus.mockserver.utils.MockDataBuilder.buildFunctionCode
 import ch.bziswiler.pvlogger.modbus.mockserver.utils.MockDataBuilder.buildHeader

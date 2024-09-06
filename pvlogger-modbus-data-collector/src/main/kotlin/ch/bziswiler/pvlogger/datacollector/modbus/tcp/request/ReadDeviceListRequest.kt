@@ -1,6 +1,6 @@
 package ch.bziswiler.pvlogger.datacollector.modbus.tcp.request
 
-import ch.bziswiler.pvlogger.modbus.tcp.frame.FunctionCode.ReadDeviceIdentifiers
+import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.FunctionCode.ReadDeviceIdentifiers
 import java.time.LocalDateTime
 
 class ReadDeviceListRequest(jobId: String, requestTime: LocalDateTime, requestId: UShort, logicDeviceId: UByte) :

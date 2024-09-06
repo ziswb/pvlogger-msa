@@ -6,9 +6,9 @@ import ch.bziswiler.pvlogger.heartbeat.database.DatabaseFactoryImpl
 import ch.bziswiler.pvlogger.heartbeat.jobs.management.JobScheduler
 import ch.bziswiler.pvlogger.heartbeat.jobs.management.JobSchedulerManager
 import ch.bziswiler.pvlogger.heartbeat.jobs.management.PvLoggerJobFactory
-import ch.bziswiler.pvlogger.messaging.SimpleMessageSender
-import ch.bziswiler.pvlogger.messaging.impl.ActiveMqMessageSender
-import ch.bziswiler.pvlogger.messaging.meta.QueueName.JOB_SCHEDULER
+import ch.bziswiler.pvlogger.shared.messaging.SimpleMessageSender
+import ch.bziswiler.pvlogger.shared.messaging.impl.ActiveMqMessageSender
+import ch.bziswiler.pvlogger.shared.messaging.meta.QueueName.JOB_SCHEDULER
 import org.koin.dsl.module
 import org.quartz.spi.JobFactory
 

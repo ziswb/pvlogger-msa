@@ -1,6 +1,6 @@
 package ch.bziswiler.pvlogger.dataaccessor.schema
 
-import ch.bziswiler.pvlogger.modbus.ModbusObject
+import ch.bziswiler.pvlogger.shared.modbus.ModbusObject
 
 
 interface ObjectStore {

@@ -1,7 +1,7 @@
 package ch.bziswiler.pvlogger.heartbeat.jobs
 
-import ch.bziswiler.pvlogger.messaging.SimpleMessageSender
-import ch.bziswiler.pvlogger.messaging.meta.MessageTag
+import ch.bziswiler.pvlogger.shared.messaging.SimpleMessageSender
+import ch.bziswiler.pvlogger.shared.messaging.meta.MessageTag
 import org.quartz.Job
 
 abstract class MessageProducingJob(private val messageSender: SimpleMessageSender) : Job {

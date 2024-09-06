@@ -7,7 +7,7 @@ import ch.bziswiler.pvlogger.dataaccessor.services.messaging.MessageHandler
 import ch.bziswiler.pvlogger.dataaccessor.services.messaging.MessageReceiver
 import ch.bziswiler.pvlogger.dataaccessor.services.messaging.impl.ActiveMqMessageReceiver
 import ch.bziswiler.pvlogger.dataaccessor.services.messaging.impl.StoreModbusValuesMessageHandler
-import ch.bziswiler.pvlogger.messaging.meta.QueueName.PERSIST_MODBUS
+import ch.bziswiler.pvlogger.shared.messaging.meta.QueueName.PERSIST_MODBUS
 import org.koin.dsl.module
 
 val appModule = module {

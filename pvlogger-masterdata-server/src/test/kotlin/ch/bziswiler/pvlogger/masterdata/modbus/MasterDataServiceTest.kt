@@ -1,12 +1,14 @@
 package ch.bziswiler.pvlogger.masterdata.modbus
 
-import ch.bziswiler.pvlogger.masterdata.modbus.dto.ModbusRegisterDefinition
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
 import ch.bziswiler.pvlogger.masterdata.modbus.testutils.BaseApplicationTest
 import ch.bziswiler.pvlogger.masterdata.modbus.testutils.TestRecordBuilder
 import ch.bziswiler.pvlogger.masterdata.server.config.AppConfig
 import ch.bziswiler.pvlogger.masterdata.server.modbus.schema.MasterDataDao
 import ch.bziswiler.pvlogger.masterdata.server.modbus.services.MasterDataImporter
 import ch.bziswiler.pvlogger.masterdata.server.plugins.REGISTER_DEFINITIONS_PATH
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode

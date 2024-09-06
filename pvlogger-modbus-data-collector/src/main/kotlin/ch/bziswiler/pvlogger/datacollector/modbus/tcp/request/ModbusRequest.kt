@@ -2,9 +2,9 @@ package ch.bziswiler.pvlogger.datacollector.modbus.tcp.request
 
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.readUByte
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.readUShort
-import ch.bziswiler.pvlogger.modbus.tcp.frame.FunctionCode
-import ch.bziswiler.pvlogger.modbus.tcp.frame.MbapHeader
-import ch.bziswiler.pvlogger.modbus.tcp.response.ModbusResponse
+import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.FunctionCode
+import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.MbapHeader
+import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusResponse
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.ByteWriteChannel
 import java.time.LocalDateTime

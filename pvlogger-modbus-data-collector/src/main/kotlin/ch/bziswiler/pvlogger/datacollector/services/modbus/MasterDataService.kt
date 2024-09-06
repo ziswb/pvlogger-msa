@@ -1,9 +1,9 @@
 package ch.bziswiler.pvlogger.datacollector.services.modbus
 
 import ch.bziswiler.pvlogger.datacollector.config.AppConfig
-import ch.bziswiler.pvlogger.masterdata.modbus.Category
-import ch.bziswiler.pvlogger.masterdata.modbus.DeviceType
-import ch.bziswiler.pvlogger.masterdata.modbus.dto.ModbusRegisterDefinition
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO

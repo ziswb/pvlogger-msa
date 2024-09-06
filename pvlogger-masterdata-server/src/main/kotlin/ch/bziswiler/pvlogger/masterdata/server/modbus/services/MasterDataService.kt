@@ -1,7 +1,7 @@
 package ch.bziswiler.pvlogger.masterdata.server.modbus.services
 
-import ch.bziswiler.pvlogger.masterdata.modbus.Category
-import ch.bziswiler.pvlogger.masterdata.modbus.DeviceType
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType
 import ch.bziswiler.pvlogger.masterdata.server.modbus.schema.MasterDataDao
 import ch.bziswiler.pvlogger.masterdata.server.modbus.schema.MasterDataTable.category
 import ch.bziswiler.pvlogger.masterdata.server.modbus.schema.MasterDataTable.deviceType

@@ -2,8 +2,8 @@ package ch.bziswiler.pvlogger.dataaccessor.services.messaging.impl
 
 import ch.bziswiler.pvlogger.dataaccessor.services.messaging.MessageHandler
 import ch.bziswiler.pvlogger.dataaccessor.services.messaging.MessageReceiver
-import ch.bziswiler.pvlogger.messaging.meta.MqConfig
-import ch.bziswiler.pvlogger.messaging.meta.QueueName
+import ch.bziswiler.pvlogger.shared.messaging.meta.MqConfig
+import ch.bziswiler.pvlogger.shared.messaging.meta.QueueName
 import org.apache.activemq.ActiveMQConnectionFactory
 import javax.jms.Connection
 import javax.jms.Queue

@@ -1,6 +1,6 @@
 package ch.bziswiler.pvlogger.heartbeat.config
 
-import ch.bziswiler.pvlogger.messaging.meta.MqConfig
+import ch.bziswiler.pvlogger.shared.messaging.meta.MqConfig
 
 class AppConfig {
     lateinit var serverConfig: ServerConfig

@@ -1,7 +1,7 @@
 package ch.bziswiler.pvlogger.modbus.mockserver.utils
 
-import ch.bziswiler.pvlogger.modbus.tcp.frame.FunctionCode
-import ch.bziswiler.pvlogger.modbus.tcp.frame.MbapHeader
+import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.FunctionCode
+import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.MbapHeader
 
 object MockDataBuilder {
     fun buildHeader(

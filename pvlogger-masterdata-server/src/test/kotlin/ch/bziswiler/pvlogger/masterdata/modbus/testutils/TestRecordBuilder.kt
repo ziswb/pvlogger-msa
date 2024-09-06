@@ -1,10 +1,10 @@
 package ch.bziswiler.pvlogger.masterdata.modbus.testutils
 
-import ch.bziswiler.pvlogger.masterdata.modbus.Category
-import ch.bziswiler.pvlogger.masterdata.modbus.Gain
-import ch.bziswiler.pvlogger.masterdata.modbus.ReadWrite
-import ch.bziswiler.pvlogger.masterdata.modbus.Type
-import ch.bziswiler.pvlogger.masterdata.modbus.Unit
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.Gain
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.ReadWrite
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.Type
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.Unit
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import org.apache.commons.csv.CSVRecord

@@ -1,6 +1,6 @@
 package ch.bziswiler.pvlogger.dataaccessor.schema
 
-import ch.bziswiler.pvlogger.modbus.ModbusRegisterUIntValue
+import ch.bziswiler.pvlogger.shared.modbus.ModbusRegisterUIntValue
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.insert
 

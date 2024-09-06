@@ -1,10 +1,10 @@
 package ch.bziswiler.pvlogger.masterdata.server.modbus.schema
 
-import ch.bziswiler.pvlogger.masterdata.modbus.DeviceType
-import ch.bziswiler.pvlogger.masterdata.modbus.Quantity
-import ch.bziswiler.pvlogger.masterdata.modbus.RegisterAddress
-import ch.bziswiler.pvlogger.masterdata.modbus.Scope
-import ch.bziswiler.pvlogger.masterdata.modbus.dto.ModbusRegisterDefinition
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.Quantity
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.RegisterAddress
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.Scope
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
 import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.batchInsert

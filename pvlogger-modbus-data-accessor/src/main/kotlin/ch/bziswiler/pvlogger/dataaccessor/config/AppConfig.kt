@@ -1,6 +1,6 @@
 package ch.bziswiler.pvlogger.dataaccessor.config
 
-import ch.bziswiler.pvlogger.messaging.meta.MqConfig
+import ch.bziswiler.pvlogger.shared.messaging.meta.MqConfig
 
 class AppConfig {
     lateinit var databaseConfig: DatabaseConfig
@@ -20,11 +20,4 @@ data class DatabaseConfig(
 
 data class ServerConfig(
     val isProd: Boolean,
-)
-
-data class MqConfig(
-    val clientId: String,
-    val user: String,
-    val passwd: String,
-    val brokerUrl: String
 )

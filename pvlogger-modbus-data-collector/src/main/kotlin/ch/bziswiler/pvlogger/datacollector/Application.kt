@@ -9,11 +9,11 @@ import ch.bziswiler.pvlogger.datacollector.services.modbus.impl.ModbusBatchedDyn
 import ch.bziswiler.pvlogger.datacollector.services.modbus.impl.ModbusBatchedStaticDataCollectionJob
 import ch.bziswiler.pvlogger.datacollector.services.modbus.impl.ModbusDeviceIdentifiersCollectionJob
 import ch.bziswiler.pvlogger.datacollector.services.modbus.impl.ModbusDeviceListCollectionJob
-import ch.bziswiler.pvlogger.messaging.meta.JobName.DEVICE_IDS_JOB
-import ch.bziswiler.pvlogger.messaging.meta.JobName.DEVICE_LIST_JOB
-import ch.bziswiler.pvlogger.messaging.meta.JobName.DYNAMIC_DATA_JOB
-import ch.bziswiler.pvlogger.messaging.meta.JobName.STATIC_DATA_JOB
-import ch.bziswiler.pvlogger.messaging.meta.JobStartMessageTag
+import ch.bziswiler.pvlogger.shared.messaging.meta.JobName.DEVICE_IDS_JOB
+import ch.bziswiler.pvlogger.shared.messaging.meta.JobName.DEVICE_LIST_JOB
+import ch.bziswiler.pvlogger.shared.messaging.meta.JobName.DYNAMIC_DATA_JOB
+import ch.bziswiler.pvlogger.shared.messaging.meta.JobName.STATIC_DATA_JOB
+import ch.bziswiler.pvlogger.shared.messaging.meta.JobStartMessageTag
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import org.koin.ktor.ext.inject

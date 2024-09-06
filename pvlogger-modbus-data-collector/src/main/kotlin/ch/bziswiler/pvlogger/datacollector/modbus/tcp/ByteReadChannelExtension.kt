@@ -1,6 +1,6 @@
 package ch.bziswiler.pvlogger.datacollector.modbus.tcp
 
-import ch.bziswiler.pvlogger.masterdata.modbus.dto.stringify
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.stringify
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.core.readBytes
 import kotlinx.coroutines.delay
