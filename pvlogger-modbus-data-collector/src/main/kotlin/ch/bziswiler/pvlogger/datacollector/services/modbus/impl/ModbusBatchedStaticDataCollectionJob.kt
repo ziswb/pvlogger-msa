@@ -10,7 +10,10 @@ import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category.CONFIG
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category.STATIC
 import ch.bziswiler.pvlogger.shared.messaging.job.status.JobStatusMessageFactory.staticDataCollectionJobFailedMessage
 import ch.bziswiler.pvlogger.shared.messaging.job.status.JobStatusMessageFactory.staticDataCollectionJobFinishedMessage
+import ch.bziswiler.pvlogger.shared.messaging.meta.JobFinishedMessageTag
 import ch.bziswiler.pvlogger.shared.messaging.meta.JobId
+import ch.bziswiler.pvlogger.shared.messaging.meta.JobName.STATIC_DATA_JOB
+import ch.bziswiler.pvlogger.shared.messaging.meta.StoreModbusRegisterValuesMessageTag
 import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusRegisterValueResponse
 import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusResponse
 import io.micrometer.core.instrument.Counter
@@ -43,16 +46,16 @@ class ModbusBatchedStaticDataCollectionJob(
     override fun storeResponse(response: ModbusResponse) {
         logger.debug("ModbusInverterBatchedStaticDataCollectionJob.storeResponse()")
         when (response) {
-            is ModbusRegisterValueResponse -> mqService.sendMessage(response)
+            is ModbusRegisterValueResponse -> mqService.sendTaggedMessage(response, StoreModbusRegisterValuesMessageTag())
             else -> throw UnsupportedOperationException("'storeResponse()' does not support '${response::class.java.canonicalName}'")
         }
     }
 
     override fun jobFinished(jobId: JobId) {
-        mqService.sendJobStatusMessage(staticDataCollectionJobFinishedMessage(jobId))
+        mqService.sendTaggedMessage(staticDataCollectionJobFinishedMessage(jobId), JobFinishedMessageTag(STATIC_DATA_JOB))
     }
 
     override fun jobFailed(jobId: JobId) {
-        mqService.sendJobStatusMessage(staticDataCollectionJobFailedMessage(jobId))
+        mqService.sendTaggedMessage(staticDataCollectionJobFailedMessage(jobId), JobFinishedMessageTag(STATIC_DATA_JOB))
     }
 }

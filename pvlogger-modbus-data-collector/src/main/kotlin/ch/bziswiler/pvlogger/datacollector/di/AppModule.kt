@@ -17,7 +17,7 @@ val appModule = module {
     single { IdProvider() }
     single { ModbusTcpChannel(get<AppConfig>()) }
     single { MasterDataService(get<AppConfig>()) }
-    single<MqService> { MqServiceImpl(get<AppConfig>()) }
+    single<MqService> { MqServiceImpl(get<AppConfig>().mqConfig) }
     single<ModbusBatchedDynamicDataCollectionJob> {
         ModbusBatchedDynamicDataCollectionJob(
             get<AppConfig>(),

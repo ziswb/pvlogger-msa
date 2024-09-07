@@ -42,8 +42,8 @@ fun Application.start() {
     val devIdsJob by inject<ModbusDeviceIdentifiersCollectionJob>()
     val devLstJob by inject<ModbusDeviceListCollectionJob>()
     val mqService by inject<MqService>()
-    mqService.addListener(JobTriggeringMqListener(JobStartMessageTag(DYNAMIC_DATA_JOB).toSelector(), dynDataJob))
-    mqService.addListener(JobTriggeringMqListener(JobStartMessageTag(STATIC_DATA_JOB).toSelector(), stcDataJob))
-    mqService.addListener(JobTriggeringMqListener(JobStartMessageTag(DEVICE_IDS_JOB).toSelector(), devIdsJob))
-    mqService.addListener(JobTriggeringMqListener(JobStartMessageTag(DEVICE_LIST_JOB).toSelector(), devLstJob))
+    mqService.addHandler(JobTriggeringMqListener(JobStartMessageTag(DYNAMIC_DATA_JOB).toSelector(), dynDataJob))
+    mqService.addHandler(JobTriggeringMqListener(JobStartMessageTag(STATIC_DATA_JOB).toSelector(), stcDataJob))
+    mqService.addHandler(JobTriggeringMqListener(JobStartMessageTag(DEVICE_IDS_JOB).toSelector(), devIdsJob))
+    mqService.addHandler(JobTriggeringMqListener(JobStartMessageTag(DEVICE_LIST_JOB).toSelector(), devLstJob))
 }

@@ -6,6 +6,7 @@ import ch.bziswiler.pvlogger.datacollector.modbus.tcp.request.ReadDeviceIdentifi
 import ch.bziswiler.pvlogger.datacollector.services.IdProvider
 import ch.bziswiler.pvlogger.datacollector.services.messaging.MqService
 import ch.bziswiler.pvlogger.datacollector.services.modbus.ModbusDataCollectionJob
+import ch.bziswiler.pvlogger.shared.messaging.meta.StoreModbusRegisterValuesMessageTag
 import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ReadDeviceIdentifiersResponse
 import io.micrometer.core.instrument.Metrics
 import io.micrometer.core.instrument.Timer
@@ -56,7 +57,7 @@ open class ModbusDeviceIdentifiersCollectionJob(
 
     private fun persist(response: ReadDeviceIdentifiersResponse) {
         logger.debug { "Storing device identifiers $response" }
-        mqService.sendMessage(response)
+        mqService.sendTaggedMessage(response, StoreModbusRegisterValuesMessageTag())
     }
 
     private fun readDeviceIdentifiers(

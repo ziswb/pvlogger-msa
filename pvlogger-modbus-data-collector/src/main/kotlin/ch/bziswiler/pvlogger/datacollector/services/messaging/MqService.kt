@@ -1,13 +1,13 @@
 package ch.bziswiler.pvlogger.datacollector.services.messaging
 
+import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
 import ch.bziswiler.pvlogger.shared.messaging.job.status.JobStatusMessage
-import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusResponse
+import ch.bziswiler.pvlogger.shared.messaging.meta.MessageTag
+import java.io.Serializable
 
 interface MqService {
 
-    fun addListener(listener: MqListener)
+    fun addHandler(handler: MessageHandler)
 
-    fun sendMessage(message: ModbusResponse)
-
-    fun sendJobStatusMessage(message: JobStatusMessage)
+    fun sendTaggedMessage(message: Serializable, tag: MessageTag)
 }

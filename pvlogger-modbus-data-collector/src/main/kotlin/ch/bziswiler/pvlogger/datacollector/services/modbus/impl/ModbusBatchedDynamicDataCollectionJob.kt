@@ -9,7 +9,10 @@ import ch.bziswiler.pvlogger.datacollector.services.modbus.ModbusBatchedDataColl
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category.ALARM
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category.DYNAMIC
 import ch.bziswiler.pvlogger.shared.messaging.job.status.JobStatusMessageFactory.dynamicDataCollectionJobFinishedMessage
+import ch.bziswiler.pvlogger.shared.messaging.meta.JobFinishedMessageTag
 import ch.bziswiler.pvlogger.shared.messaging.meta.JobId
+import ch.bziswiler.pvlogger.shared.messaging.meta.JobName.DYNAMIC_DATA_JOB
+import ch.bziswiler.pvlogger.shared.messaging.meta.StoreModbusRegisterValuesMessageTag
 import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusRegisterValueResponse
 import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusResponse
 import io.micrometer.core.instrument.Counter
@@ -39,20 +42,21 @@ class ModbusBatchedDynamicDataCollectionJob(
             .maximumExpectedValue(Duration.ofSeconds(120))
             .register(Metrics.globalRegistry)
 
-    override fun storeResponse(response: ModbusResponse) {
+    override fun
+            storeResponse(response: ModbusResponse) {
         logger.debug("ModbusInverterBatchedDynamicDataCollectionJob.storeResponse()")
         when (response) {
-            is ModbusRegisterValueResponse -> mqService.sendMessage(response)
+            is ModbusRegisterValueResponse -> mqService.sendTaggedMessage(response, StoreModbusRegisterValuesMessageTag())
             else -> throw UnsupportedOperationException("'storeResponse()' does not support '${response::class.java.canonicalName}'")
         }
     }
 
     override fun jobFinished(jobId: JobId) {
-        mqService.sendJobStatusMessage(dynamicDataCollectionJobFinishedMessage(jobId))
+        mqService.sendTaggedMessage(dynamicDataCollectionJobFinishedMessage(jobId), JobFinishedMessageTag(DYNAMIC_DATA_JOB))
     }
 
     override fun jobFailed(jobId: JobId) {
-        mqService.sendJobStatusMessage(dynamicDataCollectionJobFinishedMessage(jobId))
+        mqService.sendTaggedMessage(dynamicDataCollectionJobFinishedMessage(jobId), JobFinishedMessageTag(DYNAMIC_DATA_JOB))
     }
 }
 

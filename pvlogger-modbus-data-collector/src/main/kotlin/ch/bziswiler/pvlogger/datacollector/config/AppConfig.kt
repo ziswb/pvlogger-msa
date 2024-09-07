@@ -1,5 +1,7 @@
 package ch.bziswiler.pvlogger.datacollector.config
 
+import ch.bziswiler.pvlogger.shared.messaging.meta.MqConfig
+
 class AppConfig {
     lateinit var masterDataConfig: MasterDataConfig
     lateinit var serverConfig: ServerConfig
@@ -23,11 +25,4 @@ data class ModbusTcpConfig(
     val delay: Long,
     val meterDeviceIds: UByteArray,
     val inverterDeviceIds: UByteArray,
-)
-
-data class MqConfig(
-    val clientId: String,
-    val user: String,
-    val passwd: String,
-    val brokerUrl: String
 )
