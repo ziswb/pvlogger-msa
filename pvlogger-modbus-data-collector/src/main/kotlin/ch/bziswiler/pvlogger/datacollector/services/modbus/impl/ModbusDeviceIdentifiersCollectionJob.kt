@@ -4,7 +4,7 @@ import ch.bziswiler.pvlogger.datacollector.config.AppConfig
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.ModbusTcpChannel
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.request.ReadDeviceIdentifiersRequest
 import ch.bziswiler.pvlogger.datacollector.services.IdProvider
-import ch.bziswiler.pvlogger.datacollector.services.messaging.MqService
+import ch.bziswiler.pvlogger.datacollector.services.messaging.impl.PersistenceMessageSender
 import ch.bziswiler.pvlogger.datacollector.services.modbus.ModbusDataCollectionJob
 import ch.bziswiler.pvlogger.shared.messaging.meta.StoreModbusRegisterValuesMessageTag
 import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ReadDeviceIdentifiersResponse
@@ -20,9 +20,11 @@ open class ModbusDeviceIdentifiersCollectionJob(
     config: AppConfig,
     private val channel: ModbusTcpChannel,
     protected val idProvider: IdProvider,
-    private val mqService: MqService
+    private val persistenceMessageSender: PersistenceMessageSender
 ) : ModbusDataCollectionJob {
+
     private val logger = KotlinLogging.logger {}
+
     private val inverterDeviceIds = config.modbusTcpConfig.inverterDeviceIds
     private val counter = Metrics.counter("modbus-device-identifiers-collection-job-execution")
     private val timer =
@@ -57,7 +59,7 @@ open class ModbusDeviceIdentifiersCollectionJob(
 
     private fun persist(response: ReadDeviceIdentifiersResponse) {
         logger.debug { "Storing device identifiers $response" }
-        mqService.sendTaggedMessage(response, StoreModbusRegisterValuesMessageTag())
+        persistenceMessageSender.tagAndSendMessage(response, StoreModbusRegisterValuesMessageTag())
     }
 
     private fun readDeviceIdentifiers(

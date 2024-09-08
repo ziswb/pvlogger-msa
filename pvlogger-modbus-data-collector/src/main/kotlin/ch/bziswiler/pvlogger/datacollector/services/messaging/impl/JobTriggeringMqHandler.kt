@@ -4,7 +4,6 @@ import ch.bziswiler.pvlogger.datacollector.services.modbus.ModbusDataCollectionJ
 import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
 import javax.jms.Message
 
-class JobTriggeringMqListener(override val messageSelector: String, private val job: ModbusDataCollectionJob) : MessageHandler {
-
+class JobTriggeringMqHandler(override val messageSelector: String, private val job: ModbusDataCollectionJob) : MessageHandler {
     override fun onMessage(message: Message) = job.execute()
 }

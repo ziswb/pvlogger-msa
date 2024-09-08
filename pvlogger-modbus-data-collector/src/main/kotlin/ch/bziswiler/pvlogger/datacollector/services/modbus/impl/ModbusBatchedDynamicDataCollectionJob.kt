@@ -3,7 +3,8 @@ package ch.bziswiler.pvlogger.datacollector.services.modbus.impl
 import ch.bziswiler.pvlogger.datacollector.config.AppConfig
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.ModbusTcpChannel
 import ch.bziswiler.pvlogger.datacollector.services.IdProvider
-import ch.bziswiler.pvlogger.datacollector.services.messaging.MqService
+import ch.bziswiler.pvlogger.datacollector.services.messaging.impl.PersistenceMessageSender
+import ch.bziswiler.pvlogger.datacollector.services.messaging.impl.JobSchedulerMessageSender
 import ch.bziswiler.pvlogger.datacollector.services.modbus.MasterDataService
 import ch.bziswiler.pvlogger.datacollector.services.modbus.ModbusBatchedDataCollectionJob
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category.ALARM
@@ -12,14 +13,10 @@ import ch.bziswiler.pvlogger.shared.messaging.job.status.JobStatusMessageFactory
 import ch.bziswiler.pvlogger.shared.messaging.meta.JobFinishedMessageTag
 import ch.bziswiler.pvlogger.shared.messaging.meta.JobId
 import ch.bziswiler.pvlogger.shared.messaging.meta.JobName.DYNAMIC_DATA_JOB
-import ch.bziswiler.pvlogger.shared.messaging.meta.StoreModbusRegisterValuesMessageTag
-import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusRegisterValueResponse
-import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusResponse
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.Metrics
 import io.micrometer.core.instrument.Metrics.counter
 import io.micrometer.core.instrument.Timer
-import mu.KotlinLogging
 import java.time.Duration
 
 class ModbusBatchedDynamicDataCollectionJob(
@@ -27,36 +24,31 @@ class ModbusBatchedDynamicDataCollectionJob(
     channel: ModbusTcpChannel,
     idProvider: IdProvider,
     masterDataService: MasterDataService,
-    private val mqService: MqService
-) : ModbusBatchedDataCollectionJob(config, channel, idProvider, masterDataService) {
-    private val logger = KotlinLogging.logger {}
+    persistenceMessageSender: PersistenceMessageSender,
+    private val jobSchedulerMessageSender: JobSchedulerMessageSender
+) : ModbusBatchedDataCollectionJob(config, channel, idProvider, masterDataService, persistenceMessageSender) {
+
+    private val counterId = "modbus-batched-dynamic-data-collection-job-counter"
+    private val timerId = "modbus-batched-dynamic-data-collection-job-timer"
+
     override val categories = listOf(DYNAMIC, ALARM)
-    override val metricCounter: Counter = counter("modbus-inverter-batched-dynamic-data-collection-job-execution")
+    override val metricCounter: Counter = counter(counterId)
     override val metricTimer: Timer =
         Timer
-            .builder("modbus_inverter_batched_dynamic_data_collection_job_timer")
+            .builder(timerId)
             .publishPercentiles(0.5, 0.95)
             .publishPercentileHistogram()
-            .serviceLevelObjectives(Duration.ofSeconds(90))
-            .minimumExpectedValue(Duration.ofSeconds(60))
-            .maximumExpectedValue(Duration.ofSeconds(120))
+            .serviceLevelObjectives(Duration.ofMillis(1500))
+            .minimumExpectedValue(Duration.ofMillis(100))
+            .maximumExpectedValue(Duration.ofMillis(10000))
             .register(Metrics.globalRegistry)
 
-    override fun
-            storeResponse(response: ModbusResponse) {
-        logger.debug("ModbusInverterBatchedDynamicDataCollectionJob.storeResponse()")
-        when (response) {
-            is ModbusRegisterValueResponse -> mqService.sendTaggedMessage(response, StoreModbusRegisterValuesMessageTag())
-            else -> throw UnsupportedOperationException("'storeResponse()' does not support '${response::class.java.canonicalName}'")
-        }
-    }
-
     override fun jobFinished(jobId: JobId) {
-        mqService.sendTaggedMessage(dynamicDataCollectionJobFinishedMessage(jobId), JobFinishedMessageTag(DYNAMIC_DATA_JOB))
+        jobSchedulerMessageSender.tagAndSendMessage(dynamicDataCollectionJobFinishedMessage(jobId), JobFinishedMessageTag(DYNAMIC_DATA_JOB))
     }
 
     override fun jobFailed(jobId: JobId) {
-        mqService.sendTaggedMessage(dynamicDataCollectionJobFinishedMessage(jobId), JobFinishedMessageTag(DYNAMIC_DATA_JOB))
+        jobSchedulerMessageSender.tagAndSendMessage(dynamicDataCollectionJobFinishedMessage(jobId), JobFinishedMessageTag(DYNAMIC_DATA_JOB))
     }
 }
 

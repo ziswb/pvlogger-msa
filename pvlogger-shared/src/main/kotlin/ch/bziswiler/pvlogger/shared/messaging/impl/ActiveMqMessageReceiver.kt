@@ -2,43 +2,21 @@ package ch.bziswiler.pvlogger.shared.messaging.impl
 
 import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
 import ch.bziswiler.pvlogger.shared.messaging.MessageReceiver
-import ch.bziswiler.pvlogger.shared.messaging.meta.MqConfig
+import ch.bziswiler.pvlogger.shared.messaging.MqSessionFactory
 import ch.bziswiler.pvlogger.shared.messaging.meta.QueueName
-import org.apache.activemq.ActiveMQConnectionFactory
-import javax.jms.Connection
 import javax.jms.Queue
 import javax.jms.Session
-import javax.jms.Session.AUTO_ACKNOWLEDGE
 
 /*
  * see https://codenotfound.com/jms-publish-subscribe-messaging-example-activemq-maven.html for examples
  * see https://github.com/code-not-found/jms for code
  */
-class ActiveMqMessageReceiver(
-    private val mqConfig: MqConfig, private val queueName: QueueName
-) : MessageReceiver {
+open class ActiveMqMessageReceiver(private val mqSessionFactory: MqSessionFactory, final override val queueName: QueueName) : MessageReceiver {
 
-    private var session: Session
-    private var queue: Queue
+    private var session: Session = mqSessionFactory.session()
+    private var queue: Queue = session.createQueue(queueName.value)
 
-    init {
-        with(connection()) {
-            with(createSession(false, AUTO_ACKNOWLEDGE)) {
-                session = this
-                queue = createQueue(queueName.value)
-            }
-            start()
-        }
-    }
-
-    override fun addMessageHandler(listener: MessageHandler) = with(session.createConsumer(queue, listener.messageSelector)) {
-        messageListener = listener
-    }
-
-    private fun connection(): Connection = with(ActiveMQConnectionFactory(mqConfig.brokerUrl)) {
-        userName = mqConfig.user
-        password = mqConfig.passwd
-        clientID = mqConfig.clientId
-        createConnection()
+    override fun addMessageHandler(handler: MessageHandler) = with(session.createConsumer(queue, handler.messageSelector)) {
+        messageListener = handler
     }
 }

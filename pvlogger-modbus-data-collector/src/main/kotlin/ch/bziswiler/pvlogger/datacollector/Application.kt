@@ -3,12 +3,12 @@ package ch.bziswiler.pvlogger.datacollector
 import ch.bziswiler.pvlogger.datacollector.di.appModule
 import ch.bziswiler.pvlogger.datacollector.plugins.configureMonitoring
 import ch.bziswiler.pvlogger.datacollector.plugins.setupConfig
-import ch.bziswiler.pvlogger.datacollector.services.messaging.MqService
-import ch.bziswiler.pvlogger.datacollector.services.messaging.impl.JobTriggeringMqListener
+import ch.bziswiler.pvlogger.datacollector.services.messaging.impl.JobTriggeringMqHandler
 import ch.bziswiler.pvlogger.datacollector.services.modbus.impl.ModbusBatchedDynamicDataCollectionJob
 import ch.bziswiler.pvlogger.datacollector.services.modbus.impl.ModbusBatchedStaticDataCollectionJob
 import ch.bziswiler.pvlogger.datacollector.services.modbus.impl.ModbusDeviceIdentifiersCollectionJob
 import ch.bziswiler.pvlogger.datacollector.services.modbus.impl.ModbusDeviceListCollectionJob
+import ch.bziswiler.pvlogger.shared.messaging.MessageReceiver
 import ch.bziswiler.pvlogger.shared.messaging.meta.JobName.DEVICE_IDS_JOB
 import ch.bziswiler.pvlogger.shared.messaging.meta.JobName.DEVICE_LIST_JOB
 import ch.bziswiler.pvlogger.shared.messaging.meta.JobName.DYNAMIC_DATA_JOB
@@ -41,9 +41,9 @@ fun Application.start() {
     val stcDataJob by inject<ModbusBatchedStaticDataCollectionJob>()
     val devIdsJob by inject<ModbusDeviceIdentifiersCollectionJob>()
     val devLstJob by inject<ModbusDeviceListCollectionJob>()
-    val mqService by inject<MqService>()
-    mqService.addHandler(JobTriggeringMqListener(JobStartMessageTag(DYNAMIC_DATA_JOB).toSelector(), dynDataJob))
-    mqService.addHandler(JobTriggeringMqListener(JobStartMessageTag(STATIC_DATA_JOB).toSelector(), stcDataJob))
-    mqService.addHandler(JobTriggeringMqListener(JobStartMessageTag(DEVICE_IDS_JOB).toSelector(), devIdsJob))
-    mqService.addHandler(JobTriggeringMqListener(JobStartMessageTag(DEVICE_LIST_JOB).toSelector(), devLstJob))
+    val jobMsgReceiver by inject<MessageReceiver>()
+    jobMsgReceiver.addMessageHandler(JobTriggeringMqHandler(JobStartMessageTag(DYNAMIC_DATA_JOB).toSelector(), dynDataJob))
+    jobMsgReceiver.addMessageHandler(JobTriggeringMqHandler(JobStartMessageTag(STATIC_DATA_JOB).toSelector(), stcDataJob))
+    jobMsgReceiver.addMessageHandler(JobTriggeringMqHandler(JobStartMessageTag(DEVICE_IDS_JOB).toSelector(), devIdsJob))
+    jobMsgReceiver.addMessageHandler(JobTriggeringMqHandler(JobStartMessageTag(DEVICE_LIST_JOB).toSelector(), devLstJob))
 }

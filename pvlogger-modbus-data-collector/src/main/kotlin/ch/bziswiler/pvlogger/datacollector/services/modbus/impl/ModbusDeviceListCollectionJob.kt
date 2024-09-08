@@ -4,7 +4,7 @@ import ch.bziswiler.pvlogger.datacollector.config.AppConfig
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.ModbusTcpChannel
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.request.ReadDeviceListRequest
 import ch.bziswiler.pvlogger.datacollector.services.IdProvider
-import ch.bziswiler.pvlogger.datacollector.services.messaging.MqService
+import ch.bziswiler.pvlogger.datacollector.services.messaging.impl.PersistenceMessageSender
 import io.micrometer.core.instrument.Metrics
 import io.micrometer.core.instrument.Timer
 import mu.KotlinLogging
@@ -15,8 +15,8 @@ class ModbusDeviceListCollectionJob(
     config: AppConfig,
     channel: ModbusTcpChannel,
     idProvider: IdProvider,
-    mqService: MqService
-) : ModbusDeviceIdentifiersCollectionJob(config, channel, idProvider, mqService) {
+    persistenceMessageSender: PersistenceMessageSender
+) : ModbusDeviceIdentifiersCollectionJob(config, channel, idProvider, persistenceMessageSender) {
 
     private val logger = KotlinLogging.logger {}
     private val counter = Metrics.counter("modbus-device-list-collection-job-execution")

@@ -4,7 +4,7 @@ import ch.bziswiler.pvlogger.heartbeat.jobs.modbus.ModbusDeviceIdentifiersCollec
 import ch.bziswiler.pvlogger.heartbeat.jobs.modbus.ModbusDeviceListCollectionJob
 import ch.bziswiler.pvlogger.heartbeat.jobs.modbus.ModbusInverterBatchedDynamicDataCollectionJob
 import ch.bziswiler.pvlogger.heartbeat.jobs.modbus.ModbusInverterBatchedStaticDataCollectionJob
-import ch.bziswiler.pvlogger.shared.messaging.SimpleMessageSender
+import ch.bziswiler.pvlogger.shared.messaging.TagsMessageSender
 import mu.KotlinLogging
 import org.quartz.Job
 import org.quartz.Scheduler
@@ -12,7 +12,7 @@ import org.quartz.spi.JobFactory
 import org.quartz.spi.TriggerFiredBundle
 import kotlin.reflect.jvm.jvmName
 
-class PvLoggerJobFactory(private val messageSender: SimpleMessageSender) : JobFactory {
+class PvLoggerJobFactory(private val messageSender: TagsMessageSender) : JobFactory {
 
     private val logger = KotlinLogging.logger {}
 

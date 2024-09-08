@@ -3,13 +3,18 @@ package ch.bziswiler.pvlogger.datacollector.di
 import ch.bziswiler.pvlogger.datacollector.config.AppConfig
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.ModbusTcpChannel
 import ch.bziswiler.pvlogger.datacollector.services.IdProvider
-import ch.bziswiler.pvlogger.datacollector.services.messaging.MqService
-import ch.bziswiler.pvlogger.datacollector.services.messaging.impl.MqServiceImpl
+import ch.bziswiler.pvlogger.datacollector.services.messaging.impl.JobSchedulerMessageSender
+import ch.bziswiler.pvlogger.datacollector.services.messaging.impl.PersistenceMessageSender
 import ch.bziswiler.pvlogger.datacollector.services.modbus.MasterDataService
 import ch.bziswiler.pvlogger.datacollector.services.modbus.impl.ModbusBatchedDynamicDataCollectionJob
 import ch.bziswiler.pvlogger.datacollector.services.modbus.impl.ModbusBatchedStaticDataCollectionJob
 import ch.bziswiler.pvlogger.datacollector.services.modbus.impl.ModbusDeviceIdentifiersCollectionJob
 import ch.bziswiler.pvlogger.datacollector.services.modbus.impl.ModbusDeviceListCollectionJob
+import ch.bziswiler.pvlogger.shared.messaging.MessageReceiver
+import ch.bziswiler.pvlogger.shared.messaging.MqSessionFactory
+import ch.bziswiler.pvlogger.shared.messaging.impl.ActiveMqMessageReceiver
+import ch.bziswiler.pvlogger.shared.messaging.impl.ActiveMqSessionFactory
+import ch.bziswiler.pvlogger.shared.messaging.meta.QueueName.JOB_SCHEDULER
 import org.koin.dsl.module
 
 val appModule = module {
@@ -17,14 +22,18 @@ val appModule = module {
     single { IdProvider() }
     single { ModbusTcpChannel(get<AppConfig>()) }
     single { MasterDataService(get<AppConfig>()) }
-    single<MqService> { MqServiceImpl(get<AppConfig>().mqConfig) }
+    single<MqSessionFactory> { ActiveMqSessionFactory(get<AppConfig>().mqConfig) }
+    single<MessageReceiver> { ActiveMqMessageReceiver(get<MqSessionFactory>(), JOB_SCHEDULER) }
+    single<PersistenceMessageSender> { PersistenceMessageSender(get<MqSessionFactory>()) }
+    single<JobSchedulerMessageSender> { JobSchedulerMessageSender(get<MqSessionFactory>()) }
     single<ModbusBatchedDynamicDataCollectionJob> {
         ModbusBatchedDynamicDataCollectionJob(
             get<AppConfig>(),
             get<ModbusTcpChannel>(),
             get<IdProvider>(),
             get<MasterDataService>(),
-            get<MqService>()
+            get<PersistenceMessageSender>(),
+            get<JobSchedulerMessageSender>()
         )
     }
     single<ModbusBatchedStaticDataCollectionJob> {
@@ -33,7 +42,8 @@ val appModule = module {
             get<ModbusTcpChannel>(),
             get<IdProvider>(),
             get<MasterDataService>(),
-            get<MqService>()
+            get<PersistenceMessageSender>(),
+            get<JobSchedulerMessageSender>()
         )
     }
     single<ModbusDeviceIdentifiersCollectionJob> {
@@ -41,7 +51,7 @@ val appModule = module {
             get<AppConfig>(),
             get<ModbusTcpChannel>(),
             get<IdProvider>(),
-            get<MqService>()
+            get<PersistenceMessageSender>()
         )
     }
     single<ModbusDeviceListCollectionJob> {
@@ -49,7 +59,7 @@ val appModule = module {
             get<AppConfig>(),
             get<ModbusTcpChannel>(),
             get<IdProvider>(),
-            get<MqService>()
+            get<PersistenceMessageSender>()
         )
     }
 }

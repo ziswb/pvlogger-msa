@@ -4,12 +4,15 @@ import ch.bziswiler.pvlogger.datacollector.config.AppConfig
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.ModbusTcpChannel
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.request.ReadRegistersValueRequest
 import ch.bziswiler.pvlogger.datacollector.services.IdProvider
+import ch.bziswiler.pvlogger.datacollector.services.messaging.impl.PersistenceMessageSender
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType.INVERTER
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType.METER
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
 import ch.bziswiler.pvlogger.shared.messaging.meta.JobId
+import ch.bziswiler.pvlogger.shared.messaging.meta.StoreModbusRegisterValuesMessageTag
+import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusRegisterValueResponse
 import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusResponse
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.Timer
@@ -22,10 +25,12 @@ abstract class ModbusBatchedDataCollectionJob(
     config: AppConfig,
     private val channel: ModbusTcpChannel,
     private val idProvider: IdProvider,
-    private val masterDataService: MasterDataService
+    private val masterDataService: MasterDataService,
+    private val persistenceMessageSender: PersistenceMessageSender
 ) : ModbusDataCollectionJob {
 
     private val logger = KotlinLogging.logger {}
+
     private val meterDeviceIds = config.modbusTcpConfig.meterDeviceIds
     private val inverterDeviceIds = config.modbusTcpConfig.inverterDeviceIds
     private val deviceIdToDeviceTypesMap = mutableMapOf<UByte, List<DeviceType>>()
@@ -49,7 +54,14 @@ abstract class ModbusBatchedDataCollectionJob(
             .forEach { entry -> deviceIdToDeviceTypesMap[entry.key] = entry.value }
     }
 
-    abstract fun storeResponse(response: ModbusResponse)
+
+    private fun storeResponse(response: ModbusResponse) {
+        logger.debug("ModbusBatchedDataCollectionJob.storeResponse()")
+        when (response) {
+            is ModbusRegisterValueResponse -> persistenceMessageSender.tagAndSendMessage(response, StoreModbusRegisterValuesMessageTag())
+            else -> throw UnsupportedOperationException("'storeResponse()' does not support '${response::class.java.canonicalName}'")
+        }
+    }
 
     abstract fun jobFinished(jobId: JobId)
 

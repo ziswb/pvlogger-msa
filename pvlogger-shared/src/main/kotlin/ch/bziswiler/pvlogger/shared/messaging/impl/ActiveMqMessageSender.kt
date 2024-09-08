@@ -1,15 +1,13 @@
 package ch.bziswiler.pvlogger.shared.messaging.impl
 
-import ch.bziswiler.pvlogger.shared.messaging.SimpleMessageSender
+import ch.bziswiler.pvlogger.shared.messaging.MqSessionFactory
+import ch.bziswiler.pvlogger.shared.messaging.TaggedMessageSender
+import ch.bziswiler.pvlogger.shared.messaging.TagsMessageSender
 import ch.bziswiler.pvlogger.shared.messaging.meta.MessageTag
-import ch.bziswiler.pvlogger.shared.messaging.meta.MqConfig
 import ch.bziswiler.pvlogger.shared.messaging.meta.QueueName
 import mu.KotlinLogging
-import org.apache.activemq.ActiveMQConnectionFactory
-import javax.jms.Connection
+import java.io.Serializable
 import javax.jms.MessageProducer
-import javax.jms.Session
-import javax.jms.Session.AUTO_ACKNOWLEDGE
 
 private const val SECONDS_PER_MINUTE = 60
 private const val TWO = 2L
@@ -18,29 +16,19 @@ private const val TWO = 2L
  * see https://codenotfound.com/jms-publish-subscribe-messaging-example-activemq-maven.html for examples
  * see https://github.com/code-not-found/jms for code
  */
-open class ActiveMqMessageSender(override val queueName: QueueName, private val mqConfig: MqConfig) : SimpleMessageSender {
+open class ActiveMqMessageSender(private val mqSessionFactory: MqSessionFactory, final override val queueName: QueueName, ephemeralMessages: Boolean = false) : TagsMessageSender, TaggedMessageSender {
 
     private val logger = KotlinLogging.logger {}
 
     private val messageProducer: MessageProducer
-    private val session: Session
+    private val session = mqSessionFactory.session()
 
     init {
         // see https://activemq.apache.org/components/classic/documentation/connection-configuration-uri for details
-        with(connection()) {
-            session = createSession(false, AUTO_ACKNOWLEDGE)
-            val destination = session.createQueue(queueName.value)
-            messageProducer = session.createProducer(destination)
+        messageProducer = session.createProducer(session.createQueue(queueName.value))
+        if (ephemeralMessages) {
             messageProducer.timeToLive = TWO.minutes()
-            start()
         }
-    }
-
-    private fun connection(): Connection = with(ActiveMQConnectionFactory(mqConfig.brokerUrl)) {
-        userName = mqConfig.user
-        password = mqConfig.passwd
-        clientID = mqConfig.clientId
-        createConnection()
     }
 
     override fun sendTagsAsMessage(tags: List<MessageTag>) {
@@ -52,7 +40,21 @@ open class ActiveMqMessageSender(override val queueName: QueueName, private val 
         logger.debug {
             """
 SEND #########################################################################
-${mqConfig.clientId}: sent message: $msg
+ActiveMqMessageSender: sent message: $msg
+SEND #########################################################################
+"""
+        }
+    }
+
+    override fun tagAndSendMessage(message: Serializable, tag: MessageTag) {
+        logger.debug { "Sending message ..." }
+        val taggedMessage = session.createObjectMessage(message)
+        taggedMessage.setStringProperty(tag.key, tag.value)
+        messageProducer.send(taggedMessage)
+        logger.debug {
+            """
+SEND #########################################################################
+ActiveMqMessageSender: sent message with text='$taggedMessage'
 SEND #########################################################################
 """
         }
