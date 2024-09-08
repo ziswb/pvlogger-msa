@@ -24,7 +24,7 @@ private const val PARAM_DEV_TYPES = "deviceTypes"
 private const val PARAM_CATEGORIES = "categories"
 private const val PARAM_VALUE_SEPARATOR = ";"
 
-class MasterDataService(private val appConfig: AppConfig) {
+class MasterDataService(appConfig: AppConfig) {
 
     private val masterDataHostName = appConfig.masterDataConfig.host
     private val masterDataHostPort = appConfig.masterDataConfig.port

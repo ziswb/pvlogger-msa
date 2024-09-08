@@ -6,6 +6,10 @@ import ch.bziswiler.pvlogger.datacollector.modbus.tcp.request.ReadDeviceIdentifi
 import ch.bziswiler.pvlogger.datacollector.services.IdProvider
 import ch.bziswiler.pvlogger.datacollector.services.messaging.impl.PersistenceMessageSender
 import ch.bziswiler.pvlogger.datacollector.services.modbus.ModbusDataCollectionJob
+import ch.bziswiler.pvlogger.shared.messaging.job.status.JobStatusMessageFactory.deviceIdsDataCollectionJobFailedMessage
+import ch.bziswiler.pvlogger.shared.messaging.job.status.JobStatusMessageFactory.deviceIdsDataCollectionJobFinishedMessage
+import ch.bziswiler.pvlogger.shared.messaging.meta.JobId
+import ch.bziswiler.pvlogger.shared.messaging.meta.JobName.DEVICE_IDS_JOB
 import ch.bziswiler.pvlogger.shared.messaging.meta.StoreModbusRegisterValuesMessageTag
 import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ReadDeviceIdentifiersResponse
 import io.micrometer.core.instrument.Metrics
@@ -22,6 +26,8 @@ open class ModbusDeviceIdentifiersCollectionJob(
     protected val idProvider: IdProvider,
     private val persistenceMessageSender: PersistenceMessageSender
 ) : ModbusDataCollectionJob {
+
+    override val jobName = DEVICE_IDS_JOB
 
     private val logger = KotlinLogging.logger {}
 
@@ -41,6 +47,10 @@ open class ModbusDeviceIdentifiersCollectionJob(
         counter.increment()
         timer.recordCallable { executeForEachDeviceId(idProvider.nextJobId) }
     }
+
+    override fun jobFinishedMessageObject(jobId: JobId) = deviceIdsDataCollectionJobFinishedMessage(jobId)
+
+    override fun jobFailedMessageObject(jobId: JobId) = deviceIdsDataCollectionJobFailedMessage(jobId)
 
     private fun executeForEachDeviceId(jobId: String) = inverterDeviceIds.forEach { deviceId ->
         executeForSingleDeviceId(jobId, deviceId)

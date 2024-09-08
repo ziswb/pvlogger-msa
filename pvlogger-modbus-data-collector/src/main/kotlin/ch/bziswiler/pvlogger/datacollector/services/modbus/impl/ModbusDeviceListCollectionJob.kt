@@ -5,6 +5,10 @@ import ch.bziswiler.pvlogger.datacollector.modbus.tcp.ModbusTcpChannel
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.request.ReadDeviceListRequest
 import ch.bziswiler.pvlogger.datacollector.services.IdProvider
 import ch.bziswiler.pvlogger.datacollector.services.messaging.impl.PersistenceMessageSender
+import ch.bziswiler.pvlogger.shared.messaging.job.status.JobStatusMessageFactory.deviceListDataCollectionJobFailedMessage
+import ch.bziswiler.pvlogger.shared.messaging.job.status.JobStatusMessageFactory.deviceListDataCollectionJobFinishedMessage
+import ch.bziswiler.pvlogger.shared.messaging.meta.JobId
+import ch.bziswiler.pvlogger.shared.messaging.meta.JobName.DEVICE_LIST_JOB
 import io.micrometer.core.instrument.Metrics
 import io.micrometer.core.instrument.Timer
 import mu.KotlinLogging
@@ -17,6 +21,8 @@ class ModbusDeviceListCollectionJob(
     idProvider: IdProvider,
     persistenceMessageSender: PersistenceMessageSender
 ) : ModbusDeviceIdentifiersCollectionJob(config, channel, idProvider, persistenceMessageSender) {
+
+    override val jobName = DEVICE_LIST_JOB
 
     private val logger = KotlinLogging.logger {}
     private val counter = Metrics.counter("modbus-device-list-collection-job-execution")
@@ -37,6 +43,10 @@ class ModbusDeviceListCollectionJob(
             super.execute()
         }
     }
+
+    override fun jobFinishedMessageObject(jobId: JobId) = deviceListDataCollectionJobFinishedMessage(jobId)
+
+    override fun jobFailedMessageObject(jobId: JobId) = deviceListDataCollectionJobFailedMessage(jobId)
 
     override fun deviceIdentifiers(
         jobId: String,

@@ -17,7 +17,9 @@ object JobStatusMessageFactory {
     fun staticDataCollectionJobFinishedMessage(jobId: JobId) = jobFinishedMessage(STATIC_DATA_JOB, jobId)
     fun staticDataCollectionJobFailedMessage(jobId: JobId) = jobFailedMessage(STATIC_DATA_JOB, jobId)
     fun deviceIdsDataCollectionJobFinishedMessage(jobId: JobId) = jobFinishedMessage(DEVICE_IDS_JOB, jobId)
+    fun deviceIdsDataCollectionJobFailedMessage(jobId: JobId) = jobFailedMessage(DEVICE_IDS_JOB, jobId)
     fun deviceListDataCollectionJobFinishedMessage(jobId: JobId) = jobFinishedMessage(DEVICE_LIST_JOB, jobId)
+    fun deviceListDataCollectionJobFailedMessage(jobId: JobId) = jobFailedMessage(DEVICE_LIST_JOB, jobId)
 
     private fun jobFinishedMessage(jobName: JobName, jobId: JobId) = JobStatusMessage(JobFinishedMessageTag(jobName), jobId, FINISHED)
     private fun jobFailedMessage(jobName: JobName, jobId: JobId) = JobStatusMessage(JobFinishedMessageTag(jobName), jobId, FAILED)

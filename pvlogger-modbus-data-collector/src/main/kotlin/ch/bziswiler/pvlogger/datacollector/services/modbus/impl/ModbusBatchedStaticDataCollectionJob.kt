@@ -11,7 +11,6 @@ import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category.CONFIG
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category.STATIC
 import ch.bziswiler.pvlogger.shared.messaging.job.status.JobStatusMessageFactory.staticDataCollectionJobFailedMessage
 import ch.bziswiler.pvlogger.shared.messaging.job.status.JobStatusMessageFactory.staticDataCollectionJobFinishedMessage
-import ch.bziswiler.pvlogger.shared.messaging.meta.JobFinishedMessageTag
 import ch.bziswiler.pvlogger.shared.messaging.meta.JobId
 import ch.bziswiler.pvlogger.shared.messaging.meta.JobName.STATIC_DATA_JOB
 import io.micrometer.core.instrument.Counter
@@ -26,8 +25,10 @@ class ModbusBatchedStaticDataCollectionJob(
     idProvider: IdProvider,
     masterDataService: MasterDataService,
     persistenceMessageSender: PersistenceMessageSender,
-    private val jobSchedulerMessageSender: JobSchedulerMessageSender
-) : ModbusBatchedDataCollectionJob(config, channel, idProvider, masterDataService, persistenceMessageSender) {
+    jobSchedulerMessageSender: JobSchedulerMessageSender
+) : ModbusBatchedDataCollectionJob(config, channel, idProvider, masterDataService, persistenceMessageSender, jobSchedulerMessageSender) {
+
+    override val jobName = STATIC_DATA_JOB
 
     private val counterId = "modbus-batched-static-data-collection-job-counter"
     private val timerId = "modbus-batched-static-data-collection-job-timer"
@@ -44,11 +45,7 @@ class ModbusBatchedStaticDataCollectionJob(
             .maximumExpectedValue(Duration.ofMillis(10000))
             .register(Metrics.globalRegistry)
 
-    override fun jobFinished(jobId: JobId) {
-        jobSchedulerMessageSender.tagAndSendMessage(staticDataCollectionJobFinishedMessage(jobId), JobFinishedMessageTag(STATIC_DATA_JOB))
-    }
+    override fun jobFinishedMessageObject(jobId: JobId) = staticDataCollectionJobFinishedMessage(jobId)
 
-    override fun jobFailed(jobId: JobId) {
-        jobSchedulerMessageSender.tagAndSendMessage(staticDataCollectionJobFailedMessage(jobId), JobFinishedMessageTag(STATIC_DATA_JOB))
-    }
+    override fun jobFailedMessageObject(jobId: JobId) = staticDataCollectionJobFailedMessage(jobId)
 }

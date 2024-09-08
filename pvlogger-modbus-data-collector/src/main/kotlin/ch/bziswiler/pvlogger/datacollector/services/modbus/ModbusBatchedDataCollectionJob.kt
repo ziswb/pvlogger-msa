@@ -4,12 +4,14 @@ import ch.bziswiler.pvlogger.datacollector.config.AppConfig
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.ModbusTcpChannel
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.request.ReadRegistersValueRequest
 import ch.bziswiler.pvlogger.datacollector.services.IdProvider
+import ch.bziswiler.pvlogger.datacollector.services.messaging.impl.JobSchedulerMessageSender
 import ch.bziswiler.pvlogger.datacollector.services.messaging.impl.PersistenceMessageSender
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType.INVERTER
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType.METER
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
+import ch.bziswiler.pvlogger.shared.messaging.meta.JobFinishedMessageTag
 import ch.bziswiler.pvlogger.shared.messaging.meta.JobId
 import ch.bziswiler.pvlogger.shared.messaging.meta.StoreModbusRegisterValuesMessageTag
 import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusRegisterValueResponse
@@ -26,7 +28,8 @@ abstract class ModbusBatchedDataCollectionJob(
     private val channel: ModbusTcpChannel,
     private val idProvider: IdProvider,
     private val masterDataService: MasterDataService,
-    private val persistenceMessageSender: PersistenceMessageSender
+    private val persistenceMessageSender: PersistenceMessageSender,
+    private val jobSchedulerMessageSender: JobSchedulerMessageSender
 ) : ModbusDataCollectionJob {
 
     private val logger = KotlinLogging.logger {}
@@ -63,9 +66,9 @@ abstract class ModbusBatchedDataCollectionJob(
         }
     }
 
-    abstract fun jobFinished(jobId: JobId)
+    private fun jobFinished(jobId: JobId) = jobSchedulerMessageSender.tagAndSendMessage(jobFinishedMessageObject(jobId), JobFinishedMessageTag(jobName))
 
-    abstract fun jobFailed(jobId: JobId)
+    private fun jobFailed(jobId: JobId) = jobSchedulerMessageSender.tagAndSendMessage(jobFailedMessageObject(jobId), JobFinishedMessageTag(jobName))
 
     final override fun execute() {
         metricCounter.increment()
