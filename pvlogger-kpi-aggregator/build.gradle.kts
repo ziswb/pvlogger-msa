@@ -28,6 +28,8 @@ repositories {
 }
 
 dependencies {
+    implementation(libs.activemq.core)
+    implementation(libs.activemq.client)
 
     // Ktor
     implementation(libs.ktor.server.core)
@@ -38,6 +40,10 @@ dependencies {
     implementation(libs.kotlin.logging)
 
     implementation(project(":pvlogger-shared"))
+
+    // Koin
+    implementation(libs.koin.ktor)
+    implementation(libs.koin.logger.slf4j)
 
     // Testing
     testImplementation(libs.ktor.server.test.host)

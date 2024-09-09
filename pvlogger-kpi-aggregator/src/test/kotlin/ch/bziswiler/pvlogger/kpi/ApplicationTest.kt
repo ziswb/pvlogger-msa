@@ -1,0 +1,18 @@
+package ch.bziswiler.pvlogger.kpi
+
+import io.ktor.client.request.get
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.testing.testApplication
+import kotlin.test.Test
+import kotlin.test.assertEquals
+
+class ApplicationTest {
+    @Test
+    fun testRoot() = testApplication {
+        application {
+        }
+        client.get("/").apply {
+            assertEquals(HttpStatusCode.NotFound, status)
+        }
+    }
+}
