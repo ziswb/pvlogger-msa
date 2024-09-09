@@ -7,12 +7,12 @@ import ch.bziswiler.pvlogger.shared.messaging.MessageReceiver
 import ch.bziswiler.pvlogger.shared.messaging.MqSessionFactory
 import ch.bziswiler.pvlogger.shared.messaging.impl.ActiveMqMessageReceiver
 import ch.bziswiler.pvlogger.shared.messaging.impl.ActiveMqSessionFactory
-import ch.bziswiler.pvlogger.shared.messaging.meta.QueueName.PERSIST_MODBUS
+import ch.bziswiler.pvlogger.shared.messaging.meta.QueueName.JOB_SCHEDULER
 import org.koin.dsl.module
 
 val appModule = module {
     single<AppConfig> { AppConfig() }
     single<MessageHandler> { KpiAggregatingMessageHandler() }
     single<MqSessionFactory> { ActiveMqSessionFactory(get<AppConfig>().mqConfig) }
-    single<MessageReceiver> { ActiveMqMessageReceiver(get<MqSessionFactory>(), PERSIST_MODBUS) }
+    single<MessageReceiver> { ActiveMqMessageReceiver(get<MqSessionFactory>(), JOB_SCHEDULER) }
 }

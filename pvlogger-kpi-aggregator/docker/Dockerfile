@@ -17,8 +17,6 @@ COPY --from=build "/workspace/pvlogger-kpi-aggregator/build/libs/pvlogger-kpi-ag
 RUN useradd -u 1000 bziswiler
 USER bziswiler
 
-ENV ACTIVEMQ_HOST="activemq.activemq.svc.cluster.local"
-ENV ACTIVEMQ_PORT="61616"
 ENV TZ="Europe/Zurich"
 
 ENTRYPOINT [ \
