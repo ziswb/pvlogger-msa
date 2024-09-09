@@ -75,11 +75,13 @@ abstract class ModbusBatchedDataCollectionJob(
         metricTimer.recordCallable {
             val jobId = JobId(idProvider.nextJobId)
             runCatching {
-                logger.debug("ModbusInverterBatchedDataCollectionJobScaffold.execute()")
+                logger.debug { "ModbusInverterBatchedDataCollectionJobScaffold.execute().runCatching()" }
                 deviceIdToDeviceTypesMap.forEach { fetchRegisterValues(jobId, it.key, it.value) }
             }.onSuccess {
+                logger.debug { "ModbusInverterBatchedDataCollectionJobScaffold.execute().onSuccess()" }
                 jobFinished(jobId)
             }.onFailure {
+                logger.error(it) { "ModbusInverterBatchedDataCollectionJobScaffold.execute().onFailure()" }
                 jobFailed(jobId)
                 throw it
             }
@@ -87,11 +89,13 @@ abstract class ModbusBatchedDataCollectionJob(
     }
 
     private fun fetchRegisterValues(jobId: JobId, deviceId: UByte, deviceTypes: List<DeviceType>) {
-        logger.debug("ModbusInverterBatchedDataCollectionJobScaffold.readAndStoreRegisterValues()")
+        logger.debug { "ModbusInverterBatchedDataCollectionJobScaffold.readAndStoreRegisterValues()" }
         listOfRegisterDefinitionLists(deviceTypes).forEach { registerDefinitions ->
             runCatching {
+                logger.debug { "ModbusInverterBatchedDataCollectionJobScaffold.fetchRegisterValues().runCatching()" }
                 requestRegisterValues(buildRequest(jobId, deviceId, registerDefinitions))
             }.onSuccess {
+                logger.debug { "ModbusInverterBatchedDataCollectionJobScaffold.fetchRegisterValues().onSuccess()" }
                 storeResponse(it)
             }.onFailure {
                 logger.error(it) { "Fetching modbus data failed" }

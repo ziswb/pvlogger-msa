@@ -60,11 +60,14 @@ open class ModbusDeviceIdentifiersCollectionJob(
         jobId: String,
         deviceId: UByte,
     ) = runCatching {
+        logger.debug { "ModbusDeviceIdentifiersCollectionJob.executeForSingleDeviceId().runCatching()" }
         readDeviceIdentifiers(jobId, deviceId)
     }.onSuccess {
+        logger.debug { "ModbusDeviceIdentifiersCollectionJob.executeForSingleDeviceId().onSuccess()" }
         persist(it)
     }.onFailure {
         logger.error(it) { "Fetching device identifiers for device '$deviceId' failed" }
+        throw it
     }
 
     private fun persist(response: ReadDeviceIdentifiersResponse) {
