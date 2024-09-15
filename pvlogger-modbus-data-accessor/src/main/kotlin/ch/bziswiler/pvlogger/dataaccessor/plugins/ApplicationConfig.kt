@@ -5,7 +5,7 @@ package ch.bziswiler.pvlogger.dataaccessor.plugins
 import ch.bziswiler.pvlogger.dataaccessor.config.AppConfig
 import ch.bziswiler.pvlogger.dataaccessor.config.DatabaseConfig
 import ch.bziswiler.pvlogger.dataaccessor.config.ServerConfig
-import ch.bziswiler.pvlogger.shared.messaging.meta.MqConfig
+import ch.bziswiler.pvlogger.shared.messaging.config.MqConfig
 import io.ktor.server.application.Application
 import org.koin.ktor.ext.inject
 

@@ -4,8 +4,8 @@ import ch.bziswiler.pvlogger.heartbeat.jobs.MessageProducingJob
 import ch.bziswiler.pvlogger.heartbeat.jobs.management.JobConfiguration
 import ch.bziswiler.pvlogger.heartbeat.jobs.management.JobConfigurationHolder
 import ch.bziswiler.pvlogger.shared.messaging.TagsMessageSender
-import ch.bziswiler.pvlogger.shared.messaging.meta.JobName.DYNAMIC_DATA_JOB
-import ch.bziswiler.pvlogger.shared.messaging.meta.JobStartMessageTag
+import ch.bziswiler.pvlogger.shared.job.meta.JobName.DYNAMIC_DATA_JOB
+import ch.bziswiler.pvlogger.shared.job.tags.JobStartMessageTag
 import io.micrometer.core.instrument.Metrics.counter
 import mu.KotlinLogging
 import org.quartz.JobExecutionContext

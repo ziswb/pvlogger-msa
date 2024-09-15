@@ -4,7 +4,7 @@ import ch.bziswiler.pvlogger.heartbeat.config.AppConfig
 import ch.bziswiler.pvlogger.heartbeat.config.DatabaseConfig
 import ch.bziswiler.pvlogger.heartbeat.config.JobConfig
 import ch.bziswiler.pvlogger.heartbeat.config.ServerConfig
-import ch.bziswiler.pvlogger.shared.messaging.meta.MqConfig
+import ch.bziswiler.pvlogger.shared.messaging.config.MqConfig
 import io.ktor.server.application.Application
 import org.koin.ktor.ext.inject
 

@@ -11,9 +11,9 @@ import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType.INVERTER
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType.METER
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
-import ch.bziswiler.pvlogger.shared.messaging.meta.JobFinishedMessageTag
-import ch.bziswiler.pvlogger.shared.messaging.meta.JobId
-import ch.bziswiler.pvlogger.shared.messaging.meta.StoreModbusRegisterValuesMessageTag
+import ch.bziswiler.pvlogger.shared.job.tags.JobFinishedMessageTag
+import ch.bziswiler.pvlogger.shared.job.meta.JobId
+import ch.bziswiler.pvlogger.shared.job.tags.StoreModbusRegisterValuesMessageTag
 import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusRegisterValueResponse
 import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusResponse
 import io.micrometer.core.instrument.Counter

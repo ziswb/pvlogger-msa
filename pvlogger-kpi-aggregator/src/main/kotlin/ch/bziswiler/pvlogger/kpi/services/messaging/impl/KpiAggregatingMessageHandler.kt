@@ -1,9 +1,9 @@
 package ch.bziswiler.pvlogger.kpi.services.messaging.impl
 
 import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
-import ch.bziswiler.pvlogger.shared.messaging.job.status.JobStatusMessage
-import ch.bziswiler.pvlogger.shared.messaging.meta.JobFinishedMessageTag
-import ch.bziswiler.pvlogger.shared.messaging.meta.JobName
+import ch.bziswiler.pvlogger.shared.job.status.JobStatusMessage
+import ch.bziswiler.pvlogger.shared.job.tags.JobFinishedMessageTag
+import ch.bziswiler.pvlogger.shared.job.meta.JobName
 import mu.KotlinLogging
 import javax.jms.Message
 import javax.jms.ObjectMessage

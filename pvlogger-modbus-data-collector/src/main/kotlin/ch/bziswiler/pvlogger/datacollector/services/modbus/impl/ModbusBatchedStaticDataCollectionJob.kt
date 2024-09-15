@@ -9,10 +9,10 @@ import ch.bziswiler.pvlogger.datacollector.services.modbus.MasterDataService
 import ch.bziswiler.pvlogger.datacollector.services.modbus.ModbusBatchedDataCollectionJob
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category.CONFIG
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category.STATIC
-import ch.bziswiler.pvlogger.shared.messaging.job.status.JobStatusMessageFactory.staticDataCollectionJobFailedMessage
-import ch.bziswiler.pvlogger.shared.messaging.job.status.JobStatusMessageFactory.staticDataCollectionJobFinishedMessage
-import ch.bziswiler.pvlogger.shared.messaging.meta.JobId
-import ch.bziswiler.pvlogger.shared.messaging.meta.JobName.STATIC_DATA_JOB
+import ch.bziswiler.pvlogger.shared.job.status.JobStatusMessageFactory.staticDataCollectionJobFailedMessage
+import ch.bziswiler.pvlogger.shared.job.status.JobStatusMessageFactory.staticDataCollectionJobSucceededMessage
+import ch.bziswiler.pvlogger.shared.job.meta.JobId
+import ch.bziswiler.pvlogger.shared.job.meta.JobName.STATIC_DATA_JOB
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.Metrics
 import io.micrometer.core.instrument.Metrics.counter
@@ -45,7 +45,7 @@ class ModbusBatchedStaticDataCollectionJob(
             .maximumExpectedValue(Duration.ofMillis(10000))
             .register(Metrics.globalRegistry)
 
-    override fun jobFinishedMessageObject(jobId: JobId) = staticDataCollectionJobFinishedMessage(jobId)
+    override fun jobFinishedMessageObject(jobId: JobId) = staticDataCollectionJobSucceededMessage(jobId)
 
     override fun jobFailedMessageObject(jobId: JobId) = staticDataCollectionJobFailedMessage(jobId)
 }

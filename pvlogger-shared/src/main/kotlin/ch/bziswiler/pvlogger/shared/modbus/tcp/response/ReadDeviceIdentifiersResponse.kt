@@ -1,7 +1,7 @@
 package ch.bziswiler.pvlogger.shared.modbus.tcp.response
 
-import ch.bziswiler.pvlogger.shared.messaging.meta.JobId
-import ch.bziswiler.pvlogger.shared.messaging.meta.RequestId
+import ch.bziswiler.pvlogger.shared.job.meta.JobId
+import ch.bziswiler.pvlogger.shared.job.meta.RequestId
 import ch.bziswiler.pvlogger.shared.modbus.ModbusObject
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.FunctionCode
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.MbapHeader

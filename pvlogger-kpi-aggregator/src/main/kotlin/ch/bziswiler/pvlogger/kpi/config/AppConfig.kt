@@ -1,6 +1,6 @@
 package ch.bziswiler.pvlogger.kpi.config
 
-import ch.bziswiler.pvlogger.shared.messaging.meta.MqConfig
+import ch.bziswiler.pvlogger.shared.messaging.config.MqConfig
 
 class AppConfig {
     lateinit var serverConfig: ServerConfig

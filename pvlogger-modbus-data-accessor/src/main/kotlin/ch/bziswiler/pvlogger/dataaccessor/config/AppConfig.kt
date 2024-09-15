@@ -1,6 +1,6 @@
 package ch.bziswiler.pvlogger.dataaccessor.config
 
-import ch.bziswiler.pvlogger.shared.messaging.meta.MqConfig
+import ch.bziswiler.pvlogger.shared.messaging.config.MqConfig
 
 class AppConfig {
     lateinit var databaseConfig: DatabaseConfig

@@ -1,6 +1,6 @@
 package ch.bziswiler.pvlogger.datacollector.config
 
-import ch.bziswiler.pvlogger.shared.messaging.meta.MqConfig
+import ch.bziswiler.pvlogger.shared.messaging.config.MqConfig
 
 class AppConfig {
     lateinit var masterDataConfig: MasterDataConfig

@@ -2,7 +2,7 @@ package ch.bziswiler.pvlogger.dataaccessor.services.messaging.impl
 
 import ch.bziswiler.pvlogger.dataaccessor.services.persistence.ModbusDao
 import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
-import ch.bziswiler.pvlogger.shared.messaging.meta.StoreModbusRegisterValuesMessageTag
+import ch.bziswiler.pvlogger.shared.job.tags.StoreModbusRegisterValuesMessageTag
 import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusRegisterValueResponse
 import mu.KotlinLogging
 import javax.jms.Message

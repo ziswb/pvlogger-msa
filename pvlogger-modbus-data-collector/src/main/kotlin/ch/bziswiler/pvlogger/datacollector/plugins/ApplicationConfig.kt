@@ -6,7 +6,7 @@ import ch.bziswiler.pvlogger.datacollector.config.AppConfig
 import ch.bziswiler.pvlogger.datacollector.config.MasterDataConfig
 import ch.bziswiler.pvlogger.datacollector.config.ModbusTcpConfig
 import ch.bziswiler.pvlogger.datacollector.config.ServerConfig
-import ch.bziswiler.pvlogger.shared.messaging.meta.MqConfig
+import ch.bziswiler.pvlogger.shared.messaging.config.MqConfig
 import io.ktor.server.application.Application
 import org.koin.ktor.ext.inject
 

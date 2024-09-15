@@ -3,8 +3,8 @@ package ch.bziswiler.pvlogger.heartbeat.jobs.modbus
 import ch.bziswiler.pvlogger.heartbeat.jobs.management.ConfigurableJobConfigurationHolder
 import ch.bziswiler.pvlogger.heartbeat.jobs.management.JobConfiguration
 import ch.bziswiler.pvlogger.shared.messaging.TagsMessageSender
-import ch.bziswiler.pvlogger.shared.messaging.meta.JobName.DEVICE_LIST_JOB
-import ch.bziswiler.pvlogger.shared.messaging.meta.JobStartMessageTag
+import ch.bziswiler.pvlogger.shared.job.meta.JobName.DEVICE_LIST_JOB
+import ch.bziswiler.pvlogger.shared.job.tags.JobStartMessageTag
 import io.micrometer.core.instrument.Metrics
 import mu.KotlinLogging
 import org.quartz.JobExecutionContext

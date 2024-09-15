@@ -3,7 +3,7 @@ package ch.bziswiler.pvlogger.shared.messaging.impl
 import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
 import ch.bziswiler.pvlogger.shared.messaging.MessageReceiver
 import ch.bziswiler.pvlogger.shared.messaging.MqSessionFactory
-import ch.bziswiler.pvlogger.shared.messaging.meta.QueueName
+import ch.bziswiler.pvlogger.shared.messaging.QueueName
 import javax.jms.Queue
 import javax.jms.Session
 

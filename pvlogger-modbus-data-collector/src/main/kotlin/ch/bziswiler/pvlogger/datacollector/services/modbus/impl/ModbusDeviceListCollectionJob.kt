@@ -5,10 +5,10 @@ import ch.bziswiler.pvlogger.datacollector.modbus.tcp.ModbusTcpChannel
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.request.ReadDeviceListRequest
 import ch.bziswiler.pvlogger.datacollector.services.IdProvider
 import ch.bziswiler.pvlogger.datacollector.services.messaging.impl.PersistenceMessageSender
-import ch.bziswiler.pvlogger.shared.messaging.job.status.JobStatusMessageFactory.deviceListDataCollectionJobFailedMessage
-import ch.bziswiler.pvlogger.shared.messaging.job.status.JobStatusMessageFactory.deviceListDataCollectionJobFinishedMessage
-import ch.bziswiler.pvlogger.shared.messaging.meta.JobId
-import ch.bziswiler.pvlogger.shared.messaging.meta.JobName.DEVICE_LIST_JOB
+import ch.bziswiler.pvlogger.shared.job.status.JobStatusMessageFactory.deviceListDataCollectionJobFailedMessage
+import ch.bziswiler.pvlogger.shared.job.status.JobStatusMessageFactory.deviceListDataCollectionJobSucceededMessage
+import ch.bziswiler.pvlogger.shared.job.meta.JobId
+import ch.bziswiler.pvlogger.shared.job.meta.JobName.DEVICE_LIST_JOB
 import io.micrometer.core.instrument.Metrics
 import io.micrometer.core.instrument.Timer
 import mu.KotlinLogging
@@ -44,7 +44,7 @@ class ModbusDeviceListCollectionJob(
         }
     }
 
-    override fun jobFinishedMessageObject(jobId: JobId) = deviceListDataCollectionJobFinishedMessage(jobId)
+    override fun jobFinishedMessageObject(jobId: JobId) = deviceListDataCollectionJobSucceededMessage(jobId)
 
     override fun jobFailedMessageObject(jobId: JobId) = deviceListDataCollectionJobFailedMessage(jobId)
 

@@ -4,7 +4,7 @@ package ch.bziswiler.pvlogger.kpi.plugins
 
 import ch.bziswiler.pvlogger.kpi.config.AppConfig
 import ch.bziswiler.pvlogger.kpi.config.ServerConfig
-import ch.bziswiler.pvlogger.shared.messaging.meta.MqConfig
+import ch.bziswiler.pvlogger.shared.messaging.config.MqConfig
 import io.ktor.server.application.Application
 import org.koin.ktor.ext.inject
 

@@ -10,7 +10,7 @@ import ch.bziswiler.pvlogger.shared.messaging.MqSessionFactory
 import ch.bziswiler.pvlogger.shared.messaging.TagsMessageSender
 import ch.bziswiler.pvlogger.shared.messaging.impl.ActiveMqMessageSender
 import ch.bziswiler.pvlogger.shared.messaging.impl.ActiveMqSessionFactory
-import ch.bziswiler.pvlogger.shared.messaging.meta.QueueName.JOB_SCHEDULER
+import ch.bziswiler.pvlogger.shared.messaging.QueueName.JOB_SCHEDULER
 import org.koin.dsl.module
 import org.quartz.spi.JobFactory
 

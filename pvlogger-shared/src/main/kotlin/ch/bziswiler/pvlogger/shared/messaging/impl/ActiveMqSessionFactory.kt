@@ -1,7 +1,7 @@
 package ch.bziswiler.pvlogger.shared.messaging.impl
 
 import ch.bziswiler.pvlogger.shared.messaging.MqSessionFactory
-import ch.bziswiler.pvlogger.shared.messaging.meta.MqConfig
+import ch.bziswiler.pvlogger.shared.messaging.config.MqConfig
 import org.apache.activemq.ActiveMQConnectionFactory
 import javax.jms.Connection
 import javax.jms.Session

@@ -1,8 +1,8 @@
 package ch.bziswiler.pvlogger.datacollector.modbus.tcp.request
 
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.readUByte
-import ch.bziswiler.pvlogger.shared.messaging.meta.JobId
-import ch.bziswiler.pvlogger.shared.messaging.meta.RequestId
+import ch.bziswiler.pvlogger.shared.job.meta.JobId
+import ch.bziswiler.pvlogger.shared.job.meta.RequestId
 import ch.bziswiler.pvlogger.shared.modbus.ModbusRegisterValue
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.FunctionCode
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.FunctionCode.Companion.from

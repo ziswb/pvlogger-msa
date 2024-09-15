@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.shared.messaging.meta
+package ch.bziswiler.pvlogger.shared.tags
 
 import java.io.Serializable
 
