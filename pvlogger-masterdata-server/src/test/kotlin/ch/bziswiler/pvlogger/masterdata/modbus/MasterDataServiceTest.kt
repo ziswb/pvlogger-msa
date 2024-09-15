@@ -1,14 +1,15 @@
 package ch.bziswiler.pvlogger.masterdata.modbus
 
-import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
 import ch.bziswiler.pvlogger.masterdata.modbus.testutils.BaseApplicationTest
 import ch.bziswiler.pvlogger.masterdata.modbus.testutils.TestRecordBuilder
 import ch.bziswiler.pvlogger.masterdata.server.config.AppConfig
 import ch.bziswiler.pvlogger.masterdata.server.modbus.schema.MasterDataDao
 import ch.bziswiler.pvlogger.masterdata.server.modbus.services.MasterDataImporter
+import ch.bziswiler.pvlogger.masterdata.server.plugins.GAIN_PATH
 import ch.bziswiler.pvlogger.masterdata.server.plugins.REGISTER_DEFINITIONS_PATH
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
@@ -27,32 +28,41 @@ class MasterDataServiceTest : BaseApplicationTest() {
     }
 
     @Test
-    fun testMasterDataService() =
-        withApp {
-            startApplication()
-            setUpDatabase()
-            client.get(REGISTER_DEFINITIONS_PATH) {
-                url {
-                    parameters.append("deviceTypes", listOf("INVERTER").joinToString(separator = ";"))
-                    parameters.append("categories", listOf("ALARM").joinToString(separator = ";"))
-                }
-            }.apply {
-                assertEquals(HttpStatusCode.OK, status)
-                val string = bodyAsText()
-                val result = Json.decodeFromString<Array<ModbusRegisterDefinition>>(string)
-                assertEquals(Category.ALARM, result.first().category)
+    fun testMasterDataService() = withApp {
+        startApplication()
+        setUpDatabase()
+        client.get(REGISTER_DEFINITIONS_PATH) {
+            url {
+                parameters.append("deviceTypes", listOf("INVERTER").joinToString(separator = ";"))
+                parameters.append("categories", listOf("ALARM").joinToString(separator = ";"))
             }
+        }.apply {
+            assertEquals(HttpStatusCode.OK, status)
+            val string = bodyAsText()
+            val result = Json.decodeFromString<Array<ModbusRegisterDefinition>>(string)
+            assertEquals(Category.ALARM, result.first().category)
         }
+    }
 
     @Test
-    fun `test master data service with illegal query parameters`() =
-        withApp {
-            client.get(REGISTER_DEFINITIONS_PATH) {
-                url {
-                    parameters.append("categories", listOf("foo", "bar", "baz").joinToString(separator = ";"))
-                }
-            }.apply {
-                assertEquals(HttpStatusCode.BadRequest, status)
+    fun `test master data service with illegal query parameters`() = withApp {
+        client.get(REGISTER_DEFINITIONS_PATH) {
+            url {
+                parameters.append("categories", listOf("foo", "bar", "baz").joinToString(separator = ";"))
             }
+        }.apply {
+            assertEquals(HttpStatusCode.BadRequest, status)
         }
+    }
+
+    @Test
+    fun testGetGainAddress() = withApp {
+        val address = 1
+        startApplication()
+        setUpDatabase()
+        client.get(GAIN_PATH.replace("{address}", "$address")).apply {
+            assertEquals(HttpStatusCode.OK, status)
+            assertEquals("$address", bodyAsText())
+        }
+    }
 }
