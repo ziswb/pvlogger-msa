@@ -38,16 +38,15 @@ dependencies {
     implementation(libs.activemq.core)
     implementation(libs.activemq.client)
 
+    // Serialization
     implementation(libs.ktor.serialization.kotlinx.json)
+
     implementation(libs.ktor.server.call.logging)
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.call.id)
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.server.metrics.micrometer)
     implementation(libs.ktor.server.netty)
-
-    // Needed in order to recognize the subprojects serializable annotations
-    implementation(libs.ktor.serialization.jackson)
 
     implementation(project(":pvlogger-shared"))
 

@@ -1,15 +1,16 @@
 package ch.bziswiler.pvlogger.dataaccessor.plugins
 
-import com.fasterxml.jackson.databind.SerializationFeature
-import io.ktor.serialization.jackson.jackson
+import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import kotlinx.serialization.json.Json
 
 fun Application.configureSerialization() {
     install(ContentNegotiation) {
-        jackson {
-            enable(SerializationFeature.INDENT_OUTPUT)
-        }
+        json(Json {
+            prettyPrint = true
+            encodeDefaults = true
+        })
     }
 }

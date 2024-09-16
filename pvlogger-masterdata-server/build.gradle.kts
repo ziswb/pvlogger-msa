@@ -35,16 +35,15 @@ repositories {
 }
 
 dependencies {
-    // Ktor
+    // Serialization
     implementation(libs.ktor.serialization.kotlinx.json)
+
+    // Ktor
     implementation(libs.ktor.server.call.logging)
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.metrics.micrometer)
     implementation(libs.ktor.server.netty)
-
-    // Needed in order to recognize the subprojects serializable annotations
-    implementation(libs.ktor.serialization.jackson)
 
     // Shared pvlogger-resources
     implementation(project(":pvlogger-shared"))
