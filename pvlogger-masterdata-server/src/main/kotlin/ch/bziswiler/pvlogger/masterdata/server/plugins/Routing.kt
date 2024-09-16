@@ -66,14 +66,14 @@ fun Application.configureRouting() {
 
                     else -> {
                         logger.info { "address: $address" }
-                        val result: String? = masterDataService.gainForAddress(address)
+                        val result: String? = masterDataService.gainForRegisterAddress(address)
                         logger.info { "result: $result" }
                         if (result != null) {
                             call.response.status(HttpStatusCode.OK)
                             call.respondText(result, ContentType.Text.Plain)
                         } else {
                             call.response.status(HttpStatusCode.BadRequest)
-                            call.respond("No gain for address '$address' found")
+                            call.respond("No gain for register address '$address' found")
                         }
                     }
                 }

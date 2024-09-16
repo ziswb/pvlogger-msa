@@ -13,7 +13,7 @@ class MasterDataService(private val dao: MasterDataDao) {
 
     fun registerDefinitionList(categories: List<Category>, deviceTypes: List<DeviceType>) = runBlocking { dao.registerDefinitionList(whereCondition(categories, deviceTypes)) }
 
-    fun gainForAddress(address: Int): String? = runBlocking { dao.gainForRegisterAddress(address) }
+    fun gainForRegisterAddress(address: Int): String? = runBlocking { dao.gainForRegisterAddress(address) }
 
     private fun whereCondition(
         categories: List<Category>,
