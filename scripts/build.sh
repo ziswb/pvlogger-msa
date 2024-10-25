@@ -28,22 +28,20 @@ help()
 
 version=""
 
-OPTIND=1
-
-while getopts v:h: flag
+while getopts v:h flag
 do
   case "${flag}" in
     v) version=${OPTARG}
+      shift 1;
        ;;
     h) help
        exit 0
        ;;
     *) echo "Invalid option: -$flag"
+       exit 0
        ;;
   esac
 done
-
-shift $((OPTIND-1))
 
 PV_LOGGER_COMPONENT="$*"
 
