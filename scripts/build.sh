@@ -14,6 +14,8 @@ REQUIRE_COMMAND="${SCRIPT_DIR}/require-command.sh"
 DOCKER_CMD=$(${REQUIRE_COMMAND} docker)
 GREP_CMD=$(${REQUIRE_COMMAND} grep)
 SED_CMD=$(${REQUIRE_COMMAND} sed)
+DOCKER_REGISTRY="registry.local:5000"
+REGISTRY_PATH="bziswiler"
 
 help()
 {
@@ -32,12 +34,12 @@ while getopts v:h flag
 do
   case "${flag}" in
     v) version=${OPTARG}
-      shift 1;
+       shift "$((OPTIND-1))"
        ;;
     h) help
        exit 0
        ;;
-    *) echo "Invalid option: -$flag"
+    *) echo "Invalid option: -$OPTARG"
        exit 0
        ;;
   esac
@@ -59,10 +61,12 @@ if [ -z "$(curl -s --unix-socket /var/run/docker.sock http/_ping 2>&1 /dev/null)
   exit 1;
 fi
 
+echo "Building pv logger component '${PV_LOGGER_COMPONENT}' version '${version}' and pushing to '${DOCKER_REGISTRY}/${REGISTRY_PATH}'"
+
 $DOCKER_CMD build \
--t "registry.local:5000/bziswiler/${PV_LOGGER_COMPONENT}:latest" \
--t "registry.local:5000/bziswiler/${PV_LOGGER_COMPONENT}:${version}" \
+-t "${DOCKER_REGISTRY}/${REGISTRY_PATH}/${PV_LOGGER_COMPONENT}:latest" \
+-t "${DOCKER_REGISTRY}/${REGISTRY_PATH}/${PV_LOGGER_COMPONENT}:${version}" \
 -f "${SCRIPT_DIR}/../${PV_LOGGER_COMPONENT}/docker/Dockerfile" \
 "${SCRIPT_DIR}/../"
-$DOCKER_CMD image push "registry.local:5000/bziswiler/${PV_LOGGER_COMPONENT}:latest"
-$DOCKER_CMD image push "registry.local:5000/bziswiler/${PV_LOGGER_COMPONENT}:${version}"
+$DOCKER_CMD image push "${DOCKER_REGISTRY}/${REGISTRY_PATH}/${PV_LOGGER_COMPONENT}:latest"
+$DOCKER_CMD image push "${DOCKER_REGISTRY}/${REGISTRY_PATH}/${PV_LOGGER_COMPONENT}:${version}"
