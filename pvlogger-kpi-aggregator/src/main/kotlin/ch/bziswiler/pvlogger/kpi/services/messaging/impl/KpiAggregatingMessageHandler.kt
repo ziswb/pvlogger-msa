@@ -22,12 +22,10 @@ StoreModbusValuesMessageListener: message received: $message
 RECEIVED #########################################################################
 """
         }
-        if (message is ObjectMessage) {
-            handleObjectMessage(message)
-        } else if (message == null) {
-            logger.info { "message is null" }
-        } else {
-            logger.info { "message is not of type ObjectMessage: ${message.javaClass::class}" }
+        when (message) {
+            is ObjectMessage -> handleObjectMessage(message)
+            null -> logger.info { "message is null" }
+            else -> logger.info { "message is not of type ObjectMessage but: ${message.javaClass::class}" }
         }
     }
 
@@ -41,7 +39,7 @@ RECEIVED #######################################################################
     }
 
     private fun handleJobStatusMessage(jobStatusMessage: JobStatusMessage) {
-        logger.info { "Job Status is '${jobStatusMessage.status}" }
+        logger.info { "Job Status is '${jobStatusMessage.status}'" }
     }
 }
 
