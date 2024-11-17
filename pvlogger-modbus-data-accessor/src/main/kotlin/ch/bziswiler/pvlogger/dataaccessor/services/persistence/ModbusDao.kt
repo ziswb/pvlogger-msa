@@ -39,7 +39,7 @@ object ModbusDao {
                 }
 
                 is ModbusRegisterShortValue -> {
-                    logger.debug { "Storing I16 values '${data}" }
+                    logger.trace { "Storing I16 values '${data}" }
                     ShortValueTable.store(headerId.value, registerValue)
                 }
 
@@ -48,17 +48,17 @@ object ModbusDao {
                 }
 
                 is ModbusRegisterIntValue -> {
-                    logger.debug { "Storing I32 values '${data}" }
+                    logger.trace { "Storing I32 values '${data}" }
                     IntegerValueTable.store(headerId.value, registerValue)
                 }
 
                 is ModbusRegisterStringValue -> {
-                    logger.debug { "Storing STR values '${data}" }
+                    logger.trace { "Storing STR values '${data}" }
                     StringValuesTable.store(headerId.value, registerValue)
                 }
 
                 is ModbusRegisterShortArrayValue -> {
-                    logger.debug { "Storing MLD values '${data}" }
+                    logger.trace { "Storing MLD values '${data}" }
                     CharacteristicCurveValuesTable.store(headerId.value, registerValue)
                 }
             }
@@ -68,10 +68,10 @@ object ModbusDao {
         registerValue: ModbusRegisterUIntValue, data: ModbusRegisterValueResponse, headerId: EntityID<Int>
     ) {
         if (registerValue.definition.type == Type.U32) {
-            logger.debug { "Storing U32 values '${data}" }
+            logger.trace { "Storing U32 values '${data}" }
             UIntegerValueTable.store(headerId.value, registerValue)
         } else if (registerValue.definition.type == Type.BITFIELD_32) {
-            logger.debug { "Storing BITFIELD_32 values '${data}" }
+            logger.trace { "Storing BITFIELD_32 values '${data}" }
             UIntegerValueTable.store(headerId.value, registerValue)
         }
     }
@@ -80,10 +80,10 @@ object ModbusDao {
         registerValue: ModbusRegisterUShortValue, data: ModbusRegisterValueResponse, headerId: EntityID<Int>
     ) {
         if (registerValue.definition.type == Type.U16) {
-            logger.debug { "Storing U16 values '${data}" }
+            logger.trace { "Storing U16 values '${data}" }
             UShortValueTable.store(headerId.value, registerValue)
         } else if (registerValue.definition.type == Type.BITFIELD_16) {
-            logger.debug { "Storing BITFIELD_16 values '${data}" }
+            logger.trace { "Storing BITFIELD_16 values '${data}" }
             UShortValueTable.store(headerId.value, registerValue)
         }
     }
@@ -91,16 +91,16 @@ object ModbusDao {
     private fun storeValues(data: ReadDeviceIdentifiersResponse, headerId: EntityID<Int>) =
         data.objectList.forEach { modbusObject: ModbusObject ->
             if (modbusObject.objectId.toInt() == 21 || modbusObject.objectId.toInt() == 135) {
-                logger.debug { "Storing integer values '${data}" }
+                logger.trace { "Storing integer values '${data}" }
                 IntegerValueTable.store(headerId.value, modbusObject)
             } else {
-                logger.debug { "Storing string values '${data}" }
+                logger.trace { "Storing string values '${data}" }
                 StringValuesTable.store(headerId.value, modbusObject)
             }
         }
 
     private fun storeHeader(data: ModbusResponse): EntityID<Int> {
-        logger.debug { "Storing header '${data}" }
+        logger.trace { "Storing header '${data}" }
         return ResponseTable.insertAndGetId {
             it[job_id] = data.jobId.id
             it[request_time] = data.responseTime
