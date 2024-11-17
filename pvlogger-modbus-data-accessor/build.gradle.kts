@@ -1,5 +1,3 @@
-import org.gradle.api.tasks.testing.logging.TestExceptionFormat
-
 plugins {
     alias(libs.plugins.jvm)
     alias(libs.plugins.ktor)
@@ -72,16 +70,6 @@ dependencies {
     implementation(libs.koin.logger.slf4j)
 
     // Testing
-    testImplementation(libs.ktor.server.test.host)
-    testImplementation(libs.koin.test)
-    testImplementation(libs.koin.test.junit5)
     testImplementation(libs.kotlin.test.junit)
-}
-
-tasks.test {
-    useJUnitPlatform()
-    testLogging {
-        exceptionFormat = TestExceptionFormat.FULL
-        events("passed", "skipped", "failed")
-    }
+    testImplementation(libs.ktor.server.tests)
 }
