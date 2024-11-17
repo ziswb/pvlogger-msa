@@ -6,7 +6,9 @@ import ch.bziswiler.pvlogger.shared.masterdata.modbus.RegisterAddress
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Scope
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
 import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -36,28 +38,31 @@ class MasterDataDao {
     }
 
     fun registerDefinitionList(whereCondition: Op<Boolean>) = dbQuery {
-        MasterDataTable.selectAll().where { whereCondition }.orderBy(MasterDataTable.address to SortOrder.ASC).map {
-            ModbusRegisterDefinition(
-                it[MasterDataTable.no],
-                it[MasterDataTable.name],
-                it[MasterDataTable.readWrite],
-                it[MasterDataTable.type],
-                it[MasterDataTable.unit],
-                it[MasterDataTable.gain],
-                RegisterAddress(it[MasterDataTable.address]),
-                Quantity(it[MasterDataTable.quantity]),
-                Scope(it[MasterDataTable.scope].orEmpty()),
-                it[MasterDataTable.category],
-            )
-        }
+        MasterDataTable
+            .selectAll()
+            .where { whereCondition }
+            .orderBy(MasterDataTable.address to SortOrder.ASC)
+            .map { modbusRegisterDefinition(it) }
     }
 
-    fun gainForRegisterAddress(registerAddress: Int): String? = dbQuery {
-        MasterDataTable.select(MasterDataTable.gain).where { MasterDataTable.address.eq(registerAddress) }.let {
-            when (it.count() > 0L) {
-                true -> it.first()[MasterDataTable.gain].raw
-                else -> null
-            }
-        }
+    fun registerDefinition(address: Int) = dbQuery {
+        MasterDataTable
+            .selectAll()
+            .where(MasterDataTable.address eq address)
+            .firstOrNull()
+            ?.let { modbusRegisterDefinition(it) }
     }
+
+    private fun modbusRegisterDefinition(row: ResultRow) = ModbusRegisterDefinition(
+        row[MasterDataTable.no],
+        row[MasterDataTable.name],
+        row[MasterDataTable.readWrite],
+        row[MasterDataTable.type],
+        row[MasterDataTable.unit],
+        row[MasterDataTable.gain],
+        RegisterAddress(row[MasterDataTable.address]),
+        Quantity(row[MasterDataTable.quantity]),
+        Scope(row[MasterDataTable.scope].orEmpty()),
+        row[MasterDataTable.category],
+    )
 }

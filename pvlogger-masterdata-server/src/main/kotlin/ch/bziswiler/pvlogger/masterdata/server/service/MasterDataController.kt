@@ -1,0 +1,76 @@
+package ch.bziswiler.pvlogger.masterdata.server.service
+
+import ch.bziswiler.pvlogger.masterdata.server.config.AppConfig
+import ch.bziswiler.pvlogger.masterdata.server.modbus.schema.MasterDataDao
+import ch.bziswiler.pvlogger.masterdata.server.modbus.schema.MasterDataTable.category
+import ch.bziswiler.pvlogger.masterdata.server.modbus.schema.MasterDataTable.deviceType
+import ch.bziswiler.pvlogger.masterdata.server.modbus.services.MasterDataImporter
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType
+import ch.bziswiler.pvlogger.shared.masterdata.request.MasterDataRequesCategory
+import ch.bziswiler.pvlogger.shared.masterdata.request.MasterDataRequesCategory.CATEGORIES
+import ch.bziswiler.pvlogger.shared.masterdata.request.MasterDataRequesCategory.DEVICE_TYPES
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.ApplicationCall
+import io.ktor.server.application.call
+import io.ktor.server.response.respond
+import io.ktor.util.pipeline.PipelineContext
+import mu.KotlinLogging
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
+import org.jetbrains.exposed.sql.and
+import org.koin.java.KoinJavaComponent.inject
+
+private const val PARAM_VALUE_DELIMITER = ";"
+
+private val dao: MasterDataDao by inject(MasterDataDao::class.java)
+private val logger = KotlinLogging.logger {}
+
+suspend fun PipelineContext<Unit, ApplicationCall>.masterDataForAddress() {
+    val address = call.parameters["address"]?.toInt() ?: -1
+    val result = dao.registerDefinition(address)
+    if (result == null) {
+        call.response.status(HttpStatusCode.NoContent)
+        call.respond("No register definition found for address '$address'")
+    } else {
+        call.response.status(HttpStatusCode.OK)
+        call.respond(result)
+    }
+}
+
+suspend fun PipelineContext<Unit, ApplicationCall>.masterDataForCategoriesAndDeviceTypes() {
+    runCatching {
+        val categories = getParameterValues(CATEGORIES)?.map { Category.valueOf(it) }?.toList() ?: emptyList()
+        val deviceTypes = getParameterValues(DEVICE_TYPES)?.map { DeviceType.valueOf(it) }?.toList() ?: emptyList()
+        dao.registerDefinitionList(whereCondition(categories, deviceTypes))
+    }.onSuccess { result ->
+        if (result.isEmpty()) {
+            call.response.status(HttpStatusCode.NoContent)
+            call.respond("No gain found")
+        } else {
+            call.response.status(HttpStatusCode.OK)
+            call.respond(result)
+        }
+        call.response.status(HttpStatusCode.OK)
+        call.respond(result)
+    }.onFailure { cause ->
+        logger.error { cause }
+        call.response.status(HttpStatusCode.BadRequest)
+        call.respond("No gain found")
+    }
+}
+
+fun PipelineContext<Unit, ApplicationCall>.importMasterData() {
+    val appConfig by inject<AppConfig>(AppConfig::class.java)
+    val dao by inject<MasterDataDao>(MasterDataDao::class.java)
+    val importer = MasterDataImporter(appConfig, dao)
+    importer.importInverterRegister()
+    importer.importDeviceIdentifiers()
+    importer.importMeterRegister()
+    call.response.status(HttpStatusCode.OK)
+}
+
+private fun PipelineContext<Unit, ApplicationCall>.getParameterValues(category: MasterDataRequesCategory) =
+    call.request.queryParameters[category.value]?.split(PARAM_VALUE_DELIMITER)
+
+private fun whereCondition(categories: List<Category>, deviceTypes: List<DeviceType>) =
+    category.inList(categories).and(deviceType.inList(deviceTypes))

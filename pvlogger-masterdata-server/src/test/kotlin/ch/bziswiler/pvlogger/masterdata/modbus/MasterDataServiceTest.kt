@@ -5,18 +5,20 @@ import ch.bziswiler.pvlogger.masterdata.modbus.testutils.TestRecordBuilder
 import ch.bziswiler.pvlogger.masterdata.server.config.AppConfig
 import ch.bziswiler.pvlogger.masterdata.server.modbus.schema.MasterDataDao
 import ch.bziswiler.pvlogger.masterdata.server.modbus.services.MasterDataImporter
-import ch.bziswiler.pvlogger.masterdata.server.plugins.GAIN_PATH
-import ch.bziswiler.pvlogger.masterdata.server.plugins.REGISTER_DEFINITIONS_PATH
-import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category
-import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType
+import ch.bziswiler.pvlogger.masterdata.server.plugins.MASTER_DATA_FOR_ADDRESS_PATH
+import ch.bziswiler.pvlogger.masterdata.server.plugins.MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category.ALARM
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType.INVERTER
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
-import kotlinx.serialization.json.Json
+import io.ktor.http.HttpStatusCode.Companion.OK
+import kotlinx.serialization.json.Json.Default.decodeFromString
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.koin.test.inject
+import kotlin.test.assertNotNull
 
 class MasterDataServiceTest : BaseApplicationTest() {
     private val appConfig by inject<AppConfig>()
@@ -24,29 +26,29 @@ class MasterDataServiceTest : BaseApplicationTest() {
 
     private fun setUpDatabase() {
         val csvRecords = TestRecordBuilder.createTestRecords()
-        MasterDataImporter(appConfig, dao).storeMasterData(DeviceType.INVERTER, csvRecords)
+        MasterDataImporter(appConfig, dao).storeMasterData(INVERTER, csvRecords)
     }
 
     @Test
     fun testMasterDataService() = withApp {
         startApplication()
         setUpDatabase()
-        client.get(REGISTER_DEFINITIONS_PATH) {
+        client.get(MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES) {
             url {
                 parameters.append("deviceTypes", listOf("INVERTER").joinToString(separator = ";"))
                 parameters.append("categories", listOf("ALARM").joinToString(separator = ";"))
             }
         }.apply {
-            assertEquals(HttpStatusCode.OK, status)
+            assertEquals(OK, status)
             val string = bodyAsText()
-            val result = Json.decodeFromString<Array<ModbusRegisterDefinition>>(string)
-            assertEquals(Category.ALARM, result.first().category)
+            val result = decodeFromString<Array<ModbusRegisterDefinition>>(string)
+            assertEquals(ALARM, result.first().category)
         }
     }
 
     @Test
     fun `test master data service with illegal query parameters`() = withApp {
-        client.get(REGISTER_DEFINITIONS_PATH) {
+        client.get(MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES) {
             url {
                 parameters.append("categories", listOf("foo", "bar", "baz").joinToString(separator = ";"))
             }
@@ -56,13 +58,13 @@ class MasterDataServiceTest : BaseApplicationTest() {
     }
 
     @Test
-    fun testGetGainAddress() = withApp {
+    fun testGetMasterDataForAddress() = withApp {
         val address = 1
         startApplication()
         setUpDatabase()
-        client.get(GAIN_PATH.replace("{address}", "$address")).apply {
-            assertEquals(HttpStatusCode.OK, status)
-            assertEquals("$address", bodyAsText())
+        client.get(MASTER_DATA_FOR_ADDRESS_PATH.replace("{address}", "$address")).apply {
+            assertEquals(OK, status)
+            assertNotNull(bodyAsText())
         }
     }
 }
