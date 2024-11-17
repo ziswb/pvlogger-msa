@@ -3,7 +3,7 @@ package ch.bziswiler.pvlogger.dataaccessor.di
 import ch.bziswiler.pvlogger.dataaccessor.config.AppConfig
 import ch.bziswiler.pvlogger.dataaccessor.database.DatabaseFactory
 import ch.bziswiler.pvlogger.dataaccessor.database.DatabaseFactoryImpl
-import ch.bziswiler.pvlogger.dataaccessor.services.messaging.impl.StoreModbusValuesMessageHandler
+import ch.bziswiler.pvlogger.dataaccessor.services.messaging.StoreModbusValuesMessageHandler
 import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
 import ch.bziswiler.pvlogger.shared.messaging.MessageReceiver
 import ch.bziswiler.pvlogger.shared.messaging.MqSessionFactory

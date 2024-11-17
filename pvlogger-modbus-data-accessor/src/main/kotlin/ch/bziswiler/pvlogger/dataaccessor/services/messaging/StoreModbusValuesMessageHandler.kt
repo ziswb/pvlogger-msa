@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.dataaccessor.services.messaging.impl
+package ch.bziswiler.pvlogger.dataaccessor.services.messaging
 
 import ch.bziswiler.pvlogger.dataaccessor.services.persistence.ModbusDao
 import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
