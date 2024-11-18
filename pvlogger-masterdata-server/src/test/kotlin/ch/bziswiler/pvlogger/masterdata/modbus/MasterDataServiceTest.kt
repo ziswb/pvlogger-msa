@@ -7,6 +7,7 @@ import ch.bziswiler.pvlogger.masterdata.server.modbus.schema.MasterDataDao
 import ch.bziswiler.pvlogger.masterdata.server.modbus.services.MasterDataImporter
 import ch.bziswiler.pvlogger.masterdata.server.plugins.MASTER_DATA_FOR_ADDRESS_PATH
 import ch.bziswiler.pvlogger.masterdata.server.plugins.MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category.ALARM
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType.INVERTER
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
@@ -35,8 +36,8 @@ class MasterDataServiceTest : BaseApplicationTest() {
         setUpDatabase()
         client.get(MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES) {
             url {
-                parameters.append("deviceTypes", listOf("INVERTER").joinToString(separator = ";"))
-                parameters.append("categories", listOf("ALARM").joinToString(separator = ";"))
+                parameters.append("deviceTypes", listOf(INVERTER.name).joinToString(separator = ";"))
+                parameters.append("categories", listOf(ALARM.name).joinToString(separator = ";"))
             }
         }.apply {
             assertEquals(OK, status)

@@ -7,9 +7,10 @@ import ch.bziswiler.pvlogger.masterdata.server.modbus.schema.MasterDataTable.dev
 import ch.bziswiler.pvlogger.masterdata.server.modbus.services.MasterDataImporter
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType
-import ch.bziswiler.pvlogger.shared.masterdata.request.MasterDataRequesCategory
-import ch.bziswiler.pvlogger.shared.masterdata.request.MasterDataRequesCategory.CATEGORIES
-import ch.bziswiler.pvlogger.shared.masterdata.request.MasterDataRequesCategory.DEVICE_TYPES
+import ch.bziswiler.pvlogger.shared.masterdata.request.MasterDataRequestParameters
+import ch.bziswiler.pvlogger.shared.masterdata.request.MasterDataRequestParameters.ADDRESS
+import ch.bziswiler.pvlogger.shared.masterdata.request.MasterDataRequestParameters.CATEGORIES
+import ch.bziswiler.pvlogger.shared.masterdata.request.MasterDataRequestParameters.DEVICE_TYPES
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
@@ -26,7 +27,7 @@ private val dao: MasterDataDao by inject(MasterDataDao::class.java)
 private val logger = KotlinLogging.logger {}
 
 suspend fun PipelineContext<Unit, ApplicationCall>.masterDataForAddress() {
-    val address = call.parameters["address"]?.toInt() ?: -1
+    val address = call.parameters[ADDRESS.value]?.toInt() ?: -1
     val result = dao.registerDefinition(address)
     if (result == null) {
         call.response.status(HttpStatusCode.NoContent)
@@ -69,7 +70,7 @@ fun PipelineContext<Unit, ApplicationCall>.importMasterData() {
     call.response.status(HttpStatusCode.OK)
 }
 
-private fun PipelineContext<Unit, ApplicationCall>.getParameterValues(category: MasterDataRequesCategory) =
+private fun PipelineContext<Unit, ApplicationCall>.getParameterValues(category: MasterDataRequestParameters) =
     call.request.queryParameters[category.value]?.split(PARAM_VALUE_DELIMITER)
 
 private fun whereCondition(categories: List<Category>, deviceTypes: List<DeviceType>) =
