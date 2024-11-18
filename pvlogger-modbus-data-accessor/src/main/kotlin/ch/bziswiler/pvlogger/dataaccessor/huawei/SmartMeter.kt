@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.business.model.huawei.device
+package ch.bziswiler.pvlogger.dataaccessor.huawei
 
 class SmartMeter(deviceId: Int) : Device(deviceId) {
 

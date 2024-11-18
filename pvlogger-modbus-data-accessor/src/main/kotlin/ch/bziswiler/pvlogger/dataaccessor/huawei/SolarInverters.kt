@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.business.model.huawei.device
+package ch.bziswiler.pvlogger.dataaccessor.huawei
 
 class SolarInverters(deviceId: Int = 0, private val inverters: List<Sun2000Inverter>) : Device(deviceId) {
 

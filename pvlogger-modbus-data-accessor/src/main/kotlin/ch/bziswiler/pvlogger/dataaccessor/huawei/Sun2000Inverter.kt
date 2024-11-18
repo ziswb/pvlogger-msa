@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.business.model.huawei.device
+package ch.bziswiler.pvlogger.dataaccessor.huawei
 
 class Sun2000Inverter(deviceId: Int, private val activePowerGain: Double, private val dailyEnergyYieldGain: Double) : Device(deviceId) {
 
