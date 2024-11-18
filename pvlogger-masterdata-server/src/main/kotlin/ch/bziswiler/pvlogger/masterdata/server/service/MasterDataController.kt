@@ -45,7 +45,7 @@ suspend fun PipelineContext<Unit, ApplicationCall>.masterDataForCategoriesAndDev
     }.onSuccess { result ->
         if (result.isEmpty()) {
             call.response.status(HttpStatusCode.NoContent)
-            call.respond("No gain found")
+            call.respond("No master data found")
         } else {
             call.response.status(HttpStatusCode.OK)
             call.respond(result)
@@ -55,7 +55,7 @@ suspend fun PipelineContext<Unit, ApplicationCall>.masterDataForCategoriesAndDev
     }.onFailure { cause ->
         logger.error { cause }
         call.response.status(HttpStatusCode.BadRequest)
-        call.respond("No gain found")
+        call.respond("Error looking up master data")
     }
 }
 
