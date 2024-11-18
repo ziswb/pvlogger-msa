@@ -51,8 +51,6 @@ suspend fun PipelineContext<Unit, ApplicationCall>.masterDataForCategoriesAndDev
             call.response.status(HttpStatusCode.OK)
             call.respond(result)
         }
-        call.response.status(HttpStatusCode.OK)
-        call.respond(result)
     }.onFailure { cause ->
         logger.error { cause }
         call.response.status(HttpStatusCode.BadRequest)

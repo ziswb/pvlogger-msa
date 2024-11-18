@@ -9,11 +9,13 @@ import ch.bziswiler.pvlogger.masterdata.server.plugins.MASTER_DATA_FOR_ADDRESS_P
 import ch.bziswiler.pvlogger.masterdata.server.plugins.MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category.ALARM
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category.DEVLST
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType.INVERTER
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.HttpStatusCode.Companion.NoContent
 import io.ktor.http.HttpStatusCode.Companion.OK
 import kotlinx.serialization.json.Json.Default.decodeFromString
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -31,7 +33,7 @@ class MasterDataServiceTest : BaseApplicationTest() {
     }
 
     @Test
-    fun testMasterDataService() = withApp {
+    fun `test get master data for categories and device types`() = withApp {
         startApplication()
         setUpDatabase()
         client.get(MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES) {
@@ -48,7 +50,22 @@ class MasterDataServiceTest : BaseApplicationTest() {
     }
 
     @Test
-    fun `test master data service with illegal query parameters`() = withApp {
+    fun `test get non-existing master data for categories and device types`() = withApp {
+        startApplication()
+        setUpDatabase()
+        client.get(MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES) {
+            url {
+                parameters.append("deviceTypes", listOf(INVERTER.name).joinToString(separator = ";"))
+                parameters.append("categories", listOf(DEVLST.name).joinToString(separator = ";"))
+            }
+        }.apply {
+            assertEquals(NoContent, status)
+            assertNotNull(bodyAsText())
+        }
+    }
+
+    @Test
+    fun `test get master data for non-existing categories and device types`() = withApp {
         client.get(MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES) {
             url {
                 parameters.append("categories", listOf("foo", "bar", "baz").joinToString(separator = ";"))
@@ -59,13 +76,25 @@ class MasterDataServiceTest : BaseApplicationTest() {
     }
 
     @Test
-    fun testGetMasterDataForAddress() = withApp {
+    fun `test get master data for address`() = withApp {
         val address = 1
         startApplication()
         setUpDatabase()
         client.get(MASTER_DATA_FOR_ADDRESS_PATH.replace("{address}", "$address")).apply {
             assertEquals(OK, status)
             assertNotNull(bodyAsText())
+        }
+    }
+
+    @Test
+    fun `test get non-existing master data for address`() = withApp {
+        val address = 10
+        startApplication()
+        setUpDatabase()
+        client.get(MASTER_DATA_FOR_ADDRESS_PATH.replace("{address}", "$address")).apply {
+            assertEquals(NoContent, status)
+            val actual = bodyAsText()
+            assertNotNull(actual)
         }
     }
 }
