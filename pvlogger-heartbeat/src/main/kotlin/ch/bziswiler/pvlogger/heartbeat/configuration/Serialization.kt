@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.heartbeat.plugins
+package ch.bziswiler.pvlogger.heartbeat.configuration
 
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application

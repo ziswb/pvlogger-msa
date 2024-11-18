@@ -1,15 +1,15 @@
 package ch.bziswiler.pvlogger.datacollector.services.modbus.impl
 
-import ch.bziswiler.pvlogger.datacollector.config.AppConfig
+import ch.bziswiler.pvlogger.datacollector.configuration.AppConfig
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.ModbusTcpChannel
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.request.ReadDeviceIdentifiersRequest
 import ch.bziswiler.pvlogger.datacollector.services.IdProvider
 import ch.bziswiler.pvlogger.datacollector.services.messaging.impl.PersistenceMessageSender
 import ch.bziswiler.pvlogger.datacollector.services.modbus.ModbusDataCollectionJob
-import ch.bziswiler.pvlogger.shared.job.status.JobStatusMessageFactory.deviceIdsDataCollectionJobFailedMessage
-import ch.bziswiler.pvlogger.shared.job.status.JobStatusMessageFactory.deviceIdsDataCollectionJobSucceededMessage
 import ch.bziswiler.pvlogger.shared.job.meta.JobId
 import ch.bziswiler.pvlogger.shared.job.meta.JobName.DEVICE_IDS_JOB
+import ch.bziswiler.pvlogger.shared.job.status.JobStatusMessageFactory.deviceIdsDataCollectionJobFailedMessage
+import ch.bziswiler.pvlogger.shared.job.status.JobStatusMessageFactory.deviceIdsDataCollectionJobSucceededMessage
 import ch.bziswiler.pvlogger.shared.job.tags.StoreModbusRegisterValuesMessageTag
 import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ReadDeviceIdentifiersResponse
 import io.micrometer.core.instrument.Metrics

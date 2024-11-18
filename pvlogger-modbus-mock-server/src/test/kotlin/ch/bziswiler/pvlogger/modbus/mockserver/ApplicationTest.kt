@@ -1,11 +1,11 @@
 package ch.bziswiler.pvlogger.modbus.mockserver
 
-import ch.bziswiler.pvlogger.shared.masterdata.modbus.Type
 import ch.bziswiler.pvlogger.modbus.mockserver.utils.MockDataBuilder.buildData
 import ch.bziswiler.pvlogger.modbus.mockserver.utils.MockDataBuilder.buildFunctionCode
 import ch.bziswiler.pvlogger.modbus.mockserver.utils.MockDataBuilder.buildHeader
 import ch.bziswiler.pvlogger.modbus.mockserver.utils.MockDataReader
 import ch.bziswiler.pvlogger.modbus.mockserver.utils.MockDataWriter
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.Type
 import io.ktor.network.selector.SelectorManager
 import io.ktor.network.sockets.aSocket
 import io.ktor.network.sockets.openReadChannel

@@ -1,5 +1,7 @@
 package ch.bziswiler.pvlogger.masterdata.server.service
 
+import ch.bziswiler.pvlogger.masterdata.server.configuration.AppConfig
+import ch.bziswiler.pvlogger.masterdata.server.database.access.MasterDataDao
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType.INVERTER
@@ -12,11 +14,9 @@ import ch.bziswiler.pvlogger.shared.masterdata.modbus.Scope
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Type
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Unit
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
-import ch.bziswiler.pvlogger.masterdata.server.configuration.AppConfig
-import ch.bziswiler.pvlogger.masterdata.server.database.access.MasterDataDao
-import java.io.FileInputStream
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVRecord
+import java.io.FileInputStream
 
 private const val IDX_NO = 0
 private const val IDX_NAME = 1

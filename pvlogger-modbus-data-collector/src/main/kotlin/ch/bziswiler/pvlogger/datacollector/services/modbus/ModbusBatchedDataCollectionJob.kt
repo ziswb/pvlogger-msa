@@ -1,19 +1,19 @@
 package ch.bziswiler.pvlogger.datacollector.services.modbus
 
-import ch.bziswiler.pvlogger.datacollector.config.AppConfig
+import ch.bziswiler.pvlogger.datacollector.configuration.AppConfig
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.ModbusTcpChannel
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.request.ReadRegistersValueRequest
 import ch.bziswiler.pvlogger.datacollector.services.IdProvider
 import ch.bziswiler.pvlogger.datacollector.services.messaging.impl.JobSchedulerMessageSender
 import ch.bziswiler.pvlogger.datacollector.services.messaging.impl.PersistenceMessageSender
+import ch.bziswiler.pvlogger.shared.job.meta.JobId
+import ch.bziswiler.pvlogger.shared.job.tags.JobFinishedMessageTag
+import ch.bziswiler.pvlogger.shared.job.tags.StoreModbusRegisterValuesMessageTag
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType.INVERTER
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType.METER
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
-import ch.bziswiler.pvlogger.shared.job.tags.JobFinishedMessageTag
-import ch.bziswiler.pvlogger.shared.job.meta.JobId
-import ch.bziswiler.pvlogger.shared.job.tags.StoreModbusRegisterValuesMessageTag
 import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusRegisterValueResponse
 import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusResponse
 import io.micrometer.core.instrument.Counter

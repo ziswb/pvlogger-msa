@@ -1,14 +1,14 @@
 package ch.bziswiler.pvlogger.shared.job.status
 
-import ch.bziswiler.pvlogger.shared.job.status.JobStatus.FAILURE
-import ch.bziswiler.pvlogger.shared.job.status.JobStatus.SUCCESS
-import ch.bziswiler.pvlogger.shared.job.tags.JobFinishedMessageTag
 import ch.bziswiler.pvlogger.shared.job.meta.JobId
 import ch.bziswiler.pvlogger.shared.job.meta.JobName
 import ch.bziswiler.pvlogger.shared.job.meta.JobName.DEVICE_IDS_JOB
 import ch.bziswiler.pvlogger.shared.job.meta.JobName.DEVICE_LIST_JOB
 import ch.bziswiler.pvlogger.shared.job.meta.JobName.DYNAMIC_DATA_JOB
 import ch.bziswiler.pvlogger.shared.job.meta.JobName.STATIC_DATA_JOB
+import ch.bziswiler.pvlogger.shared.job.status.JobStatus.FAILURE
+import ch.bziswiler.pvlogger.shared.job.status.JobStatus.SUCCESS
+import ch.bziswiler.pvlogger.shared.job.tags.JobFinishedMessageTag
 
 object JobStatusMessageFactory {
 

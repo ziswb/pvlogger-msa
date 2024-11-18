@@ -1,6 +1,6 @@
 package ch.bziswiler
 
-import ch.bziswiler.pvlogger.dataaccessor.plugins.configureRouting
+import ch.bziswiler.pvlogger.dataaccessor.configuration.configureRouting
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode

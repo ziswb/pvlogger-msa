@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.dataaccessor.plugins
+package ch.bziswiler.pvlogger.dataaccessor.configuration
 
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application

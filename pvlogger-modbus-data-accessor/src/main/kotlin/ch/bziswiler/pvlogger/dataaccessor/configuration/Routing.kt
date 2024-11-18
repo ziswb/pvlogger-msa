@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.dataaccessor.plugins
+package ch.bziswiler.pvlogger.dataaccessor.configuration
 
 import ch.bziswiler.pvlogger.dataaccessor.rest.EnergiesDataController.energiesTodaySoFar
 import io.ktor.server.application.Application

@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.datacollector.plugins
+package ch.bziswiler.pvlogger.dataaccessor.configuration
 
 import io.ktor.server.application.Application
 import io.ktor.server.application.call

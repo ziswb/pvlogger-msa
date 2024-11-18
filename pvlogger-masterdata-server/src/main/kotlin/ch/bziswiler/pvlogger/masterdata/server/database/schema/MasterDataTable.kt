@@ -6,10 +6,10 @@ import ch.bziswiler.pvlogger.shared.masterdata.modbus.Gain
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.ReadWrite
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Type
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Unit
-import kotlin.enums.EnumEntries
-import kotlin.reflect.KClass
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.Column
+import kotlin.enums.EnumEntries
+import kotlin.reflect.KClass
 
 object MasterDataTable : IntIdTable("modbus_register_master_data") {
     val deviceType = enumByName("device_type", DeviceType.entries, DeviceType::class)

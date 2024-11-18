@@ -1,14 +1,14 @@
 package ch.bziswiler.pvlogger.datacollector.services.modbus.impl
 
-import ch.bziswiler.pvlogger.datacollector.config.AppConfig
+import ch.bziswiler.pvlogger.datacollector.configuration.AppConfig
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.ModbusTcpChannel
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.request.ReadDeviceListRequest
 import ch.bziswiler.pvlogger.datacollector.services.IdProvider
 import ch.bziswiler.pvlogger.datacollector.services.messaging.impl.PersistenceMessageSender
-import ch.bziswiler.pvlogger.shared.job.status.JobStatusMessageFactory.deviceListDataCollectionJobFailedMessage
-import ch.bziswiler.pvlogger.shared.job.status.JobStatusMessageFactory.deviceListDataCollectionJobSucceededMessage
 import ch.bziswiler.pvlogger.shared.job.meta.JobId
 import ch.bziswiler.pvlogger.shared.job.meta.JobName.DEVICE_LIST_JOB
+import ch.bziswiler.pvlogger.shared.job.status.JobStatusMessageFactory.deviceListDataCollectionJobFailedMessage
+import ch.bziswiler.pvlogger.shared.job.status.JobStatusMessageFactory.deviceListDataCollectionJobSucceededMessage
 import io.micrometer.core.instrument.Metrics
 import io.micrometer.core.instrument.Timer
 import mu.KotlinLogging

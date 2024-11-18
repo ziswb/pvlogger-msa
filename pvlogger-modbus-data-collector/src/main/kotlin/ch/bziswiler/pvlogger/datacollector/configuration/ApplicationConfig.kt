@@ -1,16 +1,37 @@
 @file:OptIn(ExperimentalUnsignedTypes::class)
 
-package ch.bziswiler.pvlogger.datacollector.plugins
+package ch.bziswiler.pvlogger.datacollector.configuration
 
-import ch.bziswiler.pvlogger.datacollector.config.AppConfig
-import ch.bziswiler.pvlogger.datacollector.config.MasterDataConfig
-import ch.bziswiler.pvlogger.datacollector.config.ModbusTcpConfig
-import ch.bziswiler.pvlogger.datacollector.config.ServerConfig
 import ch.bziswiler.pvlogger.shared.messaging.config.MqConfig
 import io.ktor.server.application.Application
 import org.koin.ktor.ext.inject
 
 private const val DELIMITER = ","
+
+class AppConfig {
+    lateinit var masterDataConfig: MasterDataConfig
+    lateinit var serverConfig: ServerConfig
+    lateinit var modbusTcpConfig: ModbusTcpConfig
+    lateinit var mqConfig: MqConfig
+}
+
+data class MasterDataConfig(
+    val host: String,
+    val port: Int
+)
+
+data class ServerConfig(
+    val isProd: Boolean,
+)
+
+@OptIn(ExperimentalUnsignedTypes::class)
+data class ModbusTcpConfig(
+    val host: String,
+    val port: Int,
+    val delay: Long,
+    val meterDeviceIds: UByteArray,
+    val inverterDeviceIds: UByteArray,
+)
 
 fun Application.setupConfig() {
     val appConfig by inject<AppConfig>()

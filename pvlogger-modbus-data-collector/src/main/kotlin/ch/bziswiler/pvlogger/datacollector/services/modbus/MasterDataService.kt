@@ -1,6 +1,6 @@
 package ch.bziswiler.pvlogger.datacollector.services.modbus
 
-import ch.bziswiler.pvlogger.datacollector.config.AppConfig
+import ch.bziswiler.pvlogger.datacollector.configuration.AppConfig
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition

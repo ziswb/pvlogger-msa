@@ -1,19 +1,19 @@
 package ch.bziswiler.pvlogger.datacollector
 
-import ch.bziswiler.pvlogger.datacollector.di.appModule
-import ch.bziswiler.pvlogger.datacollector.plugins.configureMonitoring
-import ch.bziswiler.pvlogger.datacollector.plugins.setupConfig
+import ch.bziswiler.pvlogger.datacollector.configuration.appModule
+import ch.bziswiler.pvlogger.datacollector.configuration.configureMonitoring
+import ch.bziswiler.pvlogger.datacollector.configuration.setupConfig
 import ch.bziswiler.pvlogger.datacollector.services.messaging.impl.JobTriggeringMqHandler
 import ch.bziswiler.pvlogger.datacollector.services.modbus.impl.ModbusBatchedDynamicDataCollectionJob
 import ch.bziswiler.pvlogger.datacollector.services.modbus.impl.ModbusBatchedStaticDataCollectionJob
 import ch.bziswiler.pvlogger.datacollector.services.modbus.impl.ModbusDeviceIdentifiersCollectionJob
 import ch.bziswiler.pvlogger.datacollector.services.modbus.impl.ModbusDeviceListCollectionJob
-import ch.bziswiler.pvlogger.shared.messaging.MessageReceiver
 import ch.bziswiler.pvlogger.shared.job.meta.JobName.DEVICE_IDS_JOB
 import ch.bziswiler.pvlogger.shared.job.meta.JobName.DEVICE_LIST_JOB
 import ch.bziswiler.pvlogger.shared.job.meta.JobName.DYNAMIC_DATA_JOB
 import ch.bziswiler.pvlogger.shared.job.meta.JobName.STATIC_DATA_JOB
 import ch.bziswiler.pvlogger.shared.job.tags.JobStartMessageTag
+import ch.bziswiler.pvlogger.shared.messaging.MessageReceiver
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import org.koin.ktor.ext.inject

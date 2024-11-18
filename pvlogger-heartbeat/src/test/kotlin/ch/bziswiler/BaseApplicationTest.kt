@@ -1,6 +1,6 @@
 package ch.bziswiler
 
-import ch.bziswiler.pvlogger.heartbeat.di.appModule
+import ch.bziswiler.pvlogger.heartbeat.configuration.appModule
 import ch.bziswiler.pvlogger.heartbeat.module
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.ApplicationTestBuilder

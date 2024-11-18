@@ -1,6 +1,6 @@
 package ch.bziswiler.pvlogger.heartbeat.database
 
-import ch.bziswiler.pvlogger.heartbeat.config.AppConfig
+import ch.bziswiler.pvlogger.heartbeat.configuration.AppConfig
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import org.jetbrains.exposed.sql.Database

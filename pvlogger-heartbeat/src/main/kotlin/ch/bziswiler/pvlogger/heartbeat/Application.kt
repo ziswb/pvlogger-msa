@@ -1,13 +1,13 @@
 package ch.bziswiler.pvlogger.heartbeat
 
-import ch.bziswiler.pvlogger.heartbeat.config.AppConfig
-import ch.bziswiler.pvlogger.heartbeat.di.appModule
+import ch.bziswiler.pvlogger.heartbeat.configuration.AppConfig
+import ch.bziswiler.pvlogger.heartbeat.configuration.appModule
+import ch.bziswiler.pvlogger.heartbeat.configuration.configureDatabases
+import ch.bziswiler.pvlogger.heartbeat.configuration.configureMonitoring
+import ch.bziswiler.pvlogger.heartbeat.configuration.contentNegotiation
+import ch.bziswiler.pvlogger.heartbeat.configuration.setupConfig
 import ch.bziswiler.pvlogger.heartbeat.jobs.management.JobScheduler
 import ch.bziswiler.pvlogger.heartbeat.jobs.management.JobSchedulerManager
-import ch.bziswiler.pvlogger.heartbeat.plugins.configureDatabases
-import ch.bziswiler.pvlogger.heartbeat.plugins.configureMonitoring
-import ch.bziswiler.pvlogger.heartbeat.plugins.contentNegotiation
-import ch.bziswiler.pvlogger.heartbeat.plugins.setupConfig
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import org.koin.ktor.ext.inject

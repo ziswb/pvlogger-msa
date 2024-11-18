@@ -1,10 +1,10 @@
 package ch.bziswiler.pvlogger.shared.messaging.impl
 
 import ch.bziswiler.pvlogger.shared.messaging.MqSessionFactory
+import ch.bziswiler.pvlogger.shared.messaging.QueueName
 import ch.bziswiler.pvlogger.shared.messaging.TaggedMessageSender
 import ch.bziswiler.pvlogger.shared.messaging.TagsMessageSender
 import ch.bziswiler.pvlogger.shared.tags.MessageTag
-import ch.bziswiler.pvlogger.shared.messaging.QueueName
 import mu.KotlinLogging
 import java.io.Serializable
 import javax.jms.MessageProducer

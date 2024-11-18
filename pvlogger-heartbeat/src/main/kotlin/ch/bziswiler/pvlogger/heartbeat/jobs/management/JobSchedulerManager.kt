@@ -1,6 +1,6 @@
 package ch.bziswiler.pvlogger.heartbeat.jobs.management
 
-import ch.bziswiler.pvlogger.heartbeat.config.AppConfig
+import ch.bziswiler.pvlogger.heartbeat.configuration.AppConfig
 import org.quartz.Scheduler
 import org.quartz.SchedulerFactory
 import org.quartz.impl.StdSchedulerFactory

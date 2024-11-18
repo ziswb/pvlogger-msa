@@ -1,6 +1,6 @@
 package ch.bziswiler.pvlogger.datacollector.modbus.tcp
 
-import ch.bziswiler.pvlogger.datacollector.config.AppConfig
+import ch.bziswiler.pvlogger.datacollector.configuration.AppConfig
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.request.ModbusRequest
 import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusResponse
 import io.ktor.network.selector.SelectorManager

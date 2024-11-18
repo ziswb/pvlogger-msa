@@ -1,6 +1,6 @@
 package ch.bziswiler.pvlogger.heartbeat.jobs.management
 
-import ch.bziswiler.pvlogger.heartbeat.config.AppConfig
+import ch.bziswiler.pvlogger.heartbeat.configuration.AppConfig
 import ch.bziswiler.pvlogger.heartbeat.jobs.modbus.ModbusDeviceIdentifiersCollectionJob
 import ch.bziswiler.pvlogger.heartbeat.jobs.modbus.ModbusDeviceListCollectionJob
 import ch.bziswiler.pvlogger.heartbeat.jobs.modbus.ModbusInverterBatchedDynamicDataCollectionJob

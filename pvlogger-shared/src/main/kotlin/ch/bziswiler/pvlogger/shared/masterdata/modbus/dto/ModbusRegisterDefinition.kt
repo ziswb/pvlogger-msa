@@ -9,9 +9,9 @@ import ch.bziswiler.pvlogger.shared.masterdata.modbus.Scope
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Type
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Unit
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition.Companion.CHAR_SET
+import kotlinx.serialization.Contextual
 import java.io.Serializable
 import java.nio.charset.Charset
-import kotlinx.serialization.Contextual
 
 @kotlinx.serialization.Serializable
 data class ModbusRegisterDefinition(

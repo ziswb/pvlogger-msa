@@ -1,11 +1,11 @@
 package ch.bziswiler.pvlogger.dataaccessor
 
-import ch.bziswiler.pvlogger.dataaccessor.di.appModule
-import ch.bziswiler.pvlogger.dataaccessor.plugins.configureDatabases
-import ch.bziswiler.pvlogger.dataaccessor.plugins.configureMonitoring
-import ch.bziswiler.pvlogger.dataaccessor.plugins.configureRouting
-import ch.bziswiler.pvlogger.dataaccessor.plugins.configureSerialization
-import ch.bziswiler.pvlogger.dataaccessor.plugins.setupConfig
+import ch.bziswiler.pvlogger.dataaccessor.configuration.appModule
+import ch.bziswiler.pvlogger.dataaccessor.configuration.configureDatabases
+import ch.bziswiler.pvlogger.dataaccessor.configuration.configureMonitoring
+import ch.bziswiler.pvlogger.dataaccessor.configuration.configureRouting
+import ch.bziswiler.pvlogger.dataaccessor.configuration.configureSerialization
+import ch.bziswiler.pvlogger.dataaccessor.configuration.setupConfig
 import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
 import ch.bziswiler.pvlogger.shared.messaging.MessageReceiver
 import io.ktor.server.application.Application

@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.heartbeat.plugins
+package ch.bziswiler.pvlogger.heartbeat.configuration
 
 import ch.bziswiler.pvlogger.heartbeat.database.DatabaseFactory
 import io.ktor.server.application.Application

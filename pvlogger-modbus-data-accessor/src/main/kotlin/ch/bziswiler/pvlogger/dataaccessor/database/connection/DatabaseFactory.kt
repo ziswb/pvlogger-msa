@@ -1,6 +1,6 @@
 package ch.bziswiler.pvlogger.dataaccessor.database.connection
 
-import ch.bziswiler.pvlogger.dataaccessor.config.AppConfig
+import ch.bziswiler.pvlogger.dataaccessor.configuration.AppConfig
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.CharacteristicCurveValuesTable
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.IntegerValueTable
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.ResponseTable
