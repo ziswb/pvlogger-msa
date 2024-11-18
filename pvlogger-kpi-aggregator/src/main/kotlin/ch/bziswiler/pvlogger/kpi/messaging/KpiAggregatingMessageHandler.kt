@@ -28,7 +28,9 @@ RECEIVED #######################################################################
             null -> logger.info { "message is null" }
             else -> logger.info { "message is not of type ObjectMessage but: ${message.javaClass::class}" }
         }
-        logger.info { runBlocking { MasterDataCache.masterDataForSmartMeter() } }
+        logger.info { runBlocking { MasterDataCache.masterDataForSmartMeterActivePower() } }
+        logger.info { runBlocking { MasterDataCache.masterDataForInverterActivePower() } }
+        logger.info { runBlocking { MasterDataCache.masterDataForInverterEnergyYield() } }
     }
 
     private fun handleObjectMessage(message: ObjectMessage) {
