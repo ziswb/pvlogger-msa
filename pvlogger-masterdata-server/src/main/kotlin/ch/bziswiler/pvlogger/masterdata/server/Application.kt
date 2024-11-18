@@ -1,11 +1,11 @@
 package ch.bziswiler.pvlogger.masterdata.server
 
-import ch.bziswiler.pvlogger.masterdata.server.di.appModule
-import ch.bziswiler.pvlogger.masterdata.server.plugins.configureDatabases
-import ch.bziswiler.pvlogger.masterdata.server.plugins.configureMonitoring
-import ch.bziswiler.pvlogger.masterdata.server.plugins.configureRouting
-import ch.bziswiler.pvlogger.masterdata.server.plugins.configureSerialization
-import ch.bziswiler.pvlogger.masterdata.server.plugins.setupConfig
+import ch.bziswiler.pvlogger.masterdata.server.configuration.appModule
+import ch.bziswiler.pvlogger.masterdata.server.configuration.configureDatabases
+import ch.bziswiler.pvlogger.masterdata.server.configuration.configureMonitoring
+import ch.bziswiler.pvlogger.masterdata.server.configuration.configureRouting
+import ch.bziswiler.pvlogger.masterdata.server.configuration.configureSerialization
+import ch.bziswiler.pvlogger.masterdata.server.configuration.setupConfig
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.netty.EngineMain

@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.masterdata.server.plugins
+package ch.bziswiler.pvlogger.masterdata.server.configuration
 
 import ch.bziswiler.pvlogger.masterdata.server.rest.importMasterData
 import ch.bziswiler.pvlogger.masterdata.server.rest.masterDataForAddress

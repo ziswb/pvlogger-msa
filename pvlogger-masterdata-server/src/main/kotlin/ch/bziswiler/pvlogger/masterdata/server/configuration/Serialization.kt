@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.masterdata.server.plugins
+package ch.bziswiler.pvlogger.masterdata.server.configuration
 
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application

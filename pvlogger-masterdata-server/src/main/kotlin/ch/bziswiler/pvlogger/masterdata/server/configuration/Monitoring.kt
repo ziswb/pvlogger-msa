@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.masterdata.server.plugins
+package ch.bziswiler.pvlogger.masterdata.server.configuration
 
 import io.ktor.server.application.Application
 import io.ktor.server.application.call

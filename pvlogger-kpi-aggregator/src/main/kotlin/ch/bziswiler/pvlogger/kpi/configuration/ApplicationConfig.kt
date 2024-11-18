@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.kpi.plugins
+package ch.bziswiler.pvlogger.kpi.configuration
 
 import ch.bziswiler.pvlogger.shared.messaging.config.MqConfig
 import io.ktor.server.application.Application

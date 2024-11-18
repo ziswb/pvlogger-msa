@@ -1,11 +1,33 @@
-package ch.bziswiler.pvlogger.masterdata.server.plugins
+package ch.bziswiler.pvlogger.masterdata.server.configuration
 
-import ch.bziswiler.pvlogger.masterdata.server.config.AppConfig
-import ch.bziswiler.pvlogger.masterdata.server.config.DatabaseConfig
-import ch.bziswiler.pvlogger.masterdata.server.config.MasterDataImportConfig
-import ch.bziswiler.pvlogger.masterdata.server.config.ServerConfig
 import io.ktor.server.application.Application
 import org.koin.ktor.ext.inject
+
+class AppConfig {
+    lateinit var databaseConfig: DatabaseConfig
+    lateinit var serverConfig: ServerConfig
+    lateinit var masterDataImportConfig: MasterDataImportConfig
+}
+
+data class DatabaseConfig(
+    val driverClass: String,
+    val dbServerUrl: String,
+    val dbName: String,
+    val dbServerCanonicalUrl: String,
+    val user: String,
+    val password: String,
+    val maxPoolSize: Int,
+)
+
+data class ServerConfig(
+    val isProd: Boolean,
+)
+
+data class MasterDataImportConfig(
+    val meterMasterDataPath: String,
+    val inverterMasterDataPath: String,
+    val deviceIdentifiersMasterDataPath: String,
+)
 
 fun Application.setupConfig() {
     val appConfig by inject<AppConfig>()

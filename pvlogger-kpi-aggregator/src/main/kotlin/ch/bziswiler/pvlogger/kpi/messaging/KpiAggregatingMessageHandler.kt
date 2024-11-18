@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.kpi.services.messaging
+package ch.bziswiler.pvlogger.kpi.messaging
 
 import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
 import ch.bziswiler.pvlogger.shared.job.status.JobStatusMessage

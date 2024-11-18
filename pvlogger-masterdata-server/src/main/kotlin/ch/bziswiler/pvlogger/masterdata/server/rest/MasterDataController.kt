@@ -1,10 +1,10 @@
 package ch.bziswiler.pvlogger.masterdata.server.rest
 
-import ch.bziswiler.pvlogger.masterdata.server.config.AppConfig
+import ch.bziswiler.pvlogger.masterdata.server.configuration.AppConfig
 import ch.bziswiler.pvlogger.masterdata.server.database.access.MasterDataDao
 import ch.bziswiler.pvlogger.masterdata.server.database.schema.MasterDataTable.category
 import ch.bziswiler.pvlogger.masterdata.server.database.schema.MasterDataTable.deviceType
-import ch.bziswiler.pvlogger.masterdata.server.modbus.services.MasterDataImporter
+import ch.bziswiler.pvlogger.masterdata.server.service.MasterDataImporter
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType
 import ch.bziswiler.pvlogger.shared.masterdata.request.MasterDataRequestParameters

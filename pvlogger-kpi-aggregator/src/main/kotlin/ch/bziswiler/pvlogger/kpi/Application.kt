@@ -1,7 +1,7 @@
 package ch.bziswiler.pvlogger.kpi
 
-import ch.bziswiler.pvlogger.kpi.di.appModule
-import ch.bziswiler.pvlogger.kpi.plugins.setupConfig
+import ch.bziswiler.pvlogger.kpi.configuration.appModule
+import ch.bziswiler.pvlogger.kpi.configuration.setupConfig
 import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
 import ch.bziswiler.pvlogger.shared.messaging.MessageReceiver
 import io.ktor.server.application.Application

@@ -1,6 +1,6 @@
 package ch.bziswiler.pvlogger.masterdata.modbus.testutils
 
-import ch.bziswiler.pvlogger.masterdata.server.di.appModule
+import ch.bziswiler.pvlogger.masterdata.server.configuration.appModule
 import ch.bziswiler.pvlogger.masterdata.server.module
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.ApplicationTestBuilder
