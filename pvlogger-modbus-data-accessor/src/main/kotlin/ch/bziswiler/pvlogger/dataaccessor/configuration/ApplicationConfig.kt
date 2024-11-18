@@ -33,37 +33,29 @@ fun Application.setupConfig() {
     readMqConfig(appConfig)
 }
 
-private fun Application.readServerConfig(appConfig: AppConfig) {
-    val serverObject = environment.config.config("ktor.server")
-    val isProd = serverObject.property("isProd").getString().toBoolean()
-    appConfig.serverConfig = ServerConfig(isProd)
+private fun Application.readServerConfig(appConfig: AppConfig) = with(environment.config.config("ktor.server")) {
+    appConfig.apply { serverConfig = ServerConfig(isProd = property("isProd").getString().toBoolean()) }
 }
 
-private fun Application.readDbConfig(appConfig: AppConfig) {
-    val databaseObject = environment.config.config("database")
-    val driverClass = databaseObject.property("driverClass").getString()
-    val dbServerUrl = databaseObject.property("dbServerUrl").getString()
-    val dbName = databaseObject.property("dbName").getString()
-    val dbCanonicalUrl = databaseObject.property("dbServerCanonicalUrl").getString()
-    val user = databaseObject.property("user").getString()
-    val password = databaseObject.property("password").getString()
-    val maxPoolSize = databaseObject.property("maxPoolSize").getString().toInt()
+private fun Application.readDbConfig(appConfig: AppConfig) = with(environment.config.config("database")) {
     appConfig.databaseConfig = DatabaseConfig(
-        driverClass,
-        dbServerUrl,
-        dbName,
-        dbCanonicalUrl,
-        user,
-        password,
-        maxPoolSize
+        driverClass = property("driverClass").getString(),
+        dbServerUrl = property("dbServerUrl").getString(),
+        dbName = property("dbName").getString(),
+        dbServerCanonicalUrl = property("dbServerCanonicalUrl").getString(),
+        user = property("user").getString(),
+        password = property("password").getString(),
+        maxPoolSize = property("maxPoolSize").getString().toInt()
     )
 }
 
-private fun Application.readMqConfig(appConfig: AppConfig) {
-    val mqObject = environment.config.config("messagequeue")
-    val clientId = mqObject.property("clientId").getString()
-    val user = mqObject.property("user").getString()
-    val passwd = mqObject.property("passwd").getString()
-    val brokerUrl = mqObject.property("brokerUrl").getString()
-    appConfig.mqConfig = MqConfig(clientId, user, passwd, brokerUrl)
+private fun Application.readMqConfig(appConfig: AppConfig) = with(environment.config.config("messagequeue")) {
+    appConfig.apply {
+        mqConfig = MqConfig(
+            clientId = property("clientId").getString(),
+            user = property("user").getString(),
+            passwd = property("passwd").getString(),
+            brokerUrl = property("brokerUrl").getString()
+        )
+    }
 }

@@ -41,49 +41,39 @@ fun Application.setupConfig() {
     readMdConfig(appConfig)
 }
 
-private fun Application.readMdConfig(appConfig: AppConfig) {
-    val mdObject = environment.config.config("pvlogger.masterdata")
-    val host = mdObject.property("host").getString()
-    val port = mdObject.property("port").getString().toInt()
-    appConfig.masterDataConfig = MasterDataConfig(host, port)
+private fun Application.readMdConfig(appConfig: AppConfig) = with(environment.config.config("pvlogger.masterdata")) {
+    appConfig.apply {
+        masterDataConfig = MasterDataConfig(
+            host = property("host").getString(),
+            port = property("port").getString().toInt()
+        )
+    }
 }
 
-private fun Application.readServerConfig(appConfig: AppConfig) {
-    val serverObject = environment.config.config("ktor.server")
-    val isProd = serverObject.property("isProd").getString().toBoolean()
-    appConfig.serverConfig = ServerConfig(isProd)
+private fun Application.readServerConfig(appConfig: AppConfig) = with(environment.config.config("ktor.server")) {
+    appConfig.apply { serverConfig = ServerConfig(isProd = property("isProd").getString().toBoolean()) }
 }
 
-private fun Application.readMqConfig(appConfig: AppConfig) {
-    val mqObject = environment.config.config("messagequeue")
-    val clientId = mqObject.property("clientId").getString()
-    val user = mqObject.property("user").getString()
-    val passwd = mqObject.property("passwd").getString()
-    val brokerUrl = mqObject.property("brokerUrl").getString()
-
-    appConfig.mqConfig = MqConfig(
-        clientId,
-        user,
-        passwd,
-        brokerUrl
-    )
+private fun Application.readMqConfig(appConfig: AppConfig) = with(environment.config.config("messagequeue")) {
+    appConfig.apply {
+        mqConfig = MqConfig(
+            clientId = property("clientId").getString(),
+            user = property("user").getString(),
+            passwd = property("passwd").getString(),
+            brokerUrl = property("brokerUrl").getString()
+        )
+    }
 }
 
-@kotlin.ExperimentalUnsignedTypes
-private fun Application.readModbusConfig(appConfig: AppConfig) {
-    val modbusObject = environment.config.config("huawei.modbus.tcp")
-    val host = modbusObject.property("host").getString()
-    val port = modbusObject.property("port").getString().toInt()
-    val delay = modbusObject.property("delay").getString().toLong()
-    val meterDeviceIds = modbusObject.property("meterDeviceIds").getString()
-        .split(DELIMITER)
-        .map { it.trim().toUByte() }
-        .toUByteArray()
-    val inverterDeviceIds = modbusObject.property("inverterDeviceIds").getString()
-        .split(DELIMITER)
-        .map { it.trim().toUByte() }
-        .toUByteArray()
-    appConfig.modbusTcpConfig = ModbusTcpConfig(
-        host, port, delay, meterDeviceIds, inverterDeviceIds
-    )
+@ExperimentalUnsignedTypes
+private fun Application.readModbusConfig(appConfig: AppConfig) = with(environment.config.config("huawei.modbus.tcp")) {
+    appConfig.apply {
+        modbusTcpConfig = ModbusTcpConfig(
+            host = property("host").getString(),
+            port = property("port").getString().toInt(),
+            delay = property("delay").getString().toLong(),
+            meterDeviceIds = property("meterDeviceIds").getString().split(DELIMITER).map { it.trim().toUByte() }.toUByteArray(),
+            inverterDeviceIds = property("inverterDeviceIds").getString().split(DELIMITER).map { it.trim().toUByte() }.toUByteArray()
+        )
+    }
 }
