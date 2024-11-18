@@ -1,9 +1,10 @@
 package ch.bziswiler.pvlogger.dataaccessor.database.access
 
-class SmartMeterDao(deviceId: Int) : DeviceDao(deviceId) {
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.Gain
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.RegisterAddress
 
-    private val activePowerRegisterAddress = 37113 // -> W
-    private val wToKw = 1000.0
+class SmartMeterDao(deviceId: Int, activePowerRegisterAddress: RegisterAddress) : SolarDeviceDao(deviceId, activePowerRegisterAddress) {
 
-    override fun activePowerKW(): Double = readAndTransposeLatestRegisterValue(activePowerRegisterAddress, wToKw)
+    //    private val smartMeterActivePowerRegisterAddress = 37113 // -> W
+    override val activePowerGain = Gain.THOUSAND
 }
