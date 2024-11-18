@@ -1,9 +1,10 @@
 package ch.bziswiler.pvlogger.kpi.messaging
 
-import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
+import ch.bziswiler.pvlogger.shared.job.meta.JobName
 import ch.bziswiler.pvlogger.shared.job.status.JobStatusMessage
 import ch.bziswiler.pvlogger.shared.job.tags.JobFinishedMessageTag
-import ch.bziswiler.pvlogger.shared.job.meta.JobName
+import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
+import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import javax.jms.Message
 import javax.jms.ObjectMessage
@@ -27,6 +28,7 @@ RECEIVED #######################################################################
             null -> logger.info { "message is null" }
             else -> logger.info { "message is not of type ObjectMessage but: ${message.javaClass::class}" }
         }
+        logger.info { runBlocking { MasterDataCache.masterDataForSmartMeter() } }
     }
 
     private fun handleObjectMessage(message: ObjectMessage) {

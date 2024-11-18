@@ -34,6 +34,11 @@ dependencies {
     // Ktor
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.netty)
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.logging)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
 
     // Logging
     implementation(libs.logback.classic)
@@ -44,6 +49,9 @@ dependencies {
     // Koin
     implementation(libs.koin.ktor)
     implementation(libs.koin.logger.slf4j)
+
+    // Cache -> https://github.com/ReactiveCircus/cache4k
+    implementation("io.github.reactivecircus.cache4k:cache4k:0.13.0") // TODO extract this to toml-file
 
     // Testing
     testImplementation(libs.ktor.server.test.host)
