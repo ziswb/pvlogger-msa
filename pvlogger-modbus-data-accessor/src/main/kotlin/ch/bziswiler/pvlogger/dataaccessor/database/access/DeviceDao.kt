@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.dataaccessor.huawei
+package ch.bziswiler.pvlogger.dataaccessor.database.access
 
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.IntegerValueTable
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.IntegerValueTable.register_address
@@ -11,7 +11,7 @@ import org.jetbrains.exposed.sql.SortOrder.DESC
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.selectAll
 
-abstract class Device(private val deviceId: Int) {
+abstract class DeviceDao(private val deviceId: Int) {
 
     private val logger = KotlinLogging.logger {}
     private val responseTimeDescending = response_time to DESC

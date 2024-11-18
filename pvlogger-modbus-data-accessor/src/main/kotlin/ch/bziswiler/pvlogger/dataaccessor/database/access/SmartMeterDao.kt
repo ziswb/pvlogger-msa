@@ -1,6 +1,6 @@
-package ch.bziswiler.pvlogger.dataaccessor.huawei
+package ch.bziswiler.pvlogger.dataaccessor.database.access
 
-class SmartMeter(deviceId: Int) : Device(deviceId) {
+class SmartMeterDao(deviceId: Int) : DeviceDao(deviceId) {
 
     private val activePowerRegisterAddress = 37113 // -> W
     private val wToKw = 1000.0
