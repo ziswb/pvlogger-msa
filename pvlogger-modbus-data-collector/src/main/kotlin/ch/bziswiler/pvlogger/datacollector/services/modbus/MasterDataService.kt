@@ -4,6 +4,7 @@ import ch.bziswiler.pvlogger.datacollector.config.AppConfig
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
+import ch.bziswiler.pvlogger.shared.rest.MasterDataPathConstants.REGISTER_DEFINITIONS_PATH
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
@@ -18,8 +19,6 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 
-
-private const val REGISTER_DEFINITIONS_PATH = "/register-definitions"
 private const val PARAM_DEV_TYPES = "deviceTypes"
 private const val PARAM_CATEGORIES = "categories"
 private const val PARAM_VALUE_SEPARATOR = ";"

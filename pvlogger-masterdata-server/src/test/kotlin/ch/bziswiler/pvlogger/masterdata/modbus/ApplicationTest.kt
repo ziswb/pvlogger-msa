@@ -1,11 +1,12 @@
 package ch.bziswiler.pvlogger.masterdata.modbus
 
 import ch.bziswiler.pvlogger.masterdata.modbus.testutils.BaseApplicationTest
-import ch.bziswiler.pvlogger.masterdata.server.configuration.ROOT_PATH
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+
+private const val ROOT_PATH = "/"
 
 class ApplicationTest : BaseApplicationTest() {
     @Test

@@ -3,6 +3,7 @@ package ch.bziswiler.pvlogger.kpi.messaging
 import ch.bziswiler.pvlogger.kpi.rest.PvHttpClient
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.RegisterAddress
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
+import ch.bziswiler.pvlogger.shared.rest.MasterDataPathConstants.MASTER_DATA_FOR_ADDRESS_PATH
 import io.github.reactivecircus.cache4k.Cache
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -30,7 +31,7 @@ object MasterDataCache {
             protocol = URLProtocol.HTTP
             host = "pvlogger-masterdata-server-service.pvlogger.svc.cluster.local" // TODO: make this configurable
             port = 8081 // TODO: make this configurable
-            pathSegments = listOf("master-data", registerAddress.value.toString())
+            pathSegments = listOf(MASTER_DATA_FOR_ADDRESS_PATH, registerAddress.value.toString())
         }
     }
 }
