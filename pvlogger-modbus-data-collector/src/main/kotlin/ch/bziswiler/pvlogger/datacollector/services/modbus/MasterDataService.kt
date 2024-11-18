@@ -45,7 +45,7 @@ class MasterDataService(appConfig: AppConfig) {
         deviceTypes: List<DeviceType>, categories: List<Category>
     ): List<ModbusRegisterDefinition> {
         return runBlocking {
-            val result = client.get(REGISTER_DEFINITIONS_PATH) {
+            val result = client.get("/$REGISTER_DEFINITIONS_PATH") {
                 host = masterDataHostName
                 port = masterDataHostPort
                 url {

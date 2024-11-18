@@ -35,7 +35,7 @@ class MasterDataServiceTest : BaseApplicationTest() {
     fun `test get master data for categories and device types`() = withApp {
         startApplication()
         setUpDatabase()
-        client.get(MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES) {
+        client.get("/$MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES") {
             url {
                 parameters.append("deviceTypes", listOf(INVERTER.name).joinToString(separator = ";"))
                 parameters.append("categories", listOf(ALARM.name).joinToString(separator = ";"))
@@ -52,7 +52,7 @@ class MasterDataServiceTest : BaseApplicationTest() {
     fun `test get non-existing master data for categories and device types`() = withApp {
         startApplication()
         setUpDatabase()
-        client.get(MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES) {
+        client.get("/$MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES") {
             url {
                 parameters.append("deviceTypes", listOf(INVERTER.name).joinToString(separator = ";"))
                 parameters.append("categories", listOf(DEVLST.name).joinToString(separator = ";"))
@@ -65,7 +65,7 @@ class MasterDataServiceTest : BaseApplicationTest() {
 
     @Test
     fun `test get master data for non-existing categories and device types`() = withApp {
-        client.get(MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES) {
+        client.get("/$MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES") {
             url {
                 parameters.append("categories", listOf("foo", "bar", "baz").joinToString(separator = ";"))
             }
@@ -79,7 +79,7 @@ class MasterDataServiceTest : BaseApplicationTest() {
         val address = 1
         startApplication()
         setUpDatabase()
-        client.get("$MASTER_DATA_FOR_ADDRESS_PATH/$address").apply {
+        client.get("/$MASTER_DATA_FOR_ADDRESS_PATH/$address").apply {
             assertEquals(OK, status)
             assertNotNull(bodyAsText())
         }
@@ -90,7 +90,7 @@ class MasterDataServiceTest : BaseApplicationTest() {
         val address = 10
         startApplication()
         setUpDatabase()
-        client.get(MASTER_DATA_FOR_ADDRESS_PATH.replace("{address}", "$address")).apply {
+        client.get("/$MASTER_DATA_FOR_ADDRESS_PATH/$address").apply {
             assertEquals(NoContent, status)
             val actual = bodyAsText()
             assertNotNull(actual)

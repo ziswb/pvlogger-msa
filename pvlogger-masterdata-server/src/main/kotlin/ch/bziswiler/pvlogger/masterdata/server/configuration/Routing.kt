@@ -11,12 +11,12 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.put
 import io.ktor.server.routing.routing
 
-private const val MASTER_DATA_FOR_ADDRESS_PATH_WITH_PARAM = "${MASTER_DATA_FOR_ADDRESS_PATH}/{address}"
+private const val MASTER_DATA_FOR_ADDRESS_PATH_WITH_PARAM = "$MASTER_DATA_FOR_ADDRESS_PATH/{address}"
 
 fun Application.configureRouting() {
     routing {
-        put(IMPORT_MASTER_DATA_PATH) { importMasterData() }
-        get(MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES) { masterDataForCategoriesAndDeviceTypes() }
-        get(MASTER_DATA_FOR_ADDRESS_PATH_WITH_PARAM) { masterDataForAddress() }
+        put("/$IMPORT_MASTER_DATA_PATH") { importMasterData() }
+        get("/$MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES") { masterDataForCategoriesAndDeviceTypes() }
+        get("/$MASTER_DATA_FOR_ADDRESS_PATH_WITH_PARAM") { masterDataForAddress() }
     }
 }
