@@ -1,20 +1,19 @@
-package ch.bziswiler.pvlogger.masterdata.server.database
+package ch.bziswiler.pvlogger.masterdata.server.database.connection
 
 import ch.bziswiler.pvlogger.masterdata.server.config.AppConfig
 import ch.bziswiler.pvlogger.masterdata.server.modbus.schema.MasterDataTable
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import javax.sql.DataSource
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
+import javax.sql.DataSource
 
-class DatabaseFactoryImpl(
-    appConfig: AppConfig,
-) : DatabaseFactory {
+class DatabaseFactory(appConfig: AppConfig) {
+
     private val dbConfig = appConfig.databaseConfig
 
-    override fun connect() {
+    fun connect() {
         assertDatabaseExists(Database.connect(hikari(dbConfig.dbServerUrl)))
         assertSchemaComplete(Database.connect(hikari(dbConfig.dbServerCanonicalUrl)))
     }
@@ -35,22 +34,17 @@ class DatabaseFactoryImpl(
         }
     }
 
-    override fun close() {
-        // not needed
-    }
-
     private fun hikari(dbServerUrl: String): DataSource {
-        val config =
-            HikariConfig().apply {
-                driverClassName = dbConfig.driverClass
-                jdbcUrl = dbServerUrl
-                username = dbConfig.user
-                password = dbConfig.password
-                maximumPoolSize = dbConfig.maxPoolSize
-                isAutoCommit = false
-                transactionIsolation = "TRANSACTION_REPEATABLE_READ"
-                validate()
-            }
+        val config = HikariConfig().apply {
+            driverClassName = dbConfig.driverClass
+            jdbcUrl = dbServerUrl
+            username = dbConfig.user
+            password = dbConfig.password
+            maximumPoolSize = dbConfig.maxPoolSize
+            isAutoCommit = false
+            transactionIsolation = "TRANSACTION_REPEATABLE_READ"
+            validate()
+        }
         return HikariDataSource(config)
     }
 }
