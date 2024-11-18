@@ -29,7 +29,7 @@ object MasterDataCache {
         url {
             protocol = URLProtocol.HTTP
             host = "pvlogger-masterdata-server-service.pvlogger.svc.cluster.local" // TODO: make this configurable
-            port = 8083 // TODO: make this configurable
+            port = 8081 // TODO: make this configurable
             pathSegments = listOf("master-data", registerAddress.value.toString())
         }
     }
