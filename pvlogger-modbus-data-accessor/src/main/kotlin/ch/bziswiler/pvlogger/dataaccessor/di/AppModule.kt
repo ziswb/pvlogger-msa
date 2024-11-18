@@ -2,14 +2,13 @@ package ch.bziswiler.pvlogger.dataaccessor.di
 
 import ch.bziswiler.pvlogger.dataaccessor.config.AppConfig
 import ch.bziswiler.pvlogger.dataaccessor.database.DatabaseFactory
-import ch.bziswiler.pvlogger.dataaccessor.database.DatabaseFactoryImpl
 import ch.bziswiler.pvlogger.dataaccessor.services.messaging.StoreModbusValuesMessageHandler
 import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
 import ch.bziswiler.pvlogger.shared.messaging.MessageReceiver
 import ch.bziswiler.pvlogger.shared.messaging.MqSessionFactory
+import ch.bziswiler.pvlogger.shared.messaging.QueueName.PERSIST_MODBUS
 import ch.bziswiler.pvlogger.shared.messaging.impl.ActiveMqMessageReceiver
 import ch.bziswiler.pvlogger.shared.messaging.impl.ActiveMqSessionFactory
-import ch.bziswiler.pvlogger.shared.messaging.QueueName.PERSIST_MODBUS
 import org.koin.dsl.module
 
 val appModule = module {
@@ -17,5 +16,5 @@ val appModule = module {
     single<MessageHandler> { StoreModbusValuesMessageHandler() }
     single<MqSessionFactory> { ActiveMqSessionFactory(get<AppConfig>().mqConfig) }
     single<MessageReceiver> { ActiveMqMessageReceiver(get<MqSessionFactory>(), PERSIST_MODBUS) }
-    single<DatabaseFactory> { DatabaseFactoryImpl(get<AppConfig>()) }
+    single<DatabaseFactory> { DatabaseFactory(get<AppConfig>()) }
 }
