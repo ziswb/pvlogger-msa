@@ -1,13 +1,13 @@
-package ch.bziswiler.pvlogger.dataaccessor.database
+package ch.bziswiler.pvlogger.dataaccessor.database.connection
 
 import ch.bziswiler.pvlogger.dataaccessor.config.AppConfig
-import ch.bziswiler.pvlogger.dataaccessor.schema.CharacteristicCurveValuesTable
-import ch.bziswiler.pvlogger.dataaccessor.schema.IntegerValueTable
-import ch.bziswiler.pvlogger.dataaccessor.schema.ResponseTable
-import ch.bziswiler.pvlogger.dataaccessor.schema.ShortValueTable
-import ch.bziswiler.pvlogger.dataaccessor.schema.StringValuesTable
-import ch.bziswiler.pvlogger.dataaccessor.schema.UIntegerValueTable
-import ch.bziswiler.pvlogger.dataaccessor.schema.UShortValueTable
+import ch.bziswiler.pvlogger.dataaccessor.database.schema.CharacteristicCurveValuesTable
+import ch.bziswiler.pvlogger.dataaccessor.database.schema.IntegerValueTable
+import ch.bziswiler.pvlogger.dataaccessor.database.schema.ResponseTable
+import ch.bziswiler.pvlogger.dataaccessor.database.schema.ShortValueTable
+import ch.bziswiler.pvlogger.dataaccessor.database.schema.StringValuesTable
+import ch.bziswiler.pvlogger.dataaccessor.database.schema.UIntegerValueTable
+import ch.bziswiler.pvlogger.dataaccessor.database.schema.UShortValueTable
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import org.jetbrains.exposed.sql.Database

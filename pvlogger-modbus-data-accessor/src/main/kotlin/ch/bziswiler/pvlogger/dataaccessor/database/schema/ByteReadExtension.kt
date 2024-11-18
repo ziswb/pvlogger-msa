@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.dataaccessor.schema
+package ch.bziswiler.pvlogger.dataaccessor.database.schema
 
 import kotlin.experimental.and
 

@@ -1,12 +1,12 @@
-package ch.bziswiler.pvlogger.dataaccessor.services.persistence
+package ch.bziswiler.pvlogger.dataaccessor.database.access
 
-import ch.bziswiler.pvlogger.dataaccessor.schema.CharacteristicCurveValuesTable
-import ch.bziswiler.pvlogger.dataaccessor.schema.IntegerValueTable
-import ch.bziswiler.pvlogger.dataaccessor.schema.ResponseTable
-import ch.bziswiler.pvlogger.dataaccessor.schema.ShortValueTable
-import ch.bziswiler.pvlogger.dataaccessor.schema.StringValuesTable
-import ch.bziswiler.pvlogger.dataaccessor.schema.UIntegerValueTable
-import ch.bziswiler.pvlogger.dataaccessor.schema.UShortValueTable
+import ch.bziswiler.pvlogger.dataaccessor.database.schema.CharacteristicCurveValuesTable
+import ch.bziswiler.pvlogger.dataaccessor.database.schema.IntegerValueTable
+import ch.bziswiler.pvlogger.dataaccessor.database.schema.ResponseTable
+import ch.bziswiler.pvlogger.dataaccessor.database.schema.ShortValueTable
+import ch.bziswiler.pvlogger.dataaccessor.database.schema.StringValuesTable
+import ch.bziswiler.pvlogger.dataaccessor.database.schema.UIntegerValueTable
+import ch.bziswiler.pvlogger.dataaccessor.database.schema.UShortValueTable
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Type
 import ch.bziswiler.pvlogger.shared.modbus.ModbusObject
 import ch.bziswiler.pvlogger.shared.modbus.ModbusRegisterIntValue

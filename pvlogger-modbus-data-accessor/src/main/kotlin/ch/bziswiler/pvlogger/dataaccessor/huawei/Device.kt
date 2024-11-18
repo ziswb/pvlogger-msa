@@ -1,9 +1,9 @@
 package ch.bziswiler.pvlogger.business.model.huawei.device
 
-import ch.bziswiler.pvlogger.dataaccessor.schema.IntegerValueTable
-import ch.bziswiler.pvlogger.dataaccessor.schema.IntegerValueTable.register_address
-import ch.bziswiler.pvlogger.dataaccessor.schema.ResponseTable
-import ch.bziswiler.pvlogger.dataaccessor.schema.ResponseTable.logic_device_id
+import ch.bziswiler.pvlogger.dataaccessor.database.schema.IntegerValueTable
+import ch.bziswiler.pvlogger.dataaccessor.database.schema.IntegerValueTable.register_address
+import ch.bziswiler.pvlogger.dataaccessor.database.schema.ResponseTable
+import ch.bziswiler.pvlogger.dataaccessor.database.schema.ResponseTable.logic_device_id
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.SortOrder.DESC
 import org.jetbrains.exposed.sql.and

@@ -1,12 +1,12 @@
-package ch.bziswiler.pvlogger.dataaccessor.services.persistence
+package ch.bziswiler.pvlogger.dataaccessor.database.access
 
-import ch.bziswiler.pvlogger.dataaccessor.schema.IntegerValueTable
-import ch.bziswiler.pvlogger.dataaccessor.schema.IntegerValueTable.register_address
-import ch.bziswiler.pvlogger.dataaccessor.schema.IntegerValueTable.register_value
-import ch.bziswiler.pvlogger.dataaccessor.schema.ResponseTable
-import ch.bziswiler.pvlogger.dataaccessor.schema.ResponseTable.logic_device_id
-import ch.bziswiler.pvlogger.dataaccessor.schema.ResponseTable.request_time
-import ch.bziswiler.pvlogger.dataaccessor.schema.UIntegerValueTable
+import ch.bziswiler.pvlogger.dataaccessor.database.schema.IntegerValueTable
+import ch.bziswiler.pvlogger.dataaccessor.database.schema.IntegerValueTable.register_address
+import ch.bziswiler.pvlogger.dataaccessor.database.schema.IntegerValueTable.register_value
+import ch.bziswiler.pvlogger.dataaccessor.database.schema.ResponseTable
+import ch.bziswiler.pvlogger.dataaccessor.database.schema.ResponseTable.logic_device_id
+import ch.bziswiler.pvlogger.dataaccessor.database.schema.ResponseTable.request_time
+import ch.bziswiler.pvlogger.dataaccessor.database.schema.UIntegerValueTable
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Gain
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.SortOrder

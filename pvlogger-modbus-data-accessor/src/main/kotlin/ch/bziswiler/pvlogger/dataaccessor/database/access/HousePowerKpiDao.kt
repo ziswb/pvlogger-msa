@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.dataaccessor.services.persistence
+package ch.bziswiler.pvlogger.dataaccessor.database.access
 
 import mu.KotlinLogging
 
