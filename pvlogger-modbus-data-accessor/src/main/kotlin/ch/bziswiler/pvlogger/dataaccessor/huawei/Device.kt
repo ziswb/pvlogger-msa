@@ -1,9 +1,10 @@
-package ch.bziswiler.pvlogger.business.model.huawei.device
+package ch.bziswiler.pvlogger.dataaccessor.huawei
 
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.IntegerValueTable
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.IntegerValueTable.register_address
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.ResponseTable
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.ResponseTable.logic_device_id
+import ch.bziswiler.pvlogger.dataaccessor.database.schema.ResponseTable.request_time
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.SortOrder.DESC
 import org.jetbrains.exposed.sql.and
@@ -19,16 +20,8 @@ abstract class Device(private val deviceId: Int) {
     protected fun activePowerKW(registerAddress: Int, gain: Double): Double = (IntegerValueTable innerJoin ResponseTable)
         .selectAll()
         .where { register_address.eq(registerAddress).and(logic_device_id.eq(deviceId.toUByte())) }
-        .orderBy(ResponseTable.request_time to DESC)
+        .orderBy(request_time to DESC)
         .firstOrNull()
         .let { row -> row?.get(IntegerValueTable.register_value) }
-        .let { value -> projectedValue(value, gain) }
-
-    private fun projectedValue(value: Int?, scalar: Double): Double =
-        if (value != null) {
-            value.toDouble().div(scalar)
-        } else {
-            logger.info { "'device value' is null; returning default value '$default'" }
-            default
-        }
+        .let { value -> value?.toDouble()?.div(gain) ?: default.also { logger.info { "'device value' is null; returning default value '$default'" } } }
 }
