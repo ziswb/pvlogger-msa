@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.dataaccessor.services.rest
+package ch.bziswiler.pvlogger.dataaccessor.rest
 
 import kotlinx.serialization.Serializable
 
