@@ -1,6 +1,6 @@
 package ch.bziswiler.pvlogger.kpi.di
 
-import ch.bziswiler.pvlogger.kpi.config.AppConfig
+import ch.bziswiler.pvlogger.kpi.plugins.AppConfig
 import ch.bziswiler.pvlogger.kpi.services.messaging.impl.KpiAggregatingMessageHandler
 import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
 import ch.bziswiler.pvlogger.shared.messaging.MessageReceiver

@@ -1,12 +1,17 @@
-@file:OptIn(ExperimentalUnsignedTypes::class)
-
 package ch.bziswiler.pvlogger.kpi.plugins
 
-import ch.bziswiler.pvlogger.kpi.config.AppConfig
-import ch.bziswiler.pvlogger.kpi.config.ServerConfig
 import ch.bziswiler.pvlogger.shared.messaging.config.MqConfig
 import io.ktor.server.application.Application
 import org.koin.ktor.ext.inject
+
+class AppConfig {
+    lateinit var serverConfig: ServerConfig
+    lateinit var mqConfig: MqConfig
+}
+
+data class ServerConfig(
+    val isProd: Boolean,
+)
 
 fun Application.setupConfig() {
     val appConfig by inject<AppConfig>()
