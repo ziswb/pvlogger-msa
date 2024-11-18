@@ -1,3 +1,6 @@
 package ch.bziswiler.pvlogger.dataaccessor.rest
 
-data class SolarInverterData(val activePowerKw: Double, val energyYieldKwh: Double)
+import ch.bziswiler.pvlogger.shared.masterdata.unit.KW
+import ch.bziswiler.pvlogger.shared.masterdata.unit.KWh
+
+data class SolarInverterData(val activePowerKw: KW, val energyYieldKwh: KWh)
