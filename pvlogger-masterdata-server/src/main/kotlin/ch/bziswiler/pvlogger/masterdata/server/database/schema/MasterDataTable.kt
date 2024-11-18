@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.masterdata.server.modbus.schema
+package ch.bziswiler.pvlogger.masterdata.server.database.schema
 
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType

@@ -3,7 +3,7 @@ package ch.bziswiler.pvlogger.masterdata.modbus
 import ch.bziswiler.pvlogger.masterdata.modbus.testutils.BaseApplicationTest
 import ch.bziswiler.pvlogger.masterdata.modbus.testutils.TestRecordBuilder
 import ch.bziswiler.pvlogger.masterdata.server.config.AppConfig
-import ch.bziswiler.pvlogger.masterdata.server.modbus.schema.MasterDataDao
+import ch.bziswiler.pvlogger.masterdata.server.database.access.MasterDataDao
 import ch.bziswiler.pvlogger.masterdata.server.modbus.services.MasterDataImporter
 import ch.bziswiler.pvlogger.masterdata.server.plugins.MASTER_DATA_FOR_ADDRESS_PATH
 import ch.bziswiler.pvlogger.masterdata.server.plugins.MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES

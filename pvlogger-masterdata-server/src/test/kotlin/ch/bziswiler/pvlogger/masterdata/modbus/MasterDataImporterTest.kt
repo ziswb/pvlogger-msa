@@ -3,8 +3,8 @@ package ch.bziswiler.pvlogger.masterdata.modbus
 import ch.bziswiler.pvlogger.masterdata.modbus.testutils.BaseApplicationTest
 import ch.bziswiler.pvlogger.masterdata.modbus.testutils.TestRecordBuilder.createTestRecords
 import ch.bziswiler.pvlogger.masterdata.server.config.AppConfig
-import ch.bziswiler.pvlogger.masterdata.server.modbus.schema.MasterDataDao
-import ch.bziswiler.pvlogger.masterdata.server.modbus.schema.MasterDataTable
+import ch.bziswiler.pvlogger.masterdata.server.database.access.MasterDataDao
+import ch.bziswiler.pvlogger.masterdata.server.database.schema.MasterDataTable
 import ch.bziswiler.pvlogger.masterdata.server.modbus.services.MasterDataImporter
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType
 import kotlin.test.assertEquals

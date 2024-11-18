@@ -1,5 +1,6 @@
-package ch.bziswiler.pvlogger.masterdata.server.modbus.schema
+package ch.bziswiler.pvlogger.masterdata.server.database.access
 
+import ch.bziswiler.pvlogger.masterdata.server.database.schema.MasterDataTable
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Quantity
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.RegisterAddress

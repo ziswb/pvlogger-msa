@@ -1,7 +1,7 @@
 package ch.bziswiler.pvlogger.masterdata.server.database.connection
 
 import ch.bziswiler.pvlogger.masterdata.server.config.AppConfig
-import ch.bziswiler.pvlogger.masterdata.server.modbus.schema.MasterDataTable
+import ch.bziswiler.pvlogger.masterdata.server.database.schema.MasterDataTable
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import org.jetbrains.exposed.sql.Database

@@ -1,8 +1,8 @@
 package ch.bziswiler.pvlogger.masterdata.server.plugins
 
-import ch.bziswiler.pvlogger.masterdata.server.service.importMasterData
-import ch.bziswiler.pvlogger.masterdata.server.service.masterDataForAddress
-import ch.bziswiler.pvlogger.masterdata.server.service.masterDataForCategoriesAndDeviceTypes
+import ch.bziswiler.pvlogger.masterdata.server.rest.importMasterData
+import ch.bziswiler.pvlogger.masterdata.server.rest.masterDataForAddress
+import ch.bziswiler.pvlogger.masterdata.server.rest.masterDataForCategoriesAndDeviceTypes
 import io.ktor.server.application.Application
 import io.ktor.server.routing.get
 import io.ktor.server.routing.put

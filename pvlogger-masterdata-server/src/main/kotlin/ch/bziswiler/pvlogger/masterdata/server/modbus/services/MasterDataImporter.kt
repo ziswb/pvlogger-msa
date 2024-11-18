@@ -13,7 +13,7 @@ import ch.bziswiler.pvlogger.shared.masterdata.modbus.Type
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Unit
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
 import ch.bziswiler.pvlogger.masterdata.server.config.AppConfig
-import ch.bziswiler.pvlogger.masterdata.server.modbus.schema.MasterDataDao
+import ch.bziswiler.pvlogger.masterdata.server.database.access.MasterDataDao
 import java.io.FileInputStream
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVRecord
