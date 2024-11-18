@@ -40,6 +40,7 @@ RECEIVED #######################################################################
 
     private fun handleJobStatusMessage(jobStatusMessage: JobStatusMessage) {
         logger.info { "Job Status is '${jobStatusMessage.status}'" }
+        logger.info { "Message tag is '${jobStatusMessage.messageTag.value}'" }
     }
 }
 
