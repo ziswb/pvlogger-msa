@@ -15,40 +15,35 @@ fun Application.setupConfig() {
 }
 
 private fun Application.readImportConfig(appConfig: AppConfig) {
-    val masterDataObject = environment.config.config("masterdata.import")
-    val meterMasterDataPath = masterDataObject.property("meterMasterDataPath").getString()
-    val inverterMasterDataPath = masterDataObject.property("inverterMasterDataPath").getString()
-    val deviceIdentifiersMasterDataPath = masterDataObject.property("deviceIdentifiersMasterDataPath").getString()
-    appConfig.masterDataImportConfig =
-        MasterDataImportConfig(
-            meterMasterDataPath,
-            inverterMasterDataPath,
-            deviceIdentifiersMasterDataPath,
-        )
+    with(environment.config.config("masterdata.import")) {
+        appConfig.apply {
+            masterDataImportConfig = MasterDataImportConfig(
+                meterMasterDataPath = property("meterMasterDataPath").getString(),
+                inverterMasterDataPath = property("inverterMasterDataPath").getString(),
+                deviceIdentifiersMasterDataPath = property("deviceIdentifiersMasterDataPath").getString(),
+            )
+        }
+    }
 }
 
 private fun Application.readDbConfig(appConfig: AppConfig) {
-    val databaseObject = environment.config.config("database")
-    val driverClass = databaseObject.property("driverClass").getString()
-    val dbServerUrl = databaseObject.property("dbServerUrl").getString()
-    val dbName = databaseObject.property("dbName").getString()
-    val dbCanonicalUrl = databaseObject.property("dbServerCanonicalUrl").getString()
-    val user = databaseObject.property("user").getString()
-    val password = databaseObject.property("password").getString()
-    val maxPoolSize = databaseObject.property("maxPoolSize").getString().toInt()
-    appConfig.databaseConfig = DatabaseConfig(
-        driverClass,
-        dbServerUrl,
-        dbName,
-        dbCanonicalUrl,
-        user,
-        password,
-        maxPoolSize
-    )
+    with(environment.config.config("database")) {
+        appConfig.apply {
+            databaseConfig = DatabaseConfig(
+                driverClass = property("driverClass").getString(),
+                dbServerUrl = property("dbServerUrl").getString(),
+                dbName = property("dbName").getString(),
+                dbServerCanonicalUrl = property("dbServerCanonicalUrl").getString(),
+                user = property("user").getString(),
+                password = property("password").getString(),
+                maxPoolSize = property("maxPoolSize").getString().toInt()
+            )
+        }
+    }
 }
 
 private fun Application.readServerConfig(appConfig: AppConfig) {
-    val serverObject = environment.config.config("ktor.server")
-    val isProd = serverObject.property("isProd").getString().toBoolean()
-    appConfig.serverConfig = ServerConfig(isProd)
+    with(environment.config.config("ktor.server")) {
+        appConfig.apply { serverConfig = ServerConfig(property("isProd").getString().toBoolean()) }
+    }
 }
