@@ -1,22 +1,25 @@
 package ch.bziswiler
 
-import ch.bziswiler.pvlogger.dataaccessor.configuration.configureRouting
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.testing.testApplication
-import kotlin.test.Test
-import kotlin.test.assertEquals
+import io.ktor.http.appendPathSegments
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
+import kotlin.test.assertTrue
 
-class ApplicationTest {
+class ApplicationTest : BaseApplicationTest() {
+
     @Test
-    fun testRoot() = testApplication {
-        application {
-            configureRouting()
-        }
-        client.get("/energiesTodaySoFar").apply {
-            assertEquals(HttpStatusCode.OK, status)
-            assertEquals("Hello World!", bodyAsText())
+    fun testRoot() = withApp {
+        client.get("/read-latest-register-value") {
+            url {
+                appendPathSegments("16", "37113")
+                parameters.append("gain", "1")
+            }
+        }.apply {
+            assertEquals(HttpStatusCode.NotFound, status)
+            assertTrue(bodyAsText().isEmpty())
         }
     }
 }

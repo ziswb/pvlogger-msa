@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+
 plugins {
     alias(libs.plugins.jvm)
     alias(libs.plugins.ktor)
@@ -9,8 +11,15 @@ plugins {
 group = "ch.bziswiler"
 version = "0.0.1"
 
+idea {
+    module {
+        isDownloadJavadoc = true
+        isDownloadSources = true
+    }
+}
+
 application {
-    mainClass.set("ch.bziswiler.pvlogger.dataaccessor.ApplicationKt")
+    mainClass.set("io.ktor.server.netty.EngineMain")
     val isDevelopment: Boolean = project.ext.has("development")
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
@@ -25,13 +34,6 @@ repositories {
     mavenCentral()
 }
 
-idea {
-    module {
-        isDownloadJavadoc = true
-        isDownloadSources = true
-    }
-}
-
 dependencies {
     implementation(libs.activemq.core)
     implementation(libs.activemq.client)
@@ -39,6 +41,7 @@ dependencies {
     // Serialization
     implementation(libs.ktor.serialization.kotlinx.json)
 
+    // Ktor
     implementation(libs.ktor.server.call.logging)
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.call.id)
@@ -46,6 +49,7 @@ dependencies {
     implementation(libs.ktor.server.metrics.micrometer)
     implementation(libs.ktor.server.netty)
 
+    // Shared pvlogger-resources
     implementation(project(":pvlogger-shared"))
 
     // Monitoring
@@ -62,14 +66,25 @@ dependencies {
     implementation(libs.exposed.jdbc)
     implementation(libs.postgresql)
     implementation(libs.hikaricp)
-    // This way the application can be launched using a H2-configuration
+
+    // In-memory DB for testing
     implementation(libs.h2)
 
-    // Koin
+    // Dependency injection
     implementation(libs.koin.ktor)
     implementation(libs.koin.logger.slf4j)
 
     // Testing
+    testImplementation(libs.ktor.server.test.host)
+    testImplementation(libs.koin.test)
+    testImplementation(libs.koin.test.junit5)
     testImplementation(libs.kotlin.test.junit)
-    testImplementation(libs.ktor.server.tests)
+}
+
+tasks.test {
+    useJUnitPlatform()
+    testLogging {
+        exceptionFormat = TestExceptionFormat.FULL
+        events("passed", "skipped", "failed")
+    }
 }

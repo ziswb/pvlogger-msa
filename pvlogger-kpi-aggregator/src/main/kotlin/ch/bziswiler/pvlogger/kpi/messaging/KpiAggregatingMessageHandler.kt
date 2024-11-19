@@ -1,6 +1,7 @@
 package ch.bziswiler.pvlogger.kpi.messaging
 
 import ch.bziswiler.pvlogger.shared.job.meta.JobName
+import ch.bziswiler.pvlogger.shared.job.status.JobStatus
 import ch.bziswiler.pvlogger.shared.job.status.JobStatusMessage
 import ch.bziswiler.pvlogger.shared.job.tags.JobFinishedMessageTag
 import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
@@ -28,9 +29,6 @@ RECEIVED #######################################################################
             null -> logger.info { "message is null" }
             else -> logger.info { "message is not of type ObjectMessage but: ${message.javaClass::class}" }
         }
-        logger.info { runBlocking { MasterDataCache.masterDataForSmartMeterActivePower() } }
-        logger.info { runBlocking { MasterDataCache.masterDataForInverterActivePower() } }
-        logger.info { runBlocking { MasterDataCache.masterDataForInverterEnergyYield() } }
     }
 
     private fun handleObjectMessage(message: ObjectMessage) {
@@ -45,6 +43,11 @@ RECEIVED #######################################################################
     private fun handleJobStatusMessage(jobStatusMessage: JobStatusMessage) {
         logger.info { "Job Status is '${jobStatusMessage.status}'" }
         logger.info { "Message tag is '${jobStatusMessage.messageTag.value}'" }
+        if (jobStatusMessage.status == JobStatus.SUCCESS) {
+            logger.info { runBlocking { MasterDataCache.masterDataForSmartMeterActivePower() } }
+            logger.info { runBlocking { MasterDataCache.masterDataForInverterActivePower() } }
+            logger.info { runBlocking { MasterDataCache.masterDataForInverterEnergyYield() } }
+        }
     }
 }
 

@@ -30,11 +30,13 @@ fun Application.module(testing: Boolean = false) {
     configureSerialization()
     configureDatabases()
     configureRouting()
-    startServices()
+    startServices(testing)
 }
 
-fun Application.startServices() {
-    val messageReceiver by inject<MessageReceiver>()
-    val messageHandler by inject<MessageHandler>()
-    messageReceiver.addMessageHandler(messageHandler)
+fun Application.startServices(testing: Boolean = false) {
+    if (!testing) {
+        val messageReceiver by inject<MessageReceiver>()
+        val messageHandler by inject<MessageHandler>()
+        messageReceiver.addMessageHandler(messageHandler)
+    }
 }
