@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalUnsignedTypes::class)
-
 package ch.bziswiler.pvlogger.datacollector.configuration
 
 import ch.bziswiler.pvlogger.shared.messaging.config.MqConfig
@@ -65,7 +63,7 @@ private fun Application.readMqConfig(appConfig: AppConfig) = with(environment.co
     }
 }
 
-@ExperimentalUnsignedTypes
+@OptIn(ExperimentalUnsignedTypes::class)
 private fun Application.readModbusConfig(appConfig: AppConfig) = with(environment.config.config("huawei.modbus.tcp")) {
     appConfig.apply {
         modbusTcpConfig = ModbusTcpConfig(
