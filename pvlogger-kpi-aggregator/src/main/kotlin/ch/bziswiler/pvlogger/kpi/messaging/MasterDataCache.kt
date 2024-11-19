@@ -1,5 +1,6 @@
 package ch.bziswiler.pvlogger.kpi.messaging
 
+import ch.bziswiler.pvlogger.kpi.configuration.AppConfig
 import ch.bziswiler.pvlogger.kpi.rest.PvHttpClient
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.RegisterAddress
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
@@ -10,6 +11,7 @@ import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.URLProtocol
+import org.koin.java.KoinJavaComponent.inject
 import kotlin.time.Duration.Companion.hours
 
 object MasterDataCache {
@@ -35,10 +37,11 @@ object MasterDataCache {
     }
 
     private suspend fun getMasterData(registerAddress: RegisterAddress) = PvHttpClient.client.get {
+        val appConfig: AppConfig by inject(AppConfig::class.java)
         url {
             protocol = URLProtocol.HTTP
-            host = "pvlogger-masterdata-server-service.pvlogger.svc.cluster.local" // TODO: make this configurable
-            port = 8081 // TODO: make this configurable
+            host = appConfig.masterDataConfig.host
+            port = appConfig.masterDataConfig.port
             pathSegments = listOf(MASTER_DATA_FOR_ADDRESS_PATH, registerAddress.value.toString())
         }
     }
