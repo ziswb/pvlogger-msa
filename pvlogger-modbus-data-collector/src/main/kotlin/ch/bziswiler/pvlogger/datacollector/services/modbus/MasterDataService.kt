@@ -43,21 +43,19 @@ class MasterDataService(appConfig: AppConfig) {
 
     fun fetchRegisterDefinitions(
         deviceTypes: List<DeviceType>, categories: List<Category>
-    ): List<ModbusRegisterDefinition> {
-        return runBlocking {
-            val result = client.get("/$MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES") {
-                host = masterDataHostName
-                port = masterDataHostPort
-                url {
-                    parameters.append(PARAM_DEV_TYPES, deviceTypes.joinToString(separator = PARAM_VALUE_SEPARATOR))
-                    parameters.append(PARAM_CATEGORIES, categories.joinToString(separator = PARAM_VALUE_SEPARATOR))
-                }
+    ): List<ModbusRegisterDefinition> = runBlocking {
+        val result = client.get {
+            host = masterDataHostName
+            port = masterDataHostPort
+            url {
+                pathSegments = listOf(MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES)
+                parameters.append(PARAM_DEV_TYPES, deviceTypes.joinToString(separator = PARAM_VALUE_SEPARATOR))
+                parameters.append(PARAM_CATEGORIES, categories.joinToString(separator = PARAM_VALUE_SEPARATOR))
             }
-            if (result.status == HttpStatusCode.OK) {
-                return@runBlocking result.body<List<ModbusRegisterDefinition>>()
-            } else {
-                return@runBlocking emptyList<ModbusRegisterDefinition>()
-            }
+        }
+        when (result.status) {
+            HttpStatusCode.OK -> result.body<List<ModbusRegisterDefinition>>()
+            else -> emptyList()
         }
     }
 }
