@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.kpi.rest
+package ch.bziswiler.pvlogger.shared.rest
 
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO

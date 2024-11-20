@@ -5,19 +5,13 @@ import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
 import ch.bziswiler.pvlogger.shared.rest.MasterDataPathConstants.MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES
-import io.ktor.client.HttpClient
+import ch.bziswiler.pvlogger.shared.rest.PvHttpClient.client
 import io.ktor.client.call.body
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.logging.LogLevel
-import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.get
 import io.ktor.client.request.host
 import io.ktor.client.request.port
 import io.ktor.http.HttpStatusCode
-import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.Json
 
 private const val PARAM_DEV_TYPES = "deviceTypes"
 private const val PARAM_CATEGORIES = "categories"
@@ -27,19 +21,6 @@ class MasterDataService(appConfig: AppConfig) {
 
     private val masterDataHostName = appConfig.masterDataConfig.host
     private val masterDataHostPort = appConfig.masterDataConfig.port
-
-    private val client = HttpClient(CIO) {
-        install(Logging) { level = LogLevel.ALL }
-        install(ContentNegotiation) {
-            json(Json {
-                prettyPrint = true
-                isLenient = true
-                ignoreUnknownKeys = true
-                allowSpecialFloatingPointValues = true
-                encodeDefaults = true
-            })
-        }
-    }
 
     fun fetchRegisterDefinitions(
         deviceTypes: List<DeviceType>, categories: List<Category>

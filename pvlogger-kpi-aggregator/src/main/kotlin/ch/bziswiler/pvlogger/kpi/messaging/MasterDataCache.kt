@@ -1,10 +1,10 @@
 package ch.bziswiler.pvlogger.kpi.messaging
 
 import ch.bziswiler.pvlogger.kpi.configuration.AppConfig
-import ch.bziswiler.pvlogger.kpi.rest.PvHttpClient
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.RegisterAddress
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
 import ch.bziswiler.pvlogger.shared.rest.MasterDataPathConstants.MASTER_DATA_FOR_ADDRESS_PATH
+import ch.bziswiler.pvlogger.shared.rest.PvHttpClient.client
 import io.github.reactivecircus.cache4k.Cache
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -36,7 +36,7 @@ object MasterDataCache {
         }
     }
 
-    private suspend fun getMasterData(registerAddress: RegisterAddress) = PvHttpClient.client.get {
+    private suspend fun getMasterData(registerAddress: RegisterAddress) = client.get {
         val appConfig: AppConfig by inject(AppConfig::class.java)
         url {
             protocol = URLProtocol.HTTP

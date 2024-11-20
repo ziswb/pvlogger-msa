@@ -1,10 +1,19 @@
 plugins {
     alias(libs.plugins.jvm)
     alias(libs.plugins.serialization)
+//  alias(libs.plugins.idea)
+    id("idea")
 }
 
-group = "ch.bziswiler.pvlogger"
+group = "ch.bziswiler"
 version = "0.0.1"
+
+idea {
+    module {
+        isDownloadJavadoc = true
+        isDownloadSources = true
+    }
+}
 
 repositories {
     mavenCentral()
@@ -16,13 +25,14 @@ dependencies {
     // Logging
     implementation(libs.kotlin.logging)
 
+    // Ktor
+    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.logging)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+
     // Messaging
     implementation(libs.activemq.core)
-
-    // This dependency is exported to consumers, that is to say found on their compile classpath.
-    // api(libs.commons.math3)
-    // This dependency is used internally, and not exposed to consumers on their own compile classpath.
-    // implementation(libs.guava)
 }
 
 java {
