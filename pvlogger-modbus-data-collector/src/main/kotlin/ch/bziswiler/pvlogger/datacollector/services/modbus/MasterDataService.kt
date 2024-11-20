@@ -4,7 +4,7 @@ import ch.bziswiler.pvlogger.datacollector.configuration.AppConfig
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
-import ch.bziswiler.pvlogger.shared.rest.MasterDataPathConstants.REGISTER_DEFINITIONS_PATH
+import ch.bziswiler.pvlogger.shared.rest.MasterDataPathConstants.MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
@@ -45,7 +45,7 @@ class MasterDataService(appConfig: AppConfig) {
         deviceTypes: List<DeviceType>, categories: List<Category>
     ): List<ModbusRegisterDefinition> {
         return runBlocking {
-            val result = client.get("/$REGISTER_DEFINITIONS_PATH") {
+            val result = client.get("/$MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES") {
                 host = masterDataHostName
                 port = masterDataHostPort
                 url {
