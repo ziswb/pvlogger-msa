@@ -15,6 +15,8 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
 import io.ktor.server.response.respond
+import io.ktor.server.routing.Routing
+import io.ktor.server.routing.get
 import io.ktor.util.pipeline.PipelineContext
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.SortOrder.DESC
@@ -29,20 +31,22 @@ object ReadRegisterValueController {
     private val logger = KotlinLogging.logger {}
     private val responseTimeDescending = response_time to DESC
 
-    suspend fun PipelineContext<Unit, ApplicationCall>.readAndTransposeLatestRegisterValue() {
-        val deviceId = retrieveDeviceIdParameter()
-        val registerAddress = retrieveRegisterAddressParameter()
-        val gain = retrieveGainQueryParameter()
-        if (deviceId == null) {
-            call.respond(HttpStatusCode.BadRequest, "deviceId is required")
-        } else if (registerAddress == null) {
-            call.respond(HttpStatusCode.BadRequest, "address is required")
-        } else if (gain == null) {
-            call.respond(HttpStatusCode.BadRequest, "gain is required")
-        } else {
-            when (val value = readAndTransposeLatestRegisterValue(deviceId, registerAddress, gain)) {
-                null -> call.respond(HttpStatusCode.NotFound)
-                else -> call.respond(HttpStatusCode.OK, value)
+    fun Routing.readRegister() {
+        get("/read-latest-register-value/{deviceId}/{registerAddress}") {
+            val deviceId = retrieveDeviceIdParameter()
+            val registerAddress = retrieveRegisterAddressParameter()
+            val gain = retrieveGainQueryParameter()
+            if (deviceId == null) {
+                call.respond(HttpStatusCode.BadRequest, "deviceId is required")
+            } else if (registerAddress == null) {
+                call.respond(HttpStatusCode.BadRequest, "address is required")
+            } else if (gain == null) {
+                call.respond(HttpStatusCode.BadRequest, "gain is required")
+            } else {
+                when (val value = readAndTransposeLatestRegisterValue(deviceId, registerAddress, gain)) {
+                    null -> call.respond(HttpStatusCode.NotFound)
+                    else -> call.respond(HttpStatusCode.OK, value)
+                }
             }
         }
     }
