@@ -48,7 +48,7 @@ open class ModbusDeviceIdentifiersCollectionJob(
         timer.recordCallable { executeForEachDeviceId(idProvider.nextJobId) }
     }
 
-    override fun jobFinishedMessageObject(jobId: JobId) = deviceIdsDataCollectionJobSucceededMessage(jobId)
+    override fun jobSucceededMessageObject(jobId: JobId) = deviceIdsDataCollectionJobSucceededMessage(jobId)
 
     override fun jobFailedMessageObject(jobId: JobId) = deviceIdsDataCollectionJobFailedMessage(jobId)
 

@@ -44,7 +44,7 @@ class ModbusBatchedDynamicDataCollectionJob(
             .maximumExpectedValue(Duration.ofMillis(10000))
             .register(Metrics.globalRegistry)
 
-    override fun jobFinishedMessageObject(jobId: JobId) = dynamicDataCollectionJobSucceededMessage(jobId)
+    override fun jobSucceededMessageObject(jobId: JobId) = dynamicDataCollectionJobSucceededMessage(jobId)
 
     override fun jobFailedMessageObject(jobId: JobId) = dynamicDataCollectionJobFailedMessage(jobId)
 }

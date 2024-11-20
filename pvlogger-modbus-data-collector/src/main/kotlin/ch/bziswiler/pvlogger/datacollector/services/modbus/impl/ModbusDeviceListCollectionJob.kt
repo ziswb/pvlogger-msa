@@ -44,7 +44,7 @@ class ModbusDeviceListCollectionJob(
         }
     }
 
-    override fun jobFinishedMessageObject(jobId: JobId) = deviceListDataCollectionJobSucceededMessage(jobId)
+    override fun jobSucceededMessageObject(jobId: JobId) = deviceListDataCollectionJobSucceededMessage(jobId)
 
     override fun jobFailedMessageObject(jobId: JobId) = deviceListDataCollectionJobFailedMessage(jobId)
 

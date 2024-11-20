@@ -45,7 +45,7 @@ class ModbusBatchedStaticDataCollectionJob(
             .maximumExpectedValue(Duration.ofMillis(10000))
             .register(Metrics.globalRegistry)
 
-    override fun jobFinishedMessageObject(jobId: JobId) = staticDataCollectionJobSucceededMessage(jobId)
+    override fun jobSucceededMessageObject(jobId: JobId) = staticDataCollectionJobSucceededMessage(jobId)
 
     override fun jobFailedMessageObject(jobId: JobId) = staticDataCollectionJobFailedMessage(jobId)
 }

@@ -66,7 +66,7 @@ abstract class ModbusBatchedDataCollectionJob(
         }
     }
 
-    private fun jobFinished(jobId: JobId) = jobSchedulerMessageSender.tagAndSendMessage(jobFinishedMessageObject(jobId), JobFinishedMessageTag(jobName))
+    private fun jobSucceeded(jobId: JobId) = jobSchedulerMessageSender.tagAndSendMessage(jobSucceededMessageObject(jobId), JobFinishedMessageTag(jobName))
 
     private fun jobFailed(jobId: JobId) = jobSchedulerMessageSender.tagAndSendMessage(jobFailedMessageObject(jobId), JobFinishedMessageTag(jobName))
 
@@ -79,7 +79,7 @@ abstract class ModbusBatchedDataCollectionJob(
                 deviceIdToDeviceTypesMap.forEach { fetchRegisterValues(jobId, it.key, it.value) }
             }.onSuccess {
                 logger.debug { "ModbusInverterBatchedDataCollectionJobScaffold.execute().onSuccess()" }
-                jobFinished(jobId)
+                jobSucceeded(jobId)
             }.onFailure {
                 logger.error(it) { "ModbusInverterBatchedDataCollectionJobScaffold.execute().onFailure()" }
                 jobFailed(jobId)

@@ -6,7 +6,7 @@ import ch.bziswiler.pvlogger.shared.job.status.JobStatusMessage
 
 interface ModbusDataCollectionJob {
     val jobName: JobName
-    fun jobFinishedMessageObject(jobId: JobId): JobStatusMessage
+    fun jobSucceededMessageObject(jobId: JobId): JobStatusMessage
     fun jobFailedMessageObject(jobId: JobId): JobStatusMessage
     fun execute()
 }
