@@ -14,17 +14,17 @@ import org.koin.test.inject
 import kotlin.test.assertEquals
 
 class MasterDataImporterTest : BaseApplicationTest() {
+
     private val appConfig by inject<AppConfig>()
     private val dao by inject<MasterDataDao>()
 
     @Test
-    fun `test masterdata importer`() =
-        withApp {
-            startApplication()
-            val csvRecords = createTestRecords()
-            MasterDataImporter(appConfig, dao).storeMasterData(DeviceType.INVERTER, csvRecords)
-            var name = ""
-            transaction { name = MasterDataTable.selectAll().first()[MasterDataTable.name] }
-            assertEquals("TestRecord 1", name, "field 'name' contained the value '$name' but should contain 'TestRecord 1'")
-        }
+    fun `test masterdata importer`() = withApp {
+        startApplication()
+        val csvRecords = createTestRecords()
+        MasterDataImporter(appConfig, dao).storeMasterData(DeviceType.INVERTER, csvRecords)
+        var name = ""
+        transaction { name = MasterDataTable.selectAll().first()[MasterDataTable.name] }
+        assertEquals("TestRecord 1", name, "field 'name' contained the value '$name' but should contain 'TestRecord 1'")
+    }
 }

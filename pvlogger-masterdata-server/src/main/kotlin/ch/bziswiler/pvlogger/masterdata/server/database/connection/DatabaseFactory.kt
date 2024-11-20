@@ -18,19 +18,13 @@ class DatabaseFactory(appConfig: AppConfig) {
         assertSchemaComplete(Database.connect(hikari(dbConfig.dbServerCanonicalUrl)))
     }
 
-    private fun assertSchemaComplete(database: Database) {
-        transaction(database) {
-            SchemaUtils.create(MasterDataTable)
-        }
-    }
+    private fun assertSchemaComplete(database: Database) = transaction(database) { SchemaUtils.create(MasterDataTable) }
 
-    private fun assertDatabaseExists(database: Database) {
-        transaction(database) {
-            if (SchemaUtils.listDatabases().find { it == dbConfig.dbName }.isNullOrEmpty()) {
-                connection.autoCommit = true
-                SchemaUtils.createDatabase(databases = arrayOf(dbConfig.dbName), inBatch = true)
-                connection.autoCommit = false
-            }
+    private fun assertDatabaseExists(database: Database) = transaction(database) {
+        if (SchemaUtils.listDatabases().find { it == dbConfig.dbName }.isNullOrEmpty()) {
+            connection.autoCommit = true
+            SchemaUtils.createDatabase(databases = arrayOf(dbConfig.dbName), inBatch = true)
+            connection.autoCommit = false
         }
     }
 

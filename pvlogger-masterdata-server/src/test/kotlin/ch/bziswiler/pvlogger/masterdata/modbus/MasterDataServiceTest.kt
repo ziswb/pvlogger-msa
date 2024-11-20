@@ -23,6 +23,7 @@ import org.koin.test.inject
 import kotlin.test.assertNotNull
 
 class MasterDataServiceTest : BaseApplicationTest() {
+
     private val appConfig by inject<AppConfig>()
     private val dao by inject<MasterDataDao>()
 

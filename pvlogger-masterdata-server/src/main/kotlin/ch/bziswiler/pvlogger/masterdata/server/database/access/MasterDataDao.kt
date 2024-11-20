@@ -15,26 +15,22 @@ import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class MasterDataDao {
+
     private fun <T> dbQuery(block: () -> T): T = transaction { block() }
 
-    fun insertBatch(
-        devType: DeviceType,
-        registerDefinitions: List<ModbusRegisterDefinition>,
-    ) {
-        dbQuery {
-            MasterDataTable.batchInsert(registerDefinitions, ignore = true, shouldReturnGeneratedValues = false) {
-                this[MasterDataTable.deviceType] = devType
-                this[MasterDataTable.no] = it.no
-                this[MasterDataTable.name] = it.name
-                this[MasterDataTable.readWrite] = it.readWrite
-                this[MasterDataTable.type] = it.type
-                this[MasterDataTable.unit] = it.unit
-                this[MasterDataTable.gain] = it.gain
-                this[MasterDataTable.address] = it.registerAddress.value
-                this[MasterDataTable.quantity] = it.quantity.value
-                this[MasterDataTable.scope] = it.scope.value
-                this[MasterDataTable.category] = it.category
-            }
+    fun insertBatch(devType: DeviceType, registerDefinitions: List<ModbusRegisterDefinition>) = dbQuery {
+        MasterDataTable.batchInsert(registerDefinitions, ignore = true, shouldReturnGeneratedValues = false) {
+            this[MasterDataTable.deviceType] = devType
+            this[MasterDataTable.no] = it.no
+            this[MasterDataTable.name] = it.name
+            this[MasterDataTable.readWrite] = it.readWrite
+            this[MasterDataTable.type] = it.type
+            this[MasterDataTable.unit] = it.unit
+            this[MasterDataTable.gain] = it.gain
+            this[MasterDataTable.address] = it.registerAddress.value
+            this[MasterDataTable.quantity] = it.quantity.value
+            this[MasterDataTable.scope] = it.scope.value
+            this[MasterDataTable.category] = it.category
         }
     }
 

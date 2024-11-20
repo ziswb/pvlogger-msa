@@ -30,6 +30,7 @@ private const val IDX_SCOPE = 8
 private const val IDX_CATEGORY = 9
 
 class MasterDataImporter(appConfig: AppConfig, private val dao: MasterDataDao) {
+
     private val meterMasterDataPath = appConfig.masterDataImportConfig.meterMasterDataPath
     private val inverterMasterDataPath = appConfig.masterDataImportConfig.inverterMasterDataPath
     private val devIdsMasterDataPath = appConfig.masterDataImportConfig.deviceIdentifiersMasterDataPath
@@ -40,34 +41,25 @@ class MasterDataImporter(appConfig: AppConfig, private val dao: MasterDataDao) {
 
     fun importDeviceIdentifiers() = storeMasterData(INVERTER, readMasterData(devIdsMasterDataPath))
 
-    private fun readMasterData(path: String): List<CSVRecord> {
-        val csvRecords =
-            CSVFormat.Builder.create(CSVFormat.DEFAULT)
-                .apply { setIgnoreSurroundingSpaces(true) }
-                .build().parse(FileInputStream(path).reader())
-                .drop(IDX_NAME) // Dropping the header
-        return csvRecords
-    }
+    private fun readMasterData(path: String): List<CSVRecord> = CSVFormat.Builder.create(CSVFormat.DEFAULT)
+        .apply { setIgnoreSurroundingSpaces(true) }
+        .build().parse(FileInputStream(path).reader())
+        .drop(IDX_NAME) // Dropping the header
 
-    fun storeMasterData(
-        devType: DeviceType,
-        csvRecord: List<CSVRecord>,
-    ) = dao.insertBatch(devType, mapToModbusRegisterDefinitions(csvRecord))
+    fun storeMasterData(devType: DeviceType, csvRecord: List<CSVRecord>) = dao.insertBatch(devType, mapToModbusRegisterDefinitions(csvRecord))
 
-    private fun mapToModbusRegisterDefinitions(csvRecords: List<CSVRecord>) =
-        csvRecords
-            .map {
-                ModbusRegisterDefinition(
-                    no = it[IDX_NO].toInt(),
-                    name = it[IDX_NAME],
-                    readWrite = ReadWrite.valueOf(it[IDX_RW]),
-                    type = Type.from(it[IDX_TYPE]),
-                    unit = Unit.from(it[IDX_UNIT]),
-                    gain = Gain.from(it[IDX_GAIN]),
-                    registerAddress = RegisterAddress(it[IDX_RA].toInt()),
-                    quantity = Quantity(it[IDX_QUANTITY].toInt()),
-                    scope = Scope(it[IDX_SCOPE].orEmpty()),
-                    category = Category.valueOf(it[IDX_CATEGORY]),
-                )
-            }.toList().sortedBy(ModbusRegisterDefinition::no)
+    private fun mapToModbusRegisterDefinitions(csvRecords: List<CSVRecord>) = csvRecords.map {
+        ModbusRegisterDefinition(
+            no = it[IDX_NO].toInt(),
+            name = it[IDX_NAME],
+            readWrite = ReadWrite.valueOf(it[IDX_RW]),
+            type = Type.from(it[IDX_TYPE]),
+            unit = Unit.from(it[IDX_UNIT]),
+            gain = Gain.from(it[IDX_GAIN]),
+            registerAddress = RegisterAddress(it[IDX_RA].toInt()),
+            quantity = Quantity(it[IDX_QUANTITY].toInt()),
+            scope = Scope(it[IDX_SCOPE].orEmpty()),
+            category = Category.valueOf(it[IDX_CATEGORY]),
+        )
+    }.toList().sortedBy(ModbusRegisterDefinition::no)
 }

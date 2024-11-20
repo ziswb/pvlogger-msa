@@ -9,11 +9,7 @@ import org.junit.jupiter.api.Test
 private const val ROOT_PATH = "/"
 
 class ApplicationTest : BaseApplicationTest() {
+
     @Test
-    fun testRoot() =
-        withApp {
-            client.get(ROOT_PATH).apply {
-                assertEquals(HttpStatusCode.NotFound, status)
-            }
-        }
+    fun testRoot() = withApp { client.get(ROOT_PATH).apply { assertEquals(HttpStatusCode.NotFound, status) } }
 }
