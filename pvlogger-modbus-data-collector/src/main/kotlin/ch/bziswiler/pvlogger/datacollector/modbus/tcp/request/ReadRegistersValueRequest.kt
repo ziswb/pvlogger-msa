@@ -39,13 +39,13 @@ class ReadRegistersValueRequest(
     override val functionCode = ReadRegisters
 
     private val registerAddress: UShort = registers.firstOrNull()?.registerAddress?.value?.toUShort() ?: 0x0u
-    private val numberOfRegisters: UShort = registers.sumOf { it.quantity.value }.toUShort()
+    private val numberOfBytes: UShort = registers.sumOf { it.quantity.value }.toUShort()
 
     private val frame =
         AduFrame(
             MbapHeader(requestId, dataLength = dataLength, logicDeviceId = logicDeviceId),
             functionCode,
-            UShortData(listOf(registerAddress, numberOfRegisters)),
+            UShortData(listOf(registerAddress, numberOfBytes)),
         )
 
     override suspend fun encode(channel: ByteWriteChannel) = frame.encode(channel)
