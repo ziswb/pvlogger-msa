@@ -5,6 +5,8 @@ import ch.bziswiler.pvlogger.shared.job.status.JobStatus
 import ch.bziswiler.pvlogger.shared.job.status.JobStatusMessage
 import ch.bziswiler.pvlogger.shared.job.tags.JobFinishedMessageTag
 import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
+import ch.bziswiler.pvlogger.shared.rest.PvHttpClient.client
+import io.ktor.client.request.get
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import javax.jms.Message
@@ -44,9 +46,23 @@ RECEIVED #######################################################################
         logger.info { "Job Status is '${jobStatusMessage.status}'" }
         logger.info { "Message tag is '${jobStatusMessage.messageTag.value}'" }
         if (jobStatusMessage.status == JobStatus.SUCCESS) {
-            logger.info { runBlocking { MasterDataCache.masterDataForSmartMeterActivePower() } }
-            logger.info { runBlocking { MasterDataCache.masterDataForInverterActivePower() } }
-            logger.info { runBlocking { MasterDataCache.masterDataForInverterEnergyYield() } }
+            val smartMeterActivePowerMasterData = runBlocking { MasterDataCache.masterDataForSmartMeterActivePower() }
+            runBlocking {
+                val foo = client.get {
+                    url {
+                        host = "pvlogger-modbus-data-accessor-service"
+                        port = 8081
+                        pathSegments = listOf("read-latest-register-value", "1", "${smartMeterActivePowerMasterData.registerAddress}")
+                        parameters.append("gain", "${smartMeterActivePowerMasterData.gain}")
+                    }
+                }
+                logger.info { foo }
+            }
+            val inverterActivePowerMasterData = runBlocking { MasterDataCache.masterDataForInverterActivePower() }
+            val inverterEnergyYieldMasterData = runBlocking { MasterDataCache.masterDataForInverterEnergyYield() }
+            logger.info { smartMeterActivePowerMasterData }
+            logger.info { inverterActivePowerMasterData }
+            logger.info { inverterEnergyYieldMasterData }
         }
     }
 }
