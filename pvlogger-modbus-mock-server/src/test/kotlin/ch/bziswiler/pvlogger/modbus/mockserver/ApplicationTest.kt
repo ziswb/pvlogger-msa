@@ -5,7 +5,6 @@ import ch.bziswiler.pvlogger.modbus.mockserver.utils.MockDataBuilder.buildFuncti
 import ch.bziswiler.pvlogger.modbus.mockserver.utils.MockDataBuilder.buildHeader
 import ch.bziswiler.pvlogger.modbus.mockserver.utils.MockDataReader
 import ch.bziswiler.pvlogger.modbus.mockserver.utils.MockDataWriter
-import ch.bziswiler.pvlogger.shared.masterdata.modbus.Type
 import io.ktor.network.selector.SelectorManager
 import io.ktor.network.sockets.aSocket
 import io.ktor.network.sockets.openReadChannel
@@ -32,52 +31,26 @@ class ApplicationTest {
                 )
         }
         application {
-            module()
+            module(testing = true)
             sleep(1000) // TODO: this is definitely not the way to do it. Also the 'application'-block should be closed before the testing code starts
             runBlocking {
                 val selectorManager = SelectorManager(Dispatchers.IO)
                 val socket = aSocket(selectorManager).tcp().connect(hostname, 9090)
                 val reader = MockDataReader(socket.openReadChannel())
                 val writer = MockDataWriter(socket.openWriteChannel(autoFlush = true))
-                writer.writeData(buildHeader(), buildFunctionCode(), buildData())
-                reader.readData(mockValueTypes())
+                val mockData = buildData()
+                writer.writeData(buildHeader(dataLength = 6u), buildFunctionCode(), mockData)
+                reader.readData(mockData)
                 socket.close()
                 assertEquals(0u, reader.protocolIdentifier)
                 assertEquals(0u, reader.protocolType)
                 assertEquals(81u, reader.dataLength)
                 assertEquals(1u, reader.logicDeviceId)
-                assertEquals(mockValueTypes().size, reader.values.size)
-                assertEquals(1u, reader.values.get(0) as UShort)
-                assertEquals(2333, reader.values.get(1) as Int)
+                assertEquals(mockData.size, reader.values.size)
+                assertEquals(1u, reader.values[0] as UShort)
+                assertEquals(2333, reader.values[1] as Int)
             }
         }
-    }
-
-    private fun mockValueTypes(): MutableList<Type> {
-        val valueTypes = mutableListOf<Type>()
-        valueTypes.add(Type.U16)
-        valueTypes.add(Type.I32)
-        valueTypes.add(Type.I32)
-        valueTypes.add(Type.I32)
-        valueTypes.add(Type.I32)
-        valueTypes.add(Type.I32)
-        valueTypes.add(Type.I32)
-        valueTypes.add(Type.I32)
-        valueTypes.add(Type.I32)
-        valueTypes.add(Type.I16)
-        valueTypes.add(Type.I16)
-        valueTypes.add(Type.I32)
-        valueTypes.add(Type.I32)
-        valueTypes.add(Type.I32)
-        valueTypes.add(Type.U16)
-        valueTypes.add(Type.I32)
-        valueTypes.add(Type.I32)
-        valueTypes.add(Type.I32)
-        valueTypes.add(Type.I32)
-        valueTypes.add(Type.I32)
-        valueTypes.add(Type.I32)
-        valueTypes.add(Type.U16)
-        return valueTypes
     }
 }
 

@@ -1,7 +1,11 @@
 package ch.bziswiler.pvlogger.modbus.mockserver.utils
 
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.RegisterAddress
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.Type
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.FunctionCode
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.MbapHeader
+import mu.KotlinLogging
 
 object MockDataBuilder {
     fun buildHeader(
@@ -42,4 +46,30 @@ object MockDataBuilder {
         RegisterIntValue(value = -1405),
         RegisterUShortValue(value = 1u)
     )
+
+    suspend fun buildDataUsingMasterData(registerAddress: RegisterAddress, numberOfBytes: Int): List<RegisterValue<*>> {
+        val logger = KotlinLogging.logger {}
+        val values = mutableListOf<RegisterValue<*>>()
+        var currentRegisterAddress = registerAddress
+        var bytesWritten = 0
+        while (bytesWritten < numberOfBytes) {
+            logger.trace { "Written bytes: $bytesWritten - looking up register definition for register address '${currentRegisterAddress.value}'" }
+            val registerDefinition = MasterDataCache.modbusRegisterDefinition(currentRegisterAddress)
+            logger.trace { "Found register definition: $registerDefinition" }
+            values.add(mockValueFor(registerDefinition))
+            bytesWritten += registerDefinition.quantity.value
+            currentRegisterAddress = RegisterAddress(currentRegisterAddress.value + registerDefinition.quantity.value)
+        }
+        return values
+    }
+
+    private fun mockValueFor(registerDefinition: ModbusRegisterDefinition): RegisterValue<*> = when (registerDefinition.type) {
+        Type.U16 -> RegisterUShortValue(value = 1u)
+        Type.I16 -> RegisterShortValue(value = 2)
+        Type.U32 -> RegisterUIntValue(value = 3u)
+        Type.I32 -> RegisterIntValue(value = 4)
+        Type.BITFIELD_16 -> RegisterUShortValue(value = 5u)
+        Type.BITFIELD_32 -> RegisterUIntValue(value = 6u)
+        else -> throw NotImplementedError()
+    }
 }

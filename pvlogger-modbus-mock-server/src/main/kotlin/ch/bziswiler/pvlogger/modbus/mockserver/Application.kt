@@ -1,6 +1,7 @@
 package ch.bziswiler.pvlogger.modbus.mockserver
 
 import ch.bziswiler.pvlogger.modbus.mockserver.utils.MockDataBuilder.buildData
+import ch.bziswiler.pvlogger.modbus.mockserver.utils.MockDataBuilder.buildDataUsingMasterData
 import ch.bziswiler.pvlogger.modbus.mockserver.utils.MockDataBuilder.buildFunctionCode
 import ch.bziswiler.pvlogger.modbus.mockserver.utils.MockDataBuilder.buildHeader
 import ch.bziswiler.pvlogger.modbus.mockserver.utils.MockDataWriter
@@ -19,14 +20,14 @@ fun main(args: Array<String>) {
     io.ktor.server.netty.EngineMain.main(args)
 }
 
-fun Application.module() {
-    launch { startSocketServer() }
+fun Application.module(testing: Boolean = false) {
+    launch { startSocketServer(testing) }
 }
 
-fun Application.startSocketServer() {
+fun Application.startSocketServer(testing: Boolean) {
     val logger = KotlinLogging.logger {}
     val port = environment.config.propertyOrNull("ktor.socket-server.tcp-port")?.getString()?.toInt() ?: 8502
-    val ip = environment.config.propertyOrNull("ktor.socket-server.ip")?.getString()?: "0.0.0.0"
+    val ip = environment.config.propertyOrNull("ktor.socket-server.ip")?.getString() ?: "0.0.0.0"
     logger.info { "socket server: starting at  $ip:$port" }
     runBlocking {
         val selectorManager = SelectorManager(Dispatchers.IO)
@@ -44,7 +45,14 @@ fun Application.startSocketServer() {
                     logger.info { "received request: $request" }
                     val writer = MockDataWriter(sendChannel)
                     logger.info { "socket server: writing response" }
-                    writer.writeData(buildHeader(), buildFunctionCode(), buildData())
+                    if (testing) {
+                        writer.writeData(buildHeader(), buildFunctionCode(), buildData())
+                    } else {
+                        val data = buildDataUsingMasterData(request.first, request.second)
+                        val dataLength = data.fold(3) { sum, values -> sum + values.quantity }
+                        writer.writeData(buildHeader(dataLength = dataLength.toUShort()), buildFunctionCode(), data)
+                    }
+                    sendChannel.flush()
                 }
             }
         }

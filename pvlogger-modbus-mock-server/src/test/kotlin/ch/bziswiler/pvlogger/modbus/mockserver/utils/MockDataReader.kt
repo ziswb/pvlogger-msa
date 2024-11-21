@@ -11,14 +11,15 @@ class MockDataReader(private val channel: ByteReadChannel) {
     var logicDeviceId: UByte = 0u
     val values = mutableListOf<Any>()
 
-    suspend fun readData(valueTypes: List<Type>) {
+    suspend fun readData(registerValues: List<RegisterValue<*>>) {
         protocolIdentifier = channel.readUShort()
         protocolType = channel.readUShort()
         dataLength = channel.readUShort()
         logicDeviceId = channel.readUByte()
         channel.readUByte() // function code
-        valueTypes.forEach {
-            when (it) {
+        channel.readUByte() // number of bytes
+        registerValues.forEach {
+            when (it.type) {
                 Type.U16 -> values.add(channel.readUShort())
                 Type.I16 -> values.add(channel.readShort())
                 Type.I32 -> values.add(channel.readInt())
