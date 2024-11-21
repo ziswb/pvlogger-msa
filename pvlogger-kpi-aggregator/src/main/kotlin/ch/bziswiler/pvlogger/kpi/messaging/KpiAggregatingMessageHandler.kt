@@ -51,9 +51,9 @@ RECEIVED #######################################################################
                 val foo = client.get {
                     url {
                         host = "pvlogger-modbus-data-accessor-service"
-                        port = 8081
-                        pathSegments = listOf("read-latest-register-value", "1", "${smartMeterActivePowerMasterData.registerAddress}")
-                        parameters.append("gain", "${smartMeterActivePowerMasterData.gain}")
+                        port = 8083
+                        pathSegments = listOf("read-latest-register-value", "1", "${smartMeterActivePowerMasterData.registerAddress.value}")
+                        parameters.append("gain", smartMeterActivePowerMasterData.gain.raw)
                     }
                 }
                 logger.info { foo }
