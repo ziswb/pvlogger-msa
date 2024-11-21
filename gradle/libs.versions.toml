@@ -14,9 +14,11 @@ loggingVersion = "3.0.5"
 postgresVersion = "42.7.2"
 prometheusVersion = "1.12.2"
 quartzVersion = "2.3.2"
+cacheVersion = "0.13.0"
 
 [libraries]
 commons-csv = { module = "org.apache.commons:commons-csv", version.ref = "commonsCsvVersion" }
+reactivecircus-cache = { module = "io.github.reactivecircus.cache4k:cache4k", version.ref = "cacheVersion" }
 
 activemq-core = { module = "org.apache.activemq:activemq-core", version.ref = "activemqCoreVersion" }
 activemq-client = { module = "org.apache.activemq:activemq-client", version.ref = "activemqClientVersion" }

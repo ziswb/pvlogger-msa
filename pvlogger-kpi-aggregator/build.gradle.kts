@@ -51,7 +51,7 @@ dependencies {
     implementation(libs.koin.logger.slf4j)
 
     // Cache -> https://github.com/ReactiveCircus/cache4k
-    implementation("io.github.reactivecircus.cache4k:cache4k:0.13.0") // TODO extract this to toml-file
+    implementation(libs.reactivecircus.cache)
 
     // Testing
     testImplementation(libs.ktor.server.test.host)
