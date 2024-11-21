@@ -12,6 +12,8 @@ import io.ktor.utils.io.ByteReadChannel
 import mu.KotlinLogging
 import java.time.LocalDateTime.now
 
+private const val LENGTH_OF_DEVICE_ID_FUNCTION_CODE_AND_NUMBER_OF_BYTES: UByte = 3u
+
 abstract class ModbusRegisterValueRequest : ModbusRequest {
 
     private val logger = KotlinLogging.logger {}
@@ -28,7 +30,7 @@ abstract class ModbusRegisterValueRequest : ModbusRequest {
                 responseTime = now(),
                 header = header,
                 functionCode = functionCode,
-                numberOfBytes = header.dataLength.toInt().minus(3).toUByte(),
+                numberOfBytes = header.dataLength.minus(LENGTH_OF_DEVICE_ID_FUNCTION_CODE_AND_NUMBER_OF_BYTES).toUByte(),
                 registerValues = readData(functionCode, channel),
             )
         }
