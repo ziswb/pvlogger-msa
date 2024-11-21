@@ -11,7 +11,7 @@ import org.koin.dsl.module
 
 val appModule = module {
     single<AppConfig> { AppConfig() }
-    single<MessageHandler> { KpiAggregatingMessageHandler() }
+    single<MessageHandler> { KpiAggregatingMessageHandler(get<AppConfig>().modbusDataAccessConfig) }
     single<MqSessionFactory> { ActiveMqSessionFactory(get<AppConfig>().mqConfig) }
     single<MessageReceiver> { ActiveMqMessageReceiver(get<MqSessionFactory>(), JOB_SCHEDULER) }
 }

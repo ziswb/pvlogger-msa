@@ -1,18 +1,25 @@
 package ch.bziswiler.pvlogger.kpi.messaging
 
+import ch.bziswiler.pvlogger.kpi.configuration.ModbusDataAccessConfig
+import ch.bziswiler.pvlogger.kpi.messaging.MasterDataCache.masterDataForInverterActivePower
 import ch.bziswiler.pvlogger.shared.job.meta.JobName
 import ch.bziswiler.pvlogger.shared.job.status.JobStatus
 import ch.bziswiler.pvlogger.shared.job.status.JobStatusMessage
 import ch.bziswiler.pvlogger.shared.job.tags.JobFinishedMessageTag
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
 import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
+import ch.bziswiler.pvlogger.shared.rest.MasterDataPathConstants.MASTER_DATA_REGISTER_VALUE_PATH
+import ch.bziswiler.pvlogger.shared.rest.MasterDataQueryParameterNames.GAIN
 import ch.bziswiler.pvlogger.shared.rest.PvHttpClient.client
 import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import javax.jms.Message
 import javax.jms.ObjectMessage
 
-class KpiAggregatingMessageHandler : MessageHandler {
+class KpiAggregatingMessageHandler(private val modbusDataAccessConfig: ModbusDataAccessConfig) : MessageHandler {
 
     override val messageSelector = JobFinishedMessageTag(JobName.DYNAMIC_DATA_JOB).toSelector()
 
@@ -46,25 +53,59 @@ RECEIVED #######################################################################
         logger.info { "Job Status is '${jobStatusMessage.status}'" }
         logger.info { "Message tag is '${jobStatusMessage.messageTag.value}'" }
         if (jobStatusMessage.status == JobStatus.SUCCESS) {
-            val smartMeterActivePowerMasterData = runBlocking { MasterDataCache.masterDataForSmartMeterActivePower() }
             runBlocking {
-                val foo = client.get {
-                    url {
-                        host = "pvlogger-modbus-data-accessor-service"
-                        port = 8083
-                        pathSegments = listOf("read-latest-register-value", "1", "${smartMeterActivePowerMasterData.registerAddress.value}")
-                        parameters.append("gain", smartMeterActivePowerMasterData.gain.raw)
-                    }
-                }
-                logger.info { foo }
+                val meterActivePower = meterActivePower()
+                logger.debug { "Meter active power is: '$meterActivePower'" }
+                val inverterActivePower = inverterActivePower()
+                logger.debug { "Inverter active power is: '$inverterActivePower'" }
             }
-            val inverterActivePowerMasterData = runBlocking { MasterDataCache.masterDataForInverterActivePower() }
-            val inverterEnergyYieldMasterData = runBlocking { MasterDataCache.masterDataForInverterEnergyYield() }
-            logger.info { smartMeterActivePowerMasterData }
-            logger.info { inverterActivePowerMasterData }
-            logger.info { inverterEnergyYieldMasterData }
         }
     }
+
+    @OptIn(ExperimentalUnsignedTypes::class)
+    private suspend fun KpiAggregatingMessageHandler.inverterActivePower(): Double =
+        activePowerFor(modbusDataAccessConfig.inverterDeviceIds)
+
+    @OptIn(ExperimentalUnsignedTypes::class)
+    private suspend fun KpiAggregatingMessageHandler.meterActivePower() =
+        activePowerFor(modbusDataAccessConfig.meterDeviceIds)
+
+    @OptIn(ExperimentalUnsignedTypes::class)
+    private suspend fun KpiAggregatingMessageHandler.activePowerFor(deviceIds: UByteArray) =
+        deviceIds.fold(0.0) { sum, deviceId ->
+            sum + getAndLogActualPower(masterDataForInverterActivePower(), deviceId)
+        }
+
+    private suspend fun getAndLogActualPower(masterData: ModbusRegisterDefinition, deviceId: UByte): Double =
+        client.get {
+            logger.info { "Getting actual power for $masterData" }
+            url {
+                host = modbusDataAccessConfig.host
+                port = modbusDataAccessConfig.port
+                pathSegments = listOf(
+                    MASTER_DATA_REGISTER_VALUE_PATH,
+                    deviceId.toString(),
+                    masterData.registerAddress.value.toString()
+                )
+                parameters.append(GAIN, masterData.gain.raw)
+            }
+        }.let {
+            when (it.status) {
+                HttpStatusCode.OK -> {
+                    logger.info { "Got actual power: '$it'" }
+                    val text = it.bodyAsText()
+                    when (text.isNotBlank()) {
+                        true -> text.toDouble()
+                        else -> 0.0
+                    }
+                }
+
+                else -> {
+                    logger.error { "No actual power received" }
+                    0.0
+                }
+            }
+        }
 }
 
 //    private val smartMeterDeviceId = 1
