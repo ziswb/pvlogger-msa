@@ -1,6 +1,6 @@
 package ch.bziswiler.pvlogger.dataaccessor.configuration
 
-import ch.bziswiler.pvlogger.dataaccessor.rest.ReadRegisterValueController.readRegister
+import ch.bziswiler.pvlogger.dataaccessor.rest.readRegister
 import io.ktor.server.application.Application
 import io.ktor.server.routing.routing
 
