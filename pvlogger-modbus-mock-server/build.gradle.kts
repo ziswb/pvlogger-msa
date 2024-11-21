@@ -33,12 +33,20 @@ dependencies {
     implementation(libs.ktor.network)
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.netty)
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.logging)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
 
     // Logging
     implementation(libs.logback.classic)
     implementation(libs.kotlin.logging)
 
     implementation(project(":pvlogger-shared"))
+
+    // Cache -> https://github.com/ReactiveCircus/cache4k
+    implementation(libs.reactivecircus.cache)
 
     // Testing
     testImplementation(libs.ktor.server.test.host)
