@@ -3,7 +3,6 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 plugins {
     alias(libs.plugins.jvm)
     alias(libs.plugins.ktor)
-    alias(libs.plugins.serialization)
 //  alias(libs.plugins.idea)
     id("idea")
 }

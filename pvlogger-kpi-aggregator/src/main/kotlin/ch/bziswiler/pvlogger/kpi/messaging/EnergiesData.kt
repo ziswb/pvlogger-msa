@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.dataaccessor.rest
+package ch.bziswiler.pvlogger.kpi.messaging
 
 import ch.bziswiler.pvlogger.shared.masterdata.unit.KWh
 import kotlinx.serialization.Serializable

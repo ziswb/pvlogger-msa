@@ -9,7 +9,7 @@ import ch.bziswiler.pvlogger.shared.job.status.JobStatusMessage
 import ch.bziswiler.pvlogger.shared.job.tags.JobFinishedMessageTag
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
 import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
-import ch.bziswiler.pvlogger.shared.rest.MasterDataPathConstants.MASTER_DATA_REGISTER_VALUE_PATH
+import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_LATEST_REGISTER_VALUE_PATH
 import ch.bziswiler.pvlogger.shared.rest.PvHttpClient.client
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
@@ -77,7 +77,7 @@ RECEIVED #######################################################################
             host = config.host
             port = config.port
             pathSegments = listOf(
-                MASTER_DATA_REGISTER_VALUE_PATH,
+                DATA_ACCESSOR_READ_LATEST_REGISTER_VALUE_PATH,
                 masterData.type.raw.first(),
                 deviceId.toString(),
                 masterData.registerAddress.value.toString()

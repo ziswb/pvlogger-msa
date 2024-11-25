@@ -11,9 +11,9 @@ import ch.bziswiler.pvlogger.shared.masterdata.request.MasterDataRequestParamete
 import ch.bziswiler.pvlogger.shared.masterdata.request.MasterDataRequestParameters.ADDRESS
 import ch.bziswiler.pvlogger.shared.masterdata.request.MasterDataRequestParameters.CATEGORIES
 import ch.bziswiler.pvlogger.shared.masterdata.request.MasterDataRequestParameters.DEVICE_TYPES
-import ch.bziswiler.pvlogger.shared.rest.MasterDataPathConstants.IMPORT_MASTER_DATA_PATH
-import ch.bziswiler.pvlogger.shared.rest.MasterDataPathConstants.MASTER_DATA_FOR_ADDRESS_PATH
-import ch.bziswiler.pvlogger.shared.rest.MasterDataPathConstants.MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES
+import ch.bziswiler.pvlogger.shared.rest.MasterDataPaths.IMPORT_MASTER_DATA_PATH
+import ch.bziswiler.pvlogger.shared.rest.MasterDataPaths.MASTER_DATA_FOR_ADDRESS_PATH
+import ch.bziswiler.pvlogger.shared.rest.MasterDataPaths.MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call

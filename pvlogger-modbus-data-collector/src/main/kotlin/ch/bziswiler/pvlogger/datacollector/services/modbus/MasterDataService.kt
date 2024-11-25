@@ -4,7 +4,7 @@ import ch.bziswiler.pvlogger.datacollector.configuration.AppConfig
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
-import ch.bziswiler.pvlogger.shared.rest.MasterDataPathConstants.MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES
+import ch.bziswiler.pvlogger.shared.rest.MasterDataPaths.MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES
 import ch.bziswiler.pvlogger.shared.rest.PvHttpClient.client
 import io.ktor.client.call.body
 import io.ktor.client.request.get
