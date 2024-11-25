@@ -4,4 +4,5 @@ object MasterDataQueryParameterNames {
     const val DEVICE_ID = "deviceId"
     const val REGISTER_ADDRESS = "registerAddress"
     const val GAIN = "gain"
+    const val TYPE = "type"
 }

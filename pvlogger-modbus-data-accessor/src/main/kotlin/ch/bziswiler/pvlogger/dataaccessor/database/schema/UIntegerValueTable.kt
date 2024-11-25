@@ -5,8 +5,8 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.insert
 
 object UIntegerValueTable : IntIdTable("modbus_register_uinteger_values"), ValueStore<ModbusRegisterUIntValue> {
-    private val response_id = integer("response_id").references(ResponseTable.id)
-    private val register_address = integer("register_address")
+    val response_id = integer("response_id").references(ResponseTable.id)
+    val register_address = integer("register_address")
     val register_value = ulong("register_value").nullable()
     override fun store(responseId: Int, registerValue: ModbusRegisterUIntValue) {
         UIntegerValueTable.insert {
