@@ -14,12 +14,20 @@ class ApplicationTest : BaseApplicationTest() {
     fun testRoot() = withApp {
         client.get("/read-latest-register-value") {
             url {
-                appendPathSegments("16", "37113")
-                parameters.append("gain", "1")
+                appendPathSegments("I32", "16", "37113")
             }
         }.apply {
             assertEquals(HttpStatusCode.NotFound, status)
             assertTrue(bodyAsText().isEmpty())
         }
+    }
+
+    @Test
+    fun `test so far today energy`() = withApp {
+        client.get("/read-so-far-today-register-value") {
+            url {
+                appendPathSegments("I32", "16", "32080")
+            }
+        }.apply { assertEquals(HttpStatusCode.NotFound, status) }
     }
 }
