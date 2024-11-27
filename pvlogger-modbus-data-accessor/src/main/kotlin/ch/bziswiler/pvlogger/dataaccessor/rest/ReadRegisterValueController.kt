@@ -4,8 +4,9 @@ import ch.bziswiler.pvlogger.dataaccessor.rest.ParameterRetriever.retrieveDevice
 import ch.bziswiler.pvlogger.dataaccessor.rest.ParameterRetriever.retrieveRegisterAddressParameter
 import ch.bziswiler.pvlogger.dataaccessor.rest.ParameterRetriever.retrieveTypeParameter
 import ch.bziswiler.pvlogger.dataaccessor.rest.RegisterReader.readLatestRegisterValue
+import ch.bziswiler.pvlogger.dataaccessor.rest.RegisterReader.readSoFarTodayRegisterValue
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_LATEST_REGISTER_VALUE_PATH
-import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_SO_FAR_TODAY_REGISTER_VALUE_PATH
+import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_TODAY_SO_FAR_REGISTER_VALUE_PATH
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.response.respond
@@ -33,7 +34,15 @@ fun Routing.readLatestEnergyRegisterValues() {
 }
 
 fun Routing.readSoFarTodayEnergyRegisterValues() {
-    get("/$DATA_ACCESSOR_READ_SO_FAR_TODAY_REGISTER_VALUE_PATH/{type}/{deviceId}/{registerAddress}") {
-        throw NotImplementedError()
+    get("/$DATA_ACCESSOR_READ_TODAY_SO_FAR_REGISTER_VALUE_PATH/{type}/{registerAddress}") {
+        val type = retrieveTypeParameter()
+        val registerAddress = retrieveRegisterAddressParameter()
+        if (type == null) {
+            call.respond(HttpStatusCode.BadRequest, "type is required")
+        } else if (registerAddress == null) {
+            call.respond(HttpStatusCode.BadRequest, "address is required")
+        } else {
+            readSoFarTodayRegisterValue(type, registerAddress).let { call.respond(HttpStatusCode.OK, it) }
+        }
     }
 }

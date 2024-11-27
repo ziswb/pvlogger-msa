@@ -1,25 +1,17 @@
 package ch.bziswiler.pvlogger.kpi.messaging
 
-import ch.bziswiler.pvlogger.kpi.configuration.ModbusDataAccessConfig
-import ch.bziswiler.pvlogger.kpi.messaging.MasterDataCache.masterDataForInverterActivePower
-import ch.bziswiler.pvlogger.kpi.messaging.MasterDataCache.masterDataForSmartMeterActivePower
+import ch.bziswiler.pvlogger.kpi.rest.EnergiesRetriever
 import ch.bziswiler.pvlogger.shared.job.meta.JobName
 import ch.bziswiler.pvlogger.shared.job.status.JobStatus
 import ch.bziswiler.pvlogger.shared.job.status.JobStatusMessage
 import ch.bziswiler.pvlogger.shared.job.tags.JobFinishedMessageTag
-import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
 import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
-import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_LATEST_REGISTER_VALUE_PATH
-import ch.bziswiler.pvlogger.shared.rest.PvHttpClient.client
-import io.ktor.client.request.get
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import javax.jms.Message
 import javax.jms.ObjectMessage
 
-class KpiAggregatingMessageHandler(private val config: ModbusDataAccessConfig) : MessageHandler {
+class KpiAggregatingMessageHandler(private val adapter: EnergiesRetriever) : MessageHandler {
 
     override val messageSelector = JobFinishedMessageTag(JobName.DYNAMIC_DATA_JOB).toSelector()
 
@@ -55,94 +47,16 @@ RECEIVED #######################################################################
         if (jobStatusMessage.status == JobStatus.SUCCESS) {
             val kpis = collectLiveKpis()
             logger.debug { "Kpis are: '$kpis'" }
+            val energies = collectEnergiesTodaySoFar()
+            logger.debug { "Energies are: '$energies'" }
         }
     }
 
-    private fun collectLiveKpis() = runBlocking { KpiLiveData(inverterActivePower(), meterActivePower()) }
-
-    @OptIn(ExperimentalUnsignedTypes::class)
-    private suspend fun KpiAggregatingMessageHandler.inverterActivePower() = InverterActivePower(activePowerFor(masterDataForInverterActivePower(), config.inverterDeviceIds))
-
-    @OptIn(ExperimentalUnsignedTypes::class)
-    private suspend fun KpiAggregatingMessageHandler.meterActivePower() = MeterActivePower(activePowerFor(masterDataForSmartMeterActivePower(), config.meterDeviceIds))
-
-    @OptIn(ExperimentalUnsignedTypes::class)
-    private suspend fun KpiAggregatingMessageHandler.activePowerFor(masterData: ModbusRegisterDefinition, deviceIds: UByteArray) = deviceIds.fold(0.0) { sum, deviceId ->
-        sum + retrieveActivePower(masterData, deviceId)
+    private fun collectLiveKpis() = runBlocking {
+        KpiLiveData(adapter.inverterActivePower(), adapter.meterActivePower())
     }
 
-    private suspend fun retrieveActivePower(masterData: ModbusRegisterDefinition, deviceId: UByte): Double = client.get {
-        logger.info { "Getting actual power for $masterData" }
-        url {
-            host = config.host
-            port = config.port
-            pathSegments = listOf(
-                DATA_ACCESSOR_READ_LATEST_REGISTER_VALUE_PATH,
-                masterData.type.raw.first(),
-                deviceId.toString(),
-                masterData.registerAddress.value.toString()
-            )
-        }
-    }.let {
-        when (it.status) {
-            HttpStatusCode.OK -> {
-                logger.info { "Got actual power: '$it'" }
-                val text = it.bodyAsText()
-                when (text.isNotBlank()) {
-                    true -> text.toInt().div(masterData.gain.raw.toInt()).toDouble()
-                    else -> 0.0
-                }
-            }
-
-            else -> {
-                logger.warn { "Status: ${it.status}, no actual power received for master data '$masterData' and device id: '$deviceId'." }
-                0.0
-            }
-        }
+    private fun collectEnergiesTodaySoFar() = runBlocking {
+        EnergiesData(adapter.inverterTodayEnergy(), adapter.meterTodayEnergy())
     }
 }
-
-//    private val smartMeterDeviceId = 1
-//    private val solarInverterId1 = 1
-//    private val solarInverterId2 = 16
-//    private val scope = CoroutineScope(Dispatchers.Unconfined)
-//    fun doPostExecute(jobId: String): Unit = Unit
-// send message so another service computes the KPIs
-//        transaction {
-//            HousePowerCalculator(listOf(solarInverterId1, solarInverterId2), smartMeterDeviceId)
-//                .computeHousePowerKpis()
-//                .let { kpiValues ->
-//                    reportKpiMetrics(kpiValues)
-//                    return@transaction HousePowerKpiTable.storeAndGetId(kpiValues, jobId)
-//                }
-//        }.let {
-//            scope.launch {
-//                logger.info { "publishing kpi ..." }
-//                eventBus.publishEvent(it.value)
-//            }
-//        }
-
-// this belongs to the dedicated KPI-computation-service
-//    private val importedGauge = Metrics.globalRegistry.gauge("kpi_imported_wh", AtomicInteger(0))
-//    private val importGauge = Metrics.globalRegistry.gauge("kpi_import_w", AtomicInteger(0))
-//    private val exportedGauge = Metrics.globalRegistry.gauge("kpi_exported_wh", AtomicInteger(0))
-//    private val exportGauge = Metrics.globalRegistry.gauge("kpi_export_w", AtomicInteger(0))
-//    private val consumedGauge = Metrics.globalRegistry.gauge("kpi_consumed_wh", AtomicInteger(0))
-//    private val consumeGauge = Metrics.globalRegistry.gauge("kpi_consume_w", AtomicInteger(0))
-//    private fun reportKpiMetrics(kpiValues: HousePowerKpis) {
-//        importedGauge?.set(kpiValues.dailyEnergyImported.times(1000).toInt())
-//        exportedGauge?.set(kpiValues.dailyEnergyExported.times(1000).toInt())
-//        consumedGauge?.set(kpiValues.dailyEnergyConsumed.times(1000).toInt())
-//        importGauge?.set(kpiValues.gridToHousePower.times(1000).toInt())
-//        exportGauge?.set(kpiValues.solarToGridPower.times(1000).toInt())
-//        logger.debug {
-//            "consume gauge value is ${consumeGauge?.get()}"
-//        }
-//        logger.debug {
-//            "setting consume gauge to ${kpiValues.ownConsumption.times(1000).toInt()}"
-//        }
-//        consumeGauge?.set(kpiValues.ownConsumption.times(1000).toInt())
-//        logger.debug {
-//            "consume gauge value is now ${consumeGauge?.get()}"
-//        }
-//    }
