@@ -9,4 +9,13 @@ data class EnergiesData(private val inverterTodayEnergy: InverterEnergyToday, pr
     val imported = meterTodayEnergy.imported
     val consumed = produced - exported + imported
     val selfConsumed = produced - exported
+
+    override fun toString(): String =
+        """
+            val produced = $produced
+            val exported = $exported
+            val imported = $imported
+            val consumed = $consumed
+            val selfConsumed = $selfConsumed
+        """.trimIndent()
 }

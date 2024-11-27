@@ -9,4 +9,13 @@ data class KpiLiveData(private val inverterActivePower: InverterActivePower, pri
     val importing = meterActivePower.importing
     val consuming = producing - exporting + importing
     val selfConsuming = producing - exporting
+
+    override fun toString(): String =
+        """
+            val producing = $producing
+            val exporting = $exporting
+            val importing = $importing
+            val consuming = $consuming
+            val selfConsuming = $selfConsuming
+        """.trimIndent()
 }
