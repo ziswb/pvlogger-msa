@@ -1,5 +1,7 @@
 package ch.bziswiler
 
+import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_LATEST_REGISTER_VALUE_PATH
+import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_SO_FAR_TODAY_REGISTER_VALUE_PATH
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
@@ -12,7 +14,7 @@ class ApplicationTest : BaseApplicationTest() {
 
     @Test
     fun testRoot() = withApp {
-        client.get("/read-latest-register-value") {
+        client.get("/$DATA_ACCESSOR_READ_LATEST_REGISTER_VALUE_PATH") {
             url {
                 appendPathSegments("I32", "16", "37113")
             }
@@ -24,9 +26,9 @@ class ApplicationTest : BaseApplicationTest() {
 
     @Test
     fun `test so far today energy`() = withApp {
-        client.get("/read-so-far-today-register-value") {
+        client.get("/$DATA_ACCESSOR_READ_SO_FAR_TODAY_REGISTER_VALUE_PATH") {
             url {
-                appendPathSegments("I32", "16", "32080")
+                appendPathSegments("I32", "32080")
             }
         }.apply { assertEquals(HttpStatusCode.NotFound, status) }
     }
