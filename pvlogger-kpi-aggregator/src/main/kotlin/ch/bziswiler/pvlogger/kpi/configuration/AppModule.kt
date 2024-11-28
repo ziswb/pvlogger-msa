@@ -1,7 +1,7 @@
 package ch.bziswiler.pvlogger.kpi.configuration
 
 import ch.bziswiler.pvlogger.kpi.messaging.KpiAggregatingMessageHandler
-import ch.bziswiler.pvlogger.kpi.rest.EnergiesRetriever
+import ch.bziswiler.pvlogger.kpi.rest.DataAccessorRestProxy
 import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
 import ch.bziswiler.pvlogger.shared.messaging.MessageReceiver
 import ch.bziswiler.pvlogger.shared.messaging.MqSessionFactory
@@ -12,8 +12,8 @@ import org.koin.dsl.module
 
 val appModule = module {
     single<AppConfig> { AppConfig() }
-    single<EnergiesRetriever> { EnergiesRetriever(get<AppConfig>().modbusDataAccessConfig) }
-    single<MessageHandler> { KpiAggregatingMessageHandler(get<EnergiesRetriever>()) }
+    single<DataAccessorRestProxy> { DataAccessorRestProxy(get<AppConfig>().modbusDataAccessConfig) }
+    single<MessageHandler> { KpiAggregatingMessageHandler(get<DataAccessorRestProxy>()) }
     single<MqSessionFactory> { ActiveMqSessionFactory(get<AppConfig>().mqConfig) }
     single<MessageReceiver> { ActiveMqMessageReceiver(get<MqSessionFactory>(), JOB_SCHEDULER) }
 }

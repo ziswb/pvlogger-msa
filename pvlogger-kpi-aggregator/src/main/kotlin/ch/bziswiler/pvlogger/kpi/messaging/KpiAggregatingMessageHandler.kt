@@ -1,6 +1,6 @@
 package ch.bziswiler.pvlogger.kpi.messaging
 
-import ch.bziswiler.pvlogger.kpi.rest.EnergiesRetriever
+import ch.bziswiler.pvlogger.kpi.rest.DataAccessorRestProxy
 import ch.bziswiler.pvlogger.shared.job.meta.JobName
 import ch.bziswiler.pvlogger.shared.job.status.JobStatus
 import ch.bziswiler.pvlogger.shared.job.status.JobStatusMessage
@@ -11,7 +11,7 @@ import mu.KotlinLogging
 import javax.jms.Message
 import javax.jms.ObjectMessage
 
-class KpiAggregatingMessageHandler(private val adapter: EnergiesRetriever) : MessageHandler {
+class KpiAggregatingMessageHandler(private val adapter: DataAccessorRestProxy) : MessageHandler {
 
     override val messageSelector = JobFinishedMessageTag(JobName.DYNAMIC_DATA_JOB).toSelector()
 
@@ -57,6 +57,7 @@ RECEIVED #######################################################################
     }
 
     private fun collectEnergiesTodaySoFar() = runBlocking {
-        EnergiesData(adapter.inverterTodayEnergy(), adapter.meterTodayEnergy())
+        val data = EnergiesData(adapter.inverterEnergyToday(), adapter.meterEnergyToday())
+        logger.info { "Energies data: '$data'" }
     }
 }

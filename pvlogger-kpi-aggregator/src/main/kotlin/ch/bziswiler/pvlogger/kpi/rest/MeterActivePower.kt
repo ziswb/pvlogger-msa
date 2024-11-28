@@ -1,8 +1,10 @@
 package ch.bziswiler.pvlogger.kpi.rest
 
+import kotlinx.serialization.Serializable
 import kotlin.math.abs
 
-data class MeterActivePower(val power: Double) {
+@Serializable
+data class MeterActivePower(private val power: Double) {
     val exporting: Double
         get() = if (power > 0) {
             power

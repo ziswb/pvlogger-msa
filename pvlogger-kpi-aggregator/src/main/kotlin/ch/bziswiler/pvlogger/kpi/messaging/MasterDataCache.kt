@@ -19,6 +19,8 @@ object MasterDataCache {
     private val cache = Cache.Builder<RegisterAddress, ModbusRegisterDefinition>().expireAfterWrite(24.hours).build()
     private val smartMeterActivePowerRegisterAddress = RegisterAddress(37113) // -> W
     private val inverterActivePowerRegisterAddress = RegisterAddress(32080) // -> kW
+    private val smartMeterExportedEnergyRegisterAddress = RegisterAddress(37119) // -> kWh
+    private val smartMeterImportedEnergyRegisterAddress = RegisterAddress(37121) // -> kWh
     private val inverterDailyEnergyYieldRegisterAddress = RegisterAddress(32114) // -> kWh
 
     suspend fun masterDataForSmartMeterActivePower(): ModbusRegisterDefinition = modbusRegisterDefinition(smartMeterActivePowerRegisterAddress)
@@ -26,6 +28,10 @@ object MasterDataCache {
     suspend fun masterDataForInverterActivePower(): ModbusRegisterDefinition = modbusRegisterDefinition(inverterActivePowerRegisterAddress)
 
     suspend fun masterDataForInverterEnergyYield(): ModbusRegisterDefinition = modbusRegisterDefinition(inverterDailyEnergyYieldRegisterAddress)
+
+    suspend fun masterDataForMeterExportedEnergy(): ModbusRegisterDefinition = modbusRegisterDefinition(smartMeterExportedEnergyRegisterAddress)
+
+    suspend fun masterDataForMeterImportedEnergy(): ModbusRegisterDefinition = modbusRegisterDefinition(smartMeterImportedEnergyRegisterAddress)
 
     private suspend fun modbusRegisterDefinition(registerAddress: RegisterAddress) = cache.get(registerAddress) {
         with(getMasterData(registerAddress)) {
