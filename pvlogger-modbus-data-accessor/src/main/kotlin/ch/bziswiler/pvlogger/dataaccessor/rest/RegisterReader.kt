@@ -35,7 +35,7 @@ object RegisterReader {
         )?.toUShort()
 
         Type.U32, Type.BITFIELD_32 -> readLatestRegisterValue(
-            IntegerValueTable,
+            UIntegerValueTable,
             UIntegerValueTable.register_value,
             UIntegerValueTable.register_address,
             registerAddress,
