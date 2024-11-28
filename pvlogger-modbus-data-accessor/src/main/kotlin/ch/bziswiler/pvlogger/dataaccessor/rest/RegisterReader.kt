@@ -91,8 +91,8 @@ object RegisterReader {
             """
                 SELECT dt,
                        max - lag(max) OVER (ORDER BY dt) AS kwh
-                FROM (SELECT mrd.date_created::date                    AS dt,
-                             max(mriv.register_value)::numeric / 100.0 AS max
+                FROM (SELECT mrd.date_created::date      AS dt,
+                             max(mriv.register_value) AS max
                       FROM modbus_register_integer_values mriv
                                JOIN modbus_response_data mrd ON mriv.response_id = mrd.id
                       WHERE mriv.register_address = ${registerAddress.value}
