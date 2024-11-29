@@ -42,7 +42,18 @@ fun Routing.readSoFarTodayEnergyRegisterValues() {
         } else if (registerAddress == null) {
             call.respond(HttpStatusCode.BadRequest, "address is required")
         } else {
-            readSoFarTodayRegisterValue(type, registerAddress).let { call.respond(HttpStatusCode.OK, it) }
+            readSoFarTodayRegisterValue(type, registerAddress).let {
+                when (it) {
+                    null -> call.respond(HttpStatusCode.NotFound)
+                    else -> call.respond(HttpStatusCode.OK, it)
+                }
+            }
+            readSoFarTodayRegisterValue(type, registerAddress).let {
+                when (it) {
+                    null -> call.respond(HttpStatusCode.NotFound)
+                    else -> call.respond(HttpStatusCode.OK, it)
+                }
+            }
         }
     }
 }

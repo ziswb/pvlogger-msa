@@ -85,7 +85,7 @@ class DataAccessorRestProxy(private val config: ModbusDataAccessConfig) {
                 val text = it.bodyAsText()
                 when (text.isNotBlank()) {
                     true -> text.toInt().div(masterData.gain.raw.toInt()).toDouble()
-                    else -> 0.0
+                    else -> 0.0.also { logger.debug { "Got no actual power! Returning '0.0'." } }
                 }
             }
 

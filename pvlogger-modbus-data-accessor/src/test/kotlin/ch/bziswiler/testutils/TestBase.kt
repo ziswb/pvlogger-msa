@@ -1,4 +1,4 @@
-package ch.bziswiler
+package ch.bziswiler.testutils
 
 import ch.bziswiler.pvlogger.dataaccessor.configuration.AppConfig
 import ch.bziswiler.pvlogger.dataaccessor.configuration.appModule
@@ -16,12 +16,11 @@ import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.RegisterExtension
-import org.koin.core.context.startKoin
 import org.koin.test.KoinTest
 import org.koin.test.junit5.KoinTestExtension
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-abstract class BaseApplicationTest : KoinTest {
+abstract class TestBase : KoinTest {
     @JvmField
     @RegisterExtension
     @Suppress("unused")

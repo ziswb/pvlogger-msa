@@ -27,68 +27,43 @@ object RegisterReader {
 
     fun readLatestRegisterValue(type: Type, deviceId: Int, registerAddress: RegisterAddress): Any? = when (type) {
         Type.U16, Type.BITFIELD_16 -> readLatestRegisterValue(
-            UShortValueTable,
-            UShortValueTable.register_value,
-            UShortValueTable.register_address,
-            registerAddress,
-            deviceId
+            UShortValueTable, UShortValueTable.register_value, UShortValueTable.register_address, registerAddress, deviceId
         )?.toUShort()
 
         Type.U32, Type.BITFIELD_32 -> readLatestRegisterValue(
-            UIntegerValueTable,
-            UIntegerValueTable.register_value,
-            UIntegerValueTable.register_address,
-            registerAddress,
-            deviceId
+            UIntegerValueTable, UIntegerValueTable.register_value, UIntegerValueTable.register_address, registerAddress, deviceId
         )?.toUInt()
 
         Type.I16 -> readLatestRegisterValue(
-            ShortValueTable,
-            ShortValueTable.register_value,
-            ShortValueTable.register_address,
-            registerAddress,
-            deviceId
+            ShortValueTable, ShortValueTable.register_value, ShortValueTable.register_address, registerAddress, deviceId
         )?.toShort()
 
         Type.I32 -> readLatestRegisterValue(
-            IntegerValueTable,
-            IntegerValueTable.register_value,
-            IntegerValueTable.register_address,
-            registerAddress,
-            deviceId
+            IntegerValueTable, IntegerValueTable.register_value, IntegerValueTable.register_address, registerAddress, deviceId
         )?.toInt()
 
         Type.STR -> readLatestRegisterValue(
-            StringValuesTable,
-            StringValuesTable.register_value,
-            StringValuesTable.register_address,
-            registerAddress,
-            deviceId
+            StringValuesTable, StringValuesTable.register_value, StringValuesTable.register_address, registerAddress, deviceId
         )?.toString()
 
         Type.MLD -> throw NotImplementedError()
     }
 
     private fun <T> readLatestRegisterValue(valueTable: IdTable<Int>, valueColumn: Column<T?>, registerAddressColumn: Column<Int>, registerAddress: RegisterAddress, deviceId: Int): T? = transaction {
-        (valueTable innerJoin ResponseTable)
-            .select(valueColumn)
-            .where(registerAddressColumn.eq(registerAddress.value).and(ResponseTable.logic_device_id.eq(deviceId.toUByte())))
-            .orderBy(responseTimeDescending)
-            .limit(ONE)
-            .firstOrNull()
-            ?.let { row -> row[valueColumn] }
-            ?: null.also { logger.info { "No register value found for device ID '$deviceId' and register address '$registerAddress'." } }
+        (valueTable innerJoin ResponseTable).select(valueColumn).where(registerAddressColumn.eq(registerAddress.value).and(ResponseTable.logic_device_id.eq(deviceId.toUByte()))).orderBy(responseTimeDescending).limit(ONE).firstOrNull()?.let { row -> row[valueColumn] } ?: null.also { logger.info { "No register value found for device ID '$deviceId' and register address '$registerAddress'." } }
     }
 
-    fun readSoFarTodayRegisterValue(type: Type, registerAddress: RegisterAddress): Int = when (type) {
+    fun readSoFarTodayRegisterValue(type: Type, registerAddress: RegisterAddress): Int? = when (type) {
         Type.I32 -> readSoFarTodayRegisterValue(registerAddress)
         else -> throw NotImplementedError()
     }
 
-    private fun readSoFarTodayRegisterValue(registerAddress: RegisterAddress): Int = transaction {
-        addLogger(StdOutSqlLogger)
-        exec(
-            """
+    private fun readSoFarTodayRegisterValue(registerAddress: RegisterAddress): Int? {
+        val kWhColumn = 2
+        return transaction {
+            addLogger(StdOutSqlLogger)
+            exec(
+                """
                 SELECT dt,
                        max - lag(max) OVER (ORDER BY dt) AS kwh
                 FROM (SELECT mrd.date_created::date      AS dt,
@@ -101,10 +76,11 @@ object RegisterReader {
                       GROUP BY mrd.date_created::date) tbl
                 ORDER BY dt DESC
                 LIMIT 1;
-            """.trimIndent()
-        ) { resultSet ->
-            resultSet.next()
-            resultSet.getInt("kwh")
-        }.let { it ?: 0 }
+                """.trimIndent()
+            ) { resultSet ->
+                resultSet.next()
+                resultSet.getInt(kWhColumn)
+            }
+        }
     }
 }
