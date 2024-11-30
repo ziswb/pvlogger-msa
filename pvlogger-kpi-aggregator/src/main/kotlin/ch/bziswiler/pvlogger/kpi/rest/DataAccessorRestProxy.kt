@@ -17,54 +17,24 @@ import mu.KotlinLogging
 
 class DataAccessorRestProxy(private val config: ModbusDataAccessConfig) {
 
-    private val logger = KotlinLogging.logger {}
+    internal val logger = KotlinLogging.logger {}
 
     @OptIn(ExperimentalUnsignedTypes::class)
-    suspend fun inverterActivePower() = InverterActivePower(
-        retrieveLatestRegisterValuesAggregated(
-            masterDataForInverterActivePower(),
-            config.inverterDeviceIds
-        )
-    )
+    suspend fun inverterActivePower() = InverterActivePower(retrieveLatestRegisterValuesAggregated(masterDataForInverterActivePower(), config.inverterDeviceIds))
 
     @OptIn(ExperimentalUnsignedTypes::class)
-    suspend fun meterActivePower() = MeterActivePower(
-        retrieveLatestRegisterValuesAggregated(
-            masterDataForSmartMeterActivePower(),
-            config.meterDeviceIds
-        )
-    )
-    @OptIn(ExperimentalUnsignedTypes::class)
-    suspend fun inverterEnergyToday() = InverterEnergyToday(
-        retrieveLatestRegisterValuesAggregated(
-            masterDataForInverterEnergyYield(),
-            config.inverterDeviceIds
-        )
-    )
+    suspend fun meterActivePower() = MeterActivePower(retrieveLatestRegisterValuesAggregated(masterDataForSmartMeterActivePower(), config.meterDeviceIds))
 
     @OptIn(ExperimentalUnsignedTypes::class)
-    suspend fun meterEnergyToday(): MeterEnergyToday {
-        val deviceIds = config.meterDeviceIds
-        val masterDataExportedEnergy = masterDataForMeterExportedEnergy()
-        val exportedToday = deviceIds.fold(0.0) { sum, _ ->
-            sum + retrieveEnergyTodaySoFar(masterDataExportedEnergy)
-        }
-        val masterDataImportedEnergy = masterDataForMeterImportedEnergy()
-        val importedToday = deviceIds.fold(0.0) { sum, _ ->
-            sum + retrieveEnergyTodaySoFar(masterDataImportedEnergy)
-        }
-        return MeterEnergyToday(importedToday, exportedToday)
+    suspend fun inverterEnergyToday() = InverterEnergyToday(retrieveLatestRegisterValuesAggregated(masterDataForInverterEnergyYield(), config.inverterDeviceIds))
+
+    @OptIn(ExperimentalUnsignedTypes::class)
+    suspend fun meterEnergyToday() = MeterEnergyToday(computeImportedEnergyToday(config.meterDeviceIds), computeExportedEnergyToday(config.meterDeviceIds))
+
+    @OptIn(ExperimentalUnsignedTypes::class)
+    private suspend fun retrieveLatestRegisterValuesAggregated(masterData: ModbusRegisterDefinition, deviceIds: UByteArray) = deviceIds.fold(0.0) { sum, deviceId ->
+        sum + retrieveLatestRegisterValue(masterData, deviceId)
     }
-
-    @OptIn(ExperimentalUnsignedTypes::class)
-    private suspend fun retrieveLatestRegisterValuesAggregated(
-        masterData: ModbusRegisterDefinition,
-        deviceIds: UByteArray
-    ) =
-        deviceIds.fold(0.0) { sum, deviceId ->
-            sum + retrieveLatestRegisterValue(masterData, deviceId)
-        }
-
 
     private suspend fun retrieveLatestRegisterValue(masterData: ModbusRegisterDefinition, deviceId: UByte): Double = client.get {
         logger.info { "Getting actual power for $masterData" }
@@ -94,6 +64,16 @@ class DataAccessorRestProxy(private val config: ModbusDataAccessConfig) {
                 0.0
             }
         }
+    }
+
+    @OptIn(ExperimentalUnsignedTypes::class)
+    private suspend fun computeImportedEnergyToday(deviceIds: UByteArray): Double = deviceIds.fold(0.0) { sum, _ ->
+        sum + retrieveEnergyTodaySoFar(masterDataForMeterImportedEnergy())
+    }
+
+    @OptIn(ExperimentalUnsignedTypes::class)
+    private suspend fun computeExportedEnergyToday(deviceIds: UByteArray): Double = deviceIds.fold(0.0) { sum, _ ->
+        sum + retrieveEnergyTodaySoFar(masterDataForMeterExportedEnergy())
     }
 
     private suspend fun retrieveEnergyTodaySoFar(masterData: ModbusRegisterDefinition): Double = client.get {
