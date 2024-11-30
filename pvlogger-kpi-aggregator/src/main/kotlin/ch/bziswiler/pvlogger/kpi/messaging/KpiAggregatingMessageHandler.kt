@@ -57,7 +57,6 @@ RECEIVED #######################################################################
     }
 
     private fun collectEnergiesTodaySoFar() = runBlocking {
-        val data = EnergiesData(adapter.inverterEnergyToday(), adapter.meterEnergyToday())
-        logger.info { "Energies data: '$data'" }
+        KpiTodayData(adapter.inverterEnergyToday(), adapter.meterEnergyToday())
     }
 }

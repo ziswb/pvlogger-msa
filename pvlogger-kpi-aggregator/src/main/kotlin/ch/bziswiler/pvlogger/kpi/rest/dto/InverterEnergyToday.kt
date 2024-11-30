@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.kpi.rest
+package ch.bziswiler.pvlogger.kpi.rest.dto
 
 import kotlinx.serialization.Serializable
 
