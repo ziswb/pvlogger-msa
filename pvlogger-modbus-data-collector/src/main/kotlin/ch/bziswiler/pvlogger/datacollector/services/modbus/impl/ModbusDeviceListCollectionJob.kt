@@ -4,7 +4,7 @@ import ch.bziswiler.pvlogger.datacollector.configuration.AppConfig
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.ModbusTcpChannel
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.request.ReadDeviceListRequest
 import ch.bziswiler.pvlogger.datacollector.services.IdProvider
-import ch.bziswiler.pvlogger.datacollector.services.messaging.impl.PersistenceMessageSender
+import ch.bziswiler.pvlogger.datacollector.services.messaging.PersistenceMessageSender
 import ch.bziswiler.pvlogger.shared.job.meta.JobId
 import ch.bziswiler.pvlogger.shared.job.meta.JobName.DEVICE_LIST_JOB
 import ch.bziswiler.pvlogger.shared.job.status.JobStatusMessageFactory.deviceListDataCollectionJobFailedMessage

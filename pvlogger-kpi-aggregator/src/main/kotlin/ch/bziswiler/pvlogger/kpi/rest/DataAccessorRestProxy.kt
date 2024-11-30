@@ -6,10 +6,10 @@ import ch.bziswiler.pvlogger.kpi.messaging.MasterDataCache.masterDataForInverter
 import ch.bziswiler.pvlogger.kpi.messaging.MasterDataCache.masterDataForMeterExportedEnergy
 import ch.bziswiler.pvlogger.kpi.messaging.MasterDataCache.masterDataForMeterImportedEnergy
 import ch.bziswiler.pvlogger.kpi.messaging.MasterDataCache.masterDataForSmartMeterActivePower
-import ch.bziswiler.pvlogger.kpi.rest.dto.InverterActivePower
-import ch.bziswiler.pvlogger.kpi.rest.dto.InverterEnergyToday
-import ch.bziswiler.pvlogger.kpi.rest.dto.MeterActivePower
-import ch.bziswiler.pvlogger.kpi.rest.dto.MeterEnergyToday
+import ch.bziswiler.pvlogger.kpi.rest.data.InverterActivePower
+import ch.bziswiler.pvlogger.kpi.rest.data.InverterEnergyToday
+import ch.bziswiler.pvlogger.kpi.rest.data.MeterActivePower
+import ch.bziswiler.pvlogger.kpi.rest.data.MeterEnergyToday
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_LATEST_REGISTER_VALUE_PATH
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_TODAY_SO_FAR_REGISTER_VALUE_PATH

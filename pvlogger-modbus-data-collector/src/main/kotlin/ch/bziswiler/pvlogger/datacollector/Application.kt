@@ -3,7 +3,7 @@ package ch.bziswiler.pvlogger.datacollector
 import ch.bziswiler.pvlogger.datacollector.configuration.appModule
 import ch.bziswiler.pvlogger.datacollector.configuration.configureMonitoring
 import ch.bziswiler.pvlogger.datacollector.configuration.setupConfig
-import ch.bziswiler.pvlogger.datacollector.services.messaging.impl.JobTriggeringMqHandler
+import ch.bziswiler.pvlogger.datacollector.services.messaging.JobTriggeringMqHandler
 import ch.bziswiler.pvlogger.datacollector.services.modbus.impl.ModbusBatchedDynamicDataCollectionJob
 import ch.bziswiler.pvlogger.datacollector.services.modbus.impl.ModbusBatchedStaticDataCollectionJob
 import ch.bziswiler.pvlogger.datacollector.services.modbus.impl.ModbusDeviceIdentifiersCollectionJob

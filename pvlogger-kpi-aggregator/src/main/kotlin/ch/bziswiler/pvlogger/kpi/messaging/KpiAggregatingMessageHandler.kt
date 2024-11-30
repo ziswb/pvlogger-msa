@@ -1,13 +1,18 @@
 package ch.bziswiler.pvlogger.kpi.messaging
 
+import ch.bziswiler.pvlogger.kpi.messaging.data.KpiLiveData
+import ch.bziswiler.pvlogger.kpi.messaging.data.KpiTodayData
 import ch.bziswiler.pvlogger.kpi.rest.DataAccessorRestProxy
 import ch.bziswiler.pvlogger.shared.job.meta.JobName
 import ch.bziswiler.pvlogger.shared.job.status.JobStatus
 import ch.bziswiler.pvlogger.shared.job.status.JobStatusMessage
 import ch.bziswiler.pvlogger.shared.job.tags.JobFinishedMessageTag
 import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
+import ch.bziswiler.pvlogger.shared.messaging.PvLoggerKpiData
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 import javax.jms.Message
 import javax.jms.ObjectMessage
 
@@ -45,18 +50,27 @@ RECEIVED #######################################################################
         logger.info { "Job Status is '${jobStatusMessage.status}'" }
         logger.info { "Message tag is '${jobStatusMessage.messageTag.value}'" }
         if (jobStatusMessage.status == JobStatus.SUCCESS) {
-            val kpis = collectLiveKpis()
-            logger.debug { "Kpis are: '$kpis'" }
-            val energies = collectEnergiesTodaySoFar()
-            logger.debug { "Energies are: '$energies'" }
+            val liveKpis = collectLiveKpis()
+            logger.debug { "Kpis are: '$liveKpis'" }
+            val todayKpis = collectEnergiesTodaySoFar()
+            logger.debug { "Energies are: '$todayKpis'" }
+            val kpis = PvLoggerKpiData(
+                LocalDateTime.now().toEpochSecond(ZoneOffset.UTC),
+                liveKpis.producing,
+                liveKpis.exporting,
+                liveKpis.importing,
+                liveKpis.consuming,
+                liveKpis.selfConsuming,
+                todayKpis.produced,
+                todayKpis.exported,
+                todayKpis.imported,
+                todayKpis.consumed,
+                todayKpis.selfConsumed
+            )
         }
     }
 
-    private fun collectLiveKpis() = runBlocking {
-        KpiLiveData(adapter.inverterActivePower(), adapter.meterActivePower())
-    }
+    private fun collectLiveKpis() = runBlocking { KpiLiveData(adapter.inverterActivePower(), adapter.meterActivePower()) }
 
-    private fun collectEnergiesTodaySoFar() = runBlocking {
-        KpiTodayData(adapter.inverterEnergyToday(), adapter.meterEnergyToday())
-    }
+    private fun collectEnergiesTodaySoFar() = runBlocking { KpiTodayData(adapter.inverterEnergyToday(), adapter.meterEnergyToday()) }
 }

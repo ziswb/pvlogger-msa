@@ -1,7 +1,7 @@
-package ch.bziswiler.pvlogger.kpi.messaging
+package ch.bziswiler.pvlogger.kpi.messaging.data
 
-import ch.bziswiler.pvlogger.kpi.rest.dto.InverterEnergyToday
-import ch.bziswiler.pvlogger.kpi.rest.dto.MeterEnergyToday
+import ch.bziswiler.pvlogger.kpi.rest.data.InverterEnergyToday
+import ch.bziswiler.pvlogger.kpi.rest.data.MeterEnergyToday
 
 data class KpiTodayData(private val inverterTodayEnergy: InverterEnergyToday, private val meterTodayEnergy: MeterEnergyToday) {
     val produced = inverterTodayEnergy.produced
