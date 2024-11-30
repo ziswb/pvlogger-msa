@@ -16,7 +16,7 @@ private const val TWO = 2L
  * see https://codenotfound.com/jms-publish-subscribe-messaging-example-activemq-maven.html for examples
  * see https://github.com/code-not-found/jms for code
  */
-open class ActiveMqMessageSender(private val mqSessionFactory: MqSessionFactory, final override val queueName: QueueName, ephemeralMessages: Boolean = false) : TagsMessageSender, TaggedMessageSender {
+open class ActiveMqMessageSender(mqSessionFactory: MqSessionFactory, final override val queueName: QueueName, ephemeralMessages: Boolean = false) : TagsMessageSender, TaggedMessageSender {
 
     private val logger = KotlinLogging.logger {}
 
