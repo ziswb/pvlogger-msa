@@ -5,13 +5,13 @@ import ch.bziswiler.pvlogger.heartbeat.jobs.management.JobConfiguration
 import ch.bziswiler.pvlogger.heartbeat.jobs.management.JobConfigurationHolder
 import ch.bziswiler.pvlogger.shared.job.meta.JobName.DYNAMIC_DATA_JOB
 import ch.bziswiler.pvlogger.shared.job.tags.JobStartMessageTag
-import ch.bziswiler.pvlogger.shared.messaging.TagsMessageSender
+import ch.bziswiler.pvlogger.shared.messaging.TagsAsMessageSender
 import io.micrometer.core.instrument.Metrics.counter
 import mu.KotlinLogging
 import org.quartz.JobExecutionContext
 import java.time.ZonedDateTime.now
 
-class ModbusInverterBatchedDynamicDataCollectionJob(messageSender: TagsMessageSender) : MessageProducingJob(messageSender) {
+class ModbusInverterBatchedDynamicDataCollectionJob(messageSender: TagsAsMessageSender) : MessageProducingJob(messageSender) {
 
     private val logger = KotlinLogging.logger {}
     private val counter = counter("modbus-inverter-batched-dynamic-data-collection-job-execution")
