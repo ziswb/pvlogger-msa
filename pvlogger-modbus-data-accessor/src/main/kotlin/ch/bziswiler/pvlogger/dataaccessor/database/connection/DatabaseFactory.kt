@@ -2,6 +2,7 @@ package ch.bziswiler.pvlogger.dataaccessor.database.connection
 
 import ch.bziswiler.pvlogger.dataaccessor.configuration.AppConfig
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.CharacteristicCurveValuesTable
+import ch.bziswiler.pvlogger.dataaccessor.database.schema.HousePowerKpiTable
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.IntegerValueTable
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.ResponseTable
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.ShortValueTable
@@ -35,7 +36,8 @@ class DatabaseFactory(appConfig: AppConfig) {
                 ShortValueTable,
                 StringValuesTable,
                 UIntegerValueTable,
-                UShortValueTable
+                UShortValueTable,
+                HousePowerKpiTable
             )
         }
     }
