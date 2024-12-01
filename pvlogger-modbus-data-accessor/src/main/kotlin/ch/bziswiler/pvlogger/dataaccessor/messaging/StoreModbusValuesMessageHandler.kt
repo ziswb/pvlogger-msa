@@ -14,27 +14,13 @@ class StoreModbusValuesMessageHandler : MessageHandler {
 
     private val logger = KotlinLogging.logger {}
 
-    override fun onMessage(message: Message?) {
-        logger.debug {
-            """
-RECEIVED #########################################################################
-StoreModbusValuesMessageListener: message received: $message
-RECEIVED #########################################################################
-"""
-        }
-        if (message is ObjectMessage) {
-            handleObjectMessage(message)
-        } else {
-            logger.info { "message is no object message! -> $message" }
-        }
+    override fun onMessage(message: Message?) = when (message) {
+        is ObjectMessage -> handleObjectMessage(message)
+        else -> logger.info { "message is not an 'object' message! -> $message" }
     }
 
-    private fun handleObjectMessage(message: ObjectMessage) {
-        val obj = message.`object`
-        if (obj is ModbusRegisterValueResponse) {
-            ModbusDao.store(obj)
-        } else {
-            logger.info { "message.object is no modbus register value response! -> $obj" }
-        }
+    private fun handleObjectMessage(message: ObjectMessage) = when (val obj = message.`object`) {
+        is ModbusRegisterValueResponse -> ModbusDao.store(obj)
+        else -> logger.info { "message.object is not a 'modbus register value response'! -> $obj" }
     }
 }

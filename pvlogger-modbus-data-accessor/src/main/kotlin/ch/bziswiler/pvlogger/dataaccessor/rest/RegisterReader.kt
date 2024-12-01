@@ -6,6 +6,7 @@ import ch.bziswiler.pvlogger.dataaccessor.database.schema.ShortValueTable
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.StringValuesTable
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.UIntegerValueTable
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.UShortValueTable
+import ch.bziswiler.pvlogger.shared.job.meta.JobId
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.RegisterAddress
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Type
 import mu.KotlinLogging
@@ -25,32 +26,28 @@ object RegisterReader {
     private val logger = KotlinLogging.logger {}
     private val responseTimeDescending = ResponseTable.response_time to DESC
 
-    fun readLatestRegisterValue(type: Type, deviceId: Int, registerAddress: RegisterAddress): Any? = when (type) {
-        Type.U16, Type.BITFIELD_16 -> readLatestRegisterValue(
-            UShortValueTable, UShortValueTable.register_value, UShortValueTable.register_address, registerAddress, deviceId
-        )?.toUShort()
-
-        Type.U32, Type.BITFIELD_32 -> readLatestRegisterValue(
-            UIntegerValueTable, UIntegerValueTable.register_value, UIntegerValueTable.register_address, registerAddress, deviceId
-        )?.toUInt()
-
-        Type.I16 -> readLatestRegisterValue(
-            ShortValueTable, ShortValueTable.register_value, ShortValueTable.register_address, registerAddress, deviceId
-        )?.toShort()
-
-        Type.I32 -> readLatestRegisterValue(
-            IntegerValueTable, IntegerValueTable.register_value, IntegerValueTable.register_address, registerAddress, deviceId
-        )?.toInt()
-
-        Type.STR -> readLatestRegisterValue(
-            StringValuesTable, StringValuesTable.register_value, StringValuesTable.register_address, registerAddress, deviceId
-        )?.toString()
-
+    fun readLatestRegisterValue(type: Type, deviceId: Int, registerAddress: RegisterAddress, jobId: JobId): Any? = when (type) {
+        Type.U16, Type.BITFIELD_16 -> readLatestRegisterValue(UShortValueTable, UShortValueTable.register_value, UShortValueTable.register_address, registerAddress, deviceId, jobId)?.toUShort()
+        Type.U32, Type.BITFIELD_32 -> readLatestRegisterValue(UIntegerValueTable, UIntegerValueTable.register_value, UIntegerValueTable.register_address, registerAddress, deviceId, jobId)?.toUInt()
+        Type.I16 -> readLatestRegisterValue(ShortValueTable, ShortValueTable.register_value, ShortValueTable.register_address, registerAddress, deviceId, jobId)?.toShort()
+        Type.I32 -> readLatestRegisterValue(IntegerValueTable, IntegerValueTable.register_value, IntegerValueTable.register_address, registerAddress, deviceId, jobId)?.toInt()
+        Type.STR -> readLatestRegisterValue(StringValuesTable, StringValuesTable.register_value, StringValuesTable.register_address, registerAddress, deviceId, jobId)?.toString()
         Type.MLD -> throw NotImplementedError()
     }
 
-    private fun <T> readLatestRegisterValue(valueTable: IdTable<Int>, valueColumn: Column<T?>, registerAddressColumn: Column<Int>, registerAddress: RegisterAddress, deviceId: Int): T? = transaction {
-        (valueTable innerJoin ResponseTable).select(valueColumn).where(registerAddressColumn.eq(registerAddress.value).and(ResponseTable.logic_device_id.eq(deviceId.toUByte()))).orderBy(responseTimeDescending).limit(ONE).firstOrNull()?.let { row -> row[valueColumn] } ?: null.also { logger.info { "No register value found for device ID '$deviceId' and register address '$registerAddress'." } }
+    private fun <T> readLatestRegisterValue(valueTable: IdTable<Int>, valueColumn: Column<T?>, registerAddressColumn: Column<Int>, registerAddress: RegisterAddress, deviceId: Int, jobId: JobId): T? = transaction {
+        (valueTable innerJoin ResponseTable)
+            .select(valueColumn)
+            .where(
+                registerAddressColumn.eq(registerAddress.value)
+                .and(ResponseTable.logic_device_id.eq(deviceId.toUByte()))
+                .and(ResponseTable.job_id.eq(jobId.id))
+            )
+            .orderBy(responseTimeDescending)
+            .limit(ONE)
+            .firstOrNull()
+            ?.let { row -> row[valueColumn] } ?: null
+            .also { logger.info { "No register value found for device ID '$deviceId' and register address '$registerAddress'." } }
     }
 
     fun readSoFarTodayRegisterValue(type: Type, registerAddress: RegisterAddress): Int? = when (type) {

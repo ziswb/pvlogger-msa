@@ -10,6 +10,7 @@ import ch.bziswiler.pvlogger.kpi.rest.data.InverterActivePower
 import ch.bziswiler.pvlogger.kpi.rest.data.InverterEnergyToday
 import ch.bziswiler.pvlogger.kpi.rest.data.MeterActivePower
 import ch.bziswiler.pvlogger.kpi.rest.data.MeterEnergyToday
+import ch.bziswiler.pvlogger.shared.job.meta.JobId
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_LATEST_REGISTER_VALUE_PATH
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_TODAY_SO_FAR_REGISTER_VALUE_PATH
@@ -24,23 +25,23 @@ class DataAccessorRestProxy(private val config: ModbusDataAccessConfig) {
     private val logger = KotlinLogging.logger {}
 
     @OptIn(ExperimentalUnsignedTypes::class)
-    suspend fun inverterActivePower() = InverterActivePower(retrieveLatestRegisterValuesAggregated(masterDataForInverterActivePower(), config.inverterDeviceIds))
+    suspend fun inverterActivePower(jobId: JobId) = InverterActivePower(retrieveLatestRegisterValuesAggregated(masterDataForInverterActivePower(), config.inverterDeviceIds, jobId))
 
     @OptIn(ExperimentalUnsignedTypes::class)
-    suspend fun meterActivePower() = MeterActivePower(retrieveLatestRegisterValuesAggregated(masterDataForSmartMeterActivePower(), config.meterDeviceIds))
+    suspend fun meterActivePower(jobId: JobId) = MeterActivePower(retrieveLatestRegisterValuesAggregated(masterDataForSmartMeterActivePower(), config.meterDeviceIds, jobId))
 
     @OptIn(ExperimentalUnsignedTypes::class)
-    suspend fun inverterEnergyToday() = InverterEnergyToday(retrieveLatestRegisterValuesAggregated(masterDataForInverterEnergyYield(), config.inverterDeviceIds))
+    suspend fun inverterEnergyToday(jobId: JobId) = InverterEnergyToday(retrieveLatestRegisterValuesAggregated(masterDataForInverterEnergyYield(), config.inverterDeviceIds, jobId))
 
     @OptIn(ExperimentalUnsignedTypes::class)
     suspend fun meterEnergyToday() = MeterEnergyToday(computeImportedEnergyToday(config.meterDeviceIds), computeExportedEnergyToday(config.meterDeviceIds))
 
     @OptIn(ExperimentalUnsignedTypes::class)
-    private suspend fun retrieveLatestRegisterValuesAggregated(masterData: ModbusRegisterDefinition, deviceIds: UByteArray) = deviceIds.fold(0.0) { sum, deviceId ->
-        sum + retrieveLatestRegisterValue(masterData, deviceId)
+    private suspend fun retrieveLatestRegisterValuesAggregated(masterData: ModbusRegisterDefinition, deviceIds: UByteArray, jobId: JobId) = deviceIds.fold(0.0) { sum, deviceId ->
+        sum + retrieveLatestRegisterValue(masterData, deviceId, jobId)
     }
 
-    private suspend fun retrieveLatestRegisterValue(masterData: ModbusRegisterDefinition, deviceId: UByte): Double = client.get {
+    private suspend fun retrieveLatestRegisterValue(masterData: ModbusRegisterDefinition, deviceId: UByte, jobId: JobId): Double = client.get {
         logger.info { "Getting actual power for $masterData" }
         url {
             host = config.host
@@ -49,7 +50,8 @@ class DataAccessorRestProxy(private val config: ModbusDataAccessConfig) {
                 DATA_ACCESSOR_READ_LATEST_REGISTER_VALUE_PATH,
                 masterData.type.raw.first(),
                 deviceId.toString(),
-                masterData.registerAddress.value.toString()
+                masterData.registerAddress.value.toString(),
+                jobId.id
             )
         }
     }.let {

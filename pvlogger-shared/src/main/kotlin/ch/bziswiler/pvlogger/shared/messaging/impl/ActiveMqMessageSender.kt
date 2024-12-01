@@ -3,10 +3,11 @@ package ch.bziswiler.pvlogger.shared.messaging.impl
 import ch.bziswiler.pvlogger.shared.messaging.MqSessionFactory
 import ch.bziswiler.pvlogger.shared.messaging.QueueName
 import ch.bziswiler.pvlogger.shared.messaging.TaggedMessageSender
-import ch.bziswiler.pvlogger.shared.messaging.TagsMessageSender
+import ch.bziswiler.pvlogger.shared.messaging.TagsAsMessageSender
 import ch.bziswiler.pvlogger.shared.tags.MessageTag
 import mu.KotlinLogging
 import java.io.Serializable
+import javax.jms.Message
 import javax.jms.MessageProducer
 
 private const val SECONDS_PER_MINUTE = 60
@@ -16,7 +17,7 @@ private const val TWO = 2L
  * see https://codenotfound.com/jms-publish-subscribe-messaging-example-activemq-maven.html for examples
  * see https://github.com/code-not-found/jms for code
  */
-open class ActiveMqMessageSender(mqSessionFactory: MqSessionFactory, final override val queueName: QueueName, ephemeralMessages: Boolean = false) : TagsMessageSender, TaggedMessageSender {
+open class ActiveMqMessageSender(mqSessionFactory: MqSessionFactory, final override val queueName: QueueName, ephemeralMessages: Boolean = false) : TagsAsMessageSender, TaggedMessageSender {
 
     private val logger = KotlinLogging.logger {}
 
@@ -32,31 +33,26 @@ open class ActiveMqMessageSender(mqSessionFactory: MqSessionFactory, final overr
     }
 
     override fun sendTagsAsMessage(tags: List<MessageTag>) {
+        logger.debug { "Sending tags as message ..." }
         val msg = session.createMessage()
-        tags.forEach {
-            msg.setStringProperty(it.key, it.value)
-        }
-        messageProducer.send(msg)
-        logger.debug {
-            """
-SEND #########################################################################
-ActiveMqMessageSender: sent message: $msg
-SEND #########################################################################
-"""
-        }
+        tags.forEach { msg.setStringProperty(it.key, it.value) }
+        sendMessage(msg)
     }
 
     override fun tagAndSendMessage(message: Serializable, tag: MessageTag) {
         logger.debug { "Sending message ..." }
         val taggedMessage = session.createObjectMessage(message)
         taggedMessage.setStringProperty(tag.key, tag.value)
-        messageProducer.send(taggedMessage)
+        sendMessage(taggedMessage)
+    }
+
+    private fun sendMessage(taggedMessage: Message) = messageProducer.send(taggedMessage).also {
         logger.debug {
             """
-SEND #########################################################################
-ActiveMqMessageSender: sent message with text='$taggedMessage'
-SEND #########################################################################
-"""
+    SEND #########################################################################
+    ActiveMqMessageSender: sent message with text='$taggedMessage'
+    SEND #########################################################################
+    """
         }
     }
 }

@@ -6,8 +6,10 @@ import ch.bziswiler.pvlogger.dataaccessor.configuration.configureMonitoring
 import ch.bziswiler.pvlogger.dataaccessor.configuration.configureRouting
 import ch.bziswiler.pvlogger.dataaccessor.configuration.configureSerialization
 import ch.bziswiler.pvlogger.dataaccessor.configuration.setupConfig
-import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
-import ch.bziswiler.pvlogger.shared.messaging.MessageReceiver
+import ch.bziswiler.pvlogger.dataaccessor.messaging.StoreKpiValuesMessageHandler
+import ch.bziswiler.pvlogger.dataaccessor.messaging.StoreKpiValuesMessageReceiver
+import ch.bziswiler.pvlogger.dataaccessor.messaging.StoreModbusValuesMessageHandler
+import ch.bziswiler.pvlogger.dataaccessor.messaging.StoreModbusValuesMessageReceiver
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.netty.EngineMain
@@ -35,8 +37,19 @@ fun Application.module(testing: Boolean = false) {
 
 fun Application.startServices(testing: Boolean = false) {
     if (!testing) {
-        val messageReceiver by inject<MessageReceiver>()
-        val messageHandler by inject<MessageHandler>()
-        messageReceiver.addMessageHandler(messageHandler)
+        startStoringModbusValues()
+        startStoringKpiValues()
     }
+}
+
+private fun Application.startStoringModbusValues() {
+    val storeModbusValuesMessageReceiver by inject<StoreModbusValuesMessageReceiver>()
+    val storeModbusValuesMessageHandler by inject<StoreModbusValuesMessageHandler>()
+    storeModbusValuesMessageReceiver.addMessageHandler(storeModbusValuesMessageHandler)
+}
+
+private fun Application.startStoringKpiValues() {
+    val storeKpiValuesMessageReceiver by inject<StoreKpiValuesMessageReceiver>()
+    val storeKpiValuesMessageHandler by inject<StoreKpiValuesMessageHandler>()
+    storeKpiValuesMessageReceiver.addMessageHandler(storeKpiValuesMessageHandler)
 }
