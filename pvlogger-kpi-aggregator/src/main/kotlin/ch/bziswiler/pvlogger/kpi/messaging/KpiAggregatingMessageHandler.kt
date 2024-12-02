@@ -39,7 +39,7 @@ class KpiAggregatingMessageHandler(private val adapter: DataAccessorRestProxy, p
         else -> logger.info { "Received job message with state '${jobStatusMessage.status}', which is not 'SUCCESS'" }
     }
 
-    private fun KpiAggregatingMessageHandler.handleJobStatusSuccessMessage(jobStatusMessage: JobStatusMessage) = with(jobStatusMessage) {
+    private fun handleJobStatusSuccessMessage(jobStatusMessage: JobStatusMessage) = with(jobStatusMessage) {
         PvLoggerKpiData.from(collectLiveKpis(jobId), collectEnergiesTodaySoFar(jobId), jobId).let { kpis ->
             messageSender.tagAndSendMessage(kpis, StoreKpisMessageTag())
         }
