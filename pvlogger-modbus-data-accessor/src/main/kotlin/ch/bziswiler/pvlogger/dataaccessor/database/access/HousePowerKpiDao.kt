@@ -13,7 +13,7 @@ object HousePowerKpiDao {
     fun storeAndGetId(kpis: PvLoggerKpiData) = transaction {
         logger.trace { "Storing KPIs" }
         HousePowerKpiTable.insertAndGetId {
-            it[jobId] = jobId
+            it[jobId] = kpis.jobId
             it[solarPower] = kpis.producing
             it[solarToHousePower] = kpis.selfConsuming
             it[gridToHousePower] = kpis.importing
