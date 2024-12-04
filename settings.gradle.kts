@@ -2,7 +2,7 @@ rootProject.name = "pvlogger-msa"
 include(
     "pvlogger-database",
     "pvlogger-heartbeat",
-    "pvlogger-k8s",
+    "pvlogger-infrastructure",
     "pvlogger-kpi-aggregator",
     "pvlogger-masterdata-server",
     "pvlogger-message-queue",
