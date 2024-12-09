@@ -87,23 +87,3 @@ k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_kpi_aggregator_i
 
 k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_frontend_install/files/pvlogger-frontend-deployment.yaml')
 k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_frontend_install/files/pvlogger-frontend-service.yaml')
-
-load('ext://helm_resource', 'helm_resource', 'helm_repo')
-
-helm_repo(
-    'traefik-upstream',
-    'https://helm.traefik.io/traefik',
-)
-
-helm_resource(
-    'traefik',
-    'traefik-upstream/traefik',
-    namespace='traefik',
-    flags=[
-        '--create-namespace',
-    ],
-    resource_deps=['traefik-upstream'],
-)
-
-k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_frontend_install/files/traefik-data-ingressroute.yaml')
-k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_frontend_install/files/traefik-livedata-ingressroute.yaml')
