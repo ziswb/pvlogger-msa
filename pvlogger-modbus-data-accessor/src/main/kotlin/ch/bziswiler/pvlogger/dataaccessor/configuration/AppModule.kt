@@ -6,17 +6,13 @@ import ch.bziswiler.pvlogger.dataaccessor.messaging.StoreKpiValuesMessageReceive
 import ch.bziswiler.pvlogger.dataaccessor.messaging.StoreModbusValuesMessageHandler
 import ch.bziswiler.pvlogger.dataaccessor.messaging.StoreModbusValuesMessageReceiver
 import ch.bziswiler.pvlogger.shared.messaging.MqSessionFactory
-import ch.bziswiler.pvlogger.shared.messaging.QueueName
-import ch.bziswiler.pvlogger.shared.messaging.QueueName.EVENTS
 import ch.bziswiler.pvlogger.shared.messaging.TagsAsMessageSender
-import ch.bziswiler.pvlogger.shared.messaging.impl.ActiveMqMessageSender
 import ch.bziswiler.pvlogger.shared.messaging.impl.ActiveMqSessionFactory
 import org.koin.dsl.module
 
 val appModule = module {
     single<AppConfig> { AppConfig() }
     single<MqSessionFactory> { ActiveMqSessionFactory(get<AppConfig>().mqConfig) }
-    single<TagsAsMessageSender> { ActiveMqMessageSender(get<MqSessionFactory>(), EVENTS) }
     single<StoreModbusValuesMessageHandler> { StoreModbusValuesMessageHandler() }
     single<StoreKpiValuesMessageHandler> { StoreKpiValuesMessageHandler(get<TagsAsMessageSender>()) }
     single<StoreModbusValuesMessageReceiver> { StoreModbusValuesMessageReceiver(get<MqSessionFactory>()) }

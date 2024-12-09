@@ -5,4 +5,5 @@ object DataAccessorParameterNames {
     const val DEVICE_ID = "deviceId"
     const val REGISTER_ADDRESS = "registerAddress"
     const val JOB_ID = "jobId"
+    const val DATE = "date"
 }

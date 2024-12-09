@@ -3,16 +3,16 @@ package ch.bziswiler.pvlogger.dataaccessor.database.access
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.HousePowerKpiTable
 import ch.bziswiler.pvlogger.shared.messaging.PvLoggerKpiData
 import mu.KotlinLogging
-import org.jetbrains.exposed.sql.insertAndGetId
+import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object HousePowerKpiDao {
 
     private val logger = KotlinLogging.logger {}
 
-    fun storeAndGetId(kpis: PvLoggerKpiData) = transaction {
+    fun store(kpis: PvLoggerKpiData) = transaction {
         logger.trace { "Storing KPIs" }
-        HousePowerKpiTable.insertAndGetId {
+        HousePowerKpiTable.insert {
             it[jobId] = kpis.jobId
             it[solarPower] = kpis.producing
             it[solarToHousePower] = kpis.selfConsuming

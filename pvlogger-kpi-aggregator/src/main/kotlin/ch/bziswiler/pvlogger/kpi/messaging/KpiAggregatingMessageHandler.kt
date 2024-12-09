@@ -8,7 +8,7 @@ import ch.bziswiler.pvlogger.shared.job.meta.JobName
 import ch.bziswiler.pvlogger.shared.job.status.JobStatus
 import ch.bziswiler.pvlogger.shared.job.status.JobStatusMessage
 import ch.bziswiler.pvlogger.shared.job.tags.JobFinishedMessageTag
-import ch.bziswiler.pvlogger.shared.job.tags.StoreKpisMessageTag
+import ch.bziswiler.pvlogger.shared.job.tags.KpisCreatedMessageTag
 import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
 import ch.bziswiler.pvlogger.shared.messaging.PvLoggerKpiData
 import ch.bziswiler.pvlogger.shared.messaging.TaggedMessageSender
@@ -41,7 +41,7 @@ class KpiAggregatingMessageHandler(private val adapter: DataAccessorRestProxy, p
 
     private fun handleJobStatusSuccessMessage(jobStatusMessage: JobStatusMessage) = with(jobStatusMessage) {
         PvLoggerKpiData.from(collectLiveKpis(jobId), collectEnergiesTodaySoFar(jobId), jobId).let { kpis ->
-            messageSender.tagAndSendMessage(kpis, StoreKpisMessageTag())
+            messageSender.tagAndSendMessage(kpis, KpisCreatedMessageTag())
         }
     }
 
