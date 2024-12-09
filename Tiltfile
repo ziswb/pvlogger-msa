@@ -38,19 +38,19 @@ k8s_yaml([
     blob(pvol_yml)
 ])
 
-k8s_yaml('pvlogger-k8s/pvlogger-setup/roles/postgresql_create_namespace/files/postgresql-namespace.yaml')
-k8s_yaml('pvlogger-k8s/pvlogger-setup/roles/postgresql_install/files/postgresql-pvc-backups.yaml')
-k8s_yaml('pvlogger-k8s/pvlogger-setup/roles/postgresql_install/files/postgresql-pvc-data.yaml')
-k8s_yaml('pvlogger-k8s/pvlogger-setup/roles/postgresql_install/files/postgresql-pvc-logs.yaml')
-k8s_yaml('pvlogger-k8s/pvlogger-setup/roles/postgresql_install/files/postgresql-pvc-os.yaml')
-k8s_yaml('pvlogger-k8s/pvlogger-setup/roles/postgresql_install/files/postgresql-deployment.yaml')
-k8s_yaml('pvlogger-k8s/pvlogger-setup/roles/postgresql_install/files/postgresql-service.yaml')
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/postgresql_create_namespace/files/postgresql-namespace.yaml')
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/postgresql_install/files/postgresql-pvc-backups.yaml')
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/postgresql_install/files/postgresql-pvc-data.yaml')
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/postgresql_install/files/postgresql-pvc-logs.yaml')
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/postgresql_install/files/postgresql-pvc-os.yaml')
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/postgresql_install/files/postgresql-deployment.yaml')
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/postgresql_install/files/postgresql-service.yaml')
 
-k8s_yaml('pvlogger-k8s/pvlogger-setup/roles/activemq/files/activemq-namespace.yaml')
-k8s_yaml('pvlogger-k8s/pvlogger-setup/roles/activemq/files/activemq-claim0-persistentvolumeclaim.yaml')
-k8s_yaml('pvlogger-k8s/pvlogger-setup/roles/activemq/files/activemq-claim1-persistentvolumeclaim.yaml')
-k8s_yaml('pvlogger-k8s/pvlogger-setup/roles/activemq/files/activemq-deployment.yaml')
-k8s_yaml('pvlogger-k8s/pvlogger-setup/roles/activemq/files/activemq-service.yaml')
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/activemq/files/activemq-namespace.yaml')
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/activemq/files/activemq-claim0-persistentvolumeclaim.yaml')
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/activemq/files/activemq-claim1-persistentvolumeclaim.yaml')
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/activemq/files/activemq-deployment.yaml')
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/activemq/files/activemq-service.yaml')
 
 pv_pw_yml = """
 apiVersion: v1
@@ -66,21 +66,44 @@ k8s_yaml([
     blob(pv_pw_yml)
 ])
 
-k8s_yaml('pvlogger-k8s/pvlogger-setup/roles/pvlogger_common_install/files/pvlogger-namespace.yaml')
-k8s_yaml('pvlogger-k8s/pvlogger-setup/roles/pvlogger_heartbeat_install/files/pvlogger-heartbeat-deployment.yaml')
-k8s_yaml('pvlogger-k8s/pvlogger-setup/roles/pvlogger_heartbeat_install/files/pvlogger-heartbeat-service.yaml')
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_common_install/files/pvlogger-namespace.yaml')
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_heartbeat_install/files/pvlogger-heartbeat-deployment.yaml')
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_heartbeat_install/files/pvlogger-heartbeat-service.yaml')
 
-k8s_yaml('pvlogger-k8s/pvlogger-setup/roles/pvlogger_masterdata_server_install/files/pvlogger-masterdata-server-deployment.yaml')
-k8s_yaml('pvlogger-k8s/pvlogger-setup/roles/pvlogger_masterdata_server_install/files/pvlogger-masterdata-server-service.yaml')
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_masterdata_server_install/files/pvlogger-masterdata-server-deployment.yaml')
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_masterdata_server_install/files/pvlogger-masterdata-server-service.yaml')
 
-k8s_yaml('pvlogger-k8s/pvlogger-setup/roles/pvlogger_modbus_data_accessor_install/files/pvlogger-modbus-data-accessor-deployment.yaml')
-k8s_yaml('pvlogger-k8s/pvlogger-setup/roles/pvlogger_modbus_data_accessor_install/files/pvlogger-modbus-data-accessor-service.yaml')
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_modbus_data_accessor_install/files/pvlogger-modbus-data-accessor-deployment.yaml')
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_modbus_data_accessor_install/files/pvlogger-modbus-data-accessor-service.yaml')
 
-k8s_yaml('pvlogger-k8s/pvlogger-setup/roles/pvlogger_modbus_data_collector_install/files/pvlogger-modbus-data-collector-deployment.yaml')
-k8s_yaml('pvlogger-k8s/pvlogger-setup/roles/pvlogger_modbus_data_collector_install/files/pvlogger-modbus-data-collector-service.yaml')
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_modbus_data_collector_install/files/pvlogger-modbus-data-collector-deployment.yaml')
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_modbus_data_collector_install/files/pvlogger-modbus-data-collector-service.yaml')
 
-k8s_yaml('pvlogger-k8s/pvlogger-setup/roles/pvlogger_modbus_mock_server_install/files/pvlogger-modbus-mock-server-deployment.yaml')
-k8s_yaml('pvlogger-k8s/pvlogger-setup/roles/pvlogger_modbus_mock_server_install/files/pvlogger-modbus-mock-server-service.yaml')
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_modbus_mock_server_install/files/pvlogger-modbus-mock-server-deployment.yaml')
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_modbus_mock_server_install/files/pvlogger-modbus-mock-server-service.yaml')
 
-k8s_yaml('pvlogger-k8s/pvlogger-setup/roles/pvlogger_kpi_aggregator_install/files/pvlogger-kpi-aggregator-deployment.yaml')
-k8s_yaml('pvlogger-k8s/pvlogger-setup/roles/pvlogger_kpi_aggregator_install/files/pvlogger-kpi-aggregator-service.yaml')
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_kpi_aggregator_install/files/pvlogger-kpi-aggregator-deployment.yaml')
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_kpi_aggregator_install/files/pvlogger-kpi-aggregator-service.yaml')
+
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_frontend_install/files/pvlogger-frontend-deployment.yaml')
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_frontend_install/files/pvlogger-frontend-service.yaml')
+
+load('ext://helm_resource', 'helm_resource', 'helm_repo')
+
+helm_repo(
+    'traefik-upstream',
+    'https://helm.traefik.io/traefik',
+)
+
+helm_resource(
+    'traefik',
+    'traefik-upstream/traefik',
+    namespace='traefik',
+    flags=[
+        '--create-namespace',
+    ],
+    resource_deps=['traefik-upstream'],
+)
+
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_frontend_install/files/traefik-data-ingressroute.yaml')
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_frontend_install/files/traefik-livedata-ingressroute.yaml')
