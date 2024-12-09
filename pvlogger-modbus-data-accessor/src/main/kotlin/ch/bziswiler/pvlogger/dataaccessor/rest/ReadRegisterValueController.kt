@@ -12,7 +12,9 @@ import ch.bziswiler.pvlogger.shared.rest.DataAccessorParameterNames.REGISTER_ADD
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorParameterNames.TYPE
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_LATEST_REGISTER_VALUE_PATH
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_TODAY_SO_FAR_REGISTER_VALUE_PATH
-import io.ktor.http.HttpStatusCode
+import io.ktor.http.HttpStatusCode.Companion.BadRequest
+import io.ktor.http.HttpStatusCode.Companion.NotFound
+import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.server.application.call
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Routing
@@ -25,17 +27,17 @@ fun Routing.readLatestEnergyRegisterValues() {
         val registerAddress = retrieveRegisterAddressParameter()
         val jobId = retrieveJobIdParameter()
         if (type == null) {
-            call.respond(HttpStatusCode.BadRequest, "type is required")
+            call.respond(BadRequest, "type is required")
         } else if (deviceId == null) {
-            call.respond(HttpStatusCode.BadRequest, "deviceId is required")
+            call.respond(BadRequest, "deviceId is required")
         } else if (registerAddress == null) {
-            call.respond(HttpStatusCode.BadRequest, "address is required")
+            call.respond(BadRequest, "address is required")
         } else if (jobId == null) {
-            call.respond(HttpStatusCode.BadRequest, "jobId is required")
+            call.respond(BadRequest, "jobId is required")
         } else {
             when (val value = readLatestRegisterValue(type, deviceId, registerAddress, jobId)) {
-                null -> call.respond(HttpStatusCode.NotFound)
-                else -> call.respond(HttpStatusCode.OK, value)
+                null -> call.respond(NotFound)
+                else -> call.respond(OK, value)
             }
         }
     }
@@ -46,20 +48,20 @@ fun Routing.readSoFarTodayEnergyRegisterValues() {
         val type = retrieveTypeParameter()
         val registerAddress = retrieveRegisterAddressParameter()
         if (type == null) {
-            call.respond(HttpStatusCode.BadRequest, "type is required")
+            call.respond(BadRequest, "type is required")
         } else if (registerAddress == null) {
-            call.respond(HttpStatusCode.BadRequest, "address is required")
+            call.respond(BadRequest, "address is required")
         } else {
             readSoFarTodayRegisterValue(type, registerAddress).let {
                 when (it) {
-                    null -> call.respond(HttpStatusCode.NotFound)
-                    else -> call.respond(HttpStatusCode.OK, it)
+                    null -> call.respond(NotFound)
+                    else -> call.respond(OK, it)
                 }
             }
             readSoFarTodayRegisterValue(type, registerAddress).let {
                 when (it) {
-                    null -> call.respond(HttpStatusCode.NotFound)
-                    else -> call.respond(HttpStatusCode.OK, it)
+                    null -> call.respond(NotFound)
+                    else -> call.respond(OK, it)
                 }
             }
         }
