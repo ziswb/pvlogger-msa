@@ -9,12 +9,14 @@ import ch.bziswiler.pvlogger.frontend.plugins.configureMonitoring
 import ch.bziswiler.pvlogger.frontend.plugins.configureRouting
 import ch.bziswiler.pvlogger.frontend.plugins.configureSerialization
 import ch.bziswiler.pvlogger.frontend.plugins.configureWebSockets
+import ch.bziswiler.pvlogger.shared.messaging.MessageReceiver
 import io.ktor.server.application.Application
 import io.ktor.server.netty.EngineMain
 import io.micrometer.core.instrument.Metrics.addRegistry
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import org.koin.core.context.startKoin
+import org.koin.java.KoinJavaComponent.inject
 import org.koin.logger.slf4jLogger
 
 fun main(args: Array<String>) {
@@ -29,11 +31,12 @@ fun Application.module(testing: Boolean = false) {
             modules(appModule)
         }
     }
+    val receiver by inject<MessageReceiver>(MessageReceiver::class.java)
     val registry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
     addRegistry(registry)
     readConfiguration()
     configureMonitoring(registry, environment)
-    configureWebSockets()
+    configureWebSockets(receiver)
     configureHTTP()
     configureLogging()
     configureSerialization()
