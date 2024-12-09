@@ -36,9 +36,14 @@ fun Application.configureWebSockets() {
     // https://lankydan.dev/ktor-websockets
     routing {
         webSocket("/$FRONTEND_READ_LIVE_DATA_VALUES_PATH") {
+            val logger = KotlinLogging.logger {}
             val kpiMsgReceiver by inject<MessageReceiver>(MessageReceiver::class.java)
             kpiMsgReceiver.addMessageHandler(KpiMessageHandler() { data: KpiValuesDto ->
-                launch { sendSerialized(data) }
+                launch {
+                    logger.info { "Sending new KPIs to front end ..." }
+                    sendSerialized(data)
+                    logger.info { "New KPIs sent to front end!" }
+                }
             })
         }
     }
@@ -56,7 +61,7 @@ internal class KpiMessageHandler(private val sendData: (data: KpiValuesDto) -> U
     }
 
     private fun handleObjectMessage(message: ObjectMessage) = when (val obj = message.`object`) {
-        is PvLoggerKpiData -> sendData(obj.toKpiValuesDto()).let { logger.info { "KPIs stored: '$obj'" } }
+        is PvLoggerKpiData -> sendData(obj.toKpiValuesDto()).let { logger.info { "New KPIs received: '$obj'" } }
         else -> logger.info { "message.object is not 'pv logger kpi data'! -> '$obj'" }
     }
 }
