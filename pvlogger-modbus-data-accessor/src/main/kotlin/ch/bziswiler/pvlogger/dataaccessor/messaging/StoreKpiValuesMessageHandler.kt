@@ -4,12 +4,11 @@ import ch.bziswiler.pvlogger.dataaccessor.database.access.HousePowerKpiDao
 import ch.bziswiler.pvlogger.shared.job.tags.KpisCreatedMessageTag
 import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
 import ch.bziswiler.pvlogger.shared.messaging.PvLoggerKpiData
-import ch.bziswiler.pvlogger.shared.messaging.TagsAsMessageSender
 import mu.KotlinLogging
 import javax.jms.Message
 import javax.jms.ObjectMessage
 
-class StoreKpiValuesMessageHandler(private val messageSender: TagsAsMessageSender) : MessageHandler {
+class StoreKpiValuesMessageHandler : MessageHandler {
 
     override val messageSelector = KpisCreatedMessageTag().toSelector()
 
