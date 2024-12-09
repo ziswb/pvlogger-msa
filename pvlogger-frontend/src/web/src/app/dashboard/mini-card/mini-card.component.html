@@ -1,0 +1,15 @@
+<mat-card class="dashboard-mini-card {{colorClass}}">
+  <mat-card-header>
+    <mat-card-title>{{title}}</mat-card-title>
+  </mat-card-header>
+  <mat-card-content class="dashboard-mini-card-content">
+    <mat-list class="list-horizontal">
+      <mat-list-item>{{ kWhValue.toString() | number: '1.2-2' }} kWh</mat-list-item>
+      <mat-list-item>|</mat-list-item>
+      <mat-list-item>{{ kwValue.toString() | number: '1.2-2' }} kW</mat-list-item>
+    </mat-list>
+  </mat-card-content>
+  <mat-card-footer>
+    <mat-card-subtitle>{{ lastUpdated | date: 'E. dd. MMM yyyy HH:mm:ss':'UTC' }}</mat-card-subtitle>
+  </mat-card-footer>
+</mat-card>

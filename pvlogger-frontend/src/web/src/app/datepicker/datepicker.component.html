@@ -1,0 +1,31 @@
+<div class="container">
+  <div class="table-row">
+    <div class="table-cell spacer"></div>
+    <div class="table-cell">
+      <button mat-icon-button class="datepicker-left-arrow" (click)="previousClicked()" [disabled]="previousDisabled()">
+        <mat-icon>keyboard_arrow_left</mat-icon>
+      </button>
+    </div>
+    <div class="table-cell">
+      <mat-form-field class="datepicker" appearance="standard">
+        <input
+          class="datepicker-input"
+          matInput
+          [min]="minDate"
+          [max]="maxDate"
+          [(ngModel)]="startDate"
+          [matDatepicker]="picker"
+          (dateChange)="addEvent('change',$event)"
+        >
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+      </mat-form-field>
+    </div>
+    <div class="table-cell">
+      <button mat-icon-button class="datepicker-right-arrow" (click)="nextClicked()" [disabled]="nextDisabled()">
+        <mat-icon>keyboard_arrow_right</mat-icon>
+      </button>
+    </div>
+    <div class="table-cell spacer"></div>
+  </div>
+</div>
