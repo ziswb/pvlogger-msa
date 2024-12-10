@@ -30,10 +30,9 @@ import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.time.LocalDate
 import java.time.LocalDate.now
-import java.time.ZoneId.of
+import java.time.ZoneOffset.UTC
 import java.time.format.DateTimeFormatter.ofPattern
 
-private const val UTC = "UTC"
 private const val TWO_DECIMALS = "#.##"
 private const val DATE_PATTERN = "yyyy-M-d"
 
@@ -82,17 +81,8 @@ object HouseKpiController {
         }
     }
 
-    fun getKpiById(id: Int): KpiValuesDto? =
-        logger.info { "getting KPI by id '$id'" }.let {
-            HousePowerKpiTable
-                .selectAll()
-                .where { HousePowerKpiTable.id.eq(id) }
-                .map { toKpiValuesDto(it) }
-                .firstOrNull()
-        }
-
     private fun toKpiValuesDto(it: ResultRow) = KpiValuesDto(
-        createdAt = it[dateCreated].atZone(of(UTC)).toInstant().toEpochMilli(),
+        createdAt = it[dateCreated].toInstant(UTC).toEpochMilli(),
         solarPower = rounder.format(it[solarPower]).toDouble(),
         gridPower = rounder.format(it[gridToHousePower].minus(it[solarToGridPower])).toDouble(),
         solarToHousePower = rounder.format(it[HousePowerKpiTable.solarToHousePower]).toDouble(),

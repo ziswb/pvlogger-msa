@@ -1,5 +1,7 @@
 package ch.bziswiler.pvlogger.shared.messaging
 
+import java.time.LocalDateTime
+
 /**
  * Was formerly:
  *
@@ -19,6 +21,7 @@ package ch.bziswiler.pvlogger.shared.messaging
 @kotlinx.serialization.Serializable
 data class PvLoggerKpiData(
     val jobId: String,
+    val dateCreated: Long,
     val producing: Double,
     val exporting: Double,
     val importing: Double,

@@ -21,13 +21,12 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import mu.KotlinLogging
 import java.time.Duration
-import java.time.LocalDateTime
-import java.time.ZoneOffset
+import java.time.Duration.ofSeconds
 import javax.jms.Message
 import javax.jms.ObjectMessage
 
 private val logger = KotlinLogging.logger {}
-private val Int.Seconds: Duration get() = Duration.ofSeconds(this.toLong())
+private val Int.Seconds: Duration get() = ofSeconds(toLong())
 
 fun Application.configureWebSockets(receiver: MessageReceiver) {
     // https://lankydan.dev/ktor-websockets
@@ -36,17 +35,24 @@ fun Application.configureWebSockets(receiver: MessageReceiver) {
         timeout = 15.Seconds
         maxFrameSize = Long.MAX_VALUE
         masking = false
-        contentConverter = KotlinxWebsocketSerializationConverter(Json)
+        contentConverter = KotlinxWebsocketSerializationConverter(
+            Json {
+                encodeDefaults = true
+                ignoreUnknownKeys = true
+                isLenient = true
+                prettyPrint = true
+            }
+        )
     }
     routing {
         webSocket("/$FRONTEND_READ_LIVE_DATA_VALUES_PATH") {
-            with(MutableSharedFlow<KpiValuesDto>()) {
-                receiver.addMessageHandler(KpiMessageHandler(this))
-                asSharedFlow().collect { kpiDto ->
-                    logger.debug { "Sending KPI values DTO '$kpiDto'...'" }
-                    sendSerialized(kpiDto)
-                    logger.info { "KPIs values DTO sent!" }
-                }
+            val flow = MutableSharedFlow<KpiValuesDto>()
+            val sharedFlow = flow.asSharedFlow()
+            receiver.addMessageHandler(KpiMessageHandler(flow))
+            sharedFlow.collect { kpiDto ->
+                logger.debug { "Sending KPI values DTO '$kpiDto'...'" }
+                sendSerialized(kpiDto)
+                logger.info { "KPIs values DTO sent!" }
             }
         }
     }
@@ -68,7 +74,7 @@ internal class KpiMessageHandler(private val sharedFlow: MutableSharedFlow<KpiVa
 }
 
 private fun PvLoggerKpiData.toKpiValuesDto(): KpiValuesDto = KpiValuesDto(
-    LocalDateTime.now().toEpochSecond(ZoneOffset.UTC),
+    this.dateCreated,
     this.producing,
     gridPower = this.exporting + this.selfConsuming,
     this.selfConsuming,
