@@ -4,7 +4,7 @@ import ch.bziswiler.pvlogger.datacollector.configuration.AppConfig
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.ModbusTcpChannel
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.request.ReadDeviceListRequest
 import ch.bziswiler.pvlogger.datacollector.services.IdProvider
-import ch.bziswiler.pvlogger.datacollector.services.messaging.PersistenceMessageSender
+import ch.bziswiler.pvlogger.datacollector.services.messaging.StoreModbusValuesMessageSender
 import ch.bziswiler.pvlogger.shared.job.meta.JobId
 import ch.bziswiler.pvlogger.shared.job.meta.JobName.DEVICE_LIST_JOB
 import ch.bziswiler.pvlogger.shared.job.status.JobStatusMessageFactory.deviceListDataCollectionJobFailedMessage
@@ -19,7 +19,7 @@ class ModbusDeviceListCollectionJob(
     config: AppConfig,
     channel: ModbusTcpChannel,
     idProvider: IdProvider,
-    persistenceMessageSender: PersistenceMessageSender
+    persistenceMessageSender: StoreModbusValuesMessageSender
 ) : ModbusDeviceIdentifiersCollectionJob(config, channel, idProvider, persistenceMessageSender) {
 
     override val jobName = DEVICE_LIST_JOB

@@ -9,7 +9,7 @@ import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
 import ch.bziswiler.pvlogger.shared.messaging.MessageReceiver
 import ch.bziswiler.pvlogger.shared.messaging.MqSessionFactory
 import ch.bziswiler.pvlogger.shared.messaging.QueueName.PERSIST_MODBUS
-import ch.bziswiler.pvlogger.shared.messaging.impl.ActiveMqMessageReceiver
+import ch.bziswiler.pvlogger.shared.messaging.impl.ActiveMqQueueReceiver
 import ch.bziswiler.pvlogger.shared.messaging.impl.ActiveMqSessionFactory
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.ApplicationTestBuilder
@@ -34,7 +34,7 @@ abstract class TestBase : KoinTest {
                         single<AppConfig> { AppConfig() }
                         single<MessageHandler> { StoreModbusValuesMessageHandler() }
                         single<MqSessionFactory> { ActiveMqSessionFactory(get<AppConfig>().mqConfig) }
-                        single<MessageReceiver> { ActiveMqMessageReceiver(get<MqSessionFactory>(), PERSIST_MODBUS) }
+                        single<MessageReceiver> { ActiveMqQueueReceiver(get<MqSessionFactory>(), PERSIST_MODBUS) }
                         single<DatabaseFactory> { DatabaseFactory(get<AppConfig>()) }
                     }
                 }

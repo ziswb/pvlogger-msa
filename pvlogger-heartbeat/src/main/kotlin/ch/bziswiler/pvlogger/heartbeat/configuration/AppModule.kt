@@ -6,17 +6,17 @@ import ch.bziswiler.pvlogger.heartbeat.jobs.management.JobScheduler
 import ch.bziswiler.pvlogger.heartbeat.jobs.management.JobSchedulerManager
 import ch.bziswiler.pvlogger.heartbeat.jobs.management.PvLoggerJobFactory
 import ch.bziswiler.pvlogger.shared.messaging.MqSessionFactory
-import ch.bziswiler.pvlogger.shared.messaging.QueueName.JOB_SCHEDULER
 import ch.bziswiler.pvlogger.shared.messaging.TagsAsMessageSender
-import ch.bziswiler.pvlogger.shared.messaging.impl.ActiveMqMessageSender
+import ch.bziswiler.pvlogger.shared.messaging.TopicName.JOB_SCHEDULER
 import ch.bziswiler.pvlogger.shared.messaging.impl.ActiveMqSessionFactory
+import ch.bziswiler.pvlogger.shared.messaging.impl.ActiveMqTopicSender
 import org.koin.dsl.module
 import org.quartz.spi.JobFactory
 
 val appModule = module {
     single<AppConfig> { AppConfig() }
     single<MqSessionFactory> { ActiveMqSessionFactory(get<AppConfig>().mqConfig) }
-    single<TagsAsMessageSender> { ActiveMqMessageSender(get<MqSessionFactory>(), JOB_SCHEDULER, false) }
+    single<TagsAsMessageSender> { ActiveMqTopicSender(get<MqSessionFactory>(), JOB_SCHEDULER, false) }
     single<DatabaseFactory> { DatabaseFactoryImpl(get<AppConfig>()) }
     single<JobSchedulerManager> { JobSchedulerManager(get<AppConfig>()) }
     single<JobScheduler> { JobScheduler(get<JobSchedulerManager>()) }

@@ -4,7 +4,7 @@ import ch.bziswiler.pvlogger.datacollector.configuration.AppConfig
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.ModbusTcpChannel
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.request.ReadDeviceIdentifiersRequest
 import ch.bziswiler.pvlogger.datacollector.services.IdProvider
-import ch.bziswiler.pvlogger.datacollector.services.messaging.PersistenceMessageSender
+import ch.bziswiler.pvlogger.datacollector.services.messaging.StoreModbusValuesMessageSender
 import ch.bziswiler.pvlogger.datacollector.services.modbus.ModbusDataCollectionJob
 import ch.bziswiler.pvlogger.shared.job.meta.JobId
 import ch.bziswiler.pvlogger.shared.job.meta.JobName.DEVICE_IDS_JOB
@@ -24,7 +24,7 @@ open class ModbusDeviceIdentifiersCollectionJob(
     config: AppConfig,
     private val channel: ModbusTcpChannel,
     protected val idProvider: IdProvider,
-    private val persistenceMessageSender: PersistenceMessageSender
+    private val persistenceMessageSender: StoreModbusValuesMessageSender
 ) : ModbusDataCollectionJob {
 
     override val jobName = DEVICE_IDS_JOB

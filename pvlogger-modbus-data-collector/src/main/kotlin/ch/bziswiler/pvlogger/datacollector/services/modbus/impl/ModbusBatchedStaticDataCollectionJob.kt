@@ -4,7 +4,7 @@ import ch.bziswiler.pvlogger.datacollector.configuration.AppConfig
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.ModbusTcpChannel
 import ch.bziswiler.pvlogger.datacollector.services.IdProvider
 import ch.bziswiler.pvlogger.datacollector.services.messaging.JobSchedulerMessageSender
-import ch.bziswiler.pvlogger.datacollector.services.messaging.PersistenceMessageSender
+import ch.bziswiler.pvlogger.datacollector.services.messaging.StoreModbusValuesMessageSender
 import ch.bziswiler.pvlogger.datacollector.services.modbus.MasterDataService
 import ch.bziswiler.pvlogger.datacollector.services.modbus.ModbusBatchedDataCollectionJob
 import ch.bziswiler.pvlogger.shared.job.meta.JobId
@@ -24,7 +24,7 @@ class ModbusBatchedStaticDataCollectionJob(
     channel: ModbusTcpChannel,
     idProvider: IdProvider,
     masterDataService: MasterDataService,
-    persistenceMessageSender: PersistenceMessageSender,
+    persistenceMessageSender: StoreModbusValuesMessageSender,
     jobSchedulerMessageSender: JobSchedulerMessageSender
 ) : ModbusBatchedDataCollectionJob(config, channel, idProvider, masterDataService, persistenceMessageSender, jobSchedulerMessageSender) {
 

@@ -5,7 +5,7 @@ import ch.bziswiler.pvlogger.datacollector.modbus.tcp.ModbusTcpChannel
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.request.ReadRegistersValueRequest
 import ch.bziswiler.pvlogger.datacollector.services.IdProvider
 import ch.bziswiler.pvlogger.datacollector.services.messaging.JobSchedulerMessageSender
-import ch.bziswiler.pvlogger.datacollector.services.messaging.PersistenceMessageSender
+import ch.bziswiler.pvlogger.datacollector.services.messaging.StoreModbusValuesMessageSender
 import ch.bziswiler.pvlogger.shared.job.meta.JobId
 import ch.bziswiler.pvlogger.shared.job.tags.JobFinishedMessageTag
 import ch.bziswiler.pvlogger.shared.job.tags.StoreModbusRegisterValuesMessageTag
@@ -28,7 +28,7 @@ abstract class ModbusBatchedDataCollectionJob(
     private val channel: ModbusTcpChannel,
     private val idProvider: IdProvider,
     private val masterDataService: MasterDataService,
-    private val persistenceMessageSender: PersistenceMessageSender,
+    private val persistenceMessageSender: StoreModbusValuesMessageSender,
     private val jobSchedulerMessageSender: JobSchedulerMessageSender
 ) : ModbusDataCollectionJob {
 

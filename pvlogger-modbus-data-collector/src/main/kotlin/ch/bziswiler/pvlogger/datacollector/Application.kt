@@ -3,7 +3,7 @@ package ch.bziswiler.pvlogger.datacollector
 import ch.bziswiler.pvlogger.datacollector.configuration.appModule
 import ch.bziswiler.pvlogger.datacollector.configuration.configureMonitoring
 import ch.bziswiler.pvlogger.datacollector.configuration.setupConfig
-import ch.bziswiler.pvlogger.datacollector.services.messaging.JobTriggeringMqHandler
+import ch.bziswiler.pvlogger.datacollector.services.messaging.JobTriggeringMessageHandler
 import ch.bziswiler.pvlogger.datacollector.services.modbus.impl.ModbusBatchedDynamicDataCollectionJob
 import ch.bziswiler.pvlogger.datacollector.services.modbus.impl.ModbusBatchedStaticDataCollectionJob
 import ch.bziswiler.pvlogger.datacollector.services.modbus.impl.ModbusDeviceIdentifiersCollectionJob
@@ -42,8 +42,8 @@ fun Application.start() {
     val devIdsJob by inject<ModbusDeviceIdentifiersCollectionJob>()
     val devLstJob by inject<ModbusDeviceListCollectionJob>()
     val jobMsgReceiver by inject<MessageReceiver>()
-    jobMsgReceiver.addMessageHandler(JobTriggeringMqHandler(JobStartMessageTag(DYNAMIC_DATA_JOB).toSelector(), dynDataJob))
-    jobMsgReceiver.addMessageHandler(JobTriggeringMqHandler(JobStartMessageTag(STATIC_DATA_JOB).toSelector(), stcDataJob))
-    jobMsgReceiver.addMessageHandler(JobTriggeringMqHandler(JobStartMessageTag(DEVICE_IDS_JOB).toSelector(), devIdsJob))
-    jobMsgReceiver.addMessageHandler(JobTriggeringMqHandler(JobStartMessageTag(DEVICE_LIST_JOB).toSelector(), devLstJob))
+    jobMsgReceiver.addMessageHandler(JobTriggeringMessageHandler(JobStartMessageTag(DYNAMIC_DATA_JOB).toSelector(), dynDataJob))
+    jobMsgReceiver.addMessageHandler(JobTriggeringMessageHandler(JobStartMessageTag(STATIC_DATA_JOB).toSelector(), stcDataJob))
+    jobMsgReceiver.addMessageHandler(JobTriggeringMessageHandler(JobStartMessageTag(DEVICE_IDS_JOB).toSelector(), devIdsJob))
+    jobMsgReceiver.addMessageHandler(JobTriggeringMessageHandler(JobStartMessageTag(DEVICE_LIST_JOB).toSelector(), devLstJob))
 }
