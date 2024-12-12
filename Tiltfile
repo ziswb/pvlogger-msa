@@ -85,5 +85,62 @@ k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_modbus_mock_serv
 k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_kpi_aggregator_install/files/pvlogger-kpi-aggregator-deployment.yaml')
 k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_kpi_aggregator_install/files/pvlogger-kpi-aggregator-service.yaml')
 
+tf_mw_yml = """
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: strip-pv
+  namespace: pvlogger
+spec:
+  stripPrefix:
+    prefixes:
+      - /pv
+"""
+k8s_yaml([
+    blob(tf_mw_yml)
+])
+
+tf_dt_yml = """
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: pvlogger-data
+  namespace: pvlogger
+spec:
+  entryPoints:
+    - web
+  routes:
+    - kind: Rule
+      match: Host(`localhost`) && PathPrefix(`/v1`)
+      priority: 10
+      services:
+        - kind: Service
+          name: pvlogger-modbus-data-accessor-service
+          port: pvlogger-data-accessor
+          nativeLB: true
+    - kind: Rule
+      match: Host(`localhost`) && PathPrefix(`/livedata`)
+      priority: 100
+      services:
+        - kind: Service
+          name: pvlogger-frontend-service
+          port: pvlogger-frontend
+          nativeLB: true
+    - kind: Rule
+      match: Host(`localhost`) && PathPrefix(`/pv`)
+      priority: 1000
+      middlewares:
+        - name: "strip-pv"
+          namespace: pvlogger
+      services:
+        - kind: Service
+          name: pvlogger-frontend-service
+          port: pvlogger-frontend
+          nativeLB: true
+"""
+k8s_yaml([
+    blob(tf_dt_yml)
+])
+
 k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_frontend_install/files/pvlogger-frontend-deployment.yaml')
 k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_frontend_install/files/pvlogger-frontend-service.yaml')
