@@ -32,7 +32,7 @@ object ModbusDao {
     fun store(data: ReadDeviceIdentifiersResponse) = transaction { storeValues(data, storeHeader(data)) }
 
     private fun storeValues(data: ModbusRegisterValueResponse, headerId: EntityID<Int>) =
-        data.registerValues.forEach { registerValue: ModbusRegisterValue ->
+        data.registerValues.forEach { registerValue: ModbusRegisterValue<*> ->
             when (registerValue) {
                 is ModbusRegisterUShortValue -> {
                     storeUShortValues(registerValue, data, headerId)

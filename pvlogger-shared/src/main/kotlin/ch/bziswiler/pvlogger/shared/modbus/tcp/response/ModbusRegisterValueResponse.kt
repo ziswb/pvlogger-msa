@@ -18,7 +18,7 @@ data class ModbusRegisterValueResponse(
     override var header: MbapHeader,
     override var functionCode: FunctionCode,
     override var numberOfBytes: UByte,
-    var registerValues: List<ModbusRegisterValue>,
+    var registerValues: List<ModbusRegisterValue<*>>,
 ) : ModbusResponse {
 
     @Throws(IOException::class)
@@ -32,6 +32,6 @@ data class ModbusRegisterValueResponse(
     @Suppress("unused", "UNCHECKED_CAST")
     override fun readObject(ois: ObjectInputStream) {
         super.readObject(ois)
-        this.registerValues = ois.readObject() as List<ModbusRegisterValue>
+        this.registerValues = ois.readObject() as List<ModbusRegisterValue<*>>
     }
 }

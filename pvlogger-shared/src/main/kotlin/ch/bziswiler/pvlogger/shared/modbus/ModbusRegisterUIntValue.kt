@@ -5,8 +5,8 @@ import java.io.IOException
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 
-data class ModbusRegisterUIntValue(override var definition: ModbusRegisterDefinition, var value: UInt) :
-    ModbusRegisterValue {
+data class ModbusRegisterUIntValue(override var definition: ModbusRegisterDefinition, override var value: UInt) :
+    ModbusRegisterValue<UInt> {
 
     @Throws(IOException::class)
     @Suppress("unused")

@@ -7,8 +7,8 @@ import java.io.ObjectOutputStream
 
 private const val TWO_BYTES = 0xFFFF
 
-data class ModbusRegisterUShortValue(override var definition: ModbusRegisterDefinition, var value: UShort) :
-    ModbusRegisterValue {
+data class ModbusRegisterUShortValue(override var definition: ModbusRegisterDefinition, override var value: UShort) :
+    ModbusRegisterValue<UShort> {
 
     @Throws(IOException::class)
     @Suppress("unused")
