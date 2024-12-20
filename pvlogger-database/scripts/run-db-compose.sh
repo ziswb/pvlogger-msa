@@ -24,14 +24,11 @@ else
   exit 1
 fi
 
-DB_DATA_PATH="./"
-DB_INIT_SCRIPT_PATH="./"
-DB_PASSWORD=$(${OP_CMD} read "op://Personal/PV Logger Postgres DB/password")
-
 # determine script location
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+DB_DATA_PATH="${SCRIPT_DIR}/db-data"
+DB_PASSWORD=$(${OP_CMD} read "op://Personal/PV Logger Postgres DB/password")
 
 DB_PASSWORD="${DB_PASSWORD}" \
 DB_DATA_PATH="${DB_DATA_PATH}" \
-DB_INIT_SCRIPT_PATH="${DB_INIT_SCRIPT_PATH}" \
 ${DOCKER_COMPOSE_CMD} -f "${SCRIPT_DIR}"/../docker/docker-compose.yaml up -d
