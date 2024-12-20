@@ -26,7 +26,7 @@ fi
 
 # determine script location
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-DB_DATA_PATH="${SCRIPT_DIR}/db-data"
+DB_DATA_PATH="${SCRIPT_DIR}/../docker"
 DB_PASSWORD=$(${OP_CMD} read "op://Personal/PV Logger Postgres DB/password")
 
 DB_PASSWORD="${DB_PASSWORD}" \
