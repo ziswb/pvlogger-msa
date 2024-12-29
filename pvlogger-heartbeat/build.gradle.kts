@@ -43,6 +43,9 @@ dependencies {
     implementation(libs.exposed.dao)
     implementation(libs.exposed.jdbc)
 
+    // DB migrations
+    implementation(libs.flywaydb)
+
     // In-memory DB for testing
     implementation(libs.h2)
 
