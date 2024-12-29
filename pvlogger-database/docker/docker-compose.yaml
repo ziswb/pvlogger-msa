@@ -15,3 +15,9 @@ services:
     volumes:
       - ${DB_DATA_PATH}/dumps:/dumps
       - ${DB_DATA_PATH}/postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U postgres -d heartbeat'"]
+      interval: 5s
+      timeout: 1s
+      retries: 3
+      start_period: 2s
