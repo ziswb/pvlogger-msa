@@ -14,28 +14,143 @@ type: kubernetes.io/generic
 k8s_yaml([
     blob(pg_pw_yml)
 ])
-pvol_yml = """
+
+pvol1_yml = """
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: nfs-storage
+  name: pg-backup-data
   labels:
     type: local
 spec:
   capacity:
-    storage: 1Ti
+    storage: 100Gi
   accessModes:
     - ReadWriteMany
     - ReadWriteOnce
     - ReadOnlyMany
-  storageClassName: nfs-client
   persistentVolumeReclaimPolicy: Retain
   volumeMode: Filesystem
   hostPath:
-    path: "/Users/bziswiler/pv-data"
+    path: /Users/bziswiler/pv-data1
 """
 k8s_yaml([
-    blob(pvol_yml)
+    blob(pvol1_yml)
+])
+
+pvol2_yml = """
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pg-data-data
+  labels:
+    type: local
+spec:
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteMany
+    - ReadWriteOnce
+    - ReadOnlyMany
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem
+  hostPath:
+    path: /Users/bziswiler/pv-data2
+"""
+k8s_yaml([
+    blob(pvol2_yml)
+])
+
+pvol3_yml = """
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pg-logs-data
+  labels:
+    type: local
+spec:
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteMany
+    - ReadWriteOnce
+    - ReadOnlyMany
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem
+  hostPath:
+    path: /Users/bziswiler/pv-data3
+"""
+k8s_yaml([
+    blob(pvol3_yml)
+])
+
+pvol4_yml = """
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pg-os-data
+  labels:
+    type: local
+spec:
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteMany
+    - ReadWriteOnce
+    - ReadOnlyMany
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem
+  hostPath:
+    path: /Users/bziswiler/pv-data4
+"""
+k8s_yaml([
+    blob(pvol4_yml)
+])
+
+pvol5_yml = """
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mq-data-data
+  labels:
+    type: local
+spec:
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteMany
+    - ReadWriteOnce
+    - ReadOnlyMany
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem
+  hostPath:
+    path: /Users/bziswiler/pv-data5
+"""
+k8s_yaml([
+    blob(pvol5_yml)
+])
+
+pvol6_yml = """
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mq-log-data
+  labels:
+    type: local
+spec:
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteMany
+    - ReadWriteOnce
+    - ReadOnlyMany
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem
+  hostPath:
+    path: /Users/bziswiler/pv-data6
+"""
+k8s_yaml([
+    blob(pvol6_yml)
 ])
 
 k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/postgresql_create_namespace/files/postgresql-namespace.yaml')
