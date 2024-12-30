@@ -1,6 +1,6 @@
-package ch.bziswiler.pvlogger.heartbeat.database
+package ch.bziswiler.pvlogger.shared.databbase
 
-import ch.bziswiler.pvlogger.heartbeat.configuration.AppConfig
+import ch.bziswiler.pvlogger.shared.configuration.DatabaseConfig
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import org.flywaydb.core.Flyway.configure
@@ -9,9 +9,7 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import javax.sql.DataSource
 
-class DatabaseFactory(appConfig: AppConfig) {
-
-    private val dbConfig = appConfig.databaseConfig
+class DatabaseFactory(private val dbConfig: DatabaseConfig) {
 
     fun connect() {
         connect(hikari(dbConfig.dbServerUrl))

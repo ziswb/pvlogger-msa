@@ -1,6 +1,6 @@
 package ch.bziswiler.pvlogger.masterdata.server.configuration
 
-import ch.bziswiler.pvlogger.masterdata.server.database.connection.DatabaseFactory
+import ch.bziswiler.pvlogger.shared.databbase.DatabaseFactory
 import io.ktor.server.application.Application
 import org.koin.ktor.ext.inject
 

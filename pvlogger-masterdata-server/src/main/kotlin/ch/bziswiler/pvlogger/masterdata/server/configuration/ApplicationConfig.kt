@@ -1,5 +1,6 @@
 package ch.bziswiler.pvlogger.masterdata.server.configuration
 
+import ch.bziswiler.pvlogger.shared.configuration.DatabaseConfig
 import io.ktor.server.application.Application
 import org.koin.ktor.ext.inject
 
@@ -8,16 +9,6 @@ class AppConfig {
     lateinit var serverConfig: ServerConfig
     lateinit var masterDataImportConfig: MasterDataImportConfig
 }
-
-data class DatabaseConfig(
-    val driverClass: String,
-    val dbServerUrl: String,
-    val dbName: String,
-    val dbServerCanonicalUrl: String,
-    val user: String,
-    val password: String,
-    val maxPoolSize: Int,
-)
 
 data class ServerConfig(
     val isProd: Boolean,
@@ -50,6 +41,7 @@ private fun Application.readDbConfig(appConfig: AppConfig) = with(environment.co
     appConfig.apply {
         databaseConfig = DatabaseConfig(
             driverClass = property("driverClass").getString(),
+            driverDelegateClass = "",
             dbServerUrl = property("dbServerUrl").getString(),
             dbName = property("dbName").getString(),
             dbServerCanonicalUrl = property("dbServerCanonicalUrl").getString(),

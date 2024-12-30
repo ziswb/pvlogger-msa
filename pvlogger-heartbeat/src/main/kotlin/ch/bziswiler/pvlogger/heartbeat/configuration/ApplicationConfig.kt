@@ -1,5 +1,6 @@
 package ch.bziswiler.pvlogger.heartbeat.configuration
 
+import ch.bziswiler.pvlogger.shared.configuration.DatabaseConfig
 import ch.bziswiler.pvlogger.shared.messaging.config.MqConfig
 import io.ktor.server.application.Application
 import org.koin.ktor.ext.inject
@@ -13,17 +14,6 @@ class AppConfig {
 
 data class ServerConfig(
     val isProd: Boolean,
-)
-
-data class DatabaseConfig(
-    val driverClass: String,
-    val driverDelegateClass: String,
-    val dbServerUrl: String,
-    val dbName: String,
-    val dbServerCanonicalUrl: String,
-    val user: String,
-    val password: String,
-    val maxPoolSize: Int,
 )
 
 data class JobConfig(
