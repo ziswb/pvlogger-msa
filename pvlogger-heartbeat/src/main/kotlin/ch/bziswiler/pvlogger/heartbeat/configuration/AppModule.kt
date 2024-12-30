@@ -1,7 +1,6 @@
 package ch.bziswiler.pvlogger.heartbeat.configuration
 
 import ch.bziswiler.pvlogger.heartbeat.database.DatabaseFactory
-import ch.bziswiler.pvlogger.heartbeat.database.DatabaseFactoryImpl
 import ch.bziswiler.pvlogger.heartbeat.jobs.management.JobScheduler
 import ch.bziswiler.pvlogger.heartbeat.jobs.management.JobSchedulerManager
 import ch.bziswiler.pvlogger.heartbeat.jobs.management.PvLoggerJobFactory
@@ -17,7 +16,7 @@ val appModule = module {
     single<AppConfig> { AppConfig() }
     single<MqSessionFactory> { ActiveMqSessionFactory(get<AppConfig>().mqConfig) }
     single<TagsAsMessageSender> { ActiveMqTopicSender(get<MqSessionFactory>(), JOB_SCHEDULER, false) }
-    single<DatabaseFactory> { DatabaseFactoryImpl(get<AppConfig>()) }
+    single<DatabaseFactory> { DatabaseFactory(get<AppConfig>()) }
     single<JobSchedulerManager> { JobSchedulerManager(get<AppConfig>()) }
     single<JobScheduler> { JobScheduler(get<JobSchedulerManager>()) }
     single<JobFactory> { PvLoggerJobFactory(get<TagsAsMessageSender>()) }
