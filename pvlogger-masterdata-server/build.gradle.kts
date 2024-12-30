@@ -34,6 +34,14 @@ repositories {
     mavenCentral()
 }
 
+// Necessary due to a bug in flyway 10.x. See: https://github.com/flyway/flyway/issues/3811
+// Symptom was: no migrations were found when application was run from (shadow) jar
+tasks {
+    shadowJar {
+        mergeServiceFiles()
+    }
+}
+
 dependencies {
     // Serialization
     implementation(libs.ktor.serialization.kotlinx.json)
@@ -65,6 +73,9 @@ dependencies {
     implementation(libs.exposed.jdbc)
     implementation(libs.postgresql)
     implementation(libs.hikaricp)
+
+    // DB migrations
+    implementation(libs.flywaydb)
 
     // In-memory DB for testing
     implementation(libs.h2)

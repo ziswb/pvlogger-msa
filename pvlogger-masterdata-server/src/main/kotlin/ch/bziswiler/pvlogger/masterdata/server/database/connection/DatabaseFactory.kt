@@ -1,9 +1,9 @@
 package ch.bziswiler.pvlogger.masterdata.server.database.connection
 
 import ch.bziswiler.pvlogger.masterdata.server.configuration.AppConfig
-import ch.bziswiler.pvlogger.masterdata.server.database.schema.MasterDataTable
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import org.flywaydb.core.Flyway.configure
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -13,19 +13,35 @@ class DatabaseFactory(appConfig: AppConfig) {
 
     private val dbConfig = appConfig.databaseConfig
 
+
     fun connect() {
         assertDatabaseExists(Database.connect(hikari(dbConfig.dbServerUrl)))
-        assertSchemaComplete(Database.connect(hikari(dbConfig.dbServerCanonicalUrl)))
+        val dataSource = hikari(dbConfig.dbServerCanonicalUrl)
+        Database.connect(dataSource)
+        migrateDatabase(dataSource)
     }
 
-    private fun assertSchemaComplete(database: Database) = transaction(database) { SchemaUtils.create(MasterDataTable) }
+    private fun assertDatabaseExists(database: Database) {
+        if (databaseDoesNotExist(database)) {
+            createDatabase(database)
+        }
+    }
 
-    private fun assertDatabaseExists(database: Database) = transaction(database) {
-        if (SchemaUtils.listDatabases().find { it == dbConfig.dbName }.isNullOrEmpty()) {
+    private fun databaseDoesNotExist(database: Database): Boolean =
+        transaction(database) {
+            SchemaUtils.listDatabases().find { it == dbConfig.dbName }.isNullOrEmpty()
+        }
+
+    private fun createDatabase(database: Database) {
+        transaction(database) {
             connection.autoCommit = true
-            SchemaUtils.createDatabase(databases = arrayOf(dbConfig.dbName), inBatch = true)
+            SchemaUtils.createDatabase(databases = arrayOf(dbConfig.dbName))
             connection.autoCommit = false
         }
+    }
+
+    private fun migrateDatabase(dataSource: DataSource) {
+        configure().dataSource(dataSource).load().migrate()
     }
 
     private fun hikari(dbServerUrl: String): DataSource {
