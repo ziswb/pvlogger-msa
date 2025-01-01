@@ -2,9 +2,9 @@ package ch.bziswiler.testutils
 
 import ch.bziswiler.pvlogger.dataaccessor.configuration.AppConfig
 import ch.bziswiler.pvlogger.dataaccessor.configuration.appModule
-import ch.bziswiler.pvlogger.dataaccessor.database.connection.DatabaseFactory
 import ch.bziswiler.pvlogger.dataaccessor.messaging.StoreModbusValuesMessageHandler
 import ch.bziswiler.pvlogger.dataaccessor.module
+import ch.bziswiler.pvlogger.shared.databbase.DatabaseFactory
 import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
 import ch.bziswiler.pvlogger.shared.messaging.MessageReceiver
 import ch.bziswiler.pvlogger.shared.messaging.MqSessionFactory
@@ -35,7 +35,7 @@ abstract class TestBase : KoinTest {
                         single<MessageHandler> { StoreModbusValuesMessageHandler() }
                         single<MqSessionFactory> { ActiveMqSessionFactory(get<AppConfig>().mqConfig) }
                         single<MessageReceiver> { ActiveMqQueueReceiver(get<MqSessionFactory>(), PERSIST_MODBUS) }
-                        single<DatabaseFactory> { DatabaseFactory(get<AppConfig>()) }
+                        single<DatabaseFactory> { DatabaseFactory(get<AppConfig>().databaseConfig) }
                     }
                 }
             environment {
@@ -43,9 +43,9 @@ abstract class TestBase : KoinTest {
                     MapApplicationConfig(
                         "ktor.server.isProd" to "false",
                         "database.driverClass" to "org.h2.Driver",
-                        "database.dbServerUrl" to "jdbc:h2:mem:mem;DATABASE_TO_UPPER=false;MODE=MYSQL",
+                        "database.dbServerUrl" to "jdbc:h2:mem:mem;DATABASE_TO_UPPER=false;MODE=PostgreSQL",
                         "database.dbName" to "pvmasterdata",
-                        "database.dbServerCanonicalUrl" to "jdbc:h2:mem:mem;DATABASE_TO_UPPER=false;MODE=MYSQL",
+                        "database.dbServerCanonicalUrl" to "jdbc:h2:mem:mem;DATABASE_TO_UPPER=false;MODE=PostgreSQL",
                         "database.user" to "sa",
                         "database.password" to "",
                         "database.maxPoolSize" to "1",
