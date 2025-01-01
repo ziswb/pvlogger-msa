@@ -1,6 +1,6 @@
 #!/bin/sh
 
-FILENAME=house_power_kpi_values_`date +%Y-%m-%d"_"%H_%M_%S`
+FILENAME=modbus_characteristic_curve_data`date +%Y-%m-%d"_"%H_%M_%S`
 
 # https://www.prisma.io/dataguide/postgresql/inserting-and-modifying-data/importing-and-exporting-data-in-postgresql
 pg_dump \
@@ -8,7 +8,7 @@ pg_dump \
   --port 5432 \
   --user postgres \
   --dbname pvlogger \
-  --table house_power_kpi_values \
+  --table modbus_characteristic_curve_data \
   --no-owner \
   --data-only \
   --no-comments \
@@ -18,7 +18,6 @@ pg_dump \
   --no-subscriptions \
   --no-security-labels \
   --no-table-access-method \
-  --column-inserts \
   --disable-triggers \
   --file $FILENAME.sql \
   && tar -czvf $FILENAME.tar.gz $FILENAME.sql
