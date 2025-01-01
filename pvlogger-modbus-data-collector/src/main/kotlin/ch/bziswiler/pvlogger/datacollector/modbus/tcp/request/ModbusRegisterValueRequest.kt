@@ -18,7 +18,7 @@ abstract class ModbusRegisterValueRequest : ModbusRequest {
 
     private val logger = KotlinLogging.logger {}
 
-    override suspend fun decode(channel: ByteReadChannel) : ModbusRegisterValueResponse =
+    override suspend fun decode(channel: ByteReadChannel): ModbusRegisterValueResponse =
         run {
             logger.debug("ModbusRegisterValueRequest.decode()")
             val header = readHeader(channel)
@@ -38,7 +38,7 @@ abstract class ModbusRegisterValueRequest : ModbusRequest {
     private suspend fun readData(
         functionCode: FunctionCode,
         channel: ByteReadChannel,
-    ): List<ModbusRegisterValue> {
+    ): List<ModbusRegisterValue<*>> {
         logger.debug("ModbusRegisterValueRequest.readData()")
         if (functionCode == ReadRegisters) {
             readNumberOfBytes(channel)
@@ -48,7 +48,7 @@ abstract class ModbusRegisterValueRequest : ModbusRequest {
         }
     }
 
-    protected abstract suspend fun readRegisters(channel: ByteReadChannel): List<ModbusRegisterValue>
+    protected abstract suspend fun readRegisters(channel: ByteReadChannel): List<ModbusRegisterValue<*>>
 
     private suspend fun readNumberOfBytes(channel: ByteReadChannel) = channel.readUByte()
 }
