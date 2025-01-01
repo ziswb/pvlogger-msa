@@ -4,7 +4,7 @@ ENV GRADLE_USER_HOME="/workspace/gradle_home"
 ADD . /workspace
 
 WORKDIR /workspace
-RUN ./gradlew :pvlogger-kpi-aggregator:clean :pvlogger-kpi-aggregator:shadowJar
+RUN ./gradlew :pvlogger-kpi-aggregator:clean :pvlogger-kpi-aggregator:buildFatJar
 
 FROM eclipse-temurin:21-jre-ubi9-minimal
 

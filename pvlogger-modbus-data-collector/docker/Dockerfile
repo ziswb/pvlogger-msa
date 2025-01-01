@@ -4,7 +4,7 @@ ENV GRADLE_USER_HOME="/workspace/gradle_home"
 ADD . /workspace
 
 WORKDIR /workspace
-RUN ./gradlew :pvlogger-modbus-data-collector:clean :pvlogger-modbus-data-collector:shadowJar
+RUN ./gradlew :pvlogger-modbus-data-collector:clean :pvlogger-modbus-data-collector:buildFatJar
 
 FROM eclipse-temurin:21-jre-ubi9-minimal
 

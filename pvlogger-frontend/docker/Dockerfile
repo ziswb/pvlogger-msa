@@ -4,7 +4,7 @@ ENV GRADLE_USER_HOME="/workspace/gradle_home"
 ADD . /workspace
 
 WORKDIR /workspace
-RUN ./gradlew :pvlogger-frontend:clean :pvlogger-frontend:shadowJar
+RUN ./gradlew :pvlogger-frontend:clean :pvlogger-frontend:buildFatJar
 
 FROM eclipse-temurin:21-jre-ubi9-minimal
 

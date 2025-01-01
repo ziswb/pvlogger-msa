@@ -4,7 +4,7 @@ ENV GRADLE_USER_HOME="/workspace/gradle_home"
 ADD . /workspace
 
 WORKDIR /workspace
-RUN ./gradlew :pvlogger-modbus-mock-server:clean :pvlogger-modbus-mock-server:shadowJar
+RUN ./gradlew :pvlogger-modbus-mock-server:clean :pvlogger-modbus-mock-server:buildFatJar
 
 FROM eclipse-temurin:21-jre-ubi9-minimal
 

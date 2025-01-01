@@ -34,14 +34,6 @@ repositories {
     mavenCentral()
 }
 
-// Necessary due to a bug in flyway 10.x. See: https://github.com/flyway/flyway/issues/3811
-// Symptom was: no migrations were found when application was run from (shadow) jar
-tasks {
-    shadowJar {
-        mergeServiceFiles()
-    }
-}
-
 dependencies {
     // Serialization
     implementation(libs.ktor.serialization.kotlinx.json)
