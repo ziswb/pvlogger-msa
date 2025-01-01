@@ -1,0 +1,5 @@
+.idea
+build
+scripts
+/docker/dumps
+/docker/postgres-data
