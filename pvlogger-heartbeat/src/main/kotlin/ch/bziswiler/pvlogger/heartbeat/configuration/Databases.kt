@@ -1,6 +1,6 @@
 package ch.bziswiler.pvlogger.heartbeat.configuration
 
-import ch.bziswiler.pvlogger.heartbeat.database.DatabaseFactory
+import ch.bziswiler.pvlogger.shared.databbase.DatabaseFactory
 import io.ktor.server.application.Application
 import org.koin.ktor.ext.inject
 
