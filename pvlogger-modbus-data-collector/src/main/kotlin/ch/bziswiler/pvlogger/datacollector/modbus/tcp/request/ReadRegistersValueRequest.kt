@@ -51,7 +51,7 @@ class ReadRegistersValueRequest(
     override suspend fun encode(channel: ByteWriteChannel) = frame.encode(channel)
 
     override suspend fun readRegisters(channel: ByteReadChannel) =
-        registers.fold(listOf<ModbusRegisterValue>()) { list, register ->
+        registers.fold(listOf<ModbusRegisterValue<*>>()) { list, register ->
             list.plus(readRegisterValue(register, channel))
         }
 
