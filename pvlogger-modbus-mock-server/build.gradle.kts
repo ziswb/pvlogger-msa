@@ -5,6 +5,13 @@ plugins {
     alias(libs.plugins.ktor)
     idea
 //    alias(libs.plugins.idea)
+    id("org.owasp.dependencycheck") version "11.1.1"
+}
+
+buildscript {
+    dependencies {
+        classpath("org.owasp.dependencycheck:org.owasp.dependencycheck.gradle.plugin:11.1.1")
+    }
 }
 
 group = "ch.bziswiler"
