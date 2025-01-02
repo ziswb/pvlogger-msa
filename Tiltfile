@@ -15,6 +15,8 @@ k8s_yaml([
     blob(pg_pw_yml)
 ])
 
+local_resource('install_traefik', cmd='./scripts/install_traefik.sh')
+
 pvol1_yml = """
 apiVersion: v1
 kind: PersistentVolume
@@ -32,7 +34,7 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   volumeMode: Filesystem
   hostPath:
-    path: /Users/bziswiler/pv-data1
+    path: /Users/brunozi/pv-data1
 """
 k8s_yaml([
     blob(pvol1_yml)
@@ -55,7 +57,7 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   volumeMode: Filesystem
   hostPath:
-    path: /Users/bziswiler/pv-data2
+    path: /Users/brunozi/pv-data2
 """
 k8s_yaml([
     blob(pvol2_yml)
@@ -78,7 +80,7 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   volumeMode: Filesystem
   hostPath:
-    path: /Users/bziswiler/pv-data3
+    path: /Users/brunozi/pv-data3
 """
 k8s_yaml([
     blob(pvol3_yml)
@@ -101,7 +103,7 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   volumeMode: Filesystem
   hostPath:
-    path: /Users/bziswiler/pv-data4
+    path: /Users/brunozi/pv-data4
 """
 k8s_yaml([
     blob(pvol4_yml)
@@ -124,7 +126,7 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   volumeMode: Filesystem
   hostPath:
-    path: /Users/bziswiler/pv-data5
+    path: /Users/brunozi/pv-data5
 """
 k8s_yaml([
     blob(pvol5_yml)
@@ -147,7 +149,7 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   volumeMode: Filesystem
   hostPath:
-    path: /Users/bziswiler/pv-data6
+    path: /Users/brunozi/pv-data6
 """
 k8s_yaml([
     blob(pvol6_yml)
