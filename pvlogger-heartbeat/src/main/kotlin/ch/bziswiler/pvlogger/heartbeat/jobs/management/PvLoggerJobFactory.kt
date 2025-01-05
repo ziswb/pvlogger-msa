@@ -1,5 +1,6 @@
 package ch.bziswiler.pvlogger.heartbeat.jobs.management
 
+import ch.bziswiler.pvlogger.heartbeat.jobs.general.KpiExportJobTrigger
 import ch.bziswiler.pvlogger.heartbeat.jobs.modbus.ModbusDeviceIdentifiersCollectionJob
 import ch.bziswiler.pvlogger.heartbeat.jobs.modbus.ModbusDeviceListCollectionJob
 import ch.bziswiler.pvlogger.heartbeat.jobs.modbus.ModbusInverterBatchedDynamicDataCollectionJob
@@ -26,6 +27,7 @@ class PvLoggerJobFactory(private val messageSender: TagsAsMessageSender) : JobFa
             ModbusInverterBatchedStaticDataCollectionJob::class.jvmName -> ModbusInverterBatchedStaticDataCollectionJob(messageSender)
             ModbusDeviceIdentifiersCollectionJob::class.jvmName -> ModbusDeviceIdentifiersCollectionJob(messageSender)
             ModbusDeviceListCollectionJob::class.jvmName -> ModbusDeviceListCollectionJob(messageSender)
+            KpiExportJobTrigger::class.jvmName -> KpiExportJobTrigger(messageSender)
             else -> throw NotImplementedError("Job Factory error: No factory found for '${bundle.jobDetail?.jobClass?.name}'")
         }
     }

@@ -3,6 +3,7 @@ package ch.bziswiler.pvlogger.heartbeat.jobs.modbus
 import ch.bziswiler.pvlogger.heartbeat.jobs.MessageProducingJob
 import ch.bziswiler.pvlogger.heartbeat.jobs.management.JobConfiguration
 import ch.bziswiler.pvlogger.heartbeat.jobs.management.JobConfigurationHolder
+import ch.bziswiler.pvlogger.heartbeat.jobs.minutes
 import ch.bziswiler.pvlogger.shared.job.meta.JobName.DYNAMIC_DATA_JOB
 import ch.bziswiler.pvlogger.shared.job.tags.JobStartMessageTag
 import ch.bziswiler.pvlogger.shared.messaging.TagsAsMessageSender
@@ -24,7 +25,7 @@ class ModbusInverterBatchedDynamicDataCollectionJob(messageSender: TagsAsMessage
                 jobGroup = "Modbus Group",
                 jobClass = ModbusInverterBatchedDynamicDataCollectionJob::class.java,
                 startTime = now(),
-                intervalInSeconds = 120,
+                intervalInSeconds = 2.minutes,
             )
     }
 

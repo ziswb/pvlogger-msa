@@ -9,3 +9,6 @@ abstract class MessageProducingJob(private val messageSender: TagsAsMessageSende
         messageSender.sendTagsAsMessage(listOf(tag))
     }
 }
+
+val Int.minutes: Int
+    get() = this * 60

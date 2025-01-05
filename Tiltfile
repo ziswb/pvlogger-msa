@@ -71,6 +71,9 @@ k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_modbus_mock_serv
 k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_kpi_aggregator_install/files/pvlogger-kpi-aggregator-deployment.yaml')
 k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_kpi_aggregator_install/files/pvlogger-kpi-aggregator-service.yaml')
 
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_kpi_exporter_install/files/pvlogger-kpi-exporter-deployment.yaml')
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_kpi_exporter_install/files/pvlogger-kpi-exporter-service.yaml')
+
 tf_mw_yml = """
 apiVersion: traefik.io/v1alpha1
 kind: Middleware

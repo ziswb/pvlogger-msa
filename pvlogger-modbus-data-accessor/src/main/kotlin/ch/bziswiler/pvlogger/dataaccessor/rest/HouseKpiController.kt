@@ -13,8 +13,10 @@ import ch.bziswiler.pvlogger.dataaccessor.database.schema.HousePowerKpiTable.sol
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorParameterNames.DATE
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_DATA_TODAY_VALUES_PATH
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_DATA_VERSION_PATH
+import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_LATEST_KPI_PATH
 import ch.bziswiler.pvlogger.shared.rest.KpiValuesDto
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
+import io.ktor.http.HttpStatusCode.Companion.NotFound
 import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.server.application.call
 import io.ktor.server.response.respond
@@ -23,6 +25,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.SortOrder.DESC
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -45,6 +48,14 @@ fun Route.readHouseKpiValues() {
             } ?: call.respond(BadRequest)
         }
     }
+    route("/$DATA_ACCESSOR_READ_DATA_VERSION_PATH/$DATA_ACCESSOR_READ_LATEST_KPI_PATH") {
+        get {
+            when (HouseKpiController.latestKpi()) {
+                null -> call.respond(NotFound)
+                else -> call.respond(OK, it)
+            }
+        }
+    }
 }
 
 object HouseKpiController {
@@ -61,9 +72,20 @@ object HouseKpiController {
             HousePowerKpiTable
                 .selectAll()
                 .where { dateCreated.greaterEq(now().atStartOfDay()) }
-                .orderBy(dateCreated)
+                .orderBy(dateCreated, DESC)
                 .map { toKpiValuesDto(it) }
                 .toList()
+        }
+    }
+
+    fun latestKpi() = transaction {
+        logger.info { "getting latest KPI" }.let {
+            HousePowerKpiTable
+                .selectAll()
+                .orderBy(dateCreated, DESC)
+                .limit(1)
+                .firstOrNull()
+                ?.let { toKpiValuesDto(it) }
         }
     }
 
@@ -72,10 +94,11 @@ object HouseKpiController {
             HousePowerKpiTable
                 .selectAll()
                 .where {
-                    dateCreated.greaterEq(date.atStartOfDay())
+                    dateCreated
+                        .greaterEq(date.atStartOfDay())
                         .and(dateCreated.less(date.plusDays(1).atStartOfDay()))
                 }
-                .orderBy(dateCreated)
+                .orderBy(dateCreated, DESC)
                 .map { toKpiValuesDto(it) }
                 .toList()
         }
