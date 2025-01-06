@@ -2,6 +2,7 @@ package ch.bziswiler.pvlogger.exporter.configuration
 
 import ch.bziswiler.pvlogger.exporter.messaging.KpiExportingMessageHandler
 import ch.bziswiler.pvlogger.exporter.rest.DataAccessorRestProxy
+import ch.bziswiler.pvlogger.exporter.service.DirectoryService
 import ch.bziswiler.pvlogger.exporter.service.ExportService
 import ch.bziswiler.pvlogger.exporter.service.JsonFileService
 import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
@@ -16,7 +17,8 @@ val appModule = module {
     single<AppConfig> { AppConfig() }
     single<MqSessionFactory> { ActiveMqSessionFactory(get<AppConfig>().mqConfig) }
     single<DataAccessorRestProxy> { DataAccessorRestProxy(get<AppConfig>().dataAccessConfig) }
-    single<ExportService> { JsonFileService(get<AppConfig>().exportConfig) }
+    single<DirectoryService> { DirectoryService(get<AppConfig>().exportConfig) }
+    single<ExportService> { JsonFileService(get<AppConfig>().exportConfig, get<DirectoryService>()) }
     single<MessageHandler> { KpiExportingMessageHandler(get<DataAccessorRestProxy>(), get<ExportService>()) }
     single<MessageReceiver> { ActiveMqTopicReceiver(get<MqSessionFactory>(), JOB_SCHEDULER) }
 }
