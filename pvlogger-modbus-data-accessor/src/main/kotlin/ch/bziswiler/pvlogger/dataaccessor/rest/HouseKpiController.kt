@@ -50,9 +50,9 @@ fun Route.readHouseKpiValues() {
     }
     route("/$DATA_ACCESSOR_READ_DATA_VERSION_PATH/$DATA_ACCESSOR_READ_LATEST_KPI_PATH") {
         get {
-            when (HouseKpiController.latestKpi()) {
+            when (val kpi = HouseKpiController.latestKpi()) {
                 null -> call.respond(NotFound)
-                else -> call.respond(OK, it)
+                else -> call.respond(OK, kpi)
             }
         }
     }
