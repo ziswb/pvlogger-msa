@@ -21,7 +21,9 @@ object MockDataBuilder {
     )
 
     private val uintRange = UIntRange(0u, 1000u);
-    private val intRange = IntRange(0, 1000);
+    private val uShortRange = UIntRange(0u, 100u);
+    private val intRange = IntRange(-1000, 1000);
+    private val shortRange = IntRange(-100, 100);
 
     fun buildFunctionCode(code: UByte = 0x03u) = FunctionCode.from(code)
 
@@ -67,11 +69,11 @@ object MockDataBuilder {
     }
 
     private fun mockValueFor(registerDefinition: ModbusRegisterDefinition): RegisterValue<*> = when (registerDefinition.type) {
-        Type.U16 -> RegisterUShortValue(value = uintRange.random().toUShort())
-        Type.I16 -> RegisterShortValue(value = intRange.random().toShort())
+        Type.U16 -> RegisterUShortValue(value = uShortRange.random().toUShort())
+        Type.I16 -> RegisterShortValue(value = shortRange.random().toShort())
         Type.U32 -> RegisterUIntValue(value = uintRange.random())
         Type.I32 -> RegisterIntValue(value = intRange.random())
-        Type.BITFIELD_16 -> RegisterUShortValue(value = uintRange.random().toUShort())
+        Type.BITFIELD_16 -> RegisterUShortValue(value = uShortRange.random().toUShort())
         Type.BITFIELD_32 -> RegisterUIntValue(value = intRange.random().toUInt())
         else -> throw NotImplementedError()
     }
