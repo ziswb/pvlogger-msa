@@ -14,6 +14,8 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import mu.KotlinLogging
 import java.io.File
+import java.nio.file.Files
+import kotlin.io.path.isSymbolicLink
 
 class JsonFileService(exportConfig: ExportConfig, private val directoryService: DirectoryService) : ExportService {
 
@@ -57,21 +59,26 @@ class JsonFileService(exportConfig: ExportConfig, private val directoryService: 
 
     private fun write(createdAt: LocalDateTime, record: KpiExportRecord) {
         logger.info { "writing KPI record to JSON file" }
-        val file = File(File(root, path), "$name-${createdAt.format(fileNameDateFormatter)}.json")
-        assertFileExists(file)
+        val parent = File(root, path)
+        val fileName = "$name-${createdAt.format(fileNameDateFormatter)}.json"
+        val file = assertFileExists(parent, fileName)
         exportRecordToJson(record, file)
     }
 
-    private fun assertFileExists(file: File) {
-        val parentDirectory = file.parentFile
-        if (!parentDirectory.exists()) {
-            logger.info { "creating parent directory '$parentDirectory'" }
-            parentDirectory.mkdirs()
+    private fun assertFileExists(parent: File, fileName: String): File {
+        var file = File(parent, fileName)
+        if (parent.toPath().isSymbolicLink()) {
+            logger.info { "parent directory '${parent.toPath()}' exists and is a symbolic link" }
+            file = File(Files.readSymbolicLink(parent.toPath()).toFile(), fileName)
+        } else if (parent.exists().not()) {
+            logger.info { "creating parent directory '${parent}'" }
+            parent.mkdirs()
         }
         if (!file.exists()) {
             logger.info { "creating new file '$file'" }
             file.createNewFile()
         }
+        return file
     }
 
     private fun exportRecordToJson(record: KpiExportRecord, file: File) = myJson.encodeToString(record).let { file.writeText(it) }
