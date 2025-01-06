@@ -19,6 +19,7 @@ data class ModbusDataAccessConfig(
 )
 
 data class ExportConfig(
+    val root: String,
     val path: String,
     val name: String,
 )
@@ -58,6 +59,7 @@ private fun Application.readMqConfig(appConfig: AppConfig) = with(environment.co
 private fun Application.readExportConfig(appConfig: AppConfig) = with(environment.config.config("pvlogger.export")) {
     appConfig.apply {
         exportConfig = ExportConfig(
+            root = property("root").getString(),
             path = property("path").getString(),
             name = property("name").getString(),
         )

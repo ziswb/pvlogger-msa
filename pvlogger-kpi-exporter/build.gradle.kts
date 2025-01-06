@@ -58,6 +58,12 @@ dependencies {
     // Koin
     implementation(libs.koin.ktor)
     implementation(libs.koin.logger.slf4j)
+
+    // Kotlin DateTime
+    implementation(libs.kotlinx.datetime)
+
+    // Testing
+    testImplementation(libs.kotlin.test)
 }
 
 tasks.test {

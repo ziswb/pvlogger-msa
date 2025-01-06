@@ -9,6 +9,7 @@ h2Version = "2.2.224"
 koinVersion = "3.5.3"
 kotlinVersion = "1.9.25"
 kotlinxVersion = "1.6.3"
+kotlinxDateTimeVersion = "0.6.1"
 ktorVersion = "2.3.8"
 logbackVersion = "1.5.15"
 loggingVersion = "3.0.5"
@@ -38,6 +39,7 @@ koin-ktor = { module = "io.insert-koin:koin-ktor", version.ref = "koinVersion" }
 koin-logger-slf4j = { module = "io.insert-koin:koin-logger-slf4j", version.ref = "koinVersion" }
 
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxVersion" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDateTimeVersion" }
 
 kotlin-logging = { module = "io.github.microutils:kotlin-logging", version.ref = "loggingVersion" }
 
