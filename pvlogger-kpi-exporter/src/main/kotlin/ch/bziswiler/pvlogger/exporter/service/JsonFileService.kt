@@ -9,6 +9,7 @@ import java.io.File
 import java.time.Instant.ofEpochMilli
 import java.time.LocalDateTime.from
 import java.time.LocalDateTime.parse
+import java.time.ZoneId.systemDefault
 import java.time.format.DateTimeFormatter.ofPattern
 
 class JsonFileService(exportConfig: ExportConfig, private val directoryService: DirectoryService) : ExportService {
@@ -29,7 +30,7 @@ class JsonFileService(exportConfig: ExportConfig, private val directoryService: 
     override fun export(data: KpiValuesDto) {
         write(
             KpiExportRecord(
-                lastUpdateTime = from(ofEpochMilli(data.createdAt)).format(lastUpdateTimePattern),
+                lastUpdateTime = from(ofEpochMilli(data.createdAt).atZone(systemDefault())).format(lastUpdateTimePattern),
                 CurrentDataRecord(
                     pv_prod_akt_w = data.solarPower,
                     pv_verk_akt_w = data.solarToGridPower,
