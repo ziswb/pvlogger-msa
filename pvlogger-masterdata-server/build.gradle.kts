@@ -4,8 +4,7 @@ plugins {
     alias(libs.plugins.jvm)
     alias(libs.plugins.ktor)
     alias(libs.plugins.serialization)
-//  alias(libs.plugins.idea)
-    id("idea")
+    idea
 }
 
 group = "ch.bziswiler"
@@ -34,37 +33,28 @@ repositories {
     mavenCentral()
 }
 
-// Necessary due to a bug in flyway 10.x. See: https://github.com/flyway/flyway/issues/3811
-// Symptom was: no migrations were found when application was run from (shadow) jar
-tasks {
-    shadowJar {
-        mergeServiceFiles()
-    }
-}
-
 dependencies {
-    // Serialization
-    implementation(libs.ktor.serialization.kotlinx.json)
-
     // Ktor
+    implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.ktor.server.call.logging)
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.metrics.micrometer)
     implementation(libs.ktor.server.netty)
 
-    // Shared pvlogger-resources
-    implementation(project(":pvlogger-shared"))
-
-    // Monitoring
-    implementation(libs.micrometer.registry.prometheus)
-
-    // CSV
-    implementation(libs.commons.csv)
-
     // Logging
     implementation(libs.logback.classic)
     implementation(libs.kotlin.logging)
+
+    // Shared pvlogger-resources
+    implementation(project(":pvlogger-shared"))
+
+    // Koin
+    implementation(libs.koin.ktor)
+    implementation(libs.koin.logger.slf4j)
+
+    // Monitoring
+    implementation(libs.micrometer.registry.prometheus)
 
     // Database
     implementation(libs.exposed.core)
@@ -80,9 +70,8 @@ dependencies {
     // In-memory DB for testing
     implementation(libs.h2)
 
-    // Dependency injection
-    implementation(libs.koin.ktor)
-    implementation(libs.koin.logger.slf4j)
+    // CSV
+    implementation(libs.commons.csv)
 
     // Testing
     testImplementation(libs.ktor.server.test.host)
@@ -96,5 +85,13 @@ tasks.test {
     testLogging {
         exceptionFormat = TestExceptionFormat.FULL
         events("passed", "skipped", "failed")
+    }
+}
+
+// Necessary due to a bug in flyway 10.x. See: https://github.com/flyway/flyway/issues/3811
+// Symptom was: no migrations were found when application was run from (shadow) jar
+tasks {
+    shadowJar {
+        mergeServiceFiles()
     }
 }

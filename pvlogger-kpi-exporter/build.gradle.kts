@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+
 plugins {
     alias(libs.plugins.jvm)
     alias(libs.plugins.ktor)
@@ -16,9 +18,15 @@ idea {
 }
 
 application {
-    mainClass.set("ch.bziswiler.pvlogger.exporter.ApplicationKt")
+    mainClass.set("io.ktor.server.netty.EngineMain")
     val isDevelopment: Boolean = project.ext.has("development")
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
 }
 
 repositories {
@@ -26,25 +34,36 @@ repositories {
 }
 
 dependencies {
+    // Messaging
     implementation(libs.activemq.core)
     implementation(libs.activemq.client)
 
     // Ktor
+    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.logging)
+    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.ktor.server.call.logging)
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.netty)
-    implementation(libs.ktor.client.core)
-    implementation(libs.ktor.client.cio)
-    implementation(libs.ktor.client.logging)
-    implementation(libs.ktor.client.content.negotiation)
-    implementation(libs.ktor.serialization.kotlinx.json)
 
     // Logging
     implementation(libs.logback.classic)
     implementation(libs.kotlin.logging)
 
+    // Shared pvlogger-resources
     implementation(project(":pvlogger-shared"))
 
     // Koin
     implementation(libs.koin.ktor)
     implementation(libs.koin.logger.slf4j)
+}
+
+tasks.test {
+    useJUnitPlatform()
+    testLogging {
+        exceptionFormat = TestExceptionFormat.FULL
+        events("passed", "skipped", "failed")
+    }
 }

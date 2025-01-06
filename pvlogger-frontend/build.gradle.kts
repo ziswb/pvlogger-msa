@@ -1,12 +1,10 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 
 plugins {
-    application
     alias(libs.plugins.jvm)
     alias(libs.plugins.ktor)
     alias(libs.plugins.serialization)
-//  alias(libs.plugins.idea)
-    id("idea")
+    idea
 }
 
 group = "ch.bziswiler"
@@ -36,13 +34,12 @@ repositories {
 }
 
 dependencies {
+    // Messaging
     implementation(libs.activemq.core)
     implementation(libs.activemq.client)
 
-    // Serialization
-    implementation(libs.ktor.serialization.kotlinx.json)
-
     // Ktor
+    implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.ktor.server.caching.headers)
     implementation(libs.ktor.server.call.logging)
     implementation(libs.ktor.server.core)
@@ -52,27 +49,27 @@ dependencies {
     implementation(libs.ktor.server.cors)
     implementation(libs.ktor.server.default.headers)
     implementation(libs.ktor.server.host.common)
-    implementation(libs.ktor.server.locations)
     implementation(libs.ktor.server.metrics)
     implementation(libs.ktor.server.metrics.micrometer)
-    implementation(libs.ktor.server.websockets)
     implementation(libs.ktor.server.netty)
+    implementation(libs.ktor.server.resources)
+    implementation(libs.ktor.server.websockets)
     implementation(libs.ktor.server.webjars)
-
 
     // Shared pvlogger-resources
     implementation(project(":pvlogger-shared"))
-
-    // Monitoring
-    implementation(libs.micrometer.registry.prometheus)
 
     // Logging
     implementation(libs.logback.classic)
     implementation(libs.kotlin.logging)
 
-    // Dependency injection
+    // Koin
     implementation(libs.koin.ktor)
     implementation(libs.koin.logger.slf4j)
+
+
+    // Monitoring
+    implementation(libs.micrometer.registry.prometheus)
 
     // Testing
     testImplementation(libs.ktor.server.test.host)

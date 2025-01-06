@@ -2,7 +2,6 @@ plugins {
     alias(libs.plugins.jvm)
     alias(libs.plugins.ktor)
     idea
-//    alias(libs.plugins.idea)
 }
 
 group = "ch.bziswiler"
@@ -17,9 +16,14 @@ idea {
 
 application {
     mainClass.set("io.ktor.server.netty.EngineMain")
-
     val isDevelopment: Boolean = project.ext.has("development")
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
 }
 
 repositories {
@@ -27,30 +31,34 @@ repositories {
 }
 
 dependencies {
+    // Messaging
     implementation(libs.activemq.core)
     implementation(libs.activemq.client)
 
-    implementation(libs.koin.ktor)
-    implementation(libs.koin.logger.slf4j)
-
-    implementation(libs.kotlin.logging)
-
+    // Ktor
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.logging)
-
     implementation(libs.ktor.serialization.kotlinx.json)
-
     implementation(libs.ktor.server.call.logging)
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.metrics.micrometer)
     implementation(libs.ktor.server.netty)
 
+    // Logging
     implementation(libs.logback.classic)
-    implementation(libs.micrometer.registry.prometheus)
+    implementation(libs.kotlin.logging)
 
+    // Shared pvlogger-resources
     implementation(project(":pvlogger-shared"))
+
+    // Koin
+    implementation(libs.koin.ktor)
+    implementation(libs.koin.logger.slf4j)
+
+    // Monitoring
+    implementation(libs.micrometer.registry.prometheus)
 
     testImplementation(libs.kotlin.test.junit)
     testImplementation(libs.ktor.server.tests)

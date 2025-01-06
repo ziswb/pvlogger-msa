@@ -1,10 +1,12 @@
 package ch.bziswiler.pvlogger.frontend.plugins
 
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.plugins.callid.*
-import io.ktor.server.plugins.callloging.*
-import io.ktor.server.request.*
+import io.ktor.http.HttpHeaders
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.plugins.callid.CallId
+import io.ktor.server.plugins.callid.callIdMdc
+import io.ktor.server.plugins.callloging.CallLogging
+import io.ktor.server.request.path
 import org.slf4j.event.Level
 
 fun Application.configureLogging() {
