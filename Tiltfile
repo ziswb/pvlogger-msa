@@ -23,6 +23,7 @@ k8s_yaml(local('./scripts/persistent_volume_yaml.sh ./tilt-templates/pg-logs-dat
 k8s_yaml(local('./scripts/persistent_volume_yaml.sh ./tilt-templates/pg-os-data-pv-template.yaml'))
 k8s_yaml(local('./scripts/persistent_volume_yaml.sh ./tilt-templates/mq-data-data-pv-template.yaml'))
 k8s_yaml(local('./scripts/persistent_volume_yaml.sh ./tilt-templates/mq-log-data-pv-template.yaml'))
+k8s_yaml(local('./scripts/persistent_volume_yaml.sh ./tilt-templates/kpi-export-data-pv-template.yaml'))
 
 k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/postgresql_create_namespace/files/postgresql-namespace.yaml')
 k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/postgresql_install/files/postgresql-pvc-backups.yaml')
@@ -73,6 +74,7 @@ k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_kpi_aggregator_i
 
 k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_kpi_exporter_install/files/pvlogger-kpi-exporter-deployment.yaml')
 k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_kpi_exporter_install/files/pvlogger-kpi-exporter-service.yaml')
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_kpi_exporter_install/files/pvlogger-kpi-exporter-pvc.yaml')
 
 tf_mw_yml = """
 apiVersion: traefik.io/v1alpha1

@@ -1,11 +1,14 @@
 package ch.bziswiler.pvlogger.exporter.service
 
 import ch.bziswiler.pvlogger.exporter.configuration.ExportConfig
-import ch.bziswiler.pvlogger.shared.messaging.PvLoggerKpiData
+import ch.bziswiler.pvlogger.shared.rest.KpiValuesDto
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import mu.KotlinLogging
 import java.io.File
+import java.time.Instant.ofEpochMilli
+import java.time.LocalDateTime.from
+import java.time.LocalDateTime.now
 import java.time.LocalDateTime.parse
 import java.time.format.DateTimeFormatter.ofPattern
 
@@ -23,8 +26,24 @@ class JsonFileService(exportConfig: ExportConfig) : ExportService {
         encodeDefaults = true
     }
 
-    override fun export(data: PvLoggerKpiData) {
-        TODO("Not yet implemented")
+    override fun export(data: KpiValuesDto) {
+        val createdAt = from(ofEpochMilli(data.createdAt)).format(dateTimeFormatter) ?: now().format(dateTimeFormatter)
+        write(
+            KpiExportRecord(
+                createdAt,
+                CurrentDataRecord(
+                    pv_prod_akt_w = data.solarPower,
+                    pv_verk_akt_w = data.solarToGridPower,
+                    pv_kauf_akt_w = data.gridToHousePower,
+                    pv_verb_akt_w = data.solarToHousePower + data.gridToHousePower,
+                ), CurrentDayDataRecord(
+                    pv_prod_tag_wh = data.dailyEnergyYield,
+                    pv_verk_tag_wh = data.dailyEnergyExported,
+                    pv_kauf_tag_wh = data.dailyEnergyImported,
+                    pv_verb_tag_wh = data.dailyEnergyConsumed,
+                )
+            )
+        )
     }
 
     private fun write(record: KpiExportRecord) {

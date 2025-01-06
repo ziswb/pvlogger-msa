@@ -1,7 +1,7 @@
 package ch.bziswiler.pvlogger.exporter.service
 
-import ch.bziswiler.pvlogger.shared.messaging.PvLoggerKpiData
+import ch.bziswiler.pvlogger.shared.rest.KpiValuesDto
 
 interface ExportService {
-    fun export(data: PvLoggerKpiData)
+    fun export(data: KpiValuesDto)
 }
