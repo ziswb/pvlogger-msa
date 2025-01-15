@@ -24,7 +24,6 @@ class JsonFileService(exportConfig: ExportConfig, private val directoryService: 
     private val fileNameDateFormatter = Format { yearMonthDayPattern();char('_');hour();char('-');minute();char('-');second();char('-');secondFraction(3) }
     private val path = exportConfig.path
     private val name = exportConfig.name
-    private val root = exportConfig.root
     private val myJson = Json {
         prettyPrint = true
         isLenient = true
@@ -59,7 +58,7 @@ class JsonFileService(exportConfig: ExportConfig, private val directoryService: 
 
     private fun write(createdAt: LocalDateTime, record: KpiExportRecord) {
         logger.info { "writing KPI record to JSON file" }
-        val parent = File(root, path)
+        val parent = File(path)
         val fileName = "$name-${createdAt.format(fileNameDateFormatter)}.json"
         val file = assertFileExists(parent, fileName)
         exportRecordToJson(record, file)
