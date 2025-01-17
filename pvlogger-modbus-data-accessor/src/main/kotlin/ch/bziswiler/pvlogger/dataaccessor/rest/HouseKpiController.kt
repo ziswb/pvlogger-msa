@@ -25,6 +25,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.SortOrder.ASC
 import org.jetbrains.exposed.sql.SortOrder.DESC
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.selectAll
@@ -98,7 +99,7 @@ object HouseKpiController {
                         .greaterEq(date.atStartOfDay())
                         .and(dateCreated.less(date.plusDays(1).atStartOfDay()))
                 }
-                .orderBy(dateCreated, DESC)
+                .orderBy(dateCreated, ASC)
                 .map { toKpiValuesDto(it) }
                 .toList()
         }
