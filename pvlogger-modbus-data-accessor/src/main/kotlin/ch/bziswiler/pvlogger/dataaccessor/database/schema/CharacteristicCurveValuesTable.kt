@@ -4,7 +4,7 @@ import ch.bziswiler.pvlogger.shared.modbus.ModbusRegisterShortArrayValue
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.insert
 
-object CharacteristicCurveValuesTable : IntIdTable("modbus_characteristic_crv_data"), ValueStore<ModbusRegisterShortArrayValue> {
+object CharacteristicCurveValuesTable : IntIdTable("modbus_characteristic_curve_data"), ValueStore<ModbusRegisterShortArrayValue> {
     private val response_id = integer("response_id").references(ResponseTable.id)
     private val register_address = integer("register_address")
     private val number_of_points = ushort("number_of_points")
