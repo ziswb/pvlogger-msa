@@ -4,6 +4,7 @@ import ch.bziswiler.pvlogger.dataaccessor.database.access.ModbusDao
 import ch.bziswiler.pvlogger.shared.job.tags.StoreModbusRegisterValuesMessageTag
 import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
 import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusRegisterValueResponse
+import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ReadDeviceIdentifiersResponse
 import mu.KotlinLogging
 import javax.jms.Message
 import javax.jms.ObjectMessage
@@ -21,6 +22,7 @@ class StoreModbusValuesMessageHandler : MessageHandler {
 
     private fun handleObjectMessage(message: ObjectMessage) = when (val obj = message.`object`) {
         is ModbusRegisterValueResponse -> ModbusDao.store(obj)
-        else -> logger.info { "message.object is not a 'modbus register value response'! -> $obj" }
+        is ReadDeviceIdentifiersResponse -> ModbusDao.store(obj)
+        else -> logger.info { "message.object is neither a 'modbus register value response' nor a 'read device identifiers response'! -> $obj" }
     }
 }
