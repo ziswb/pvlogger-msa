@@ -17,13 +17,13 @@ k8s_yaml([
 
 local_resource('install_traefik', cmd='./scripts/install_traefik.sh')
 
-k8s_yaml(local('./scripts/persistent_volume_yaml.sh ./tilt-templates/pg-backup-data-pv-template.yaml'))
-k8s_yaml(local('./scripts/persistent_volume_yaml.sh ./tilt-templates/pg-data-data-pv-template.yaml'))
-k8s_yaml(local('./scripts/persistent_volume_yaml.sh ./tilt-templates/pg-logs-data-pv-template.yaml'))
-k8s_yaml(local('./scripts/persistent_volume_yaml.sh ./tilt-templates/pg-os-data-pv-template.yaml'))
-k8s_yaml(local('./scripts/persistent_volume_yaml.sh ./tilt-templates/mq-data-data-pv-template.yaml'))
-k8s_yaml(local('./scripts/persistent_volume_yaml.sh ./tilt-templates/mq-log-data-pv-template.yaml'))
-k8s_yaml(local('./scripts/persistent_volume_yaml.sh ./tilt-templates/kpi-export-data-pv-template.yaml'))
+k8s_yaml(local('./scripts/replace_path_by_home.sh ./tilt-templates/pg-backup-data-pv-template.yaml'))
+k8s_yaml(local('./scripts/replace_path_by_home.sh ./tilt-templates/pg-data-data-pv-template.yaml'))
+k8s_yaml(local('./scripts/replace_path_by_home.sh ./tilt-templates/pg-logs-data-pv-template.yaml'))
+k8s_yaml(local('./scripts/replace_path_by_home.sh ./tilt-templates/pg-os-data-pv-template.yaml'))
+k8s_yaml(local('./scripts/replace_path_by_home.sh ./tilt-templates/mq-data-data-pv-template.yaml'))
+k8s_yaml(local('./scripts/replace_path_by_home.sh ./tilt-templates/mq-log-data-pv-template.yaml'))
+k8s_yaml(local('./scripts/replace_path_by_home.sh ./tilt-templates/kpi-export-data-pv-template.yaml'))
 
 k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/postgresql_create_namespace/files/postgresql-namespace.yaml')
 k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/postgresql_install/files/postgresql-pvc-backups.yaml')
