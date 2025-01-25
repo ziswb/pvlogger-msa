@@ -63,6 +63,20 @@ k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_masterdata_serve
 k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_modbus_data_accessor_install/files/pvlogger-modbus-data-accessor-deployment.yaml')
 k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_modbus_data_accessor_install/files/pvlogger-modbus-data-accessor-service.yaml')
 
+cm_yml = """
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lwip-config
+  namespace: pvlogger
+data:
+  lwip_host: "pvlogger-modbus-mock-server-service.pvlogger.svc.cluster.local"
+  lwip_port: "8502"
+"""
+k8s_yaml([
+    blob(cm_yml)
+])
+
 k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_modbus_data_collector_install/files/pvlogger-modbus-data-collector-deployment.yaml')
 k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_modbus_data_collector_install/files/pvlogger-modbus-data-collector-service.yaml')
 
