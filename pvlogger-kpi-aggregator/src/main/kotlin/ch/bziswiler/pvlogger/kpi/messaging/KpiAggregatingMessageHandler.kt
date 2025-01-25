@@ -53,16 +53,16 @@ class KpiAggregatingMessageHandler(private val adapter: DataAccessorRestProxy, p
 }
 
 private fun PvLoggerKpiData.Companion.from(liveKpis: KpiLiveData, todayKpis: KpiTodayData, jobId: JobId) = PvLoggerKpiData(
-    jobId.id,
-    now().toInstant(UTC).toEpochMilli(),
-    liveKpis.producing,
-    liveKpis.exporting,
-    liveKpis.importing,
-    liveKpis.consuming,
-    liveKpis.selfConsuming,
-    todayKpis.produced,
-    todayKpis.exported,
-    todayKpis.imported,
-    todayKpis.consumed,
-    todayKpis.selfConsumed
+    jobId = jobId.id,
+    dateCreated = now().toInstant(UTC).toEpochMilli(),
+    producing = liveKpis.producing,
+    exporting = liveKpis.exporting,
+    importing = liveKpis.importing,
+    consuming = liveKpis.consuming,
+    selfConsuming = liveKpis.selfConsuming,
+    produced = todayKpis.produced.toWh(),
+    exported = todayKpis.exported.toWh(),
+    imported = todayKpis.imported.toWh(),
+    consumed = todayKpis.consumed.toWh(),
+    selfConsumed = todayKpis.selfConsumed.toWh()
 )

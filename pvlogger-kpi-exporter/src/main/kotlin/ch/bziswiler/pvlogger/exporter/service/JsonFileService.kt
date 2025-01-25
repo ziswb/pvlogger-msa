@@ -41,15 +41,15 @@ class JsonFileService(exportConfig: ExportConfig, private val directoryService: 
         write(
             localDateTime, KpiExportRecord(
                 lastUpdateTime = lastUpdateTimeFormatter.format(localDateTime), CurrentDataRecord(
-                    pv_prod_akt_w = data.solarPower,
-                    pv_verk_akt_w = data.solarToGridPower,
-                    pv_kauf_akt_w = data.gridToHousePower,
-                    pv_verb_akt_w = data.solarToHousePower + data.gridToHousePower,
+                    pv_prod_akt_w = data.solarPower.toW().w,
+                    pv_verk_akt_w = data.solarToGridPower.toW().w,
+                    pv_kauf_akt_w = data.gridToHousePower.toW().w,
+                    pv_verb_akt_w = (data.solarToHousePower + data.gridToHousePower).toW().w,
                 ), CurrentDayDataRecord(
-                    pv_prod_tag_wh = data.dailyEnergyYield,
-                    pv_verk_tag_wh = data.dailyEnergyExported,
-                    pv_kauf_tag_wh = data.dailyEnergyImported,
-                    pv_verb_tag_wh = data.dailyEnergyConsumed,
+                    pv_prod_tag_wh = data.dailyEnergyYield.toWh().wh,
+                    pv_verk_tag_wh = data.dailyEnergyExported.toWh().wh,
+                    pv_kauf_tag_wh = data.dailyEnergyImported.toWh().wh,
+                    pv_verb_tag_wh = data.dailyEnergyConsumed.toWh().wh,
                 )
             )
         )

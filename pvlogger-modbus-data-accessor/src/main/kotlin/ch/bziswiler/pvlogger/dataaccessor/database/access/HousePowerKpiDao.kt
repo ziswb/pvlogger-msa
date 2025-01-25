@@ -18,16 +18,16 @@ object HousePowerKpiDao {
         HousePowerKpiTable.insert {
             it[jobId] = kpis.jobId
             it[dateCreated] = ofInstant(ofEpochMilli(kpis.dateCreated), UTC)
-            it[solarPower] = kpis.producing
-            it[solarToHousePower] = kpis.selfConsuming
-            it[gridToHousePower] = kpis.importing
-            it[solarToGridPower] = kpis.exporting
-            it[ownConsumption] = kpis.consuming
-            it[dailyEnergyYield] = kpis.produced
-            it[dailyEnergySelfCovered] = kpis.selfConsumed
-            it[dailyEnergyExported] = kpis.exported
-            it[dailyEnergyImported] = kpis.imported
-            it[dailyEnergyConsumed] = kpis.selfConsumed
+            it[solarPower] = kpis.producing.toKW().kw
+            it[solarToHousePower] = kpis.selfConsuming.toKW().kw
+            it[gridToHousePower] = kpis.importing.toKW().kw
+            it[solarToGridPower] = kpis.exporting.toKW().kw
+            it[ownConsumption] = kpis.consuming.toKW().kw
+            it[dailyEnergyYield] = kpis.produced.toKWh().kWh
+            it[dailyEnergySelfCovered] = kpis.selfConsumed.toKWh().kWh
+            it[dailyEnergyExported] = kpis.exported.toKWh().kWh
+            it[dailyEnergyImported] = kpis.imported.toKWh().kWh
+            it[dailyEnergyConsumed] = kpis.selfConsumed.toKWh().kWh
         }
     }
 }

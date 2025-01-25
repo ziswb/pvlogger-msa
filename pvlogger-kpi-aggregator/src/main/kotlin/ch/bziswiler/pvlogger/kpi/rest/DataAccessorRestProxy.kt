@@ -16,6 +16,7 @@ import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_LA
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_TODAY_SO_FAR_REGISTER_VALUE_PATH
 import ch.bziswiler.pvlogger.shared.rest.PvHttpClient.client
 import io.ktor.client.request.get
+import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode.Companion.OK
 import mu.KotlinLogging
@@ -25,16 +26,16 @@ class DataAccessorRestProxy(private val config: ModbusDataAccessConfig) {
     private val logger = KotlinLogging.logger {}
 
     @OptIn(ExperimentalUnsignedTypes::class)
-    suspend fun inverterActivePower(jobId: JobId) = InverterActivePower(retrieveLatestRegisterValuesAggregated(masterDataForInverterActivePower(), config.inverterDeviceIds, jobId))
+    suspend fun inverterActivePower(jobId: JobId) = InverterActivePower(retrieveLatestRegisterValuesAggregated(masterDataForInverterActivePower(), config.inverterDeviceIds, jobId), masterDataForInverterActivePower().unit)
 
     @OptIn(ExperimentalUnsignedTypes::class)
-    suspend fun meterActivePower(jobId: JobId) = MeterActivePower(retrieveLatestRegisterValuesAggregated(masterDataForSmartMeterActivePower(), config.meterDeviceIds, jobId))
+    suspend fun meterActivePower(jobId: JobId) = MeterActivePower(retrieveLatestRegisterValuesAggregated(masterDataForSmartMeterActivePower(), config.meterDeviceIds, jobId), masterDataForSmartMeterActivePower().unit)
 
     @OptIn(ExperimentalUnsignedTypes::class)
-    suspend fun inverterEnergyToday(jobId: JobId) = InverterEnergyToday(retrieveLatestRegisterValuesAggregated(masterDataForInverterEnergyYield(), config.inverterDeviceIds, jobId))
+    suspend fun inverterEnergyToday(jobId: JobId) = InverterEnergyToday(retrieveLatestRegisterValuesAggregated(masterDataForInverterEnergyYield(), config.inverterDeviceIds, jobId), masterDataForInverterEnergyYield().unit)
 
     @OptIn(ExperimentalUnsignedTypes::class)
-    suspend fun meterEnergyToday() = MeterEnergyToday(computeImportedEnergyToday(config.meterDeviceIds), computeExportedEnergyToday(config.meterDeviceIds))
+    suspend fun meterEnergyToday() = MeterEnergyToday(computeImportedEnergyToday(config.meterDeviceIds), masterDataForMeterImportedEnergy().unit, computeExportedEnergyToday(config.meterDeviceIds), masterDataForMeterExportedEnergy().unit)
 
     @OptIn(ExperimentalUnsignedTypes::class)
     private suspend fun retrieveLatestRegisterValuesAggregated(masterData: ModbusRegisterDefinition, deviceIds: UByteArray, jobId: JobId) = deviceIds.fold(0.0) { sum, deviceId ->
@@ -58,11 +59,7 @@ class DataAccessorRestProxy(private val config: ModbusDataAccessConfig) {
         when (it.status) {
             OK -> {
                 logger.info { "Got actual power: '$it'" }
-                val text = it.bodyAsText()
-                when (text.isNotBlank()) {
-                    true -> text.toInt().div(masterData.gain.raw.toInt()).toDouble()
-                    else -> 0.0.also { logger.debug { "Got no actual power! Returning '0.0'." } }
-                }
+                it.toEnergyValue(masterData)
             }
 
             else -> {
@@ -97,11 +94,7 @@ class DataAccessorRestProxy(private val config: ModbusDataAccessConfig) {
         when (it.status) {
             OK -> {
                 logger.info { "Got actual energy: '$it'" }
-                val text = it.bodyAsText()
-                when (text.isNotBlank()) {
-                    true -> text.toInt().div(masterData.gain.raw.toInt()).toDouble()
-                    else -> 0.0
-                }
+                it.toEnergyValue(masterData)
             }
 
             else -> {
@@ -109,5 +102,15 @@ class DataAccessorRestProxy(private val config: ModbusDataAccessConfig) {
                 0.0
             }
         }
+    }
+
+}
+
+private suspend fun HttpResponse.toEnergyValue(masterData: ModbusRegisterDefinition): Double = toIntOrDefault(bodyAsText(), 0).div(toIntOrDefault(masterData.gain.raw, 1)).toDouble()
+
+private fun toIntOrDefault(text: String, default: Int): Int {
+    return when (val value = text.toIntOrNull()) {
+        null -> default
+        else -> value
     }
 }

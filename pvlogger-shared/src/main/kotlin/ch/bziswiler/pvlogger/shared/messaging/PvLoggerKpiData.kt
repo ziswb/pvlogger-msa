@@ -1,6 +1,7 @@
 package ch.bziswiler.pvlogger.shared.messaging
 
-import java.time.LocalDateTime
+import ch.bziswiler.pvlogger.shared.unit.W
+import ch.bziswiler.pvlogger.shared.unit.Wh
 
 /**
  * Was formerly:
@@ -22,14 +23,14 @@ import java.time.LocalDateTime
 data class PvLoggerKpiData(
     val jobId: String,
     val dateCreated: Long,
-    val producing: Double,
-    val exporting: Double,
-    val importing: Double,
-    val consuming: Double,
-    val selfConsuming: Double,
-    val produced: Double,
-    val exported: Double,
-    val imported: Double,
-    val consumed: Double,
-    val selfConsumed: Double
+    val producing: W,
+    val exporting: W,
+    val importing: W,
+    val consuming: W,
+    val selfConsuming: W,
+    val produced: Wh,
+    val exported: Wh,
+    val imported: Wh,
+    val consumed: Wh,
+    val selfConsumed: Wh
 ) : java.io.Serializable

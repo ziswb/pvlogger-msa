@@ -1,20 +1,23 @@
 package ch.bziswiler.pvlogger.kpi.rest.data
 
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.Unit
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.toW
+import ch.bziswiler.pvlogger.shared.unit.W
 import kotlinx.serialization.Serializable
 import kotlin.math.abs
 
 @Serializable
-data class MeterActivePower(private val power: Double) {
-    val exporting: Double
+data class MeterActivePower(private val power: Double, private val sourceUnit: Unit) {
+    val exporting: W
         get() = if (power > 0) {
-            power
+            sourceUnit.toW(power)
         } else {
-            0.0
+            sourceUnit.toW(0.0)
         }
-    val importing: Double
+    val importing: W
         get() = if (power < 0) {
-            abs(power)
+            sourceUnit.toW(abs(power))
         } else {
-            0.0
+            sourceUnit.toW(0.0)
         }
 }

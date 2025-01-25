@@ -73,17 +73,29 @@ internal class KpiMessageHandler(private val sharedFlow: MutableSharedFlow<KpiVa
     }
 }
 
+
 private fun PvLoggerKpiData.toKpiValuesDto(): KpiValuesDto = KpiValuesDto(
-    this.dateCreated,
-    this.producing,
-    gridPower = this.exporting + this.selfConsuming,
-    this.selfConsuming,
-    this.importing,
-    this.exporting,
-    this.produced,
-    this.consuming,
-    this.selfConsumed,
-    this.exported,
-    this.imported,
-    this.consumed
+    createdAt = this.dateCreated,
+//val solarPower: Double = producing
+    solarPower = this.producing.toKW(),
+// gridPower = gridToHousePower - solarToGridPower
+    gridPower = (this.importing - this.exporting).toKW(),
+//val solarToGridPower: Double = exporting
+    solarToGridPower = this.exporting.toKW(),
+//val solarToHousePower: Double = selfConsuming
+    solarToHousePower = this.selfConsuming.toKW(),
+//val gridToHousePower: Double = importing
+    gridToHousePower = this.importing.toKW(),
+//val ownConsumption: Double = consuming
+    ownConsumption = this.consuming.toKW(),
+//val dailyEnergyYield: Double = produced
+    dailyEnergyYield = this.produced.toKWh(),
+//val dailyEnergySelfCovered: Double = selfConsumed
+    dailyEnergySelfCovered = this.selfConsumed.toKWh(),
+//val dailyEnergyExported: Double = exported
+    dailyEnergyExported = this.exported.toKWh(),
+//val dailyEnergyImported: Double = imported
+    dailyEnergyImported = this.imported.toKWh(),
+//val dailyEnergyConsumed: Double = consumed
+    dailyEnergyConsumed = this.consumed.toKWh()
 )

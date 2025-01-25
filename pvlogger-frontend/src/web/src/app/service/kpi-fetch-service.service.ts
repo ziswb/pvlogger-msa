@@ -89,14 +89,14 @@ export class KpiFetchServiceService {
       return;
     }
     this.maxCreatedAtReceived = value.createdAt;
-    this.solarpowerdata.push([value.createdAt, Number(value.solarPower)]);
-    this.gridpowerdata.push([value.createdAt, Number(value.gridPower)]);
-    this.usedpowerdata.push([value.createdAt, Number(value.ownConsumption)]);
-    this.dailyexporteddata.push([value.createdAt, -Number(value.dailyEnergyExported)]);
-    this.dailyimporteddata.push([value.createdAt, Number(value.dailyEnergyImported)]);
-    this.dailyownuseddata.push([value.createdAt, Number(value.dailyEnergySelfCovered)]);
-    this.dailyconsumeddata.push([value.createdAt, Number(value.dailyEnergyConsumed)]);
-    this.dailyproduceddata.push([value.createdAt, Number(value.dailyEnergyYield)]);
+    this.solarpowerdata.push([value.createdAt, Number(value.solarPower.kw)]);
+    this.gridpowerdata.push([value.createdAt, Number(value.gridPower.kw)]);
+    this.usedpowerdata.push([value.createdAt, Number(value.ownConsumption.kw)]);
+    this.dailyexporteddata.push([value.createdAt, -Number(value.dailyEnergyExported.kwh)]);
+    this.dailyimporteddata.push([value.createdAt, Number(value.dailyEnergyImported.kwh)]);
+    this.dailyownuseddata.push([value.createdAt, Number(value.dailyEnergySelfCovered.kwh)]);
+    this.dailyconsumeddata.push([value.createdAt, Number(value.dailyEnergyConsumed.kwh)]);
+    this.dailyproduceddata.push([value.createdAt, Number(value.dailyEnergyYield.kwh)]);
   }
 
   private compareFn(a: Number[], b: Number[]): number {

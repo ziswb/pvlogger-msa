@@ -15,6 +15,8 @@ import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_DA
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_DATA_VERSION_PATH
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_LATEST_KPI_PATH
 import ch.bziswiler.pvlogger.shared.rest.KpiValuesDto
+import ch.bziswiler.pvlogger.shared.unit.KW
+import ch.bziswiler.pvlogger.shared.unit.KWh
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.http.HttpStatusCode.Companion.NotFound
 import io.ktor.http.HttpStatusCode.Companion.OK
@@ -25,7 +27,6 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.SortOrder.ASC
 import org.jetbrains.exposed.sql.SortOrder.DESC
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.selectAll
@@ -99,7 +100,7 @@ object HouseKpiController {
                         .greaterEq(date.atStartOfDay())
                         .and(dateCreated.less(date.plusDays(1).atStartOfDay()))
                 }
-                .orderBy(dateCreated, ASC)
+                .orderBy(dateCreated, DESC)
                 .map { toKpiValuesDto(it) }
                 .toList()
         }
@@ -107,16 +108,16 @@ object HouseKpiController {
 
     private fun toKpiValuesDto(it: ResultRow) = KpiValuesDto(
         createdAt = it[dateCreated].toInstant(UTC).toEpochMilli(),
-        solarPower = rounder.format(it[solarPower]).toDouble(),
-        gridPower = rounder.format(it[gridToHousePower].minus(it[solarToGridPower])).toDouble(),
-        solarToHousePower = rounder.format(it[HousePowerKpiTable.solarToHousePower]).toDouble(),
-        gridToHousePower = rounder.format(it[gridToHousePower]).toDouble(),
-        solarToGridPower = rounder.format(it[solarToGridPower]).toDouble(),
-        dailyEnergyYield = rounder.format(it[dailyEnergyYield]).toDouble(),
-        ownConsumption = rounder.format(it[ownConsumption]).toDouble(),
-        dailyEnergySelfCovered = rounder.format(it[HousePowerKpiTable.dailyEnergySelfCovered]).toDouble(),
-        dailyEnergyExported = rounder.format(it[dailyEnergyExported]).toDouble(),
-        dailyEnergyImported = rounder.format(it[dailyEnergyImported]).toDouble(),
-        dailyEnergyConsumed = rounder.format(it[dailyEnergyConsumed]).toDouble()
+        solarPower = KW(rounder.format(it[solarPower]).toDouble()),
+        gridPower = KW(rounder.format(it[gridToHousePower].minus(it[solarToGridPower])).toDouble()),
+        solarToHousePower = KW(rounder.format(it[HousePowerKpiTable.solarToHousePower]).toDouble()),
+        gridToHousePower = KW(rounder.format(it[gridToHousePower]).toDouble()),
+        solarToGridPower = KW(rounder.format(it[solarToGridPower]).toDouble()),
+        ownConsumption = KW(rounder.format(it[ownConsumption]).toDouble()),
+        dailyEnergyYield = KWh(rounder.format(it[dailyEnergyYield]).toDouble()),
+        dailyEnergySelfCovered = KWh(rounder.format(it[HousePowerKpiTable.dailyEnergySelfCovered]).toDouble()),
+        dailyEnergyExported = KWh(rounder.format(it[dailyEnergyExported]).toDouble()),
+        dailyEnergyImported = KWh(rounder.format(it[dailyEnergyImported]).toDouble()),
+        dailyEnergyConsumed = KWh(rounder.format(it[dailyEnergyConsumed]).toDouble())
     )
 }

@@ -1,5 +1,9 @@
 package ch.bziswiler.pvlogger.shared.masterdata.modbus
 
+import ch.bziswiler.pvlogger.shared.unit.KW
+import ch.bziswiler.pvlogger.shared.unit.KWh
+import ch.bziswiler.pvlogger.shared.unit.W
+
 enum class Unit(val raw: List<String>) {
     PERCENT(listOf("%")),
     PERCENT_PER_SECOND(listOf("%/s")),
@@ -22,5 +26,20 @@ enum class Unit(val raw: List<String>) {
 
     companion object {
         fun from(s: String): Unit = entries.find { it.raw.contains(s.trim()) }!!
+    }
+}
+
+fun Unit.toW(value: Double): W {
+    return when (this) {
+        Unit.W -> W(value)
+        Unit.KW -> KW(value).toW()
+        else -> throw IllegalStateException("unit $this is not a known power unit")
+    }
+}
+
+fun Unit.toKWh(value: Double): KWh {
+    return when (this) {
+        Unit.KWH -> KWh(value)
+        else -> throw IllegalStateException("unit $this is not a known energy unit")
     }
 }
