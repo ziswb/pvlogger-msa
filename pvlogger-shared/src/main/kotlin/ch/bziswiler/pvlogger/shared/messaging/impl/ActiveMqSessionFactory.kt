@@ -33,10 +33,10 @@ class ActiveMqSessionFactory(private val mqConfig: MqConfig) : MqSessionFactory 
         userName = mqConfig.user
         password = mqConfig.passwd
         clientID = mqConfig.clientId
-        tryCreatingConnection()
+        tryConnectingToMessageQueue()
     }
 
-    private fun ActiveMQConnectionFactory.tryCreatingConnection(): Connection {
+    private fun ActiveMQConnectionFactory.tryConnectingToMessageQueue(): Connection {
         retryCounter.set(0)
         while (retryCounter.incrementAndGet() <= maxRetries) {
             try {
