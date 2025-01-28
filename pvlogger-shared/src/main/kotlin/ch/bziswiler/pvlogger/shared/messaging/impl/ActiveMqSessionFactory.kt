@@ -2,8 +2,12 @@ package ch.bziswiler.pvlogger.shared.messaging.impl
 
 import ch.bziswiler.pvlogger.shared.messaging.MqSessionFactory
 import ch.bziswiler.pvlogger.shared.messaging.config.MqConfig
+import mu.KotlinLogging
 import org.apache.activemq.ActiveMQConnectionFactory
+import java.lang.Thread.sleep
+import java.util.concurrent.atomic.AtomicInteger
 import javax.jms.Connection
+import javax.jms.JMSException
 import javax.jms.Session
 import javax.jms.Session.AUTO_ACKNOWLEDGE
 
@@ -11,6 +15,10 @@ class ActiveMqSessionFactory(private val mqConfig: MqConfig) : MqSessionFactory 
 
     private val activeMqSession: Session
     private val transacted = false
+    private val logger = KotlinLogging.logger {}
+    private val maxRetries = 10
+    private val sleepMs: Long = 5000
+    private val retryCounter = AtomicInteger(0)
 
     init {
         with(connection()) {
@@ -25,6 +33,20 @@ class ActiveMqSessionFactory(private val mqConfig: MqConfig) : MqSessionFactory 
         userName = mqConfig.user
         password = mqConfig.passwd
         clientID = mqConfig.clientId
-        createConnection()
+        tryCreatingConnection()
+    }
+
+    private fun ActiveMQConnectionFactory.tryCreatingConnection(): Connection {
+        retryCounter.set(0)
+        while (retryCounter.incrementAndGet() <= maxRetries) {
+            try {
+                logger.info("Connecting to message queue, attempt number: {}", retryCounter.get())
+                return createConnection()
+            } catch (jmse: JMSException) {
+                logger.info("Connection to message queue failed: {}", jmse.message)
+                sleep(sleepMs)
+            }
+        }
+        throw IllegalStateException("Connection to message queue failed")
     }
 }
