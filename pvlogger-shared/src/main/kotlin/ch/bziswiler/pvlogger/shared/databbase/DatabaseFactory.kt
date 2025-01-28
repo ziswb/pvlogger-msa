@@ -9,8 +9,8 @@ import org.jetbrains.exposed.sql.Database.Companion.connect
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.lang.Thread.sleep
+import java.sql.SQLException
 import java.util.concurrent.atomic.AtomicInteger
-import javax.jms.JMSException
 import javax.sql.DataSource
 
 class DatabaseFactory(private val dbConfig: DatabaseConfig) {
@@ -69,8 +69,8 @@ class DatabaseFactory(private val dbConfig: DatabaseConfig) {
             try {
                 logger.info("Connecting to database, attempt number: {}", retryCounter.get())
                 return HikariDataSource(config)
-            } catch (jmse: JMSException) {
-                logger.info("Connection to database failed: {}", jmse.message)
+            } catch (sqle: SQLException) {
+                logger.info("Connection to database failed: {}", sqle.message)
                 sleep(sleepMs)
             }
         }
