@@ -50,8 +50,11 @@ do
     h) help
        exit 0
        ;;
-    *) echo "Invalid option: -$OPTARG"
-       exit 0
+    :) echo "Option -${OPTARG} requires an argument."
+       exit 1
+       ;;
+    ?) echo "Invalid option: -${OPTARG}."
+       exit 1
        ;;
   esac
 done
