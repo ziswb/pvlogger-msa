@@ -1,9 +1,10 @@
 package ch.bziswiler.pvlogger.shared.unit
 
 import kotlinx.serialization.Serializable
+import java.io.Serializable as JavaSerializable
 
 @Serializable
-data class KW(val kw: Double) {
+data class KW(val kw: Double) : JavaSerializable {
 
     fun toW() = W(kw.times(1000))
 
