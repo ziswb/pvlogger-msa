@@ -15,6 +15,7 @@ DOCKER_CMD=$(${REQUIRE_COMMAND} docker)
 GREP_CMD=$(${REQUIRE_COMMAND} grep)
 SED_CMD=$(${REQUIRE_COMMAND} sed)
 DOCKER_REGISTRY="registry.local:5000"
+LOCAL_REGISTRY="localhost:15000"
 REGISTRY_PATH="bziswiler"
 
 help()
@@ -29,12 +30,22 @@ help()
 }
 
 version=""
+component=""
+registry="$DOCKER_REGISTRY"
 
-while getopts v:h flag
+OPTSTRING=":v:c:lh"
+
+while getopts $OPTSTRING option
 do
-  case "${flag}" in
+  case "${option}" in
     v) version=${OPTARG}
-       shift "$((OPTIND-1))"
+       echo "version = $version"
+       ;;
+    l) registry="${LOCAL_REGISTRY}"
+       echo "using local registry '${registry}'"
+       ;;
+    c) component="${OPTARG}"
+       echo "building component '${component}'"
        ;;
     h) help
        exit 0
@@ -45,7 +56,7 @@ do
   esac
 done
 
-PV_LOGGER_COMPONENT="$*"
+PV_LOGGER_COMPONENT="$component"
 
 if [ -z "${version}" ]; then
   version="$(${GREP_CMD} -e 'LABEL version=\"\([0-9.]*\)\"' "${SCRIPT_DIR}/../${PV_LOGGER_COMPONENT}/docker/Dockerfile" | ${SED_CMD} -e 's/LABEL version=\"\([0-9.]*\)\"/\1/')";
@@ -61,12 +72,12 @@ if [ -z "$(curl -s --unix-socket /var/run/docker.sock http/_ping 2>&1 /dev/null)
   exit 1;
 fi
 
-echo "Building pv logger component '${PV_LOGGER_COMPONENT}' version '${version}' and pushing to '${DOCKER_REGISTRY}/${REGISTRY_PATH}'"
+echo "Building pv logger component '${PV_LOGGER_COMPONENT}' version '${version}' and pushing to '${registry}/${REGISTRY_PATH}'"
 
 $DOCKER_CMD build \
--t "${DOCKER_REGISTRY}/${REGISTRY_PATH}/${PV_LOGGER_COMPONENT}:latest" \
--t "${DOCKER_REGISTRY}/${REGISTRY_PATH}/${PV_LOGGER_COMPONENT}:${version}" \
+-t "${registry}/${REGISTRY_PATH}/${PV_LOGGER_COMPONENT}:latest" \
+-t "${registry}/${REGISTRY_PATH}/${PV_LOGGER_COMPONENT}:${version}" \
 -f "${SCRIPT_DIR}/../${PV_LOGGER_COMPONENT}/docker/Dockerfile" \
 "${SCRIPT_DIR}/../"
-$DOCKER_CMD image push "${DOCKER_REGISTRY}/${REGISTRY_PATH}/${PV_LOGGER_COMPONENT}:latest"
-$DOCKER_CMD image push "${DOCKER_REGISTRY}/${REGISTRY_PATH}/${PV_LOGGER_COMPONENT}:${version}"
+$DOCKER_CMD image push "${registry}/${REGISTRY_PATH}/${PV_LOGGER_COMPONENT}:latest"
+$DOCKER_CMD image push "${registry}/${REGISTRY_PATH}/${PV_LOGGER_COMPONENT}:${version}"
