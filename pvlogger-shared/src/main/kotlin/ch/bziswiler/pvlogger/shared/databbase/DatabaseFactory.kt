@@ -3,13 +3,22 @@ package ch.bziswiler.pvlogger.shared.databbase
 import ch.bziswiler.pvlogger.shared.configuration.DatabaseConfig
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import mu.KotlinLogging
 import org.flywaydb.core.Flyway.configure
 import org.jetbrains.exposed.sql.Database.Companion.connect
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.lang.Thread.sleep
+import java.util.concurrent.atomic.AtomicInteger
+import javax.jms.JMSException
 import javax.sql.DataSource
 
 class DatabaseFactory(private val dbConfig: DatabaseConfig) {
+
+    private val logger = KotlinLogging.logger {}
+    private val maxRetries = 20
+    private val sleepMs: Long = 5000
+    private val retryCounter = AtomicInteger(0)
 
     fun connect() {
         connect(hikari(dbConfig.dbServerUrl))
@@ -51,6 +60,20 @@ class DatabaseFactory(private val dbConfig: DatabaseConfig) {
             transactionIsolation = "TRANSACTION_REPEATABLE_READ"
             validate()
         }
-        return HikariDataSource(config)
+        return tryConnectingToDatabase(config)
+    }
+
+    private fun tryConnectingToDatabase(config: HikariConfig): HikariDataSource {
+        retryCounter.set(0)
+        while (retryCounter.incrementAndGet() <= maxRetries) {
+            try {
+                logger.info("Connecting to database, attempt number: {}", retryCounter.get())
+                return HikariDataSource(config)
+            } catch (jmse: JMSException) {
+                logger.info("Connection to database failed: {}", jmse.message)
+                sleep(sleepMs)
+            }
+        }
+        throw IllegalStateException("Connection to database failed")
     }
 }
