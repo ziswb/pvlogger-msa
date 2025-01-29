@@ -9,14 +9,13 @@ import org.jetbrains.exposed.sql.Database.Companion.connect
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.lang.Thread.sleep
-import java.sql.SQLException
 import java.util.concurrent.atomic.AtomicInteger
 import javax.sql.DataSource
 
 class DatabaseFactory(private val dbConfig: DatabaseConfig) {
 
     private val logger = KotlinLogging.logger {}
-    private val maxRetries = 20
+    private val maxRetries = 30
     private val sleepMs: Long = 5000
     private val retryCounter = AtomicInteger(0)
 
@@ -68,9 +67,10 @@ class DatabaseFactory(private val dbConfig: DatabaseConfig) {
         while (retryCounter.incrementAndGet() <= maxRetries) {
             try {
                 logger.info("Connecting to database, attempt number: {}", retryCounter.get())
-                return HikariDataSource(config)
-            } catch (sqle: SQLException) {
-                logger.info("Connection to database failed: {}", sqle.message)
+                val dataSource = HikariDataSource(config)
+                return dataSource
+            } catch (th: Throwable) {
+                logger.info("Connection to database failed: {}", th.message)
                 sleep(sleepMs)
             }
         }

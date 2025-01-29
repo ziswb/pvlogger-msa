@@ -7,7 +7,6 @@ import org.apache.activemq.ActiveMQConnectionFactory
 import java.lang.Thread.sleep
 import java.util.concurrent.atomic.AtomicInteger
 import javax.jms.Connection
-import javax.jms.JMSException
 import javax.jms.Session
 import javax.jms.Session.AUTO_ACKNOWLEDGE
 
@@ -16,7 +15,7 @@ class ActiveMqSessionFactory(private val mqConfig: MqConfig) : MqSessionFactory 
     private val activeMqSession: Session
     private val transacted = false
     private val logger = KotlinLogging.logger {}
-    private val maxRetries = 10
+    private val maxRetries = 30
     private val sleepMs: Long = 5000
     private val retryCounter = AtomicInteger(0)
 
@@ -41,9 +40,10 @@ class ActiveMqSessionFactory(private val mqConfig: MqConfig) : MqSessionFactory 
         while (retryCounter.incrementAndGet() <= maxRetries) {
             try {
                 logger.info("Connecting to message queue, attempt number: {}", retryCounter.get())
-                return createConnection()
-            } catch (jmse: JMSException) {
-                logger.info("Connection to message queue failed: {}", jmse.message)
+                val connection = createConnection()
+                return connection
+            } catch (th: Throwable) {
+                logger.info("Connection to message queue failed: {}", th.message)
                 sleep(sleepMs)
             }
         }
