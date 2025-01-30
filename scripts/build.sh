@@ -22,10 +22,12 @@ help()
 {
    echo "This script builds a docker image for pvlogger."
    echo
-   echo "Syntax: build.sh [-v|h] <pvlogger-component>"
+   echo "Syntax: build.sh [-v|c|l|h] <pvlogger-component>"
    echo "options:"
    echo "h     Print this Help."
    echo "v     Version to tag the docker image with."
+   echo "l     Use local docker registry."
+   echo "c     The component to build."
    echo
 }
 
@@ -39,7 +41,7 @@ while getopts $OPTSTRING option
 do
   case "${option}" in
     v) version=${OPTARG}
-       echo "version = $version"
+       echo "using version '$version'"
        ;;
     l) registry="${LOCAL_REGISTRY}"
        echo "using local registry '${registry}'"
