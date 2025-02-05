@@ -2,6 +2,8 @@ package ch.bziswiler.pvlogger.exporter.service
 
 import ch.bziswiler.pvlogger.exporter.configuration.ExportConfig
 import ch.bziswiler.pvlogger.shared.rest.KpiValuesDto
+import ch.bziswiler.pvlogger.shared.unit.KW
+import ch.bziswiler.pvlogger.shared.unit.KWh
 import kotlinx.datetime.Instant.Companion.fromEpochMilliseconds
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalDateTime.Companion.Format
@@ -41,15 +43,15 @@ class JsonFileService(exportConfig: ExportConfig, private val directoryService: 
         write(
             localDateTime, KpiExportRecord(
                 lastUpdateTime = lastUpdateTimeFormatter.format(localDateTime), CurrentDataRecord(
-                    pv_prod_akt_w = data.solarPower.toW().w,
-                    pv_verk_akt_w = data.solarToGridPower.toW().w,
-                    pv_kauf_akt_w = data.gridToHousePower.toW().w,
-                    pv_verb_akt_w = (data.solarToHousePower + data.gridToHousePower).toW().w,
+                    pv_prod_akt_w = KW(data.solarPower).toW().w,
+                    pv_verk_akt_w = KW(data.solarToGridPower).toW().w,
+                    pv_kauf_akt_w = KW(data.gridToHousePower).toW().w,
+                    pv_verb_akt_w = KW((data.solarToHousePower + data.gridToHousePower)).toW().w,
                 ), CurrentDayDataRecord(
-                    pv_prod_tag_wh = data.dailyEnergyYield.toWh().wh,
-                    pv_verk_tag_wh = data.dailyEnergyExported.toWh().wh,
-                    pv_kauf_tag_wh = data.dailyEnergyImported.toWh().wh,
-                    pv_verb_tag_wh = data.dailyEnergyConsumed.toWh().wh,
+                    pv_prod_tag_wh = KWh(data.dailyEnergyYield).toWh().wh,
+                    pv_verk_tag_wh = KWh(data.dailyEnergyExported).toWh().wh,
+                    pv_kauf_tag_wh = KWh(data.dailyEnergyImported).toWh().wh,
+                    pv_verb_tag_wh = KWh(data.dailyEnergyConsumed).toWh().wh,
                 )
             )
         )

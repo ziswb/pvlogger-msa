@@ -89,31 +89,37 @@ export class KpiFetchServiceService {
       return;
     }
     this.maxCreatedAtReceived = value.createdAt;
-    this.solarpowerdata.push([value.createdAt, Number(value.solarPower.kw)]);
-    this.gridpowerdata.push([value.createdAt, Number(value.gridPower.kw)]);
-    this.usedpowerdata.push([value.createdAt, Number(value.ownConsumption.kw)]);
-    this.dailyexporteddata.push([value.createdAt, -Number(value.dailyEnergyExported.kwh)]);
-    this.dailyimporteddata.push([value.createdAt, Number(value.dailyEnergyImported.kwh)]);
-    this.dailyownuseddata.push([value.createdAt, Number(value.dailyEnergySelfCovered.kwh)]);
-    this.dailyconsumeddata.push([value.createdAt, Number(value.dailyEnergyConsumed.kwh)]);
-    this.dailyproduceddata.push([value.createdAt, Number(value.dailyEnergyYield.kwh)]);
+    this.solarpowerdata.push([value.createdAt, Number(value.solarPower)]);
+    this.gridpowerdata.push([value.createdAt, Number(value.gridPower)]);
+    this.usedpowerdata.push([value.createdAt, Number(value.ownConsumption)]);
+    this.dailyexporteddata.push([value.createdAt, -Number(value.dailyEnergyExported)]);
+    this.dailyimporteddata.push([value.createdAt, Number(value.dailyEnergyImported)]);
+    this.dailyownuseddata.push([value.createdAt, Number(value.dailyEnergySelfCovered)]);
+    this.dailyconsumeddata.push([value.createdAt, Number(value.dailyEnergyConsumed)]);
+    this.dailyproduceddata.push([value.createdAt, Number(value.dailyEnergyYield)]);
   }
 
-  private compareFn(a: Number[], b: Number[]): number {
+  private compareArrays(a: Number[], b: Number[]): number {
     if (a[0] < b[0]) { return -1; }
     if (a[0] > b[0]) { return 1; }
     return 0;
   }
 
+  private compareNumbers(a: Number, b: Number): number {
+    if (a < b) { return -1; }
+    if (a > b) { return 1; }
+    return 0;
+  }
+
   private sortData() {
     console.log("sorting data");
-    this.solarpowerdata.sort((a, b) => this.compareFn(a, b));
-    this.gridpowerdata.sort((a, b) => this.compareFn(a, b));
-    this.usedpowerdata.sort((a, b) => this.compareFn(a, b));
-    this.dailyexporteddata.sort((a, b) => this.compareFn(a, b));
-    this.dailyimporteddata.sort((a, b) => this.compareFn(a, b));
-    this.dailyownuseddata.sort((a, b) => this.compareFn(a, b));
-    this.dailyconsumeddata.sort((a, b) => this.compareFn(a, b));
-    this.dailyproduceddata.sort((a, b) => this.compareFn(a, b));
+    this.solarpowerdata.sort((a, b) => this.compareArrays(a, b));
+    this.gridpowerdata.sort((a, b) => this.compareArrays(a, b));
+    this.usedpowerdata.sort((a, b) => this.compareArrays(a, b));
+    this.dailyexporteddata.sort((a, b) => this.compareArrays(a, b));
+    this.dailyimporteddata.sort((a, b) => this.compareArrays(a, b));
+    this.dailyownuseddata.sort((a, b) => this.compareArrays(a, b));
+    this.dailyconsumeddata.sort((a, b) => this.compareArrays(a, b));
+    this.dailyproduceddata.sort((a, b) => this.compareArrays(a, b));
   }
 }

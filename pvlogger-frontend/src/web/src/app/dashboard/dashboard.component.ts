@@ -10,10 +10,10 @@ import { KpiValues } from '../model/kpi-values.model';
 })
 export class DashboardComponent {
   miniCardData: MiniCardModel[] = [
-    new MiniCardModel('Energieverbrauch', 'pv-usage', (value) => Number(value.ownConsumption.kw), (value) => Number(value.dailyEnergyConsumed.kwh)),
-    new MiniCardModel('Energieimport', 'pv-import', (value) => Number(value.gridToHousePower.kw), (value) => Number(value.dailyEnergyImported.kwh)),
-    new MiniCardModel('PV Produktion', 'pv-prod', (value) => Number(value.solarPower.kw), (value) => Number(value.dailyEnergyYield.kwh)),
-    new MiniCardModel('Energieexport', 'pv-export', (value) => Number(value.solarToGridPower.kw), (value) => Number(value.dailyEnergyExported.kwh)),
+    new MiniCardModel('Energieverbrauch', 'pv-usage', (value) => Number(value.ownConsumption), (value) => Number(value.dailyEnergyConsumed)),
+    new MiniCardModel('Energieimport', 'pv-import', (value) => Number(value.gridToHousePower), (value) => Number(value.dailyEnergyImported)),
+    new MiniCardModel('PV Produktion', 'pv-prod', (value) => Number(value.solarPower), (value) => Number(value.dailyEnergyYield)),
+    new MiniCardModel('Energieexport', 'pv-export', (value) => Number(value.solarToGridPower), (value) => Number(value.dailyEnergyExported)),
   ];
   /** Based on the screen size, switch from standard to one column per row */
   cardLayout = this.breakpointObserver.observe([Breakpoints.Handset, Breakpoints.Tablet]).pipe(
