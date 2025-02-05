@@ -72,7 +72,7 @@ if [ -z "${version// }" ]; then
   exit 1
 fi
 
-if [ -z "$(curl -s --unix-socket /var/run/docker.sock http/_ping 2>&1 /dev/null)" ]; then
+if (! docker stats --no-stream &> /dev/null); then
   echo "Docker is not running";
   exit 1;
 fi
