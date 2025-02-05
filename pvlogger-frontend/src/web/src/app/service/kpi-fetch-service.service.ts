@@ -35,7 +35,7 @@ export class KpiFetchServiceService {
     this.http.get<KpiValues[]>(`${KpiFetchServiceService.SERVER_URL}/v1/daydata/${requestedDate}`).subscribe((data: KpiValues[]) => {
       console.log(`data received`);
       console.log(data);
-      (data as KpiValues[]).forEach((value) => {
+      (data as KpiValues[]).sort((a, b) => this.compareNumbers(a.createdAt, b.createdAt)).forEach((value) => {
         this.pushData(value);
       });
       if (data && data.length && data.length > 0) {
