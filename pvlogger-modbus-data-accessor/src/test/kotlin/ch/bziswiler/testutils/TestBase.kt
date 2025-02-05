@@ -18,6 +18,7 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.koin.test.KoinTest
 import org.koin.test.junit5.KoinTestExtension
+import javax.jms.Queue
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class TestBase : KoinTest {
@@ -30,14 +31,14 @@ abstract class TestBase : KoinTest {
         testApplication {
             application {
                 module(testing = true)
-                    org.koin.dsl.module {
-                        single<AppConfig> { AppConfig() }
-                        single<MessageHandler> { StoreModbusValuesMessageHandler() }
-                        single<MqSessionFactory> { ActiveMqSessionFactory(get<AppConfig>().mqConfig) }
-                        single<MessageReceiver> { ActiveMqQueueReceiver(get<MqSessionFactory>(), PERSIST_MODBUS) }
-                        single<DatabaseFactory> { DatabaseFactory(get<AppConfig>().databaseConfig) }
-                    }
+                org.koin.dsl.module {
+                    single<AppConfig> { AppConfig() }
+                    single<MessageHandler> { StoreModbusValuesMessageHandler() }
+                    single<MqSessionFactory> { ActiveMqSessionFactory(get<AppConfig>().mqConfig) }
+                    single<MessageReceiver<Queue>> { ActiveMqQueueReceiver(get<MqSessionFactory>(), PERSIST_MODBUS) }
+                    single<DatabaseFactory> { DatabaseFactory(get<AppConfig>().databaseConfig) }
                 }
+            }
             environment {
                 config =
                     MapApplicationConfig(

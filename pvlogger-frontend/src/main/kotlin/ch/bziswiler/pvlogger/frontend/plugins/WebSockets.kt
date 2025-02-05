@@ -2,7 +2,7 @@ package ch.bziswiler.pvlogger.frontend.plugins
 
 import ch.bziswiler.pvlogger.shared.job.tags.KpisCreatedMessageTag
 import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
-import ch.bziswiler.pvlogger.shared.messaging.MessageReceiver
+import ch.bziswiler.pvlogger.shared.messaging.MqReceiverComposer
 import ch.bziswiler.pvlogger.shared.messaging.PvLoggerKpiData
 import ch.bziswiler.pvlogger.shared.rest.FrontendPaths.FRONTEND_READ_LIVE_DATA_VALUES_PATH
 import ch.bziswiler.pvlogger.shared.rest.KpiValuesDto
@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import mu.KotlinLogging
+import org.koin.java.KoinJavaComponent.inject
 import java.time.Duration
 import java.time.Duration.ofSeconds
 import javax.jms.Message
@@ -28,7 +29,7 @@ import javax.jms.ObjectMessage
 private val logger = KotlinLogging.logger {}
 private val Int.Seconds: Duration get() = ofSeconds(toLong())
 
-fun Application.configureWebSockets(receiver: MessageReceiver) {
+fun Application.configureWebSockets() {
     // https://lankydan.dev/ktor-websockets
     install(WebSockets) {
         pingPeriod = 15.Seconds
@@ -48,7 +49,9 @@ fun Application.configureWebSockets(receiver: MessageReceiver) {
         webSocket("/$FRONTEND_READ_LIVE_DATA_VALUES_PATH") {
             val flow = MutableSharedFlow<KpiValuesDto>()
             val sharedFlow = flow.asSharedFlow()
-            receiver.addMessageHandler(KpiMessageHandler(flow))
+            val composer by inject<MqReceiverComposer>(MqReceiverComposer::class.java)
+            composer.addMessageHandler(KpiMessageHandler(flow))
+            composer.compose()
             sharedFlow.collect { kpiDto ->
                 logger.debug { "Sending KPI values DTO '$kpiDto'...'" }
                 sendSerialized(kpiDto)

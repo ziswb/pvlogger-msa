@@ -10,5 +10,6 @@ import javax.jms.Topic
  */
 open class ActiveMqTopicSender(mqSessionFactory: MqSessionFactory, name: TopicName, ephemeralMessages: Boolean = false) : ActiveMqSenderScaffold(mqSessionFactory, name, ephemeralMessages) {
 
-    final override fun createDestination(): Topic = session.createTopic(name.value)
+    override val destination: Topic
+        get() = mqSessionFactory.session.createTopic(name.value)
 }

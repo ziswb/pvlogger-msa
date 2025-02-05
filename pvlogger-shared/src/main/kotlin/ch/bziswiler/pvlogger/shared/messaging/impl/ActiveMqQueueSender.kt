@@ -10,5 +10,6 @@ import javax.jms.Queue
  */
 open class ActiveMqQueueSender(mqSessionFactory: MqSessionFactory, name: QueueName, ephemeralMessages: Boolean = false) : ActiveMqSenderScaffold(mqSessionFactory, name, ephemeralMessages) {
 
-    final override fun createDestination(): Queue = session.createQueue(name.value)
+    override val destination: Queue
+        get() = mqSessionFactory.session.createQueue(name.value)
 }

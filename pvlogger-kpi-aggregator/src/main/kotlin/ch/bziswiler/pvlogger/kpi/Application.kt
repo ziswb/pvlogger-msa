@@ -2,8 +2,7 @@ package ch.bziswiler.pvlogger.kpi
 
 import ch.bziswiler.pvlogger.kpi.configuration.appModule
 import ch.bziswiler.pvlogger.kpi.configuration.setupConfig
-import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
-import ch.bziswiler.pvlogger.shared.messaging.MessageReceiver
+import ch.bziswiler.pvlogger.shared.messaging.MqReceiverComposer
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.netty.EngineMain
@@ -28,7 +27,6 @@ fun Application.module(testing: Boolean = false) {
 }
 
 fun Application.startServices() {
-    val messageReceiver by inject<MessageReceiver>()
-    val messageHandler by inject<MessageHandler>()
-    messageReceiver.addMessageHandler(messageHandler)
+    val composer by inject<MqReceiverComposer>()
+    composer.compose()
 }

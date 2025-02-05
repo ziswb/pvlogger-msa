@@ -1,5 +1,7 @@
 package ch.bziswiler.pvlogger.shared.messaging
 
-interface MessageReceiver : NameAware {
-    fun addMessageHandler(handler: MessageHandler)
+import javax.jms.Destination
+
+interface MessageReceiver<T : Destination> : NameAware {
+    val destination: T
 }
