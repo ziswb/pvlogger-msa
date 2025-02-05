@@ -22,6 +22,33 @@ help()
    echo
 }
 
+declare -a pids
+
+waitPids() {
+    while [ ${#pids[@]} -ne 0 ]; do
+        echo "Waiting for pids:" "${pids[@]}"
+        local range
+        range=$(eval "echo {0..$((${#pids[@]}-1))}")
+        local i
+        for i in $range; do
+            if ! kill -0 "${pids[$i]}" 2> /dev/null; then
+                echo "Done -- ${pids[$i]}"
+                unset 'pids[$i]'
+            fi
+        done
+        pids=("${pids[@]}") # Expunge nulls created by unset.
+        sleep 1
+    done
+    echo "Done!"
+}
+
+addPid() {
+    local desc=$1
+    local pid=$2
+    echo "$desc -- $pid"
+    pids=("${pids[@]}" "$pid")
+}
+
 OPTSTRING=":v:lh"
 passed_ops=""
 
@@ -57,9 +84,20 @@ PV_LOGGER_MODULES=(
   "pvlogger-modbus-mock-server"
 )
 
+echo "###############################################################"
+echo "                       START BUILDING"
+echo "###############################################################"
+
 for module in "${PV_LOGGER_MODULES[@]}"; do
   echo "executing ${SCRIPT_DIR}/build.sh ${passed_ops} -c $module"
-  eval "${SCRIPT_DIR}/build.sh ${passed_ops} -c $module"
+  eval "${SCRIPT_DIR}/build.sh ${passed_ops} -c $module" >/dev/null 2>&1 &
+  addPid "Building $module" $!
 done
+
+waitPids
+
+echo "###############################################################"
+echo "                        BUILDING DONE"
+echo "###############################################################"
 
 #  "${SCRIPT_DIR}/build.sh" -v "$(date +%s)" -l -c $module
