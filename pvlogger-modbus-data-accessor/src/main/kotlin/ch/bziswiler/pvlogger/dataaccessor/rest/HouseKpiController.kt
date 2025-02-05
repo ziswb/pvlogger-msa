@@ -100,7 +100,7 @@ object HouseKpiController {
                         .greaterEq(date.atStartOfDay())
                         .and(dateCreated.less(date.plusDays(1).atStartOfDay()))
                 }
-                .orderBy(dateCreated, DESC)
+                .orderBy(dateCreated, ASC)
                 .map { toKpiValuesDto(it) }
                 .toList()
         }
