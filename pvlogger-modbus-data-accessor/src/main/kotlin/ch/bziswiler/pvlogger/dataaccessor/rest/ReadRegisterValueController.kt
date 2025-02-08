@@ -11,7 +11,7 @@ import ch.bziswiler.pvlogger.shared.rest.DataAccessorParameterNames.JOB_ID
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorParameterNames.REGISTER_ADDRESS
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorParameterNames.TYPE
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_LATEST_REGISTER_VALUE_PATH
-import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_TODAY_SO_FAR_REGISTER_VALUE_PATH
+import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_KW_TODAY_SO_FAR_PATH
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.http.HttpStatusCode.Companion.NotFound
 import io.ktor.http.HttpStatusCode.Companion.OK
@@ -45,6 +45,7 @@ fun Routing.readLatestEnergyRegisterValues() {
 
 fun Routing.readSoFarTodayEnergyRegisterValues() {
     get("/$DATA_ACCESSOR_READ_TODAY_SO_FAR_REGISTER_VALUE_PATH/{$TYPE}/{$REGISTER_ADDRESS}") {
+    get("/$DATA_ACCESSOR_READ_KW_TODAY_SO_FAR_PATH/{$TYPE}/{$REGISTER_ADDRESS}") {
         val type = retrieveTypeParameter()
         val registerAddress = retrieveRegisterAddressParameter()
         if (type == null) {

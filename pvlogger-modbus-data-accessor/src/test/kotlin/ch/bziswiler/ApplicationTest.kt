@@ -1,7 +1,7 @@
 package ch.bziswiler
 
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_LATEST_REGISTER_VALUE_PATH
-import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_TODAY_SO_FAR_REGISTER_VALUE_PATH
+import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_KW_TODAY_SO_FAR_PATH
 import ch.bziswiler.testutils.TestBase
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
@@ -27,7 +27,7 @@ class ApplicationTest : TestBase() {
 
     @Test
     fun `test so far today energy`() = withApp {
-        client.get("/$DATA_ACCESSOR_READ_TODAY_SO_FAR_REGISTER_VALUE_PATH") {
+        client.get("/$DATA_ACCESSOR_READ_KW_TODAY_SO_FAR_PATH") {
             url {
                 appendPathSegments("I32", "32080")
             }

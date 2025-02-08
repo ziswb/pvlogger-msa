@@ -66,7 +66,7 @@ class RegisterReaderTest : TestBase() {
     fun `test register reader`() = withApp {
         startApplication()
         setUpDatabase()
-        client.get("/${DataAccessorPaths.DATA_ACCESSOR_READ_TODAY_SO_FAR_REGISTER_VALUE_PATH}") {
+        client.get("/${DataAccessorPaths.DATA_ACCESSOR_READ_KW_TODAY_SO_FAR_PATH}") {
             url {
                 appendPathSegments("I32", "1")
             }
