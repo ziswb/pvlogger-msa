@@ -14,7 +14,7 @@ object HousePowerKpiDao {
     private val logger = KotlinLogging.logger {}
 
     fun store(kpis: PvLoggerKpiData) = transaction {
-        logger.trace { "Storing KPIs" }
+        logger.trace { "Storing KPIs '$kpis'" }
         HousePowerKpiTable.insert {
             it[jobId] = kpis.jobId
             it[dateCreated] = ofInstant(ofEpochMilli(kpis.dateCreated), UTC)
