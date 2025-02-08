@@ -106,10 +106,10 @@ class DataAccessorRestProxy(private val config: ModbusDataAccessConfig) {
 
 }
 
-private suspend fun HttpResponse.toEnergyValue(masterData: ModbusRegisterDefinition): Double = toIntOrDefault(bodyAsText(), 0).div(toIntOrDefault(masterData.gain.raw, 1)).toDouble()
+private suspend fun HttpResponse.toEnergyValue(masterData: ModbusRegisterDefinition): Double = toDoubleOrDefault(bodyAsText(), 0.0).div(toDoubleOrDefault(masterData.gain.raw, 1.0))
 
-private fun toIntOrDefault(text: String, default: Int): Int {
-    return when (val value = text.toIntOrNull()) {
+private fun toDoubleOrDefault(text: String, default: Double): Double {
+    return when (val value = text.toDoubleOrNull()) {
         null -> default
         else -> value
     }
