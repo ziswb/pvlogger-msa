@@ -50,12 +50,12 @@ object RegisterReader {
             .also { logger.info { "No register value found for device ID '$deviceId' and register address '$registerAddress'." } }
     }
 
-    fun readSoFarTodayRegisterValue(type: Type, registerAddress: RegisterAddress): Int? = when (type) {
-        Type.I32 -> readSoFarTodayRegisterValue(registerAddress)
+    fun readKwSoFarToday(type: Type, registerAddress: RegisterAddress): Int? = when (type) {
+        Type.I32 -> readKwSoFarToday(registerAddress)
         else -> throw NotImplementedError()
     }
 
-    private fun readSoFarTodayRegisterValue(registerAddress: RegisterAddress): Int? {
+    private fun readKwSoFarToday(registerAddress: RegisterAddress): Int? {
         val kWhColumn = 2
         return transaction {
             addLogger(StdOutSqlLogger)

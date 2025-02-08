@@ -5,7 +5,7 @@ import ch.bziswiler.pvlogger.dataaccessor.rest.ParameterRetriever.retrieveJobIdP
 import ch.bziswiler.pvlogger.dataaccessor.rest.ParameterRetriever.retrieveRegisterAddressParameter
 import ch.bziswiler.pvlogger.dataaccessor.rest.ParameterRetriever.retrieveTypeParameter
 import ch.bziswiler.pvlogger.dataaccessor.rest.RegisterReader.readLatestRegisterValue
-import ch.bziswiler.pvlogger.dataaccessor.rest.RegisterReader.readSoFarTodayRegisterValue
+import ch.bziswiler.pvlogger.dataaccessor.rest.RegisterReader.readKwSoFarToday
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorParameterNames.DEVICE_ID
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorParameterNames.JOB_ID
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorParameterNames.REGISTER_ADDRESS
@@ -43,8 +43,7 @@ fun Routing.readLatestEnergyRegisterValues() {
     }
 }
 
-fun Routing.readSoFarTodayEnergyRegisterValues() {
-    get("/$DATA_ACCESSOR_READ_TODAY_SO_FAR_REGISTER_VALUE_PATH/{$TYPE}/{$REGISTER_ADDRESS}") {
+fun Routing.readKwSoFarToday() {
     get("/$DATA_ACCESSOR_READ_KW_TODAY_SO_FAR_PATH/{$TYPE}/{$REGISTER_ADDRESS}") {
         val type = retrieveTypeParameter()
         val registerAddress = retrieveRegisterAddressParameter()
@@ -53,13 +52,7 @@ fun Routing.readSoFarTodayEnergyRegisterValues() {
         } else if (registerAddress == null) {
             call.respond(BadRequest, "address is required")
         } else {
-            readSoFarTodayRegisterValue(type, registerAddress).let {
-                when (it) {
-                    null -> call.respond(NotFound)
-                    else -> call.respond(OK, it)
-                }
-            }
-            readSoFarTodayRegisterValue(type, registerAddress).let {
+            readKwSoFarToday(type, registerAddress).let {
                 when (it) {
                     null -> call.respond(NotFound)
                     else -> call.respond(OK, it)
