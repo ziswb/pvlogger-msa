@@ -27,7 +27,6 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.and
 import org.koin.java.KoinJavaComponent.inject
 
-private const val MASTER_DATA_FOR_ADDRESS_PATH_WITH_PARAM = "$MASTER_DATA_FOR_ADDRESS_PATH/{address}"
 private const val PARAM_VALUE_DELIMITER = ";"
 
 private val dao: MasterDataDao by inject(MasterDataDao::class.java)
@@ -35,7 +34,7 @@ private val logger = KotlinLogging.logger {}
 
 
 fun Routing.masterDataForAddress() {
-    get("/$MASTER_DATA_FOR_ADDRESS_PATH_WITH_PARAM") {
+    get("/$MASTER_DATA_FOR_ADDRESS_PATH/{address}") {
 
         val address = call.parameters[ADDRESS.value]?.toInt() ?: -1
         val result = dao.registerDefinition(address)
