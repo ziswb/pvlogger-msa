@@ -2,6 +2,7 @@ package ch.bziswiler.pvlogger.shared.rest
 
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
@@ -19,6 +20,9 @@ object PvHttpClient {
                 allowSpecialFloatingPointValues = true
                 encodeDefaults = true
             })
+        }
+        install(HttpTimeout) {
+            requestTimeoutMillis = 600000
         }
     }
 }
