@@ -15,8 +15,11 @@ import io.ktor.server.websocket.pingPeriod
 import io.ktor.server.websocket.sendSerialized
 import io.ktor.server.websocket.timeout
 import io.ktor.server.websocket.webSocket
+import io.ktor.websocket.Frame
+import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import mu.KotlinLogging
@@ -45,17 +48,34 @@ fun Application.configureWebSockets() {
             }
         )
     }
+
+    val flow = MutableSharedFlow<KpiValuesDto>()
+    val sharedFlow = flow.asSharedFlow()
+    val composer by inject<MqReceiverComposer>(MqReceiverComposer::class.java)
+
+    composer.addMessageHandler(KpiMessageHandler(flow))
+    composer.compose()
+
     routing {
         webSocket("/$FRONTEND_READ_LIVE_DATA_VALUES_PATH") {
-            val flow = MutableSharedFlow<KpiValuesDto>()
-            val sharedFlow = flow.asSharedFlow()
-            val composer by inject<MqReceiverComposer>(MqReceiverComposer::class.java)
-            composer.addMessageHandler(KpiMessageHandler(flow))
-            composer.compose()
-            sharedFlow.collect { kpiDto ->
-                logger.debug { "Sending KPI values DTO '$kpiDto'...'" }
-                sendSerialized(kpiDto)
-                logger.info { "KPIs values DTO sent!" }
+            val job = launch {
+                sharedFlow.collect { kpiDto ->
+                    logger.debug { "WebSocket: Sending KPI values DTO '$kpiDto'...'" }
+                    sendSerialized(kpiDto)
+                    logger.info { "WebSocket: KPI values sent!" }
+                }
+            }
+            runCatching {
+                incoming.consumeEach { frame ->
+                    when (frame) {
+                        is Frame.Close -> logger.debug { "WebSocket: Closing websocket" }.also { job.cancel() }
+                        else -> logger.debug { "WebSocket: Received frame '$frame'" }
+                    }
+                }
+            }.onFailure { exception ->
+                logger.info(exception) { "WebSocket: Received exception" }
+            }.also {
+                job.cancel()
             }
         }
     }
