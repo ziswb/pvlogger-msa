@@ -61,6 +61,14 @@ do
   esac
 done
 
+if [ -z "${component}" ]; then
+  echo "-----------------------------------"
+  echo "Option '-c <component>' is missing."
+  echo "-----------------------------------"
+  help
+  exit 1
+fi
+
 PV_LOGGER_COMPONENT="$component"
 
 if [ -z "${version}" ]; then
