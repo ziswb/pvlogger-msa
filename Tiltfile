@@ -149,3 +149,6 @@ k8s_yaml([
 
 k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_frontend_install/files/pvlogger-frontend-deployment.yaml')
 k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_frontend_install/files/pvlogger-frontend-service.yaml')
+
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_crepuscular_install/files/pvlogger-crepuscular-deployment.yaml')
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_crepuscular_install/files/pvlogger-crepuscular-service.yaml')

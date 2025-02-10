@@ -9,5 +9,5 @@ val appModule = module {
     single<AppConfig> { AppConfig() }
     single<DatabaseFactory> { DatabaseFactory(get<AppConfig>().databaseConfig) }
     single<SunriseSunsetDao> { SunriseSunsetDao() }
-    single<SunriseSunsetService> { SunriseSunsetService(get<SunriseSunsetServiceConfig>(), get<SunriseSunsetDao>()) }
+    single<SunriseSunsetService> { SunriseSunsetService(get<AppConfig>().sunriseSunsetServiceConfig, get<SunriseSunsetDao>()) }
 }

@@ -9,7 +9,7 @@ import ch.bziswiler.pvlogger.crepuscular.service.SunriseSunsetService
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.netty.EngineMain
-import org.koin.java.KoinJavaComponent.inject
+import org.koin.ktor.ext.inject
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
 
@@ -25,9 +25,9 @@ fun Application.module(testing: Boolean = false) {
             modules(appModule)
         }
     }
-    val service: SunriseSunsetService by inject(SunriseSunsetService::class.java)
     setupConfig()
     configureDatabases()
+    val service: SunriseSunsetService by inject<SunriseSunsetService>()
     configureRouting(service)
     configureMonitoring()
 }
