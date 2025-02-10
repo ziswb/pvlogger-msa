@@ -27,7 +27,7 @@ object HousePowerKpiDao {
             it[dailyEnergySelfCovered] = kpis.selfConsumed.toKWh().kWh
             it[dailyEnergyExported] = kpis.exported.toKWh().kWh
             it[dailyEnergyImported] = kpis.imported.toKWh().kWh
-            it[dailyEnergyConsumed] = kpis.selfConsumed.toKWh().kWh
+            it[dailyEnergyConsumed] = kpis.consumed.toKWh().kWh
         }
     }
 }
