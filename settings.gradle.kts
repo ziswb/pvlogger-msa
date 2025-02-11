@@ -3,9 +3,11 @@ plugins {
 }
 rootProject.name = "pvlogger-msa"
 include(
+    "pvlogger-crepuscular-service",
     "pvlogger-database",
-    "pvlogger-heartbeat",
     "pvlogger-frontend",
+    "pvlogger-fusionsolar",
+    "pvlogger-heartbeat",
     "pvlogger-infrastructure",
     "pvlogger-kpi-aggregator",
     "pvlogger-kpi-exporter",
@@ -14,7 +16,5 @@ include(
     "pvlogger-modbus-data-accessor",
     "pvlogger-modbus-data-collector",
     "pvlogger-modbus-mock-server",
-    "pvlogger-crepuscular-service",
-    "pvlogger-shared"
+    "pvlogger-shared",
 )
-include("pvlogger-fusionsolar")
