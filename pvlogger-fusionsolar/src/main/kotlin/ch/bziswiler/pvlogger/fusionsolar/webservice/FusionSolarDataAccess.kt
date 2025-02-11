@@ -1,6 +1,11 @@
 package ch.bziswiler.pvlogger.fusionsolar.webservice
 
-import ch.bziswiler.fusionsolar.model.*
+import ch.bziswiler.pvlogger.fusionsolar.model.DevFiveMinutesResponse
+import ch.bziswiler.pvlogger.fusionsolar.model.DevKpiDayResponse
+import ch.bziswiler.pvlogger.fusionsolar.model.DevRealKpiResponse
+import ch.bziswiler.pvlogger.fusionsolar.model.KpiStationExtendedResponse
+import ch.bziswiler.pvlogger.fusionsolar.model.KpiStationHourResponse
+import ch.bziswiler.pvlogger.fusionsolar.model.StationRealKpiResponse
 import java.time.Instant
 import java.time.ZonedDateTime
 
