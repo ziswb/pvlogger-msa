@@ -22,12 +22,11 @@ help()
 {
    echo "This script builds a docker image for pvlogger."
    echo
-   echo "Syntax: build.sh [-v|c|l|h] <pvlogger-component>"
+   echo "Syntax: build.sh [-h|-l|-v <version>] -c <pvlogger-component>"
    echo "options:"
    echo "h     Print this Help."
-   echo "v     Version to tag the docker image with."
-   echo "l     Use local docker registry."
-   echo "c     The component to build."
+   echo "v     The <version> to tag the docker image with."
+   echo "l     Use the local docker registry."
    echo
 }
 
