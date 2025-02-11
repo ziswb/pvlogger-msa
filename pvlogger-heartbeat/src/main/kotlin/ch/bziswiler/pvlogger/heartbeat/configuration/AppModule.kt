@@ -3,6 +3,7 @@ package ch.bziswiler.pvlogger.heartbeat.configuration
 import ch.bziswiler.pvlogger.heartbeat.jobs.management.JobScheduler
 import ch.bziswiler.pvlogger.heartbeat.jobs.management.JobSchedulerManager
 import ch.bziswiler.pvlogger.heartbeat.jobs.management.PvLoggerJobFactory
+import ch.bziswiler.pvlogger.heartbeat.rest.SunriseSunsetRestProxy
 import ch.bziswiler.pvlogger.shared.databbase.DatabaseFactory
 import ch.bziswiler.pvlogger.shared.messaging.MqSessionFactory
 import ch.bziswiler.pvlogger.shared.messaging.TagsAsMessageSender
@@ -14,10 +15,11 @@ import org.quartz.spi.JobFactory
 
 val appModule = module {
     single<AppConfig> { AppConfig() }
+    single<SunriseSunsetRestProxy> { SunriseSunsetRestProxy(get<AppConfig>().sunriseSunsetServiceConfig) }
     single<MqSessionFactory> { ActiveMqSessionFactory(get<AppConfig>().mqConfig) }
     single<TagsAsMessageSender> { ActiveMqTopicSender(get<MqSessionFactory>(), JOB_SCHEDULER, false) }
     single<DatabaseFactory> { DatabaseFactory(get<AppConfig>().databaseConfig) }
     single<JobSchedulerManager> { JobSchedulerManager(get<AppConfig>()) }
     single<JobScheduler> { JobScheduler(get<JobSchedulerManager>()) }
-    single<JobFactory> { PvLoggerJobFactory(get<TagsAsMessageSender>()) }
+    single<JobFactory> { PvLoggerJobFactory(get<JobScheduler>(), get<SunriseSunsetRestProxy>(), get<TagsAsMessageSender>()) }
 }
