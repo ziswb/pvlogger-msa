@@ -40,12 +40,13 @@ dependencies {
     implementation(libs.activemq.client)
 
     // Ktor
+    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.logging)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.ktor.server.call.logging)
-    implementation(libs.ktor.server.call.id)
-    implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.server.core)
-    implementation(libs.ktor.server.metrics.micrometer)
     implementation(libs.ktor.server.netty)
 
     // Logging
