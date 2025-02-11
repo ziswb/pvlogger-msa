@@ -1,0 +1,23 @@
+post:
+  tags:
+    - DeviceRealKpi
+  summary: Get the KPI for each device
+  description: |
+    This interface is used to obtain real-time device data by device type and device ID set. The data varies according to device types. Data of a maximum of 100 devices of the same type can be queried at a time.
+    For details about the data list that can be queried using this interface, see 4.6 Real-Time Device Data Interface.
+  operationId: DeviceRealKpi
+  requestBody:
+    content:
+      application/json:
+        schema:
+          $ref: '../requestBodies/DevRealKpiRequest.yaml'
+    required: true
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '../responses/DevRealKpiResponse.yaml'
+      description: OK
+  security:
+    - bearerAuth: [ ]

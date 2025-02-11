@@ -1,0 +1,14 @@
+title: DevPeriodicDataRequest
+type: object
+required:
+  - devIds
+  - devTypeId
+  - collectTime
+properties:
+  devIds:
+    type: string
+  devTypeId:
+    type: integer
+  collectTime:
+    type: integer
+    format: int64

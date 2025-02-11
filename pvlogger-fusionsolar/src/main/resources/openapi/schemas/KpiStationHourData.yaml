@@ -1,0 +1,24 @@
+type: object
+required:
+  - stationCode
+  - collectTime
+  - dataItemMap
+properties:
+  stationCode:
+    type: string
+  collectTime:
+    type: integer
+    format: int64
+  dataItemMap:
+    type: object
+    properties:
+      radiation_intensity:
+        type: number
+      theory_power:
+        type: number
+      inverter_power:
+        type: number
+      ongrid_power:
+        type: number
+      power_profit:
+        type: integer

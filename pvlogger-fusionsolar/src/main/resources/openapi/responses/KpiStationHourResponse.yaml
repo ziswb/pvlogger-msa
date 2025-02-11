@@ -1,0 +1,9 @@
+title: KpiStationHourResponse
+allOf:
+  - $ref: '../schemas/ResponseObject.yaml'
+  - type: object
+    properties:
+      data:
+        type: array
+        items:
+          $ref: '../schemas/KpiStationHourData.yaml'

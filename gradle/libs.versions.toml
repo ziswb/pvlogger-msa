@@ -17,6 +17,7 @@ postgresVersion = "42.7.4"
 prometheusVersion = "1.12.2"
 quartzVersion = "2.3.2"
 cacheVersion = "0.13.0"
+openapiVersion = "7.0.1"
 
 [libraries]
 commons-csv = { module = "org.apache.commons:commons-csv", version.ref = "commonsCsvVersion" }
@@ -84,3 +85,4 @@ jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlinVersion" }
 ktor = { id = "io.ktor.plugin", version.ref = "ktorVersion" }
 #idea = { id = "idea" }
 serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinVersion" }
+openapi = { id = "org.openapi.generator", version.ref =  "openapiVersion" }

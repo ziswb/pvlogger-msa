@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.jvm)
     alias(libs.plugins.ktor)
     alias(libs.plugins.serialization)
+    alias(libs.plugins.openapi)
     idea
 }
 
@@ -96,4 +97,34 @@ tasks {
     shadowJar {
         mergeServiceFiles()
     }
+}
+
+sourceSets.getByName("main") {
+    java.srcDir("src/gen/kotlin")
+}
+
+val openapiSpecFile = "$projectDir/src/main/resources/openapi/fusionsolar-api.yaml"
+val openapiOutputPath = "$projectDir"
+val openapiModelPackage = "ch.bziswiler.pvlogger.fusionsolar.model"
+val openapiLibrary = "multiplatform"
+val openapiSourceFolder = "src/gen/kotlin"
+
+openApiValidate {
+    inputSpec.set(openapiSpecFile)
+}
+
+openApiGenerate {
+    generatorName.set("kotlin")
+    inputSpec.set(openapiSpecFile)
+    outputDir.set(openapiOutputPath)
+    globalProperties.set(
+        mapOf(
+            "models" to "", "modelDocs" to "false"
+        )
+    )
+    additionalProperties.set(
+        mapOf(
+            "modelPackage" to openapiModelPackage, "library" to openapiLibrary, "sourceFolder" to openapiSourceFolder
+        )
+    )
 }

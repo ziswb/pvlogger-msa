@@ -1,0 +1,20 @@
+post:
+  tags:
+    - StationList
+  summary: Get the list of the stations of this account
+  operationId: StationList
+  requestBody:
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/EmptyObject.yaml'
+    required: true
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '../responses/StationListResponse.yaml'
+      description: OK
+  security:
+    - bearerAuth: [ ]

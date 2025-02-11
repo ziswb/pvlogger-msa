@@ -1,0 +1,29 @@
+type: object
+required:
+  - stationCode
+  - dataItemMap
+properties:
+  stationCode:
+    type: string
+  dataItemMap:
+    type: object
+    properties:
+      total_income:
+        type: number
+      total_power:
+        type: number
+      day_power:
+        type: number
+      day_income:
+        type: number
+      real_health_state:
+        type: integer
+      month_power:
+        type: number
+    required:
+      - total_income
+      - total_power
+      - day_power
+      - day_income
+      - real_health_state
+      - month_power
