@@ -17,3 +17,4 @@ include(
     "pvlogger-crepuscular-service",
     "pvlogger-shared"
 )
+include("pvlogger-fusionsolar")
