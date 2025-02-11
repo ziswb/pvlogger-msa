@@ -32,16 +32,16 @@ class PvLoggerJobFactory(
         }
         logger.info { "creating new job '${bundle.jobDetail.jobClass.name}'" }
         return when (bundle.jobDetail.jobClass.name) {
-            ModbusInverterBatchedDynamicDataCollectionJob::class.jvmName -> ModbusInverterBatchedDynamicDataCollectionJob(messageSender)
-            ModbusInverterBatchedStaticDataCollectionJob::class.jvmName -> ModbusInverterBatchedStaticDataCollectionJob(messageSender)
-            ModbusDeviceIdentifiersCollectionJob::class.jvmName -> ModbusDeviceIdentifiersCollectionJob(messageSender)
-            ModbusDeviceListCollectionJob::class.jvmName -> ModbusDeviceListCollectionJob(messageSender)
-            KpiExportJobTrigger::class.jvmName -> KpiExportJobTrigger(messageSender)
             DeviceFiveMinutesKpiCollectionJob::class.jvmName -> DeviceFiveMinutesKpiCollectionJob(messageSender)
             DeviceKpiCollectionJob::class.jvmName -> DeviceKpiCollectionJob(messageSender)
             ExtendedKpiCollectionJob::class.jvmName -> ExtendedKpiCollectionJob(messageSender)
-            StationKpiCollectionJob::class.jvmName -> StationKpiCollectionJob(messageSender)
             JobSchedulerJob::class.jvmName -> JobSchedulerJob(sunriseSunsetRestProxy, jobScheduler)
+            KpiExportJobTrigger::class.jvmName -> KpiExportJobTrigger(messageSender)
+            ModbusDeviceIdentifiersCollectionJob::class.jvmName -> ModbusDeviceIdentifiersCollectionJob(messageSender)
+            ModbusDeviceListCollectionJob::class.jvmName -> ModbusDeviceListCollectionJob(messageSender)
+            ModbusInverterBatchedDynamicDataCollectionJob::class.jvmName -> ModbusInverterBatchedDynamicDataCollectionJob(messageSender)
+            ModbusInverterBatchedStaticDataCollectionJob::class.jvmName -> ModbusInverterBatchedStaticDataCollectionJob(messageSender)
+            StationKpiCollectionJob::class.jvmName -> StationKpiCollectionJob(messageSender)
             else -> throw NotImplementedError("Job Factory error: No factory found for '${bundle.jobDetail?.jobClass?.name}'")
         }
     }
