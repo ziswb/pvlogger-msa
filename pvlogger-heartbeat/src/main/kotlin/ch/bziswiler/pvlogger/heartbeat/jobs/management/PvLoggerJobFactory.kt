@@ -9,6 +9,7 @@ import ch.bziswiler.pvlogger.heartbeat.jobs.modbus.ModbusDeviceIdentifiersCollec
 import ch.bziswiler.pvlogger.heartbeat.jobs.modbus.ModbusDeviceListCollectionJob
 import ch.bziswiler.pvlogger.heartbeat.jobs.modbus.ModbusInverterBatchedDynamicDataCollectionJob
 import ch.bziswiler.pvlogger.heartbeat.jobs.modbus.ModbusInverterBatchedStaticDataCollectionJob
+import ch.bziswiler.pvlogger.heartbeat.rest.SunriseSunsetRestProxy
 import ch.bziswiler.pvlogger.shared.messaging.TagsAsMessageSender
 import mu.KotlinLogging
 import org.quartz.Job
@@ -17,7 +18,11 @@ import org.quartz.spi.JobFactory
 import org.quartz.spi.TriggerFiredBundle
 import kotlin.reflect.jvm.jvmName
 
-class PvLoggerJobFactory(private val messageSender: TagsAsMessageSender) : JobFactory {
+class PvLoggerJobFactory(
+    private val jobScheduler: JobScheduler,
+    private val sunriseSunsetRestProxy: SunriseSunsetRestProxy,
+    private val messageSender: TagsAsMessageSender
+) : JobFactory {
 
     private val logger = KotlinLogging.logger {}
 
@@ -36,6 +41,7 @@ class PvLoggerJobFactory(private val messageSender: TagsAsMessageSender) : JobFa
             DeviceKpiCollectionJob::class.jvmName -> DeviceKpiCollectionJob(messageSender)
             ExtendedKpiCollectionJob::class.jvmName -> ExtendedKpiCollectionJob(messageSender)
             StationKpiCollectionJob::class.jvmName -> StationKpiCollectionJob(messageSender)
+            JobSchedulerJob::class.jvmName -> JobSchedulerJob(sunriseSunsetRestProxy, jobScheduler)
             else -> throw NotImplementedError("Job Factory error: No factory found for '${bundle.jobDetail?.jobClass?.name}'")
         }
     }
