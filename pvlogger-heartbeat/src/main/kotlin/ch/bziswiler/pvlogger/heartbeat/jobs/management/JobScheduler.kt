@@ -1,6 +1,7 @@
 package ch.bziswiler.pvlogger.heartbeat.jobs.management
 
 import ch.bziswiler.pvlogger.heartbeat.configuration.AppConfig
+import ch.bziswiler.pvlogger.heartbeat.jobs.fusionsolar.DeviceFiveMinutesKpiCollectionJob
 import ch.bziswiler.pvlogger.heartbeat.jobs.general.KpiExportJobTrigger
 import ch.bziswiler.pvlogger.heartbeat.jobs.modbus.ModbusDeviceIdentifiersCollectionJob
 import ch.bziswiler.pvlogger.heartbeat.jobs.modbus.ModbusDeviceListCollectionJob
@@ -70,6 +71,7 @@ class JobScheduler(private val jobSchedulerManager: JobSchedulerManager) {
     private fun setUpIndefiniteJobs() {
         scheduleForeverRepeatingJob(ModbusInverterBatchedDynamicDataCollectionJob.config)
         scheduleForeverRepeatingJob(KpiExportJobTrigger.config)
+        scheduleForeverRepeatingJob(DeviceFiveMinutesKpiCollectionJob.config)
     }
 
     private fun scheduleForeverRepeatingJob(config: JobConfiguration) {
