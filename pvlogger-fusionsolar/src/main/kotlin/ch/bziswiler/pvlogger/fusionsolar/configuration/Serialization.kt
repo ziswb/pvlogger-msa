@@ -1,21 +1,11 @@
 package ch.bziswiler.pvlogger.fusionsolar.configuration
 
-import io.ktor.serialization.kotlinx.json.json
-import io.ktor.server.application.Application
-import io.ktor.server.application.install
-import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonTransformingSerializer
 import kotlinx.serialization.modules.SerializersModule
 import mu.KotlinLogging
-
-fun Application.configureSerialization() {
-    install(ContentNegotiation) {
-        json(myJson)
-    }
-}
 
 val myJson = Json {
     prettyPrint = true
