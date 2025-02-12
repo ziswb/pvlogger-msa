@@ -82,7 +82,7 @@ PV_LOGGER_MODULES=(
   "pvlogger-modbus-data-accessor"
   "pvlogger-modbus-data-collector"
   "pvlogger-modbus-mock-server"
-  "pvlogger-crepuscular-service"
+  "pvlogger-sunrise-sunset"
 )
 
 echo "###############################################################"
