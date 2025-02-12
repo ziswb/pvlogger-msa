@@ -10,7 +10,7 @@ FROM eclipse-temurin:21-jre-ubi9-minimal
 
 LABEL author="Bruno Ziswiler"
 LABEL description="Backend Image for PV Logger"
-LABEL version="1.3.2"
+LABEL version="1.4.0"
 
 RUN mkdir -p "/opt/pvlogger/"
 COPY --from=build "/workspace/pvlogger-masterdata-server/build/libs/pvlogger-masterdata-server-all.jar" "/opt/pvlogger/masterdata-server.jar"
