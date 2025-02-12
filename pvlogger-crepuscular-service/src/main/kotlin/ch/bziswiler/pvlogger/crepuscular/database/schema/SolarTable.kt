@@ -4,6 +4,7 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 
 object SolarTable : IntIdTable("solar_table") {
     val status = text("status")
+    val time_zone_id = text("time_zone_id")
     val sunrise = text("sunrise")
     val sunset = text("sunset")
     val solar_noon = text("solar_noon")
