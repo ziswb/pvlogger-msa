@@ -51,7 +51,6 @@ class FusionSolarConnection(config: AppConfig) {
         install(Logging) { level = LogLevel.ALL }
         install(ContentNegotiation) { json(myJson) }
         install(HttpCookies)
-        expectSuccess = true
     }
 
     suspend fun connect() {
