@@ -11,7 +11,6 @@ import io.ktor.server.routing.get
 
 fun Routing.sunriseSunsetToday(service: SunriseSunsetService) {
     get("/$SUNRISE_SUNSET_VERSION_PATH/${SUNRISE_SUNSET_TODAY_PATH}") {
-        call.response.status(HttpStatusCode.OK)
-        call.respond(service.sunriseSunsetToday())
+        call.respond(HttpStatusCode.OK, service.sunriseSunsetToday())
     }
 }
