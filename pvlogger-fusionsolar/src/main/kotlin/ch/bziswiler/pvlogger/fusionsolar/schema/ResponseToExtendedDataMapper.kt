@@ -1,10 +1,14 @@
-package ch.bziswiler.pvlogger.persistence.huawei.fusionsolar.schema
+package ch.bziswiler.pvlogger.fusionsolar.schema
 
-import ch.bziswiler.fusionsolar.model.KpiStationExtendedData
-import ch.bziswiler.pvlogger.business.model.huawei.fusionsolar.FusionSolarDataType
+import ch.bziswiler.pvlogger.fusionsolar.model.KpiStationExtendedData
+import ch.bziswiler.pvlogger.fusionsolar.webservice.FusionSolarDataType
 import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.update
 
 class ResponseToExtendedDataMapper {
 
@@ -22,7 +26,8 @@ class ResponseToExtendedDataMapper {
         private fun saveOrUpdateMapping(responseId: EntityID<Int>, data: KpiStationExtendedData, type: FusionSolarDataType) {
             FsResponseToStationExtendedData
                 .slice(FsResponseToStationExtendedData.responseId)
-                .select { FsResponseToStationExtendedData.collectTime.eq(data.collectTime).and(FsResponseToStationExtendedData.type.eq(type)) }
+                .select { FsResponseToStationExtendedData.collectTime.eq(data.collectTime).and(
+                    FsResponseToStationExtendedData.type.eq(type)) }
                 .toList().let { rows ->
                     if (rows.isEmpty()) {
                         insertData(responseId, data, type)

@@ -1,6 +1,7 @@
-package ch.bziswiler.pvlogger.persistence.huawei.fusionsolar.schema
+package ch.bziswiler.pvlogger.fusionsolar.schema
 
-import ch.bziswiler.fusionsolar.model.ResponseObjectParams
+import ch.bziswiler.pvlogger.fusionsolar.model.ResponseObjectParams
+import ch.bziswiler.pvlogger.persistence.huawei.fusionsolar.schema.FsResponse
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.insert

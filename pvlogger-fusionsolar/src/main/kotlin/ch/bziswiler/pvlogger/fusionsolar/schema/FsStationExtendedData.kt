@@ -1,8 +1,8 @@
-package ch.bziswiler.pvlogger.persistence.huawei.fusionsolar.schema
+package ch.bziswiler.pvlogger.fusionsolar.schema
 
-import ch.bziswiler.fusionsolar.model.KpiStationExtendedData
-import ch.bziswiler.pvlogger.business.model.huawei.fusionsolar.FusionSolarDataType
-import ch.bziswiler.pvlogger.business.model.huawei.fusionsolar.FusionSolarDataType.entries
+import ch.bziswiler.pvlogger.fusionsolar.model.KpiStationExtendedData
+import ch.bziswiler.pvlogger.fusionsolar.webservice.FusionSolarDataType
+import ch.bziswiler.pvlogger.fusionsolar.webservice.FusionSolarDataType.entries
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insertIgnore

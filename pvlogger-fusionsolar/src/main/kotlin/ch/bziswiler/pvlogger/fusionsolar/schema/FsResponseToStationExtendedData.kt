@@ -1,7 +1,8 @@
-package ch.bziswiler.pvlogger.persistence.huawei.fusionsolar.schema
+package ch.bziswiler.pvlogger.fusionsolar.schema
 
-import ch.bziswiler.pvlogger.business.model.huawei.fusionsolar.FusionSolarDataType
-import ch.bziswiler.pvlogger.business.model.huawei.fusionsolar.FusionSolarDataType.entries
+import ch.bziswiler.pvlogger.fusionsolar.webservice.FusionSolarDataType
+import ch.bziswiler.pvlogger.fusionsolar.webservice.FusionSolarDataType.entries
+import ch.bziswiler.pvlogger.persistence.huawei.fusionsolar.schema.FsResponse
 import org.jetbrains.exposed.sql.Table
 
 object FsResponseToStationExtendedData : Table("fs_response_to_station_extended_data") {

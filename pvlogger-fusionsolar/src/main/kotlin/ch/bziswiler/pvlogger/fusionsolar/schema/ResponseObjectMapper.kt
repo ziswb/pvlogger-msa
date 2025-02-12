@@ -1,5 +1,6 @@
-package ch.bziswiler.pvlogger.persistence.huawei.fusionsolar.schema
+package ch.bziswiler.pvlogger.fusionsolar.schema
 
+import ch.bziswiler.pvlogger.persistence.huawei.fusionsolar.schema.FsResponse
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.dao.id.EntityID
