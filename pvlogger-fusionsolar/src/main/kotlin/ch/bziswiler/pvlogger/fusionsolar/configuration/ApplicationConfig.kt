@@ -5,7 +5,7 @@ import ch.bziswiler.pvlogger.shared.messaging.config.MqConfig
 import io.ktor.server.application.Application
 import org.koin.ktor.ext.inject
 
-private const val HUAWEI_FUSION_SOLAR = "huawei.fusion.solar"
+private const val FUSION_SOLAR = "fusionsolar"
 private const val BASE_URL_OLD = "baseUrlOld"
 private const val BASE_URL_NEW = "baseUrlNew"
 private const val USERNAME = "username"
@@ -47,6 +47,7 @@ fun Application.setupConfig() {
     readServerConfig(appConfig)
     readDbConfig(appConfig)
     readMqConfig(appConfig)
+    readFusionSolarConfig(appConfig)
 }
 
 private fun Application.readServerConfig(appConfig: AppConfig) = with(environment.config.config(KTOR_SERVER)) {
@@ -78,7 +79,7 @@ private fun Application.readMqConfig(appConfig: AppConfig) = with(environment.co
     }
 }
 
-private fun Application.fusionSolarConfig(appConfig: AppConfig) = with(environment.config.config(HUAWEI_FUSION_SOLAR)) {
+private fun Application.readFusionSolarConfig(appConfig: AppConfig) = with(environment.config.config(FUSION_SOLAR)) {
     appConfig.apply {
         fusionSolarConfig = FusionSolarConfig(
             username = property(USERNAME).getString(),

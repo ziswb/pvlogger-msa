@@ -1,6 +1,6 @@
 package ch.bziswiler.pvlogger.fusionsolar.webservice
 
-import ch.bziswiler.pvlogger.fusionsolar.configuration.AppConfig
+import ch.bziswiler.pvlogger.fusionsolar.configuration.FusionSolarConfig
 import ch.bziswiler.pvlogger.fusionsolar.configuration.myJson
 import ch.bziswiler.pvlogger.fusionsolar.model.LoginCredentials
 import ch.bziswiler.pvlogger.fusionsolar.model.LoginCredentialsV1
@@ -32,7 +32,7 @@ import mu.KotlinLogging
 import java.util.*
 import kotlin.concurrent.schedule
 
-class FusionSolarConnection(config: AppConfig) {
+class FusionSolarConnection(config: FusionSolarConfig) {
 
     val logger = KotlinLogging.logger {}
     val tokenName = "XSRF-TOKEN"
@@ -40,10 +40,10 @@ class FusionSolarConnection(config: AppConfig) {
 
     private val blockedUrlsSet = mutableSetOf<String>()
     private val delayAfter407 = 60 * 1000L
-    private val loginUrlOld = "${config.fusionSolarConfig.baseUrlOld}/login"
-    private val loginUrlNew = "${config.fusionSolarConfig.baseUrlNew}/login"
-    private val userName = config.fusionSolarConfig.username
-    private val systemCode = config.fusionSolarConfig.password
+    private val loginUrlOld = "${config.baseUrlOld}/login"
+    private val loginUrlNew = "${config.baseUrlNew}/login"
+    private val userName = config.username
+    private val systemCode = config.password
     private var authenticated = AuthState.NOT_AUTHENTICATED
 
     var xsrfToken: String? = ""
@@ -85,10 +85,14 @@ class FusionSolarConnection(config: AppConfig) {
             305 -> handleNotLoggedIn()
             407 -> handleAccessFrequencyTooHigh(targetUrl)
         }
-        throw UnsuccessfulRequestException(jsonObject["failCode"]?.jsonPrimitive?.int ?: 30029, jsonObject["message"]?.jsonPrimitive?.contentOrNull)
+        throw UnsuccessfulRequestException(
+            jsonObject["failCode"]?.jsonPrimitive?.int ?: 30029,
+            jsonObject["message"]?.jsonPrimitive?.contentOrNull
+        )
     }
 
-    inline fun <reified R> convertJsonObjectTo(jsonObject: JsonObject): R = myJson.decodeFromString<R>(myJson.encodeToString<JsonObject>(jsonObject))
+    inline fun <reified R> convertJsonObjectTo(jsonObject: JsonObject): R =
+        myJson.decodeFromString<R>(myJson.encodeToString<JsonObject>(jsonObject))
 
     suspend fun assertConnected() {
         if (this.authenticated != AuthState.AUTHENTICATED) {

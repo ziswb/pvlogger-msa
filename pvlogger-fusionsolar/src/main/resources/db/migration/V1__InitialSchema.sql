@@ -1,10 +1,62 @@
-create table public.fs_device_real_kpi
+create table fs_response
+(
+    id        serial
+        primary key,
+    timestamp timestamp not null,
+    success   boolean   not null,
+    fail_code integer   not null,
+    message   text,
+    raw       text      not null
+);
+
+create table fs_station_extended_data
+(
+    collect_time         bigint      not null,
+    type                 varchar(17) not null,
+    station_code         text        not null,
+    installed_capacity   double precision,
+    radiation_intensity  double precision,
+    theory_power         double precision,
+    performance_ratio    double precision,
+    inverter_power       double precision,
+    ongrid_power         double precision,
+    use_power            double precision,
+    power_profit         double precision,
+    perpower_ratio       double precision,
+    reduction_total_co2  double precision,
+    reduction_total_coal double precision,
+    reduction_total_tree double precision,
+    constraint pk_fs_station_extended_data
+        primary key (collect_time, type)
+);
+
+create index fs_station_extended_data_collect_time
+    on fs_station_extended_data (collect_time);
+
+create index fs_station_extended_data_type
+    on fs_station_extended_data (type);
+
+create table fs_response_to_station_extended_data
+(
+    response_id  integer     not null
+        constraint fk_fs_response_to_station_extended_data_response_id__id
+            references fs_response
+            on update restrict on delete restrict,
+    collect_time bigint      not null,
+    type         varchar(17) not null,
+    constraint pk_fs_response_to_station_extended_data
+        primary key (response_id, collect_time, type),
+    constraint fk_response_to_station_extended_data
+        foreign key (collect_time, type) references fs_station_extended_data
+);
+
+create table fs_device_real_kpi
 (
     id             serial
         primary key,
     response       integer not null
         constraint fk_fs_device_real_kpi_response__id
-            references public.fs_response
+            references fs_response
             on update restrict on delete restrict,
     type           varchar(17) default 'DEVICE_REAL_KPI'::character varying not null,
     "devId"        bigint,
@@ -100,103 +152,51 @@ create table public.fs_device_real_kpi
     collect_time   bigint
 );
 
-create table public.fs_response
-(
-    id        serial
-        primary key,
-    timestamp timestamp not null,
-    success   boolean   not null,
-    fail_code integer   not null,
-    message   text,
-    raw       text      not null
-);
-
-create table public.fs_response_params_basic
+create table fs_response_params_basic
 (
     id             serial
         primary key,
     response       integer not null
         constraint fk_fs_response_params_basic_response__id
-            references public.fs_response
+            references fs_response
             on update restrict on delete restrict,
     station_codes  text,
     "current_time" bigint
 );
 
-create table public.fs_response_params_device
+create table fs_response_params_device
 (
     id             serial
         primary key,
     response       integer not null
         constraint fk_fs_response_params_device_response__id
-            references public.fs_response
+            references fs_response
             on update restrict on delete restrict,
     dev_ids        text,
     dev_type_id    integer,
     "current_time" bigint
 );
 
-create table public.fs_response_params_extended
+create table fs_response_params_extended
 (
     id             serial
         primary key,
     response       integer not null
         constraint fk_fs_response_params_extended_response__id
-            references public.fs_response
+            references fs_response
             on update restrict on delete restrict,
     station_codes  text,
     collect_time   bigint,
     "current_time" bigint
 );
 
-create table public.fs_response_to_station_extended_data
-(
-    response_id  integer     not null
-        constraint fk_fs_response_to_station_extended_data_response_id__id
-            references public.fs_response
-            on update restrict on delete restrict,
-    collect_time bigint      not null,
-    type         varchar(17) not null,
-    constraint pk_fs_response_to_station_extended_data
-        primary key (response_id, collect_time, type),
-    constraint fk_response_to_station_extended_data
-        foreign key (collect_time, type) references public.fs_station_extended_data
-);
-
-create table public.fs_station_extended_data
-(
-    collect_time         bigint      not null,
-    type                 varchar(17) not null,
-    station_code         text        not null,
-    installed_capacity   double precision,
-    radiation_intensity  double precision,
-    theory_power         double precision,
-    performance_ratio    double precision,
-    inverter_power       double precision,
-    ongrid_power         double precision,
-    use_power            double precision,
-    power_profit         double precision,
-    perpower_ratio       double precision,
-    reduction_total_co2  double precision,
-    reduction_total_coal double precision,
-    reduction_total_tree double precision,
-    constraint pk_fs_station_extended_data
-        primary key (collect_time, type)
-);
-
-create index fs_station_extended_data_collect_time
-    on public.fs_station_extended_data (collect_time);
-
-create index fs_station_extended_data_type
-    on public.fs_station_extended_data (type);
-
-create table public.fs_station_real_kpi
+create table fs_station_real_kpi
 (
     id                serial
         primary key,
     response          integer          not null
         constraint fk_fs_station_real_kpi_response__id
-            references public.fs_response
+            references fs_response
             on update restrict on delete restrict,
     type              varchar(17) default 'STATION_REAL_KPI'::character varying not null,
     station_code      text,

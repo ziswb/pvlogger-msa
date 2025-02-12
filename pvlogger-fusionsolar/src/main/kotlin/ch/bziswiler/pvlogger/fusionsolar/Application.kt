@@ -9,7 +9,6 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.netty.EngineMain
 import io.ktor.server.plugins.callloging.CallLogging
-import org.koin.core.qualifier.named
 import org.koin.ktor.ext.inject
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
@@ -29,22 +28,10 @@ fun Application.module(testing: Boolean = false) {
     setupConfig()
     configureMonitoring()
     configureDatabases()
-    startServices(testing)
+    startServices()
 }
 
-fun Application.startServices(testing: Boolean = false) {
-    if (!testing) {
-        startStoringModbusValues()
-        startStoringKpiValues()
-    }
-}
-
-private fun Application.startStoringModbusValues() {
-    val composer by inject<MqReceiverComposer>(named("modbus_values"))
-    composer.compose()
-}
-
-private fun Application.startStoringKpiValues() {
-    val composer by inject<MqReceiverComposer>(named("kpi_values"))
+fun Application.startServices() {
+    val composer by inject<MqReceiverComposer>()
     composer.compose()
 }

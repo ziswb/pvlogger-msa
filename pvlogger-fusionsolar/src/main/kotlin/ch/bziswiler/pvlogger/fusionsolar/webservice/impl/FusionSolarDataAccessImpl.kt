@@ -1,6 +1,6 @@
 package ch.bziswiler.pvlogger.fusionsolar.webservice.impl
 
-import ch.bziswiler.pvlogger.fusionsolar.configuration.AppConfig
+import ch.bziswiler.pvlogger.fusionsolar.configuration.FusionSolarConfig
 import ch.bziswiler.pvlogger.fusionsolar.model.DevFiveMinutesResponse
 import ch.bziswiler.pvlogger.fusionsolar.model.DevKpiDayResponse
 import ch.bziswiler.pvlogger.fusionsolar.model.DevListRequest
@@ -37,18 +37,18 @@ import java.time.ZoneId.systemDefault
 import java.time.ZonedDateTime
 import java.time.ZonedDateTime.now
 
-class FusionSolarDataAccessImpl(config: AppConfig) : FusionSolarDataAccess {
+class FusionSolarDataAccessImpl(config: FusionSolarConfig) : FusionSolarDataAccess {
 
     private val logger = KotlinLogging.logger {}
-    private val stationListUrl = "${config.fusionSolarConfig.baseUrlOld}/getStationList"
-    private val stationRealKpiUrl = "${config.fusionSolarConfig.baseUrlOld}/getStationRealKpi"
-    private val kpiStationHourUrl = "${config.fusionSolarConfig.baseUrlOld}/getKpiStationHour"
-    private val kpiStationDayUrl = "${config.fusionSolarConfig.baseUrlOld}/getKpiStationDay"
-    private val kpiStationMonthUrl = "${config.fusionSolarConfig.baseUrlOld}/getKpiStationMonth"
-    private val kpiStationYearUrl = "${config.fusionSolarConfig.baseUrlOld}/getKpiStationYear"
-    private val devListUrl = "${config.fusionSolarConfig.baseUrlOld}/getDevList"
-    private val devRealKpiUrl = "${config.fusionSolarConfig.baseUrlOld}/getDevRealKpi"
-    private val devFiveMinutesUrl = "${config.fusionSolarConfig.baseUrlOld}/getDevFiveMinutes"
+    private val stationListUrl = "${config.baseUrlOld}/getStationList"
+    private val stationRealKpiUrl = "${config.baseUrlOld}/getStationRealKpi"
+    private val kpiStationHourUrl = "${config.baseUrlOld}/getKpiStationHour"
+    private val kpiStationDayUrl = "${config.baseUrlOld}/getKpiStationDay"
+    private val kpiStationMonthUrl = "${config.baseUrlOld}/getKpiStationMonth"
+    private val kpiStationYearUrl = "${config.baseUrlOld}/getKpiStationYear"
+    private val devListUrl = "${config.baseUrlOld}/getDevList"
+    private val devRealKpiUrl = "${config.baseUrlOld}/getDevRealKpi"
+    private val devFiveMinutesUrl = "${config.baseUrlOld}/getDevFiveMinutes"
     private val stringInverterTypeId = 1
     private val connection = FusionSolarConnection(config)
     private var stationCode = ""
