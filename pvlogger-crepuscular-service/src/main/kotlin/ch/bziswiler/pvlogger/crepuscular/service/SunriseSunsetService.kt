@@ -43,7 +43,6 @@ class SunriseSunsetService(private val config: SunriseSunsetServiceConfig, priva
                 allowSpecialFloatingPointValues = true
             })
         }
-        expectSuccess = true
     }
 
     suspend fun sunriseSunsetToday() = sunriseSunsetPair(today())
@@ -53,7 +52,7 @@ class SunriseSunsetService(private val config: SunriseSunsetServiceConfig, priva
         sunriseSunsetData(date).let { data ->
             logger.debug { "SunriseSunset result: $data" }
             dao.save(data)
-            SunriseSunsetPair(toUtcDateTime(data.result.sunrise), toUtcDateTime(data.result.sunset))
+            SunriseSunsetPair(toUtcDateTime(data.results.sunrise), toUtcDateTime(data.results.sunset))
         }
     }.onFailure { error: Throwable ->
         logger.error(error) { "solar-api failed" }
