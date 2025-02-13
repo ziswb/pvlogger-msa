@@ -1,0 +1,27 @@
+type: object
+required:
+  - devId
+  - collectTime
+  - dataItemMap
+properties:
+  devId:
+    type: integer
+    format: int64
+  collectTime:
+    type: integer
+    format: int64
+  dataItemMap:
+    type: object
+    properties:
+      aoc_ratio:
+        type: number
+      yield_deviation:
+        type: integer
+      total_aop:
+        type: integer
+      installed_capacity:
+        type: number
+      product_power:
+        type: number
+      perpower_ratio:
+        type: number

@@ -1,0 +1,26 @@
+post:
+  tags:
+    - DevKpiDay
+  summary: Get the KPI for each device
+  description: |
+    This interface is used to obtain daily device data. A maximum of 100 devices of the same type can be queried at a time.
+    The backend calculates the month of the collection time based on the request parameter collectTime (collection time in milliseconds) and the time zone where the device is located.
+    Then, you can query the daily data of the device in the month based on the device ID.
+    If there is data for n (0 ≤ n ≤ 31) days of the month, n (0 ≤ n ≤ 31) records will be returned.
+    For details about the data list that can be queried using this interface, see 4.8 Daily Device Data Interface.
+  operationId: DevKpiDay
+  requestBody:
+    content:
+      application/json:
+        schema:
+          $ref: '../requestBodies/DevPeriodicDataRequest.yaml'
+    required: true
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '../responses/DevKpiDayResponse.yaml'
+      description: OK
+  security:
+    - bearerAuth: [ ]

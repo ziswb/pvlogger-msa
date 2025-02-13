@@ -1,0 +1,23 @@
+post:
+  tags:
+    - DevList
+  summary: Get list of devices for a given station
+  description: |
+    This interface is used to obtain basic device information. Before invoking other interfaces to obtain device data, you need to invoke this interface to obtain the device ID.
+    You can query devices by plant ID set. Devices of a maximum of 100 plants can be queried at a time.
+  operationId: DeviceList
+  requestBody:
+    content:
+      application/json:
+        schema:
+          $ref: '../requestBodies/DevListRequest.yaml'
+    required: true
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '../responses/DevListResponse.yaml'
+      description: OK
+  security:
+    - bearerAuth: [ ]

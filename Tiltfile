@@ -15,6 +15,20 @@ k8s_yaml([
     blob(pg_pw_yml)
 ])
 
+fs_pw_yml = """
+apiVersion: v1
+data:
+  FUSIONSOLAR_PASSWORD: "<redacted>"
+kind: Secret
+metadata:
+  name: fusionsolar-secret
+  namespace: pvlogger
+type: kubernetes.io/generic
+"""
+k8s_yaml([
+    blob(fs_pw_yml)
+])
+
 local_resource('install_traefik', cmd='./scripts/install_traefik.sh')
 
 k8s_yaml(local('./scripts/replace_path_by_home.sh ./tilt-templates/pg-backup-data-pv-template.yaml'))
@@ -149,3 +163,9 @@ k8s_yaml([
 
 k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_frontend_install/files/pvlogger-frontend-deployment.yaml')
 k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_frontend_install/files/pvlogger-frontend-service.yaml')
+
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_crepuscular_install/files/pvlogger-crepuscular-deployment.yaml')
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_crepuscular_install/files/pvlogger-crepuscular-service.yaml')
+
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_fusionsolar_install/files/pvlogger-fusionsolar-deployment.yaml')
+k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/pvlogger_fusionsolar_install/files/pvlogger-fusionsolar-service.yaml')

@@ -1,6 +1,7 @@
 package ch.bziswiler.pvlogger.heartbeat.jobs.management
 
 import ch.bziswiler.pvlogger.heartbeat.configuration.AppConfig
+import ch.bziswiler.pvlogger.heartbeat.jobs.fusionsolar.DeviceFiveMinutesKpiCollectionJob
 import ch.bziswiler.pvlogger.heartbeat.jobs.general.KpiExportJobTrigger
 import ch.bziswiler.pvlogger.heartbeat.jobs.modbus.ModbusDeviceIdentifiersCollectionJob
 import ch.bziswiler.pvlogger.heartbeat.jobs.modbus.ModbusDeviceListCollectionJob
@@ -17,14 +18,32 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.util.Date.from
 
 class JobScheduler(private val jobSchedulerManager: JobSchedulerManager) {
 
     private val logger = KotlinLogging.logger {}
 
     fun initializeJobs(appConfig: AppConfig) {
+        setUpJobSchedulerJob()
         setUpDailyOnceJobs(appConfig)
         setUpIndefiniteJobs()
+    }
+
+    fun scheduleLimitedRepeatingJob(config: JobConfiguration) {
+        logger.debug { "scheduling limited-repeating-job '$config'" }
+        newTrigger()
+            .withIdentity(config.triggerKey)
+            .startAt(from(config.startInstant))
+            .endAt(from(config.stopInstant))
+            .withSchedule(
+                simpleSchedule()
+                    .withIntervalInSeconds(config.intervalInSeconds)
+                    .withMisfireHandlingInstructionIgnoreMisfires()
+                    .repeatForever()
+            )
+            .forJob(config.jobKey).build()
+            .let { trigger -> scheduleJob(config.jobClass, trigger) }
     }
 
     private fun setUpDailyOnceJobs(appConfig: AppConfig) {
@@ -52,6 +71,7 @@ class JobScheduler(private val jobSchedulerManager: JobSchedulerManager) {
     private fun setUpIndefiniteJobs() {
         scheduleForeverRepeatingJob(ModbusInverterBatchedDynamicDataCollectionJob.config)
         scheduleForeverRepeatingJob(KpiExportJobTrigger.config)
+        scheduleForeverRepeatingJob(DeviceFiveMinutesKpiCollectionJob.config)
     }
 
     private fun scheduleForeverRepeatingJob(config: JobConfiguration) {
@@ -76,6 +96,23 @@ class JobScheduler(private val jobSchedulerManager: JobSchedulerManager) {
                 .build()
                 .let { job -> this.scheduleJob(job, trigger) }
         }
+
+    private fun setUpJobSchedulerJob() {
+        logger.debug { "setting up 'JobSchedulerJob' one-off style" }
+        scheduleOnceJob(JobSchedulerJob.config.copy(jobId = "job-once", triggerId = "trigger-once"))
+        logger.debug { "setting up 'JobSchedulerJob' repeatedly" }
+        scheduleDailyOnceJob(JobSchedulerJob.config)
+    }
+
+    private fun scheduleOnceJob(config: JobConfiguration) {
+        logger.debug { "scheduling once-job '$config'" }
+        newTrigger()
+            .withIdentity(config.triggerKey)
+            .startAt(from(config.startInstant))
+            .forJob(config.jobId, config.jobGroup)
+            .build()
+            .let { trigger -> scheduleJob(config.jobClass, trigger) }
+    }
 
     private fun getStartMinute(appConfig: AppConfig): Int = when (appConfig.serverConfig.isProd) {
         true -> appConfig.jobConfig.lateEvening.split(":")[1].toInt()

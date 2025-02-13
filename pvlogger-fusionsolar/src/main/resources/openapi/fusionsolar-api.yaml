@@ -1,0 +1,93 @@
+openapi: 3.0.0
+info:
+  title: Huawei Fusion Solar openAPI
+  version: 1.0.0
+servers:
+  - url: 'https://eu5.fusionsolar.huawei.com/thirdData'
+  - url: 'https://eu5.fusionsolar.huawei.com:27200/rest/openapi/pvms'
+security:
+  - bearerAuth: [ ]
+paths:
+  /login:
+    $ref: './paths/login.yaml'
+  /v1/login:
+    $ref: './paths/loginv1.yaml'
+  /getStationList:
+    $ref: './paths/getStationList.yaml'
+  /getStationRealKpi:
+    $ref: './paths/getStationRealKpi.yaml'
+  /getKpiStationHour:
+    $ref: './paths/getKpiStationHour.yaml'
+  /getKpiStationDay:
+    $ref: './paths/getKpiStationDay.yaml'
+  /getKpiStationMonth:
+    $ref: './paths/getKpiStationMonth.yaml'
+  /getKpiStationYear:
+    $ref: './paths/getKpiStationYear.yaml'
+  /getDevList:
+    $ref: './paths/getDevList.yaml'
+  /getDevRealKpi:
+    $ref: './paths/getDevRealKpi.yaml'
+  /getDevFiveMinutes:
+    $ref: './paths/getDevFiveMinutes.yaml'
+  /getDevKpiDay:
+    $ref: './paths/getDevKpiDay.yaml'
+components:
+  schemas:
+    LoginCredentials:
+      $ref: './schemas/LoginCredentials.yaml'
+    LoginCredentialsV1:
+      $ref: './schemas/LoginCredentialsV1.yaml'
+    LoginResponse:
+      $ref: './responses/LoginResponse.yaml'
+    StationListResponse:
+      $ref: './responses/StationListResponse.yaml'
+    StationData:
+      $ref: './schemas/StationData.yaml'
+    StationRealKpiRequest:
+      $ref: './requestBodies/StationRealKpiRequest.yaml'
+    StationRealKpiResponse:
+      $ref: './responses/StationRealKpiResponse.yaml'
+    StationRealKpiData:
+      $ref: './schemas/StationRealKpiData.yaml'
+    KpiStationExtendedRequest:
+      $ref: './requestBodies/KpiStationExtendedRequest.yaml'
+    KpiStationExtendedResponse:
+      $ref: './responses/KpiStationExtendedResponse.yaml'
+    KpiStationExtendedData:
+      $ref: './schemas/KpiStationExtendedData.yaml'
+    KpiStationHourResponse:
+      $ref: './responses/KpiStationHourResponse.yaml'
+    KpiStationHourData:
+      $ref: './schemas/KpiStationHourData.yaml'
+    DevListRequest:
+      $ref: './requestBodies/DevListRequest.yaml'
+    DevListResponse:
+      $ref: './responses/DevListResponse.yaml'
+    DevData:
+      $ref: './schemas/DevData.yaml'
+    DevRealKpiRequest:
+      $ref: './requestBodies/DevRealKpiRequest.yaml'
+    DevRealKpiResponse:
+      $ref: './responses/DevRealKpiResponse.yaml'
+    DevRealKpiData:
+      $ref: './schemas/DevRealKpiData.yaml'
+    DevPeriodicDataRequest:
+      $ref: './requestBodies/DevPeriodicDataRequest.yaml'
+    DevFiveMinutesResponse:
+      $ref: './responses/DevFiveMinutesResponse.yaml'
+    DevFiveMinutesData:
+      $ref: './schemas/DevFiveMinutesData.yaml'
+    DevKpiDayResponse:
+      $ref: './responses/DevKpiDayResponse.yaml'
+    DevKpiDayData:
+      $ref: './schemas/DevKpiDayData.yaml'
+    ResponseObject:
+      $ref: './schemas/ResponseObject.yaml'
+    EmptyObject:
+      $ref: './schemas/EmptyObject.yaml'
+  securitySchemes:
+    bearerAuth:
+      bearerFormat: XSRF-TOKEN
+      scheme: bearer
+      type: http

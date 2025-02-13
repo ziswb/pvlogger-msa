@@ -1,0 +1,26 @@
+post:
+  tags:
+    - KpiStationHour
+  summary: Get the KPI for the given stations
+  description: |
+    This interface is used to obtain hourly plant data. Data of a maximum of 100 plants can be queried at a time.
+    The backend calculates the date of the collection time based on the request parameter collectTime (collection time in milliseconds) and the time zone where the plant is located.
+    Then, you can query the hourly data of the plant by plant ID on the current day.
+    If there is data for n (0 ≤ n ≤ 24) hours of the day, n (0 ≤ n ≤ 24) records will be returned.
+    For details about the data list that can be queried using this interface, see 4.2 Hourly Plant Data Interface.
+  operationId: KpiStationHour
+  requestBody:
+    content:
+      application/json:
+        schema:
+          $ref: '../requestBodies/KpiStationExtendedRequest.yaml'
+    required: true
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '../responses/KpiStationHourResponse.yaml'
+      description: OK
+  security:
+    - bearerAuth: [ ]

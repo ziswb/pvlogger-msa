@@ -1,0 +1,20 @@
+post:
+  tags:
+    - Login new Style
+  summary: New Log in URL. Returns the login token in the header named "xsrf-token"
+  operationId: LoginV1
+  requestBody:
+    content:
+      application/json:
+        schema:
+          $ref: '../schemas/LoginCredentialsV1.yaml'
+    required: true
+  responses:
+    '200': # status code
+      content:
+        application/json:
+          schema:
+            $ref: '../responses/LoginResponse.yaml'
+      description: OK
+  security:
+    - bearerAuth: [ ]

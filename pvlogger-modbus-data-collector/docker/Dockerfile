@@ -10,7 +10,7 @@ FROM eclipse-temurin:21-jre-ubi9-minimal
 
 LABEL author="Bruno Ziswiler"
 LABEL description="PV Logger Data Collector"
-LABEL version="1.3.2"
+LABEL version="1.4.0"
 
 RUN mkdir -p "/opt/pvlogger/"
 COPY --from=build "/workspace/pvlogger-modbus-data-collector/build/libs/pvlogger-modbus-data-collector-all.jar" "/opt/pvlogger/data-collector.jar"

@@ -75,6 +75,7 @@ echo "passed_ops: ${passed_ops}"
 
 PV_LOGGER_MODULES=(
   "pvlogger-frontend"
+  "pvlogger-fusionsolar"
   "pvlogger-heartbeat"
   "pvlogger-kpi-aggregator"
   "pvlogger-kpi-exporter"
@@ -82,6 +83,7 @@ PV_LOGGER_MODULES=(
   "pvlogger-modbus-data-accessor"
   "pvlogger-modbus-data-collector"
   "pvlogger-modbus-mock-server"
+  "pvlogger-sunrise-sunset"
 )
 
 echo "###############################################################"

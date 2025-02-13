@@ -16,7 +16,7 @@ class DatabaseFactory(private val dbConfig: DatabaseConfig) {
 
     private val logger = KotlinLogging.logger {}
     private val maxRetries = 30
-    private val sleepMs: Long = 5000
+    private val sleepMs: Long = 15000
     private val retryCounter = AtomicInteger(0)
 
     fun connect() {

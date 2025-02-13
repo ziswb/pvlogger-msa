@@ -1,0 +1,10 @@
+title: DevRealKpiRequest
+type: object
+required:
+  - devIds
+  - devTypeId
+properties:
+  devIds:
+    type: string
+  devTypeId:
+    type: integer

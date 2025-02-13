@@ -1,0 +1,193 @@
+type: object
+required:
+  - devId
+  - dataItemMap
+properties:
+  devId:
+    type: integer
+    format: int64
+  sn:
+    type: string
+  dataItemMap:
+    type: object
+    properties:
+      pv26_i:
+        type: number
+      pv2_u:
+        type: number
+      pv28_i:
+        type: number
+      pv4_u:
+        type: number
+      pv22_i:
+        type: number
+      power_factor:
+        type: number
+      pv6_u:
+        type: number
+      pv24_i:
+        type: number
+      mppt_total_cap:
+        type: number
+      pv8_u:
+        type: number
+      pv22_u:
+        type: number
+      open_time:
+        type: integer
+        format: int64
+      a_i:
+        type: number
+      pv24_u:
+        type: number
+      c_i:
+        type: number
+      mppt_9_cap:
+        type: number
+      pv20_u:
+        type: number
+      pv19_u:
+        type: number
+      pv15_u:
+        type: number
+      a_u:
+        type: number
+      reactive_power:
+        type: number
+      pv17_u:
+        type: number
+      c_u:
+        type: number
+      mppt_8_cap:
+        type: number
+      pv20_i:
+        type: number
+      pv15_i:
+        type: number
+      efficiency:
+        type: number
+      pv17_i:
+        type: number
+      pv11_i:
+        type: number
+      pv13_i:
+        type: number
+      pv11_u:
+        type: number
+      mppt_power:
+        type: number
+      pv13_u:
+        type: number
+      run_state:
+        type: integer
+      close_time:
+        type: integer
+        format: int64
+      pv19_i:
+        type: number
+      mppt_7_cap:
+        type: number
+      mppt_5_cap:
+        type: number
+      pv27_u:
+        type: number
+      pv2_i:
+        type: number
+      active_power:
+        type: number
+      pv4_i:
+        type: number
+      pv6_i:
+        type: number
+      pv8_i:
+        type: number
+      mppt_6_cap:
+        type: number
+      pv27_i:
+        type: number
+      pv1_u:
+        type: number
+      pv3_u:
+        type: number
+      pv23_i:
+        type: number
+      pv5_u:
+        type: number
+      pv25_i:
+        type: number
+      pv7_u:
+        type: number
+      pv23_u:
+        type: number
+      inverter_state:
+        type: number
+      pv9_u:
+        type: number
+      pv25_u:
+        type: number
+      total_cap:
+        type: number
+      mppt_3_cap:
+        type: number
+      b_i:
+        type: number
+      pv21_u:
+        type: number
+      mppt_10_cap:
+        type: number
+      pv16_u:
+        type: number
+      pv18_u:
+        type: number
+      temperature:
+        type: number
+      b_u:
+        type: number
+      bc_u:
+        type: number
+      pv21_i:
+        type: number
+      elec_freq:
+        type: number
+      mppt_4_cap:
+        type: number
+      pv16_i:
+        type: number
+      pv18_i:
+        type: number
+      day_cap:
+        type: number
+      pv12_i:
+        type: number
+      pv14_i:
+        type: number
+      pv12_u:
+        type: number
+      mppt_1_cap:
+        type: number
+      pv14_u:
+        type: number
+      pv10_u:
+        type: number
+      pv26_u:
+        type: number
+      pv1_i:
+        type: number
+      pv28_u:
+        type: number
+      pv3_i:
+        type: number
+      mppt_2_cap:
+        type: number
+      pv5_i:
+        type: number
+      ca_u:
+        type: number
+      ab_u:
+        type: number
+      pv7_i:
+        type: number
+      pv10_i:
+        type: number
+      pv9_i:
+        type: number

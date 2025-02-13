@@ -10,6 +10,7 @@ class AppConfig {
     lateinit var mqConfig: MqConfig
     lateinit var databaseConfig: DatabaseConfig
     lateinit var jobConfig: JobConfig
+    lateinit var sunriseSunsetServiceConfig: SunriseSunsetServiceConfig
 }
 
 data class ServerConfig(
@@ -20,12 +21,18 @@ data class JobConfig(
     var lateEvening: String
 )
 
+data class SunriseSunsetServiceConfig(
+    var host: String,
+    var port: Int
+)
+
 fun Application.setupConfig() {
     val appConfig by inject<AppConfig>()
     readServerConfig(appConfig)
     readDbConfig(appConfig)
     readMqConfig(appConfig)
     readJobConfig(appConfig)
+    readCrepuscularConfig(appConfig)
 }
 
 private fun Application.readMqConfig(appConfig: AppConfig) = with(environment.config.config("messagequeue")) {
@@ -62,3 +69,6 @@ private fun Application.readJobConfig(appConfig: AppConfig) = with(environment.c
     appConfig.apply { jobConfig = JobConfig(lateEvening = property("lateEvening").getString()) }
 }
 
+private fun Application.readCrepuscularConfig(appConfig: AppConfig) = with(environment.config.config("crepuscular")) {
+    appConfig.apply { sunriseSunsetServiceConfig = SunriseSunsetServiceConfig(host = property("host").getString(), port = property("port").getString().toInt()) }
+}

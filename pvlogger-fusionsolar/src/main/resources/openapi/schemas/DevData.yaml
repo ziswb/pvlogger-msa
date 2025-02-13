@@ -1,0 +1,26 @@
+type: object
+required:
+  - devTypeId
+  - id
+properties:
+  devName:
+    type: string
+  devTypeId:
+    type: integer
+  esnCode:
+    type: string
+  id:
+    type: integer
+    format: int64
+  invType:
+    type: string
+  latitude:
+    type: number
+  longitude:
+    type: number
+  optimizerNumber:
+    type: integer
+  softwareVersion:
+    type: string
+  stationCode:
+    type: string

@@ -1,0 +1,27 @@
+type: object
+required:
+  - failCode
+properties:
+  failCode:
+    type: integer
+  message:
+    type: string
+  params:
+    type: object
+    properties:
+      collectTime:
+        type: integer
+        format: int64
+      currentTime:
+        type: integer
+        format: int64
+      stationCodes:
+        type: string
+      devIds:
+        type: string
+      devTypeId:
+        type: integer
+  success:
+    type: boolean
+  immediately:
+    type: boolean

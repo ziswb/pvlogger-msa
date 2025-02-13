@@ -1,0 +1,22 @@
+type: object
+required:
+  - stationCode
+properties:
+  aidType:
+    type: integer
+  buildState:
+    type: string
+  capacity:
+    type: number
+  combineType:
+    type: string
+  linkmanPho:
+    type: string
+  stationAddr:
+    type: string
+  stationCode:
+    type: string
+  stationLinkman:
+    type: string
+  stationName:
+    type: string

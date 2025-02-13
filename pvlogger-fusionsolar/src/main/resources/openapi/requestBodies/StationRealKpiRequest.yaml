@@ -1,0 +1,7 @@
+title: StationRealKpiRequest
+type: object
+required:
+  - stationCodes
+properties:
+  stationCodes:
+    type: string

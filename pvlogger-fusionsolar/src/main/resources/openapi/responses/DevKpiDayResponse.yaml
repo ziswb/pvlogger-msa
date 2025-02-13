@@ -1,0 +1,9 @@
+title: DevKpiDayResponse
+allOf:
+  - $ref: '../schemas/ResponseObject.yaml'
+  - type: object
+    properties:
+      data:
+        type: array
+        items:
+          $ref: '../schemas/DevKpiDayData.yaml'

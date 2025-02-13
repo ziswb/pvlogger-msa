@@ -1,0 +1,24 @@
+post:
+  tags:
+    - KpiStationYear
+  summary: Get the KPI for the given stations
+  description: |
+    This interface is used to obtain yearly plant data. Data of a maximum of 100 plants can be queried at a time.
+    Based on the plant ID, the backend queries the data of each year since the plant was constructed (including the current year).
+    For details about the data list that can be queried using this interface, see 4.5 Yearly Plant Data Interface.
+  operationId: KpiStationYear
+  requestBody:
+    content:
+      application/json:
+        schema:
+          $ref: '../requestBodies/KpiStationExtendedRequest.yaml'
+    required: true
+  responses:
+    '200':
+      content:
+        application/json:
+          schema:
+            $ref: '../responses/KpiStationExtendedResponse.yaml'
+      description: OK
+  security:
+    - bearerAuth: [ ]
