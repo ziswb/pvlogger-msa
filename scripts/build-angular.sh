@@ -22,4 +22,4 @@ $DOCKER_CMD run \
 --volume "${SCRIPT_DIR}/../pvlogger-frontend/src/":/usr/src/app \
 --workdir /usr/src/app/web \
 "$NODE_IMAGE" \
-sh -c "npm install && npm run build -- --base-href /pv/ --deploy-url /pv/ --configuration=production"
+sh -c "npm install && npm run build -- --configuration=production"
