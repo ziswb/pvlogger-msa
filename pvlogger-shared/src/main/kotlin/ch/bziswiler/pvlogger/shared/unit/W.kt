@@ -6,7 +6,7 @@ import java.io.Serializable as JavaSerializable
 @Serializable
 data class W(val w: Double) : JavaSerializable {
 
-    fun toKW() = KW(w.div(1000))
+    fun toKW() = KW(w.div(1000.0))
 
     operator fun plus(other: W) = W(this.w + other.w)
     operator fun plus(other: KW) = this + other.toW()
