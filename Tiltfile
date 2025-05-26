@@ -4,7 +4,7 @@ k8s_context('docker-desktop')
 pg_pw_yml = """
 apiVersion: v1
 data:
-  POSTGRES_PASSWORD: "<redacted>"
+  POSTGRES_PASSWORD: """ + str(local('./scripts/get_postgres_pw_base64_encoded.sh')) + """
 kind: Secret
 metadata:
   name: postgresql-secret
@@ -18,7 +18,7 @@ k8s_yaml([
 fs_pw_yml = """
 apiVersion: v1
 data:
-  FUSIONSOLAR_PASSWORD: "<redacted>"
+  FUSIONSOLAR_PASSWORD: """ + str(local('./scripts/get_fusion_solar_pw_base64_encoded.sh')) + """
 kind: Secret
 metadata:
   name: fusionsolar-secret
@@ -56,7 +56,7 @@ k8s_yaml('pvlogger-infrastructure/pvlogger-setup/roles/activemq/files/activemq-s
 pv_pw_yml = """
 apiVersion: v1
 data:
-  POSTGRES_PASSWORD: "<redacted>"
+  POSTGRES_PASSWORD: """ + str(local('./scripts/get_postgres_pw_base64_encoded.sh')) + """
 kind: Secret
 metadata:
   name: postgresql-secret
