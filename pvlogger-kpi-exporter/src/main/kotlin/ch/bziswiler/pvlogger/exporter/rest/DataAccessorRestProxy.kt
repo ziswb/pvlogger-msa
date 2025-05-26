@@ -7,6 +7,7 @@ import ch.bziswiler.pvlogger.shared.rest.KpiValuesDto
 import ch.bziswiler.pvlogger.shared.rest.PvHttpClient.client
 import io.ktor.client.call.body
 import io.ktor.client.request.get
+import io.ktor.http.HttpStatusCode.Companion.NoContent
 import io.ktor.http.HttpStatusCode.Companion.OK
 import mu.KotlinLogging
 
@@ -26,6 +27,11 @@ class DataAccessorRestProxy(private val config: ModbusDataAccessConfig) {
             OK -> {
                 logger.info { "Got latest KPIs: '$it'" }
                 it.body<KpiValuesDto>()
+            }
+
+            NoContent -> {
+                logger.info { "No KPIs available: '$it'" }
+                null
             }
 
             else -> {

@@ -22,7 +22,7 @@ import kotlin.io.path.isSymbolicLink
 class JsonFileService(exportConfig: ExportConfig, private val directoryService: DirectoryService) : ExportService {
 
     private val logger = KotlinLogging.logger {}
-    private val lastUpdateTimeFormatter = Format { yearMonthDayPattern();char(' ');hour();char(':');minute();char(':');second() }
+    private val timeFormatter = Format { yearMonthDayPattern();char(' ');hour();char(':');minute();char(':');second() }
     private val fileNameDateFormatter = Format { yearMonthDayPattern();char('_');hour();char('-');minute();char('-');second();char('-');secondFraction(3) }
     private val path = exportConfig.path
     private val name = exportConfig.name
@@ -39,19 +39,23 @@ class JsonFileService(exportConfig: ExportConfig, private val directoryService: 
     }
 
     override fun export(data: KpiValuesDto) {
-        val localDateTime = fromEpochMilliseconds(data.createdAt).toLocalDateTime(UTC)
+        val createdAt = fromEpochMilliseconds(data.createdAt).toLocalDateTime(UTC)
+        val collectedAt = fromEpochMilliseconds(data.collectedAt).toLocalDateTime(UTC)
         write(
-            localDateTime, KpiExportRecord(
-                lastUpdateTime = lastUpdateTimeFormatter.format(localDateTime), CurrentDataRecord(
+            createdAt, KpiExportRecord(
+                lastUpdateTime = timeFormatter.format(createdAt),
+                collectionTime = timeFormatter.format(collectedAt),
+                CurrentDataRecord(
                     pv_prod_akt_w = KW(data.solarPower).toW().w,
                     pv_verk_akt_w = KW(data.solarToGridPower).toW().w,
                     pv_kauf_akt_w = KW(data.gridToHousePower).toW().w,
-                    pv_verb_akt_w = KW((data.solarToHousePower + data.gridToHousePower)).toW().w,
-                ), CurrentDayDataRecord(
+                    pv_verb_akt_w = KW((data.solarToHousePower + data.gridToHousePower)).toW().w
+                ),
+                CurrentDayDataRecord(
                     pv_prod_tag_wh = KWh(data.dailyEnergyYield).toWh().wh,
                     pv_verk_tag_wh = KWh(data.dailyEnergyExported).toWh().wh,
                     pv_kauf_tag_wh = KWh(data.dailyEnergyImported).toWh().wh,
-                    pv_verb_tag_wh = KWh(data.dailyEnergyConsumed).toWh().wh,
+                    pv_verb_tag_wh = KWh(data.dailyEnergyConsumed).toWh().wh
                 )
             )
         )

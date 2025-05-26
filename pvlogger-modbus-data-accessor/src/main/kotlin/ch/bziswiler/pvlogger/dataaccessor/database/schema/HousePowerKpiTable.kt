@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.javatime.datetime
 
 object HousePowerKpiTable : IntIdTable("house_power_kpi_values") {
     val dateCreated = datetime("date_created").defaultExpression(CurrentDateTime)
+    val collectedAt = datetime("collected_at")
     val jobId = text("job_id").default("NO-JOB-ID-GIVEN")
     val solarPower = double("solar_power").default(0.0)
     val solarToHousePower = double("solar_to_house_power").default(0.0)

@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class KpiExportRecord(
     val lastUpdateTime: String,
+    val collectionTime: String,
     val currentData: CurrentDataRecord? = CurrentDataRecord(),
     val currentDayData: CurrentDayDataRecord? = CurrentDayDataRecord(),
 )

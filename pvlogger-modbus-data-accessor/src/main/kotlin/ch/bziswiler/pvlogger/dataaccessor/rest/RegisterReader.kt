@@ -1,14 +1,11 @@
 package ch.bziswiler.pvlogger.dataaccessor.rest
 
-import ch.bziswiler.pvlogger.dataaccessor.database.schema.IntegerValueTable
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.ResponseTable
-import ch.bziswiler.pvlogger.dataaccessor.database.schema.ShortValueTable
-import ch.bziswiler.pvlogger.dataaccessor.database.schema.StringValuesTable
-import ch.bziswiler.pvlogger.dataaccessor.database.schema.UIntegerValueTable
-import ch.bziswiler.pvlogger.dataaccessor.database.schema.UShortValueTable
+import ch.bziswiler.pvlogger.dataaccessor.database.schema.ResponseTable.response_time
 import ch.bziswiler.pvlogger.shared.job.meta.JobId
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.RegisterAddress
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Type
+import ch.bziswiler.pvlogger.shared.rest.Measurement
 import mu.KotlinLogging
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.Column
@@ -18,26 +15,19 @@ import org.jetbrains.exposed.sql.StdOutSqlLogger
 import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.time.LocalDateTime
+import java.time.ZoneOffset.UTC
 
 object RegisterReader {
 
     private const val ONE = 1
 
     private val logger = KotlinLogging.logger {}
-    private val responseTimeDescending = ResponseTable.response_time to DESC
+    private val responseTimeDescending = response_time to DESC
 
-    fun readLatestRegisterValue(type: Type, deviceId: Int, registerAddress: RegisterAddress, jobId: JobId): Any? = when (type) {
-        Type.U16, Type.BITFIELD_16 -> readLatestRegisterValue(UShortValueTable, UShortValueTable.register_value, UShortValueTable.register_address, registerAddress, deviceId, jobId)?.toUShort()
-        Type.U32, Type.BITFIELD_32 -> readLatestRegisterValue(UIntegerValueTable, UIntegerValueTable.register_value, UIntegerValueTable.register_address, registerAddress, deviceId, jobId)?.toUInt()
-        Type.I16 -> readLatestRegisterValue(ShortValueTable, ShortValueTable.register_value, ShortValueTable.register_address, registerAddress, deviceId, jobId)?.toShort()
-        Type.I32 -> readLatestRegisterValue(IntegerValueTable, IntegerValueTable.register_value, IntegerValueTable.register_address, registerAddress, deviceId, jobId)?.toInt()
-        Type.STR -> readLatestRegisterValue(StringValuesTable, StringValuesTable.register_value, StringValuesTable.register_address, registerAddress, deviceId, jobId)?.toString()
-        Type.MLD -> throw NotImplementedError()
-    }
-
-    private fun <T> readLatestRegisterValue(valueTable: IdTable<Int>, valueColumn: Column<T?>, registerAddressColumn: Column<Int>, registerAddress: RegisterAddress, deviceId: Int, jobId: JobId): T? = transaction {
+    fun <T> readLatestRegisterValue(valueTable: IdTable<Int>, valueColumn: Column<T?>, registerAddressColumn: Column<Int>, registerAddress: RegisterAddress, deviceId: Int, jobId: JobId): Measurement<T>? = transaction {
         (valueTable innerJoin ResponseTable)
-            .select(valueColumn)
+            .select(valueColumn, response_time)
             .where(
                 registerAddressColumn.eq(registerAddress.value)
                 .and(ResponseTable.logic_device_id.eq(deviceId.toUByte()))
@@ -46,16 +36,17 @@ object RegisterReader {
             .orderBy(responseTimeDescending)
             .limit(ONE)
             .firstOrNull()
-            ?.let { row -> row[valueColumn] } ?: null
+            ?.let { row -> row[valueColumn]?.let { Measurement<T>(row[response_time].toEpochSecond(UTC), it) } }
             .also { logger.info { "No register value found for device ID '$deviceId' and register address '$registerAddress'." } }
     }
 
-    fun readKwSoFarToday(type: Type, registerAddress: RegisterAddress): Int? = when (type) {
+    fun readKwSoFarToday(type: Type, registerAddress: RegisterAddress): Measurement<Int>? = when (type) {
         Type.I32 -> readKwSoFarToday(registerAddress)
         else -> throw NotImplementedError()
     }
 
-    private fun readKwSoFarToday(registerAddress: RegisterAddress): Int? {
+    private fun readKwSoFarToday(registerAddress: RegisterAddress): Measurement<Int>? {
+        val timestampColumn = 1
         val kWhColumn = 2
         return transaction {
             addLogger(StdOutSqlLogger)
@@ -76,7 +67,11 @@ object RegisterReader {
                 """.trimIndent()
             ) { resultSet ->
                 resultSet.next()
-                resultSet.getInt(kWhColumn)
+                val timestamp = resultSet.getTimestamp(timestampColumn)
+                val value = resultSet.getInt(kWhColumn)
+                timestamp
+                    ?.let { Measurement(it.toLocalDateTime().toEpochSecond(UTC), value) }
+                    ?: Measurement(LocalDateTime.now().toEpochSecond(UTC), value)
             }
         }
     }

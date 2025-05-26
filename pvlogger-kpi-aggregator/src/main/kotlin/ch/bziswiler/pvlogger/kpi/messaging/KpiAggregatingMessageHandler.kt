@@ -14,8 +14,6 @@ import ch.bziswiler.pvlogger.shared.messaging.PvLoggerKpiData
 import ch.bziswiler.pvlogger.shared.messaging.TaggedMessageSender
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
-import java.time.LocalDateTime.now
-import java.time.ZoneOffset.UTC
 import javax.jms.Message
 import javax.jms.ObjectMessage
 
@@ -54,7 +52,7 @@ class KpiAggregatingMessageHandler(private val adapter: DataAccessorRestProxy, p
 
 private fun PvLoggerKpiData.Companion.from(liveKpis: KpiLiveData, todayKpis: KpiTodayData, jobId: JobId) = PvLoggerKpiData(
     jobId = jobId.id,
-    dateCreated = now().toInstant(UTC).toEpochMilli(),
+    dateCreated = liveKpis.timestamp,
     producing = liveKpis.producing,
     exporting = liveKpis.exporting,
     importing = liveKpis.importing,

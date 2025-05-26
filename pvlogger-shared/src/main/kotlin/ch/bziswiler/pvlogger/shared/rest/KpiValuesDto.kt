@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class KpiValuesDto(
     val createdAt: Long = 0,
+    val collectedAt: Long,
     val solarPower: Double = 0.0,
     val gridPower: Double = 0.0,
     val solarToHousePower: Double = 0.0,

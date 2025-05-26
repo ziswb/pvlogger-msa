@@ -4,6 +4,8 @@ import ch.bziswiler.pvlogger.kpi.rest.data.InverterEnergyToday
 import ch.bziswiler.pvlogger.kpi.rest.data.MeterEnergyToday
 
 data class KpiTodayData(private val inverterTodayEnergy: InverterEnergyToday, private val meterTodayEnergy: MeterEnergyToday) {
+    val timestamp
+        get() = inverterTodayEnergy.timestamp
     val produced = inverterTodayEnergy.produced
     val exported = meterTodayEnergy.exported
     val imported = meterTodayEnergy.imported

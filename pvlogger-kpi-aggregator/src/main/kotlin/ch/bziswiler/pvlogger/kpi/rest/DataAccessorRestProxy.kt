@@ -12,14 +12,17 @@ import ch.bziswiler.pvlogger.kpi.rest.data.MeterActivePower
 import ch.bziswiler.pvlogger.kpi.rest.data.MeterEnergyToday
 import ch.bziswiler.pvlogger.shared.job.meta.JobId
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
-import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_LATEST_REGISTER_VALUE_PATH
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_KW_TODAY_SO_FAR_PATH
+import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_LATEST_REGISTER_VALUE_PATH
+import ch.bziswiler.pvlogger.shared.rest.Measurement
 import ch.bziswiler.pvlogger.shared.rest.PvHttpClient.client
+import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode.Companion.OK
 import mu.KotlinLogging
+import java.time.LocalDateTime
+import java.time.ZoneOffset.UTC
 
 class DataAccessorRestProxy(private val config: ModbusDataAccessConfig) {
 
@@ -38,11 +41,12 @@ class DataAccessorRestProxy(private val config: ModbusDataAccessConfig) {
     suspend fun meterEnergyToday() = MeterEnergyToday(computeImportedEnergyToday(config.meterDeviceIds), masterDataForMeterImportedEnergy().unit, computeExportedEnergyToday(config.meterDeviceIds), masterDataForMeterExportedEnergy().unit)
 
     @OptIn(ExperimentalUnsignedTypes::class)
-    private suspend fun retrieveLatestRegisterValuesAggregated(masterData: ModbusRegisterDefinition, deviceIds: UByteArray, jobId: JobId) = deviceIds.fold(0.0) { sum, deviceId ->
-        sum + retrieveLatestRegisterValue(masterData, deviceId, jobId)
+    private suspend fun retrieveLatestRegisterValuesAggregated(masterData: ModbusRegisterDefinition, deviceIds: UByteArray, jobId: JobId) = deviceIds.fold(Measurement(now(), 0.0)) { sum, deviceId ->
+        val measurement = retrieveLatestRegisterValue(masterData, deviceId, jobId)
+        Measurement(measurement.timestamp, sum.value + measurement.value)
     }
 
-    private suspend fun retrieveLatestRegisterValue(masterData: ModbusRegisterDefinition, deviceId: UByte, jobId: JobId): Double = client.get {
+    private suspend fun retrieveLatestRegisterValue(masterData: ModbusRegisterDefinition, deviceId: UByte, jobId: JobId): Measurement<Double> = client.get {
         logger.info { "Getting actual power for $masterData" }
         url {
             host = config.host
@@ -64,22 +68,24 @@ class DataAccessorRestProxy(private val config: ModbusDataAccessConfig) {
 
             else -> {
                 logger.warn { "Status: ${it.status}, no actual power received for master data '$masterData' and device id: '$deviceId'." }
-                0.0
+                Measurement(now(), 0.0)
             }
         }
     }
 
     @OptIn(ExperimentalUnsignedTypes::class)
-    private suspend fun computeImportedEnergyToday(deviceIds: UByteArray): Double = deviceIds.fold(0.0) { sum, _ ->
-        sum + retrieveEnergyTodaySoFar(masterDataForMeterImportedEnergy())
+    private suspend fun computeImportedEnergyToday(deviceIds: UByteArray): Measurement<Double> = deviceIds.fold(Measurement(now(), 0.0)) { sum, _ ->
+        val measurement = retrieveEnergyTodaySoFar(masterDataForMeterImportedEnergy())
+        Measurement(measurement.timestamp, sum.value + measurement.value)
     }
 
     @OptIn(ExperimentalUnsignedTypes::class)
-    private suspend fun computeExportedEnergyToday(deviceIds: UByteArray): Double = deviceIds.fold(0.0) { sum, _ ->
-        sum + retrieveEnergyTodaySoFar(masterDataForMeterExportedEnergy())
+    private suspend fun computeExportedEnergyToday(deviceIds: UByteArray): Measurement<Double> = deviceIds.fold(Measurement(now(), 0.0)) { sum, _ ->
+        val measurement = retrieveEnergyTodaySoFar(masterDataForMeterExportedEnergy())
+        Measurement(measurement.timestamp, sum.value + measurement.value)
     }
 
-    private suspend fun retrieveEnergyTodaySoFar(masterData: ModbusRegisterDefinition): Double = client.get {
+    private suspend fun retrieveEnergyTodaySoFar(masterData: ModbusRegisterDefinition): Measurement<Double> = client.get {
         logger.info { "Getting actual energy for $masterData" }
         url {
             host = config.host
@@ -99,14 +105,18 @@ class DataAccessorRestProxy(private val config: ModbusDataAccessConfig) {
 
             else -> {
                 logger.warn { "Status: ${it.status}, no actual energy received for master data '$masterData'." }
-                0.0
+                Measurement(now(), 0.0)
             }
         }
     }
 
 }
 
-private suspend fun HttpResponse.toEnergyValue(masterData: ModbusRegisterDefinition): Double = toDoubleOrDefault(bodyAsText(), 0.0).div(toDoubleOrDefault(masterData.gain.raw, 1.0))
+private fun now(): Long = LocalDateTime.now().toEpochSecond(UTC)
+
+private suspend fun HttpResponse.toEnergyValue(masterData: ModbusRegisterDefinition): Measurement<Double> = body<Measurement<Int>>().let {
+    Measurement(it.timestamp, it.value.div(toDoubleOrDefault(masterData.gain.raw, 1.0)))
+}
 
 private fun toDoubleOrDefault(text: String, default: Double): Double {
     return when (val value = text.toDoubleOrNull()) {

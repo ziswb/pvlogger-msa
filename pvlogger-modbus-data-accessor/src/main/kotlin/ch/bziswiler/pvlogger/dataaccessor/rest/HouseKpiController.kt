@@ -1,6 +1,7 @@
 package ch.bziswiler.pvlogger.dataaccessor.rest
 
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.HousePowerKpiTable
+import ch.bziswiler.pvlogger.dataaccessor.database.schema.HousePowerKpiTable.collectedAt
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.HousePowerKpiTable.dailyEnergyConsumed
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.HousePowerKpiTable.dailyEnergyExported
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.HousePowerKpiTable.dailyEnergyImported
@@ -107,6 +108,7 @@ object HouseKpiController {
 
     private fun toKpiValuesDto(it: ResultRow) = KpiValuesDto(
         createdAt = it[dateCreated].toInstant(UTC).toEpochMilli(),
+        collectedAt = it[collectedAt].toInstant(UTC).toEpochMilli(),
         solarPower = rounder.format(it[solarPower]).toDouble(),
         gridPower = rounder.format(it[gridToHousePower].minus(it[solarToGridPower])).toDouble(),
         solarToHousePower = rounder.format(it[HousePowerKpiTable.solarToHousePower]).toDouble(),
