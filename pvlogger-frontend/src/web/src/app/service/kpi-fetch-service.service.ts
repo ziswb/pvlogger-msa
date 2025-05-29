@@ -46,7 +46,7 @@ export class KpiFetchServiceService {
 
   public attachToLiveData() {
     console.log("attaching to live data");
-    this.subject = webSocket<KpiValues>(`ws://${KpiFetchServiceService.SERVER_HOST}/livedata`);
+    this.subject = webSocket<KpiValues>(`${environment.webSocketProtocol}://${KpiFetchServiceService.SERVER_HOST}/livedata`);
     this.subject.pipe(concatMap(item => of(item).pipe())).subscribe(data => {
       console.log(`live data received`);
       console.log(data);

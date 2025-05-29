@@ -5,7 +5,8 @@
 export const environment = {
   production: false,
   serverHost: "localhost:8090",
-  serverUrl: "http://localhost:8090"
+  serverUrl: "http://localhost:8090",
+  webSocketProtocol: `${location.protocol === 'https:' ? 'wss' : 'ws'}`
 };
 
 /*
