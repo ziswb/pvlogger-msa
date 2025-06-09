@@ -3,8 +3,8 @@ package ch.bziswiler.pvlogger.modbus.mockserver.utils
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.RegisterAddress
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Type
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
-import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.FunctionCode
-import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.MbapHeader
+import ch.bziswiler.pvlogger.modbus.tcp.api.tcp.frame.FunctionCode
+import ch.bziswiler.pvlogger.modbus.tcp.api.tcp.frame.MbapHeader
 import mu.KotlinLogging
 
 object MockDataBuilder {

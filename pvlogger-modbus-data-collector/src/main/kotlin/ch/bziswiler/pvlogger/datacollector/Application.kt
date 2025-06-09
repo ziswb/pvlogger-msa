@@ -1,34 +1,16 @@
 package ch.bziswiler.pvlogger.datacollector
 
-import ch.bziswiler.pvlogger.datacollector.configuration.appModule
-import ch.bziswiler.pvlogger.datacollector.configuration.configureMonitoring
+import ch.bziswiler.pvlogger.datacollector.configuration.di
 import ch.bziswiler.pvlogger.datacollector.configuration.setupConfig
 import ch.bziswiler.pvlogger.shared.messaging.MqReceiverComposer
-import io.ktor.server.application.Application
-import io.ktor.server.application.install
-import io.ktor.server.netty.EngineMain
-import io.ktor.server.plugins.callloging.CallLogging
-import org.koin.ktor.ext.inject
-import org.koin.ktor.plugin.Koin
-import org.koin.logger.slf4jLogger
-import org.slf4j.event.Level
+import org.kodein.di.instance
 
-fun main(args: Array<String>) = EngineMain.main(args)
-
-fun Application.module(testing: Boolean = false) {
-    if (!testing) {
-        install(Koin) {
-            slf4jLogger()
-            modules(appModule)
-        }
-    }
-    install(CallLogging) { level = Level.TRACE }
+fun main(args: Array<String>) {
     setupConfig()
-    configureMonitoring()
     startServices()
 }
 
-fun Application.startServices() {
-    val composer by inject<MqReceiverComposer>()
+fun startServices() {
+    val composer by di.instance<MqReceiverComposer>()
     composer.compose()
 }

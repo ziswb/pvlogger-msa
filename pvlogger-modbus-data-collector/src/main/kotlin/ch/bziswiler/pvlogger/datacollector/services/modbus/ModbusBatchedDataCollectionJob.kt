@@ -1,23 +1,21 @@
 package ch.bziswiler.pvlogger.datacollector.services.modbus
 
 import ch.bziswiler.pvlogger.datacollector.configuration.AppConfig
-import ch.bziswiler.pvlogger.datacollector.modbus.tcp.ModbusTcpChannel
-import ch.bziswiler.pvlogger.datacollector.modbus.tcp.request.ReadRegistersValueRequest
 import ch.bziswiler.pvlogger.datacollector.services.IdProvider
 import ch.bziswiler.pvlogger.datacollector.services.messaging.JobSchedulerMessageSender
 import ch.bziswiler.pvlogger.datacollector.services.messaging.StoreModbusValuesMessageSender
+import ch.bziswiler.pvlogger.datacollector.services.modbus.request.ModbusTcpChannel
+import ch.bziswiler.pvlogger.datacollector.services.modbus.request.ReadRegistersValueRequest
+import ch.bziswiler.pvlogger.datacollector.services.modbus.response.ModbusRegisterValueResponse
+import ch.bziswiler.pvlogger.datacollector.services.modbus.response.ModbusResponse
+import ch.bziswiler.pvlogger.modbus.tcp.api.masterdata.Category
+import ch.bziswiler.pvlogger.modbus.tcp.api.masterdata.DeviceType
+import ch.bziswiler.pvlogger.modbus.tcp.api.masterdata.DeviceType.INVERTER
+import ch.bziswiler.pvlogger.modbus.tcp.api.masterdata.DeviceType.METER
+import ch.bziswiler.pvlogger.modbus.tcp.api.masterdata.ModbusRegisterDefinition
 import ch.bziswiler.pvlogger.shared.job.meta.JobId
 import ch.bziswiler.pvlogger.shared.job.tags.JobFinishedMessageTag
 import ch.bziswiler.pvlogger.shared.job.tags.StoreModbusRegisterValuesMessageTag
-import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category
-import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType
-import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType.INVERTER
-import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType.METER
-import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
-import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusRegisterValueResponse
-import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusResponse
-import io.micrometer.core.instrument.Counter
-import io.micrometer.core.instrument.Timer
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import java.time.LocalDateTime.now
@@ -34,12 +32,10 @@ abstract class ModbusBatchedDataCollectionJob(
 
     private val logger = KotlinLogging.logger {}
 
-    private val meterDeviceIds = config.modbusTcpConfig.meterDeviceIds
-    private val inverterDeviceIds = config.modbusTcpConfig.inverterDeviceIds
+    private val meterDeviceIds = config.modBus.meterDeviceIds
+    private val inverterDeviceIds = config.modBus.inverterDeviceIds
     private val deviceIdToDeviceTypesMap = mutableMapOf<UByte, List<DeviceType>>()
 
-    protected abstract val metricTimer: Timer
-    protected abstract val metricCounter: Counter
     protected abstract val categories: List<Category>
 
     init {
@@ -71,20 +67,17 @@ abstract class ModbusBatchedDataCollectionJob(
     private fun jobFailed(jobId: JobId) = jobSchedulerMessageSender.tagAndSendMessage(jobFailedMessageObject(jobId), JobFinishedMessageTag(jobName))
 
     final override fun execute() {
-        metricCounter.increment()
-        metricTimer.recordCallable {
-            val jobId = JobId(idProvider.nextJobId)
-            runCatching {
-                logger.debug { "ModbusInverterBatchedDataCollectionJobScaffold.execute().runCatching()" }
-                deviceIdToDeviceTypesMap.forEach { fetchRegisterValues(jobId, it.key, it.value) }
-            }.onSuccess {
-                logger.debug { "ModbusInverterBatchedDataCollectionJobScaffold.execute().onSuccess()" }
-                jobSucceeded(jobId)
-            }.onFailure {
-                logger.error(it) { "ModbusInverterBatchedDataCollectionJobScaffold.execute().onFailure()" }
-                jobFailed(jobId)
-                throw it
-            }
+        val jobId = JobId(idProvider.nextJobId)
+        runCatching {
+            logger.debug { "ModbusInverterBatchedDataCollectionJobScaffold.execute().runCatching()" }
+            deviceIdToDeviceTypesMap.forEach { fetchRegisterValues(jobId, it.key, it.value) }
+        }.onSuccess {
+            logger.debug { "ModbusInverterBatchedDataCollectionJobScaffold.execute().onSuccess()" }
+            jobSucceeded(jobId)
+        }.onFailure {
+            logger.error(it) { "ModbusInverterBatchedDataCollectionJobScaffold.execute().onFailure()" }
+            jobFailed(jobId)
+            throw it
         }
     }
 

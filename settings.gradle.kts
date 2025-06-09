@@ -12,6 +12,8 @@ include(
     "pvlogger-kpi-exporter",
     "pvlogger-masterdata-server",
     "pvlogger-message-queue",
+    "pvlogger-modbus-tcp-api",
+    "pvlogger-modbus-tcp-impl",
     "pvlogger-modbus-data-accessor",
     "pvlogger-modbus-data-collector",
     "pvlogger-modbus-mock-server",

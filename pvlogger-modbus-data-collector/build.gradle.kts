@@ -16,8 +16,6 @@ idea {
 
 application {
     mainClass.set("io.ktor.server.netty.EngineMain")
-    val isDevelopment: Boolean = project.ext.has("development")
-    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
 
 java {
@@ -31,35 +29,29 @@ repositories {
 }
 
 dependencies {
-    // Messaging
-    implementation(libs.activemq.core)
-    implementation(libs.activemq.client)
-
-    // Ktor
-    implementation(libs.ktor.client.cio)
-    implementation(libs.ktor.client.content.negotiation)
-    implementation(libs.ktor.client.core)
-    implementation(libs.ktor.client.logging)
-    implementation(libs.ktor.serialization.kotlinx.json)
-    implementation(libs.ktor.server.call.logging)
-    implementation(libs.ktor.server.core)
-    implementation(libs.ktor.server.metrics.micrometer)
-    implementation(libs.ktor.server.netty)
-
     // Logging
     implementation(libs.logback.classic)
     implementation(libs.kotlin.logging)
 
     // Shared pvlogger-resources
     implementation(project(":pvlogger-shared"))
+    implementation(project(":pvlogger-modbus-tcp-api"))
 
-    // Koin
-    implementation(libs.koin.ktor)
-    implementation(libs.koin.logger.slf4j)
+    // Dependency Injection
+    implementation("org.kodein.di:kodein-di:7.26.1")
 
-    // Monitoring
-    implementation(libs.micrometer.registry.prometheus)
+    // Kotlin
+    implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.7.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
 
+    // Configuration
+    implementation("com.sksamuel.hoplite:hoplite-core:2.9.0")
+    implementation("com.sksamuel.hoplite:hoplite-yaml:2.9.0")
+
+//    implementation("io.github.sksamuel.hoplite:hoplite-core:2.8.4")
+//    implementation("io.github.sksamuel.hoplite:hoplite-yaml:2.8.4")
+
+    // Testing
     testImplementation(libs.kotlin.test.junit)
-    testImplementation(libs.ktor.server.tests)
+    testImplementation("io.github.sksamuel.hoplite:hoplite-testing:2.8.4")
 }

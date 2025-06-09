@@ -1,16 +1,24 @@
 package ch.bziswiler.pvlogger.datacollector.configuration
 
-import ch.bziswiler.pvlogger.shared.messaging.config.MqConfig
-import io.ktor.server.application.Application
-import org.koin.ktor.ext.inject
+import com.sksamuel.hoplite.ConfigLoaderBuilder
+import com.sksamuel.hoplite.addResourceSource
+import org.kodein.di.instance
 
-private const val DELIMITER = ","
+fun setupConfig() {
+    val configBinder = ConfigLoaderBuilder.default()
+        .addResourceSource("/application-dev.yml")
+        .addResourceSource("/application-prod.yml")
+        .build()
+        .configBinder()
+    val config = configBinder.bindOrThrow<AppConfig>("/application-dev.yaml")
+    val appConfig by di.instance<AppConfig>()
+    appConfig.masterData = config.masterData
+    appConfig.modBus = config.modBus
+}
 
 class AppConfig {
-    lateinit var masterDataConfig: MasterDataConfig
-    lateinit var serverConfig: ServerConfig
-    lateinit var modbusTcpConfig: ModbusTcpConfig
-    lateinit var mqConfig: MqConfig
+    lateinit var masterData: MasterDataConfig
+    lateinit var modBus: ModbusTcpConfig
 }
 
 data class MasterDataConfig(
@@ -18,60 +26,32 @@ data class MasterDataConfig(
     val port: Int
 )
 
-data class ServerConfig(
-    val isProd: Boolean,
-)
-
 @OptIn(ExperimentalUnsignedTypes::class)
 data class ModbusTcpConfig(
     val host: String,
     val port: Int,
-    val delay: Long,
     val meterDeviceIds: UByteArray,
     val inverterDeviceIds: UByteArray,
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
 
-fun Application.setupConfig() {
-    val appConfig by inject<AppConfig>()
-    readServerConfig(appConfig)
-    readModbusConfig(appConfig)
-    readMqConfig(appConfig)
-    readMdConfig(appConfig)
-}
+        other as ModbusTcpConfig
 
-private fun Application.readMdConfig(appConfig: AppConfig) = with(environment.config.config("pvlogger.masterdata")) {
-    appConfig.apply {
-        masterDataConfig = MasterDataConfig(
-            host = property("host").getString(),
-            port = property("port").getString().toInt()
-        )
+        if (port != other.port) return false
+        if (host != other.host) return false
+        if (!meterDeviceIds.contentEquals(other.meterDeviceIds)) return false
+        if (!inverterDeviceIds.contentEquals(other.inverterDeviceIds)) return false
+
+        return true
     }
-}
 
-private fun Application.readServerConfig(appConfig: AppConfig) = with(environment.config.config("ktor.server")) {
-    appConfig.apply { serverConfig = ServerConfig(isProd = property("isProd").getString().toBoolean()) }
-}
-
-private fun Application.readMqConfig(appConfig: AppConfig) = with(environment.config.config("messagequeue")) {
-    appConfig.apply {
-        mqConfig = MqConfig(
-            clientId = property("clientId").getString(),
-            user = property("user").getString(),
-            passwd = property("passwd").getString(),
-            brokerUrl = property("brokerUrl").getString()
-        )
-    }
-}
-
-@OptIn(ExperimentalUnsignedTypes::class)
-private fun Application.readModbusConfig(appConfig: AppConfig) = with(environment.config.config("huawei.modbus.tcp")) {
-    appConfig.apply {
-        modbusTcpConfig = ModbusTcpConfig(
-            host = property("host").getString(),
-            port = property("port").getString().toInt(),
-            delay = property("delay").getString().toLong(),
-            meterDeviceIds = property("meterDeviceIds").getString().split(DELIMITER).map { it.trim().toUByte() }.toUByteArray(),
-            inverterDeviceIds = property("inverterDeviceIds").getString().split(DELIMITER).map { it.trim().toUByte() }.toUByteArray()
-        )
+    override fun hashCode(): Int {
+        var result = port
+        result = 31 * result + host.hashCode()
+        result = 31 * result + meterDeviceIds.contentHashCode()
+        result = 31 * result + inverterDeviceIds.contentHashCode()
+        return result
     }
 }

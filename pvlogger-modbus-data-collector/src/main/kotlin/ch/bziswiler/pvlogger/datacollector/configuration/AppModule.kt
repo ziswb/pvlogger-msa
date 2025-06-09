@@ -1,6 +1,5 @@
 package ch.bziswiler.pvlogger.datacollector.configuration
 
-import ch.bziswiler.pvlogger.datacollector.modbus.tcp.ModbusTcpChannel
 import ch.bziswiler.pvlogger.datacollector.services.IdProvider
 import ch.bziswiler.pvlogger.datacollector.services.messaging.JobSchedulerMessageSender
 import ch.bziswiler.pvlogger.shared.messaging.JobTriggeringMessageHandler
@@ -10,6 +9,7 @@ import ch.bziswiler.pvlogger.datacollector.services.modbus.impl.ModbusBatchedDyn
 import ch.bziswiler.pvlogger.datacollector.services.modbus.impl.ModbusBatchedStaticDataCollectionJob
 import ch.bziswiler.pvlogger.datacollector.services.modbus.impl.ModbusDeviceIdentifiersCollectionJob
 import ch.bziswiler.pvlogger.datacollector.services.modbus.impl.ModbusDeviceListCollectionJob
+import ch.bziswiler.pvlogger.datacollector.services.modbus.request.ModbusTcpChannel
 import ch.bziswiler.pvlogger.shared.job.meta.JobName.DEVICE_IDS_JOB
 import ch.bziswiler.pvlogger.shared.job.meta.JobName.DEVICE_LIST_JOB
 import ch.bziswiler.pvlogger.shared.job.meta.JobName.DYNAMIC_DATA_JOB
@@ -22,40 +22,26 @@ import ch.bziswiler.pvlogger.shared.messaging.TopicName.JOB_SCHEDULER
 import ch.bziswiler.pvlogger.shared.messaging.impl.ActiveMqReceiverComposer
 import ch.bziswiler.pvlogger.shared.messaging.impl.ActiveMqSessionFactory
 import ch.bziswiler.pvlogger.shared.messaging.impl.ActiveMqTopicReceiver
+import org.kodein.di.DI
+import org.kodein.di.bind
+import org.kodein.di.instance
+import org.kodein.di.singleton
 import org.koin.dsl.module
 import javax.jms.Topic
 
+val di = DI {
+    bind<AppConfig>() with singleton{ AppConfig() }
+    bind<IdProvider>() with singleton{ IdProvider() }
+
+    bind<ModbusTcpChannel>() with singleton{ ModbusTcpChannel(instance()) }
+    bind<MasterDataService>() with singleton{ MasterDataService(instance()) }
+}
+
 val appModule = module {
-    single { AppConfig() }
-    single { IdProvider() }
-    single { ModbusTcpChannel(get<AppConfig>()) }
-    single { MasterDataService(get<AppConfig>()) }
-    single<MqSessionFactory> { ActiveMqSessionFactory(get<AppConfig>().mqConfig) }
-    single<MessageReceiver<Topic>> { ActiveMqTopicReceiver(get<MqSessionFactory>(), JOB_SCHEDULER) }
-    single<MqReceiverComposer> {
-        ActiveMqReceiverComposer(
-            get<MqSessionFactory>(),
-            get<MessageReceiver<Topic>>().destination,
-            listOf(
-                JobTriggeringMessageHandler(
-                    JobStartMessageTag(DYNAMIC_DATA_JOB).toSelector(),
                     get<ModbusBatchedDynamicDataCollectionJob>()
-                ),
-                JobTriggeringMessageHandler(
-                    JobStartMessageTag(STATIC_DATA_JOB).toSelector(),
                     get<ModbusBatchedStaticDataCollectionJob>()
-                ),
-                JobTriggeringMessageHandler(
-                    JobStartMessageTag(DEVICE_IDS_JOB).toSelector(),
                     get<ModbusDeviceIdentifiersCollectionJob>()
-                ),
-                JobTriggeringMessageHandler(
-                    JobStartMessageTag(DEVICE_LIST_JOB).toSelector(),
                     get<ModbusDeviceListCollectionJob>()
-                )
-            )
-        )
-    }
     single<StoreModbusValuesMessageSender> { StoreModbusValuesMessageSender(get<MqSessionFactory>()) }
     single<JobSchedulerMessageSender> { JobSchedulerMessageSender(get<MqSessionFactory>()) }
     single<ModbusBatchedDynamicDataCollectionJob> {

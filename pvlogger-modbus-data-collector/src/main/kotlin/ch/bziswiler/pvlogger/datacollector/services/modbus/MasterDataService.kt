@@ -1,9 +1,9 @@
 package ch.bziswiler.pvlogger.datacollector.services.modbus
 
 import ch.bziswiler.pvlogger.datacollector.configuration.AppConfig
-import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category
-import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType
-import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
+import ch.bziswiler.pvlogger.modbus.tcp.api.masterdata.Category
+import ch.bziswiler.pvlogger.modbus.tcp.api.masterdata.DeviceType
+import ch.bziswiler.pvlogger.modbus.tcp.api.masterdata.ModbusRegisterDefinition
 import ch.bziswiler.pvlogger.shared.rest.MasterDataPaths.MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES
 import ch.bziswiler.pvlogger.shared.rest.PvHttpClient.client
 import io.ktor.client.call.body
@@ -19,8 +19,8 @@ private const val PARAM_VALUE_SEPARATOR = ";"
 
 class MasterDataService(appConfig: AppConfig) {
 
-    private val masterDataHostName = appConfig.masterDataConfig.host
-    private val masterDataHostPort = appConfig.masterDataConfig.port
+    private val masterDataHostName = appConfig.masterData.host
+    private val masterDataHostPort = appConfig.masterData.port
 
     fun fetchRegisterDefinitions(
         deviceTypes: List<DeviceType>, categories: List<Category>
