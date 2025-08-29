@@ -1,6 +1,5 @@
 package ch.bziswiler.pvlogger.datacollector.configuration
 
-import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Metrics
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import io.prometheus.client.exporter.PushGateway

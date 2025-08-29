@@ -6,12 +6,13 @@ import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
 import ch.bziswiler.pvlogger.shared.rest.MasterDataPaths.MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES
 import ch.bziswiler.pvlogger.shared.rest.PvHttpClient.client
-import io.ktor.client.call.body // Ktor HTTP client (marked)
-import io.ktor.client.request.get // Ktor HTTP client (marked)
-import io.ktor.client.request.host // Ktor HTTP client (marked)
-import io.ktor.client.request.port // Ktor HTTP client (marked)
-import io.ktor.http.HttpStatusCode // Ktor HTTP client (marked)
+import io.ktor.client.request.get
+import io.ktor.client.request.host
+import io.ktor.client.request.port
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
 
 private const val PARAM_DEV_TYPES = "deviceTypes"
 private const val PARAM_CATEGORIES = "categories"
@@ -21,6 +22,14 @@ class MasterDataService(appConfig: AppConfig) {
 
     private val masterDataHostName = appConfig.masterDataConfig.host
     private val masterDataHostPort = appConfig.masterDataConfig.port
+
+    private val json = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+        allowSpecialFloatingPointValues = true
+        encodeDefaults = true
+        prettyPrint = false
+    }
 
     fun fetchRegisterDefinitions(
         deviceTypes: List<DeviceType>, categories: List<Category>
@@ -35,7 +44,7 @@ class MasterDataService(appConfig: AppConfig) {
             }
         }
         when (result.status) {
-            HttpStatusCode.OK -> result.body<List<ModbusRegisterDefinition>>()
+            HttpStatusCode.OK -> json.decodeFromString(result.bodyAsText())
             else -> emptyList()
         }
     }

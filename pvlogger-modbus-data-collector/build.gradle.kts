@@ -34,16 +34,13 @@ dependencies {
     implementation(libs.activemq.core)
     implementation(libs.activemq.client)
 
-    // Ktor client/network used by this module
+    // Ktor client/network used by this module (no ktor serialization)
     implementation(libs.ktor.client.cio)
-    implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.logging)
-    implementation(libs.ktor.serialization.kotlinx.json)
-    // Remove Ktor server dependencies (no server startup)
-    // implementation(libs.ktor.server.call.logging)
-    // implementation(libs.ktor.server.core)
-    // implementation(libs.ktor.server.netty)
+
+    // Kotlinx serialization (pure Kotlin)
+    implementation(libs.kotlinx.serialization.json)
 
     // Logging
     implementation(libs.logback.classic)
