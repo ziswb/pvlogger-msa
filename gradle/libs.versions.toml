@@ -22,10 +22,13 @@ cacheVersion = "0.13.0"
 openapiVersion = "7.0.1"
 retrofitVersion = "3.0.0"
 okioVersion = "3.9.0"
+lightbendConfigVersion = "1.4.3"
 
 [libraries]
 commons-csv = { module = "org.apache.commons:commons-csv", version.ref = "commonsCsvVersion" }
 reactivecircus-cache = { module = "io.github.reactivecircus.cache4k:cache4k", version.ref = "cacheVersion" }
+
+lightbend-config = { module = "com.typesafe:config", version.ref = "lightbendConfigVersion" }
 
 activemq-core = { module = "org.apache.activemq:activemq-core", version.ref = "activemqCoreVersion" }
 activemq-client = { module = "org.apache.activemq:activemq-client", version.ref = "activemqClientVersion" }

@@ -59,6 +59,9 @@ dependencies {
     // Monitoring
     implementation(libs.micrometer.registry.prometheus)
 
+    // Config (Lightbend Typesafe Config)
+    implementation(libs.lightbend.config)
+
     testImplementation(libs.kotlin.test.junit)
     testImplementation(libs.ktor.server.tests)
 }
