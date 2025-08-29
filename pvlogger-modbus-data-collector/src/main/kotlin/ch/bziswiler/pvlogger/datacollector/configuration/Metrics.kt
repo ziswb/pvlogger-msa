@@ -1,12 +1,6 @@
 package ch.bziswiler.pvlogger.datacollector.configuration
 
-import io.ktor.server.application.Application
-import io.ktor.server.application.call
-import io.ktor.server.application.install
-import io.ktor.server.metrics.micrometer.MicrometerMetrics
-import io.ktor.server.response.respond
-import io.ktor.server.routing.get
-import io.ktor.server.routing.routing
+import io.micrometer.core.instrument.Metrics
 import io.micrometer.core.instrument.binder.jvm.ClassLoaderMetrics
 import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics
 import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics
@@ -17,26 +11,16 @@ import io.micrometer.core.instrument.binder.system.UptimeMetrics
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
 
-private const val METRICS_PATH = "/metrics"
-
-fun Application.configureMonitoring() {
-    val appMicrometerRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
-    install(MicrometerMetrics) {
-        registry = appMicrometerRegistry
-        meterBinders =
-            listOf(
-                ClassLoaderMetrics(),
-                FileDescriptorMetrics(),
-                JvmGcMetrics(),
-                JvmMemoryMetrics(),
-                JvmThreadMetrics(),
-                ProcessorMetrics(),
-                UptimeMetrics(),
-            )
+fun initMetrics(): PrometheusMeterRegistry =
+    PrometheusMeterRegistry(PrometheusConfig.DEFAULT).also { registry ->
+        Metrics.addRegistry(registry)
+        listOf(
+            ClassLoaderMetrics(),
+            FileDescriptorMetrics(),
+            JvmGcMetrics(),
+            JvmMemoryMetrics(),
+            JvmThreadMetrics(),
+            ProcessorMetrics(),
+            UptimeMetrics(),
+        ).forEach { it.bindTo(registry) }
     }
-    routing {
-        get(METRICS_PATH) {
-            call.respond(appMicrometerRegistry.scrape())
-        }
-    }
-}

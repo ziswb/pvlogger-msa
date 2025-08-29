@@ -61,6 +61,7 @@ val appModule = DI.Module(name = "appModule") {
     }
     bind<StoreModbusValuesMessageSender>() with singleton { StoreModbusValuesMessageSender(instance()) }
     bind<JobSchedulerMessageSender>() with singleton { JobSchedulerMessageSender(instance()) }
+    bind<MetricsPusher>() with singleton { MetricsPusher(instance<AppConfig>().metricsPushConfig) }
     bind<ModbusBatchedDynamicDataCollectionJob>() with singleton {
         ModbusBatchedDynamicDataCollectionJob(
             instance(),

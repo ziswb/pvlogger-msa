@@ -43,7 +43,6 @@ dependencies {
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.ktor.server.call.logging)
     implementation(libs.ktor.server.core)
-    implementation(libs.ktor.server.metrics.micrometer)
     implementation(libs.ktor.server.netty)
 
     // Logging
@@ -58,6 +57,7 @@ dependencies {
 
     // Monitoring
     implementation(libs.micrometer.registry.prometheus)
+    implementation(libs.prometheus.pushgateway)
 
     // Config (Lightbend Typesafe Config)
     implementation(libs.lightbend.config)

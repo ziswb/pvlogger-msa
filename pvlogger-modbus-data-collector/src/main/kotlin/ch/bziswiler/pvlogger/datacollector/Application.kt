@@ -1,7 +1,10 @@
 package ch.bziswiler.pvlogger.datacollector
 
+import ch.bziswiler.pvlogger.datacollector.configuration.AppConfig
+import ch.bziswiler.pvlogger.datacollector.configuration.DataCollectorDI
+import ch.bziswiler.pvlogger.datacollector.configuration.MetricsPusher
 import ch.bziswiler.pvlogger.datacollector.configuration.appModule
-import ch.bziswiler.pvlogger.datacollector.configuration.configureMonitoring
+import ch.bziswiler.pvlogger.datacollector.configuration.initMetrics
 import ch.bziswiler.pvlogger.datacollector.configuration.setupConfig
 import ch.bziswiler.pvlogger.shared.messaging.MqReceiverComposer
 import io.ktor.server.application.Application
@@ -15,7 +18,6 @@ import mu.KotlinLogging
 import org.kodein.di.DI
 import org.kodein.di.direct
 import org.kodein.di.instance
-import ch.bziswiler.pvlogger.datacollector.configuration.DataCollectorDI
 import org.slf4j.event.Level
 
 private val logger = KotlinLogging.logger {}
@@ -30,7 +32,18 @@ fun Application.module(testing: Boolean = false) {
     }
     install(CallLogging) { level = Level.TRACE }
     setupConfig()
-    configureMonitoring()
+    val registry = initMetrics()
+    // Start metrics pusher if enabled via config
+    try {
+        val pusher: MetricsPusher = DataCollectorDI.di.direct.instance()
+        val appConfig: AppConfig = DataCollectorDI.di.direct.instance()
+        if (appConfig.metricsPushConfig.enabled) {
+            pusher.start()
+            Runtime.getRuntime().addShutdownHook(Thread { pusher.stop(deleteFromGateway = true) })
+        }
+    } catch (e: Exception) {
+        logger.warn(e) { "Failed to start MetricsPusher" }
+    }
     startServices()
     environment.monitor.subscribe(ApplicationStopping) {
         logger.info("Shutting down application...")
@@ -43,7 +56,7 @@ fun Application.module(testing: Boolean = false) {
     }
 }
 
-fun Application.startServices() {
+fun startServices() {
     val composer: MqReceiverComposer = DataCollectorDI.di.direct.instance()
     composer.compose()
 }

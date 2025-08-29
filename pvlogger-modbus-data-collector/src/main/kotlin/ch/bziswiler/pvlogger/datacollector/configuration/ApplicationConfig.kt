@@ -13,6 +13,7 @@ class AppConfig {
     lateinit var serverConfig: ServerConfig
     lateinit var modbusTcpConfig: ModbusTcpConfig
     lateinit var mqConfig: MqConfig
+    lateinit var metricsPushConfig: MetricsPushConfig
 }
 
 data class MasterDataConfig(
@@ -22,6 +23,14 @@ data class MasterDataConfig(
 
 data class ServerConfig(
     val isProd: Boolean,
+)
+
+data class MetricsPushConfig(
+    val enabled: Boolean,
+    val url: String,
+    val job: String,
+    val intervalSeconds: Long,
+    val grouping: Map<String, String>
 )
 
 @OptIn(ExperimentalUnsignedTypes::class)
@@ -64,6 +73,7 @@ fun setupConfig() {
     readModbusConfig(config, appConfig)
     readMqConfig(config, appConfig)
     readMdConfig(config, appConfig)
+    readMetricsPushConfig(config, appConfig)
 }
 
 private fun readMdConfig(config: Config, appConfig: AppConfig) = with(config.getConfig("pvlogger.masterdata")) {
@@ -77,6 +87,36 @@ private fun readMdConfig(config: Config, appConfig: AppConfig) = with(config.get
 
 private fun readServerConfig(config: Config, appConfig: AppConfig) = with(config.getConfig("ktor.server")) {
     appConfig.apply { serverConfig = ServerConfig(isProd = getBoolean("isProd")) }
+}
+
+private fun readMetricsPushConfig(config: Config, appConfig: AppConfig) {
+    val path = "metrics.pushgateway"
+    val enabled = if (config.hasPath(path + ".enabled")) config.getBoolean(path + ".enabled") else false
+    if (!enabled) {
+        appConfig.metricsPushConfig = MetricsPushConfig(
+            enabled = false,
+            url = "",
+            job = "",
+            intervalSeconds = 15,
+            grouping = emptyMap()
+        )
+        return
+    }
+    val sub = config.getConfig(path)
+    val grouping = if (sub.hasPath("grouping")) {
+        sub.getConfig("grouping").entrySet().associate { e ->
+            val key = e.key
+            val value = sub.getConfig("grouping").getString(key)
+            key to value
+        }
+    } else emptyMap()
+    appConfig.metricsPushConfig = MetricsPushConfig(
+        enabled = true,
+        url = sub.getString("url"),
+        job = if (sub.hasPath("job")) sub.getString("job") else "pvlogger-modbus-data-collector",
+        intervalSeconds = if (sub.hasPath("intervalSeconds")) sub.getLong("intervalSeconds") else 15L,
+        grouping = grouping
+    )
 }
 
 private fun readMqConfig(config: Config, appConfig: AppConfig) = with(config.getConfig("messagequeue")) {
