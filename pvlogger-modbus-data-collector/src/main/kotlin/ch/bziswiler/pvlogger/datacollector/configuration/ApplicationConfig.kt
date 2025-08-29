@@ -1,8 +1,8 @@
 package ch.bziswiler.pvlogger.datacollector.configuration
 
 import ch.bziswiler.pvlogger.shared.messaging.config.MqConfig
+import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
-import io.ktor.server.application.Application
 import org.kodein.di.direct
 import org.kodein.di.instance
 
@@ -31,9 +31,33 @@ data class ModbusTcpConfig(
     val delay: Long,
     val meterDeviceIds: UByteArray,
     val inverterDeviceIds: UByteArray,
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
 
-fun Application.setupConfig() {
+        other as ModbusTcpConfig
+
+        if (port != other.port) return false
+        if (delay != other.delay) return false
+        if (host != other.host) return false
+        if (!meterDeviceIds.contentEquals(other.meterDeviceIds)) return false
+        if (!inverterDeviceIds.contentEquals(other.inverterDeviceIds)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = port
+        result = 31 * result + delay.hashCode()
+        result = 31 * result + host.hashCode()
+        result = 31 * result + meterDeviceIds.contentHashCode()
+        result = 31 * result + inverterDeviceIds.contentHashCode()
+        return result
+    }
+}
+
+fun setupConfig() {
     val appConfig: AppConfig = DataCollectorDI.di.direct.instance()
     val config = ConfigFactory.load()
     readServerConfig(config, appConfig)
@@ -42,7 +66,7 @@ fun Application.setupConfig() {
     readMdConfig(config, appConfig)
 }
 
-private fun Application.readMdConfig(config: com.typesafe.config.Config, appConfig: AppConfig) = with(config.getConfig("pvlogger.masterdata")) {
+private fun readMdConfig(config: Config, appConfig: AppConfig) = with(config.getConfig("pvlogger.masterdata")) {
     appConfig.apply {
         masterDataConfig = MasterDataConfig(
             host = getString("host"),
@@ -51,11 +75,11 @@ private fun Application.readMdConfig(config: com.typesafe.config.Config, appConf
     }
 }
 
-private fun Application.readServerConfig(config: com.typesafe.config.Config, appConfig: AppConfig) = with(config.getConfig("ktor.server")) {
+private fun readServerConfig(config: Config, appConfig: AppConfig) = with(config.getConfig("ktor.server")) {
     appConfig.apply { serverConfig = ServerConfig(isProd = getBoolean("isProd")) }
 }
 
-private fun Application.readMqConfig(config: com.typesafe.config.Config, appConfig: AppConfig) = with(config.getConfig("messagequeue")) {
+private fun readMqConfig(config: Config, appConfig: AppConfig) = with(config.getConfig("messagequeue")) {
     appConfig.apply {
         mqConfig = MqConfig(
             clientId = getString("clientId"),
@@ -67,7 +91,7 @@ private fun Application.readMqConfig(config: com.typesafe.config.Config, appConf
 }
 
 @OptIn(ExperimentalUnsignedTypes::class)
-private fun Application.readModbusConfig(config: com.typesafe.config.Config, appConfig: AppConfig) = with(config.getConfig("huawei.modbus.tcp")) {
+private fun readModbusConfig(config: Config, appConfig: AppConfig) = with(config.getConfig("huawei.modbus.tcp")) {
     appConfig.apply {
         modbusTcpConfig = ModbusTcpConfig(
             host = getString("host"),
