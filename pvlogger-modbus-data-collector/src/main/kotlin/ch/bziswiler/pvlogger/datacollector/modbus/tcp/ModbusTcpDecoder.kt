@@ -1,7 +1,7 @@
 package ch.bziswiler.pvlogger.datacollector.modbus.tcp
 
 import ch.bziswiler.pvlogger.shared.modbus.ModbusObject
-import io.ktor.utils.io.ByteReadChannel
+import io.ktor.utils.io.ByteReadChannel // Ktor I/O (marked)
 
 @OptIn(ExperimentalUnsignedTypes::class)
 suspend fun decodeModbusObject(channel: ByteReadChannel): ModbusObject {

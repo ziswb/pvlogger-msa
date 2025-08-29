@@ -4,10 +4,10 @@ import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.FunctionCode
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.MbapHeader
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.UByteData
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.UShortData
-import io.ktor.utils.io.ByteWriteChannel
-import io.ktor.utils.io.core.writeUByte
-import io.ktor.utils.io.core.writeUShort
-import io.ktor.utils.io.writePacket
+import io.ktor.utils.io.ByteWriteChannel // Ktor I/O (marked)
+import io.ktor.utils.io.core.writeUByte // Ktor I/O (marked)
+import io.ktor.utils.io.core.writeUShort // Ktor I/O (marked)
+import io.ktor.utils.io.writePacket // Ktor I/O (marked)
 
 @OptIn(ExperimentalUnsignedTypes::class)
 suspend fun MbapHeader.encode(channel: ByteWriteChannel) {

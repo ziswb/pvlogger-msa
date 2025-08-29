@@ -1,6 +1,6 @@
 plugins {
     alias(libs.plugins.jvm)
-    alias(libs.plugins.ktor)
+    alias(libs.plugins.ktor) // Ktor Gradle plugin (marked)
     idea
 }
 
@@ -15,9 +15,9 @@ idea {
 }
 
 application {
-    mainClass.set("io.ktor.server.netty.EngineMain")
+    mainClass.set("io.ktor.server.netty.EngineMain") // Ktor Netty engine main class (marked)
     val isDevelopment: Boolean = project.ext.has("development")
-    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
+    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment") // Ktor development flag (marked)
 }
 
 java {
@@ -28,6 +28,7 @@ java {
 
 repositories {
     mavenCentral()
+    maven { url = uri("https://mvnrepository.com/artifact/") }
 }
 
 dependencies {
@@ -36,14 +37,14 @@ dependencies {
     implementation(libs.activemq.client)
 
     // Ktor
-    implementation(libs.ktor.client.cio)
-    implementation(libs.ktor.client.content.negotiation)
-    implementation(libs.ktor.client.core)
-    implementation(libs.ktor.client.logging)
-    implementation(libs.ktor.serialization.kotlinx.json)
-    implementation(libs.ktor.server.call.logging)
-    implementation(libs.ktor.server.core)
-    implementation(libs.ktor.server.netty)
+    implementation(libs.ktor.client.cio) // Ktor dependency (marked)
+    implementation(libs.ktor.client.content.negotiation) // Ktor dependency (marked)
+    implementation(libs.ktor.client.core) // Ktor dependency (marked)
+    implementation(libs.ktor.client.logging) // Ktor dependency (marked)
+    implementation(libs.ktor.serialization.kotlinx.json) // Ktor dependency (marked)
+    implementation(libs.ktor.server.call.logging) // Ktor dependency (marked)
+    implementation(libs.ktor.server.core) // Ktor dependency (marked)
+    implementation(libs.ktor.server.netty) // Ktor dependency (marked)
 
     // Logging
     implementation(libs.logback.classic)

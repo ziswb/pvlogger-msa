@@ -1,8 +1,8 @@
 package ch.bziswiler.pvlogger.datacollector.modbus.tcp
 
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.stringify
-import io.ktor.utils.io.ByteReadChannel
-import io.ktor.utils.io.core.readBytes
+import io.ktor.utils.io.ByteReadChannel // Ktor I/O (marked)
+import io.ktor.utils.io.core.readBytes // Ktor I/O (marked)
 import kotlinx.coroutines.delay
 
 val delayMillis get() = 200L

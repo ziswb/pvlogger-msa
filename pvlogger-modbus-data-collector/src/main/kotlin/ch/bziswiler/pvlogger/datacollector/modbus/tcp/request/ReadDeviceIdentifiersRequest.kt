@@ -12,8 +12,8 @@ import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.FunctionCode.ReadDeviceIden
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.MbapHeader
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.UByteData
 import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ReadDeviceIdentifiersResponse
-import io.ktor.utils.io.ByteReadChannel
-import io.ktor.utils.io.ByteWriteChannel
+import io.ktor.utils.io.ByteReadChannel // Ktor I/O (marked)
+import io.ktor.utils.io.ByteWriteChannel // Ktor I/O (marked)
 import mu.KotlinLogging
 import java.time.LocalDateTime
 import java.time.LocalDateTime.now

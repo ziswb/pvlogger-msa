@@ -3,12 +3,12 @@ package ch.bziswiler.pvlogger.datacollector.modbus.tcp
 import ch.bziswiler.pvlogger.datacollector.configuration.AppConfig
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.request.ModbusRequest
 import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusResponse
-import io.ktor.network.selector.SelectorManager
-import io.ktor.network.sockets.Socket
-import io.ktor.network.sockets.aSocket
-import io.ktor.network.sockets.openReadChannel
-import io.ktor.network.sockets.openWriteChannel
-import io.ktor.utils.io.ByteWriteChannel
+import io.ktor.network.selector.SelectorManager // Ktor networking (marked)
+import io.ktor.network.sockets.Socket // Ktor networking (marked)
+import io.ktor.network.sockets.aSocket // Ktor networking (marked)
+import io.ktor.network.sockets.openReadChannel // Ktor networking (marked)
+import io.ktor.network.sockets.openWriteChannel // Ktor networking (marked)
+import io.ktor.utils.io.ByteWriteChannel // Ktor I/O (marked)
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex

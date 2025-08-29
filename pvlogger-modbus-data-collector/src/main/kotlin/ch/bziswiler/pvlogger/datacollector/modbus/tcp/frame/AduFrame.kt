@@ -6,7 +6,7 @@ import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.FunctionCode
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.MbapHeader
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.UByteData
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.UShortData
-import io.ktor.utils.io.ByteWriteChannel
+import io.ktor.utils.io.ByteWriteChannel // Ktor I/O (marked)
 
 class AduFrame(private val header: MbapHeader, private val functionCode: FunctionCode, private val data: Data<*>) {
     suspend fun encode(channel: ByteWriteChannel) {

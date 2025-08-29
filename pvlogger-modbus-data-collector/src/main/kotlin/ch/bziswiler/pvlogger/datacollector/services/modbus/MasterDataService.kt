@@ -6,11 +6,11 @@ import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
 import ch.bziswiler.pvlogger.shared.rest.MasterDataPaths.MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES
 import ch.bziswiler.pvlogger.shared.rest.PvHttpClient.client
-import io.ktor.client.call.body
-import io.ktor.client.request.get
-import io.ktor.client.request.host
-import io.ktor.client.request.port
-import io.ktor.http.HttpStatusCode
+import io.ktor.client.call.body // Ktor HTTP client (marked)
+import io.ktor.client.request.get // Ktor HTTP client (marked)
+import io.ktor.client.request.host // Ktor HTTP client (marked)
+import io.ktor.client.request.port // Ktor HTTP client (marked)
+import io.ktor.http.HttpStatusCode // Ktor HTTP client (marked)
 import kotlinx.coroutines.runBlocking
 
 private const val PARAM_DEV_TYPES = "deviceTypes"

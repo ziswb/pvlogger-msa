@@ -5,8 +5,8 @@ import ch.bziswiler.pvlogger.datacollector.modbus.tcp.readUShort
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.FunctionCode
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.MbapHeader
 import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusResponse
-import io.ktor.utils.io.ByteReadChannel
-import io.ktor.utils.io.ByteWriteChannel
+import io.ktor.utils.io.ByteReadChannel // Ktor I/O (marked)
+import io.ktor.utils.io.ByteWriteChannel // Ktor I/O (marked)
 import java.time.LocalDateTime
 
 interface ModbusRequest {

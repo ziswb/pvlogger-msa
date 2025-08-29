@@ -7,13 +7,13 @@ import ch.bziswiler.pvlogger.datacollector.configuration.appModule
 import ch.bziswiler.pvlogger.datacollector.configuration.initMetrics
 import ch.bziswiler.pvlogger.datacollector.configuration.setupConfig
 import ch.bziswiler.pvlogger.shared.messaging.MqReceiverComposer
-import io.ktor.server.application.Application
-import io.ktor.server.application.ApplicationStopPreparing
-import io.ktor.server.application.ApplicationStopped
-import io.ktor.server.application.ApplicationStopping
-import io.ktor.server.application.install
-import io.ktor.server.netty.EngineMain
-import io.ktor.server.plugins.callloging.CallLogging
+import io.ktor.server.application.Application // Ktor API (marked)
+import io.ktor.server.application.ApplicationStopPreparing // Ktor API (marked)
+import io.ktor.server.application.ApplicationStopped // Ktor API (marked)
+import io.ktor.server.application.ApplicationStopping // Ktor API (marked)
+import io.ktor.server.application.install // Ktor API (marked)
+import io.ktor.server.netty.EngineMain // Ktor Netty engine (marked)
+import io.ktor.server.plugins.callloging.CallLogging // Ktor plugin (marked)
 import mu.KotlinLogging
 import org.kodein.di.DI
 import org.kodein.di.direct
@@ -22,7 +22,7 @@ import org.slf4j.event.Level
 
 private val logger = KotlinLogging.logger {}
 
-fun main(args: Array<String>) = EngineMain.main(args)
+fun main(args: Array<String>) = EngineMain.main(args) // Ktor Netty engine entry point (marked)
 
 fun Application.module(testing: Boolean = false) {
     if (!testing) {
@@ -30,7 +30,7 @@ fun Application.module(testing: Boolean = false) {
             import(appModule)
         }
     }
-    install(CallLogging) { level = Level.TRACE }
+    install(CallLogging) { level = Level.TRACE } // Ktor CallLogging plugin usage (marked)
     setupConfig()
     val registry = initMetrics()
     // Start metrics pusher if enabled via config

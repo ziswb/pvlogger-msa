@@ -1,6 +1,6 @@
 package ch.bziswiler
 
-import io.ktor.server.testing.testApplication
+import io.ktor.server.testing.testApplication // Ktor server testing (marked)
 import kotlin.test.Test
 
 class ApplicationTest {

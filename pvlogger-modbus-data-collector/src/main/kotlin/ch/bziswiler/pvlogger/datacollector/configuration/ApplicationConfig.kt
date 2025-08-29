@@ -85,6 +85,7 @@ private fun readMdConfig(config: Config, appConfig: AppConfig) = with(config.get
     }
 }
 
+// Ktor configuration section in application.conf (marked)
 private fun readServerConfig(config: Config, appConfig: AppConfig) = with(config.getConfig("ktor.server")) {
     appConfig.apply { serverConfig = ServerConfig(isProd = getBoolean("isProd")) }
 }
