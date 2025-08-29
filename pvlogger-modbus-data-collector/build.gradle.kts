@@ -1,6 +1,6 @@
 plugins {
     alias(libs.plugins.jvm)
-    alias(libs.plugins.ktor) // Ktor Gradle plugin (marked)
+    application
     idea
 }
 
@@ -15,9 +15,7 @@ idea {
 }
 
 application {
-    mainClass.set("io.ktor.server.netty.EngineMain") // Ktor Netty engine main class (marked)
-    val isDevelopment: Boolean = project.ext.has("development")
-    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment") // Ktor development flag (marked)
+    mainClass.set("ch.bziswiler.pvlogger.datacollector.ApplicationKt")
 }
 
 java {
@@ -36,15 +34,16 @@ dependencies {
     implementation(libs.activemq.core)
     implementation(libs.activemq.client)
 
-    // Ktor
-    implementation(libs.ktor.client.cio) // Ktor dependency (marked)
-    implementation(libs.ktor.client.content.negotiation) // Ktor dependency (marked)
-    implementation(libs.ktor.client.core) // Ktor dependency (marked)
-    implementation(libs.ktor.client.logging) // Ktor dependency (marked)
-    implementation(libs.ktor.serialization.kotlinx.json) // Ktor dependency (marked)
-    implementation(libs.ktor.server.call.logging) // Ktor dependency (marked)
-    implementation(libs.ktor.server.core) // Ktor dependency (marked)
-    implementation(libs.ktor.server.netty) // Ktor dependency (marked)
+    // Ktor client/network used by this module
+    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.logging)
+    implementation(libs.ktor.serialization.kotlinx.json)
+    // Remove Ktor server dependencies (no server startup)
+    // implementation(libs.ktor.server.call.logging)
+    // implementation(libs.ktor.server.core)
+    // implementation(libs.ktor.server.netty)
 
     // Logging
     implementation(libs.logback.classic)
@@ -64,5 +63,4 @@ dependencies {
     implementation(libs.lightbend.config)
 
     testImplementation(libs.kotlin.test.junit)
-    testImplementation(libs.ktor.server.tests)
 }
