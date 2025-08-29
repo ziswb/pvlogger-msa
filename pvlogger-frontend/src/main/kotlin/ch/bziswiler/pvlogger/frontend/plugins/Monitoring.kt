@@ -24,9 +24,6 @@ import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics
 import io.micrometer.core.instrument.binder.system.FileDescriptorMetrics
 import io.micrometer.core.instrument.binder.system.ProcessorMetrics
 import io.micrometer.core.instrument.binder.system.UptimeMetrics
-import org.koin.ktor.plugin.KoinApplicationStarted
-import org.koin.ktor.plugin.KoinApplicationStopPreparing
-import org.koin.ktor.plugin.KoinApplicationStopped
 import java.time.ZoneId
 
 fun Application.configureMonitoring(meterRegistry: MeterRegistry, environment: ApplicationEnvironment) {
@@ -42,15 +39,6 @@ fun Application.configureMonitoring(meterRegistry: MeterRegistry, environment: A
             ProcessorMetrics(),
             UptimeMetrics(),
         )
-    }
-    environment.monitor.subscribe(KoinApplicationStarted) {
-        log.info("Koin started.")
-    }
-    environment.monitor.subscribe(KoinApplicationStopPreparing) {
-        log.info("Koin stopping...")
-    }
-    environment.monitor.subscribe(KoinApplicationStopped) {
-        log.info("Koin stopped.")
     }
 }
 

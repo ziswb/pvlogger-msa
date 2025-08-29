@@ -63,9 +63,8 @@ dependencies {
     implementation(libs.logback.classic)
     implementation(libs.kotlin.logging)
 
-    // Koin
-    implementation(libs.koin.ktor)
-    implementation(libs.koin.logger.slf4j)
+    // Dependency Injection (Kodein)
+    implementation(libs.kodein.di)
 
 
     // Monitoring
@@ -73,8 +72,6 @@ dependencies {
 
     // Testing
     testImplementation(libs.ktor.server.test.host)
-    testImplementation(libs.koin.test)
-    testImplementation(libs.koin.test.junit5)
     testImplementation(libs.kotlin.test.junit)
 }
 

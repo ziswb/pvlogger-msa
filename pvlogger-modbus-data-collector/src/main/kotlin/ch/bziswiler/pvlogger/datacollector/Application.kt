@@ -12,9 +12,10 @@ import io.ktor.server.application.install
 import io.ktor.server.netty.EngineMain
 import io.ktor.server.plugins.callloging.CallLogging
 import mu.KotlinLogging
-import org.koin.ktor.ext.inject
-import org.koin.ktor.plugin.Koin
-import org.koin.logger.slf4jLogger
+import org.kodein.di.DI
+import org.kodein.di.direct
+import org.kodein.di.instance
+import ch.bziswiler.pvlogger.datacollector.configuration.DataCollectorDI
 import org.slf4j.event.Level
 
 private val logger = KotlinLogging.logger {}
@@ -23,9 +24,8 @@ fun main(args: Array<String>) = EngineMain.main(args)
 
 fun Application.module(testing: Boolean = false) {
     if (!testing) {
-        install(Koin) {
-            slf4jLogger()
-            modules(appModule)
+        DataCollectorDI.di = DI {
+            import(appModule)
         }
     }
     install(CallLogging) { level = Level.TRACE }
@@ -44,6 +44,6 @@ fun Application.module(testing: Boolean = false) {
 }
 
 fun Application.startServices() {
-    val composer by inject<MqReceiverComposer>()
+    val composer: MqReceiverComposer = DataCollectorDI.di.direct.instance()
     composer.compose()
 }

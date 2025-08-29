@@ -7,6 +7,7 @@ flyway = "11.1.0"
 hikaricpVersion = "5.1.0"
 h2Version = "2.2.224"
 koinVersion = "3.5.3"
+kodeinVersion = "7.21.2"
 kotlinVersion = "2.1.21"
 kotlinxVersion = "1.6.3"
 coroutinesVersion = "1.9.0"
@@ -41,6 +42,8 @@ h2 = { module = "com.h2database:h2", version.ref = "h2Version" }
 
 koin-ktor = { module = "io.insert-koin:koin-ktor", version.ref = "koinVersion" }
 koin-logger-slf4j = { module = "io.insert-koin:koin-logger-slf4j", version.ref = "koinVersion" }
+
+kodein-di = { module = "org.kodein.di:kodein-di", version.ref = "kodeinVersion" }
 
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxVersion" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDateTimeVersion" }

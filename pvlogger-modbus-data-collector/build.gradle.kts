@@ -53,9 +53,8 @@ dependencies {
     // Shared pvlogger-resources
     implementation(project(":pvlogger-shared"))
 
-    // Koin
-    implementation(libs.koin.ktor)
-    implementation(libs.koin.logger.slf4j)
+    // Dependency Injection (Kodein)
+    implementation(libs.kodein.di)
 
     // Monitoring
     implementation(libs.micrometer.registry.prometheus)

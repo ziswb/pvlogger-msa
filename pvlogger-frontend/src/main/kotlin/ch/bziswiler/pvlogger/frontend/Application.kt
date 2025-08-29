@@ -18,8 +18,8 @@ import io.micrometer.core.instrument.Metrics.addRegistry
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import mu.KotlinLogging
-import org.koin.core.context.startKoin
-import org.koin.logger.slf4jLogger
+import ch.bziswiler.pvlogger.frontend.configuration.FrontendDI
+import org.kodein.di.DI
 
 private val logger = KotlinLogging.logger {}
 
@@ -30,9 +30,8 @@ fun main(args: Array<String>) {
 @Suppress("unused") // application.conf references the main function. This annotation prevents the IDE from marking it as unused.
 fun Application.module(testing: Boolean = false) {
     if (!testing) {
-        startKoin {
-            slf4jLogger()
-            modules(appModule)
+        FrontendDI.di = DI {
+            import(appModule)
         }
     }
     val registry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)

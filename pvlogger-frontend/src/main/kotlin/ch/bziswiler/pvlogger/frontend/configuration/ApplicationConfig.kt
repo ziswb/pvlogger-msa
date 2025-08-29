@@ -1,8 +1,9 @@
 package ch.bziswiler.pvlogger.frontend.configuration
 
 import ch.bziswiler.pvlogger.shared.messaging.config.MqConfig
-import io.ktor.server.application.Application
-import org.koin.ktor.ext.inject
+import io.ktor.server.application.*
+import org.kodein.di.direct
+import org.kodein.di.instance
 
 class AppConfig {
     lateinit var dataAccessorConfig: DataAccessorConfig
@@ -20,7 +21,7 @@ data class ServerConfig(
 )
 
 fun Application.readConfiguration() {
-    val appConfig by inject<AppConfig>()
+    val appConfig: AppConfig = FrontendDI.di.direct.instance()
     readServerConfig(appConfig)
     readMqConfig(appConfig)
     readMdConfig(appConfig)

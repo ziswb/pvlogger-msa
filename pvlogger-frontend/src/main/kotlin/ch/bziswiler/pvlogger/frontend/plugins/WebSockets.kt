@@ -23,7 +23,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import mu.KotlinLogging
-import org.koin.java.KoinJavaComponent.inject
+import org.kodein.di.direct
+import org.kodein.di.instance
+import ch.bziswiler.pvlogger.frontend.configuration.FrontendDI
 import java.time.Duration
 import java.time.Duration.ofSeconds
 import javax.jms.Message
@@ -51,7 +53,7 @@ fun Application.configureWebSockets() {
 
     val flow = MutableSharedFlow<KpiValuesDto>()
     val sharedFlow = flow.asSharedFlow()
-    val composer by inject<MqReceiverComposer>(MqReceiverComposer::class.java)
+    val composer: MqReceiverComposer = FrontendDI.di.direct.instance()
 
     composer.addMessageHandler(KpiMessageHandler(flow))
     composer.compose()

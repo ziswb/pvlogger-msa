@@ -1,8 +1,9 @@
 package ch.bziswiler.pvlogger.datacollector.configuration
 
 import ch.bziswiler.pvlogger.shared.messaging.config.MqConfig
-import io.ktor.server.application.Application
-import org.koin.ktor.ext.inject
+import io.ktor.server.application.*
+import org.kodein.di.direct
+import org.kodein.di.instance
 
 private const val DELIMITER = ","
 
@@ -32,7 +33,7 @@ data class ModbusTcpConfig(
 )
 
 fun Application.setupConfig() {
-    val appConfig by inject<AppConfig>()
+    val appConfig: AppConfig = DataCollectorDI.di.direct.instance()
     readServerConfig(appConfig)
     readModbusConfig(appConfig)
     readMqConfig(appConfig)
