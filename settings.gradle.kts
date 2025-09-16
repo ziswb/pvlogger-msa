@@ -13,6 +13,7 @@ include(
     "pvlogger-message-queue",
     "pvlogger-modbus-data-accessor",
     "pvlogger-modbus-data-collector",
+    "pvlogger-modbus-data-collector-jobs",
     "pvlogger-modbus-mock-server",
     "pvlogger-sunrise-sunset",
     "pvlogger-shared",
