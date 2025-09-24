@@ -5,14 +5,14 @@ import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
 import ch.bziswiler.pvlogger.shared.rest.MasterDataPaths.MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES
-import ch.bziswiler.pvlogger.shared.rest.PvHttpClient.client
-import io.ktor.client.request.get
-import io.ktor.client.request.host
-import io.ktor.client.request.port
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
+import okhttp3.ResponseBody
+import retrofit2.Call
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.http.GET
+import retrofit2.http.Query
 
 private const val PARAM_DEV_TYPES = "deviceTypes"
 private const val PARAM_CATEGORIES = "categories"
@@ -31,21 +31,34 @@ class MasterDataService(appConfig: AppConfig) {
         prettyPrint = false
     }
 
+    private val api: MasterDataApi by lazy {
+        val baseUrl = "http://$masterDataHostName:$masterDataHostPort/"
+        Retrofit.Builder()
+            .baseUrl(baseUrl)
+            .build()
+            .create(MasterDataApi::class.java)
+    }
+
     fun fetchRegisterDefinitions(
         deviceTypes: List<DeviceType>, categories: List<Category>
     ): List<ModbusRegisterDefinition> = runBlocking {
-        val result = client.get {
-            host = masterDataHostName
-            port = masterDataHostPort
-            url {
-                pathSegments = listOf(MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES)
-                parameters.append(PARAM_DEV_TYPES, deviceTypes.joinToString(separator = PARAM_VALUE_SEPARATOR))
-                parameters.append(PARAM_CATEGORIES, categories.joinToString(separator = PARAM_VALUE_SEPARATOR))
-            }
-        }
-        when (result.status) {
-            HttpStatusCode.OK -> json.decodeFromString(result.bodyAsText())
-            else -> emptyList()
+        val devTypes = deviceTypes.joinToString(separator = PARAM_VALUE_SEPARATOR)
+        val cats = categories.joinToString(separator = PARAM_VALUE_SEPARATOR)
+        val call: Call<ResponseBody> = api.getRegisterDefinitions(devTypes, cats)
+        val response: Response<ResponseBody> = call.execute()
+        if (response.isSuccessful) {
+            val body = response.body()?.string()
+            if (body != null) json.decodeFromString(body) else emptyList()
+        } else {
+            emptyList()
         }
     }
+}
+
+private interface MasterDataApi {
+    @GET(MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES)
+    fun getRegisterDefinitions(
+        @Query(PARAM_DEV_TYPES) deviceTypes: String,
+        @Query(PARAM_CATEGORIES) categories: String
+    ): Call<ResponseBody>
 }

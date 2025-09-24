@@ -26,7 +26,6 @@ java {
 
 repositories {
     mavenCentral()
-    maven { url = uri("https://mvnrepository.com/artifact/") }
 }
 
 dependencies {
@@ -34,10 +33,14 @@ dependencies {
     implementation(libs.activemq.core)
     implementation(libs.activemq.client)
 
-    // Ktor client/network used by this module (no ktor serialization)
-    implementation(libs.ktor.client.cio)
-    implementation(libs.ktor.client.core)
-    implementation(libs.ktor.client.logging)
+    // Digitalpetri Modbus TCP for Modbus communication
+//    implementation(libs.digitalpetri.modbus.tcp)
+
+    // Ktor IO channels (non-network), used for in-memory encode/decode
+    implementation(libs.ktor.io)
+
+    // Retrofit HTTP client (replacing Ktor HTTP client)
+    implementation(libs.retrofit)
 
     // Kotlinx serialization (pure Kotlin)
     implementation(libs.kotlinx.serialization.json)
