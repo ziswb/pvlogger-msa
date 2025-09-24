@@ -12,9 +12,9 @@ import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.FunctionCode.ReadDeviceIden
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.MbapHeader
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.UByteData
 import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ReadDeviceIdentifiersResponse
-import io.ktor.utils.io.ByteReadChannel // Ktor I/O (marked)
-import io.ktor.utils.io.ByteWriteChannel // Ktor I/O (marked)
 import mu.KotlinLogging
+import okio.BufferedSink
+import okio.BufferedSource
 import java.time.LocalDateTime
 import java.time.LocalDateTime.now
 
@@ -39,21 +39,21 @@ open class ReadDeviceIdentifiersRequest(
             UByteData(listOf(meiType, readDevIdCode, objectId)),
         )
 
-    override suspend fun encode(channel: ByteWriteChannel) = frame.encode(channel)
+    override suspend fun encode(sink: BufferedSink) = frame.encode(sink)
 
-    override suspend fun decode(channel: ByteReadChannel): ReadDeviceIdentifiersResponse =
+    override suspend fun decode(source: BufferedSource): ReadDeviceIdentifiersResponse =
         run {
             logger.debug("ReadDeviceIdentifiersRequest.decode()")
-            val header = readHeader(channel)
-            val functionCode = from(channel.readUByte())
-            val meiType = channel.readUByte()
-            val readDevId = channel.readUByte()
-            val consistencyLevel = channel.readUByte()
-            val more = channel.readUByte()
-            val nextObjectId = channel.readUByte()
-            val numberOfObjects = channel.readUByte()
+            val header = readHeader(source)
+            val functionCode = from(source.readUByte())
+            val meiType = source.readUByte()
+            val readDevId = source.readUByte()
+            val consistencyLevel = source.readUByte()
+            val more = source.readUByte()
+            val nextObjectId = source.readUByte()
+            val numberOfObjects = source.readUByte()
             val objectList = mutableListOf<ModbusObject>()
-            repeat(numberOfObjects.toInt()) { objectList.add(decodeModbusObject(channel)) }
+            repeat(numberOfObjects.toInt()) { objectList.add(decodeModbusObject(source)) }
             ReadDeviceIdentifiersResponse(
                 jobId = JobId(jobId),
                 requestId = RequestId(requestId),

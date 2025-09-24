@@ -26,6 +26,7 @@ okioVersion = "3.9.0"
 lightbendConfigVersion = "1.4.3"
 retrofitVersion = "3.0.0"
 digitalpetriModbusVersion = "1.2.2"
+okioVersion = "3.9.0"
 
 [libraries]
 commons-csv = { module = "org.apache.commons:commons-csv", version.ref = "commonsCsvVersion" }
@@ -87,6 +88,7 @@ ktor-io = { module = "io.ktor:ktor-io", version.ref = "ktorVersion" }
 digitalpetri-modbus-tcp = { module = "com.digitalpetri.modbus:modbus-master-tcp", version.ref = "digitalpetriModbusVersion" }
 
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofitVersion" }
+okio = { module = "com.squareup.okio:okio", version.ref = "okioVersion" }
 
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofitVersion" }
 okio = { module = "com.squareup.okio:okio", version.ref = "okioVersion" }

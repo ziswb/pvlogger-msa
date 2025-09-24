@@ -8,8 +8,8 @@ import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.FunctionCode
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.FunctionCode.Companion.from
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.FunctionCode.ReadRegisters
 import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusRegisterValueResponse
-import io.ktor.utils.io.ByteReadChannel
 import mu.KotlinLogging
+import okio.BufferedSource
 import java.time.LocalDateTime.now
 
 private const val LENGTH_OF_DEVICE_ID_FUNCTION_CODE_AND_NUMBER_OF_BYTES: UByte = 3u
@@ -18,7 +18,7 @@ abstract class ModbusRegisterValueRequest : ModbusRequest {
 
     private val logger = KotlinLogging.logger {}
 
-    override suspend fun decode(channel: ByteReadChannel): ModbusRegisterValueResponse =
+    override suspend fun decode(channel: BufferedSource): ModbusRegisterValueResponse =
         run {
             logger.debug("ModbusRegisterValueRequest.decode()")
             val header = readHeader(channel)
@@ -37,18 +37,16 @@ abstract class ModbusRegisterValueRequest : ModbusRequest {
 
     private suspend fun readData(
         functionCode: FunctionCode,
-        channel: ByteReadChannel,
+        channel: BufferedSource,
     ): List<ModbusRegisterValue<*>> {
         logger.debug("ModbusRegisterValueRequest.readData()")
         if (functionCode == ReadRegisters) {
-            readNumberOfBytes(channel)
+            channel.readUByte() // number of bytes
             return readRegisters(channel)
         } else {
             throw UnsupportedOperationException("Unknown function code '${functionCode.value}'")
         }
     }
 
-    protected abstract suspend fun readRegisters(channel: ByteReadChannel): List<ModbusRegisterValue<*>>
-
-    private suspend fun readNumberOfBytes(channel: ByteReadChannel) = channel.readUByte()
+    protected abstract suspend fun readRegisters(channel: BufferedSource): List<ModbusRegisterValue<*>>
 }

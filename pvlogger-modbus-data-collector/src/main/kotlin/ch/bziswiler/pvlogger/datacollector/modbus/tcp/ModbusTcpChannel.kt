@@ -3,10 +3,6 @@ package ch.bziswiler.pvlogger.datacollector.modbus.tcp
 import ch.bziswiler.pvlogger.datacollector.configuration.AppConfig
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.request.ModbusRequest
 import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusResponse
-import io.ktor.utils.io.ByteChannel
-import io.ktor.utils.io.ByteReadChannel
-import io.ktor.utils.io.ByteWriteChannel
-import io.ktor.utils.io.core.readBytes
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -56,13 +52,12 @@ class ModbusTcpChannel(config: AppConfig) {
 
     private suspend fun doRequest(request: ModbusRequest): ModbusResponse {
         logger.debug("ModbusTcpChannel.doRequest()")
-        // Build request into an in-memory ByteChannel
-        val outChannel = ByteChannel(autoFlush = true)
+        // Build request into an in-memory buffer (Okio)
+        val outBuffer = okio.Buffer()
         delay(delay)
-        request.encode(outChannel)
+        request.encode(outBuffer)
         // Extract bytes and send over socket
-        val packet = outChannel.readRemaining()
-        val toSend = packet.readBytes()
+        val toSend = outBuffer.readByteArray()
         socket.getOutputStream().write(toSend)
         socket.getOutputStream().flush()
         // Read response fully with timeout (soTimeout is set). We don't know exact length, so read available after small delay
@@ -74,8 +69,8 @@ class ModbusTcpChannel(config: AppConfig) {
             val read = input.read(buffer)
             if (read <= 0) throw TimeoutException("no data")
             val data = buffer.copyOf(read)
-            val inChannel: ByteReadChannel = ByteReadChannel(data)
-            request.decode(inChannel)
+            val inBuffer = okio.Buffer().write(data)
+            request.decode(inBuffer)
         } ?: throw TimeoutException("no response within $readTimeout milliseconds!")
     }
 }

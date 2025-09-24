@@ -36,14 +36,16 @@ dependencies {
     // Digitalpetri Modbus TCP for Modbus communication
 //    implementation(libs.digitalpetri.modbus.tcp)
 
-    // Ktor IO channels (non-network), used for in-memory encode/decode
-    implementation(libs.ktor.io)
+    // Okio for in-memory encode/decode
+    implementation(libs.okio)
 
-    // Retrofit HTTP client (replacing Ktor HTTP client)
+    // Retrofit HTTP client
     implementation(libs.retrofit)
 
-    // Kotlinx serialization (pure Kotlin)
+    // Kotlinx serialization
     implementation(libs.kotlinx.serialization.json)
+    // Coroutines
+    implementation(libs.kotlinx.coroutines)
 
     // Logging
     implementation(libs.logback.classic)
