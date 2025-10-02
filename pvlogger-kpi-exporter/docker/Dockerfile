@@ -10,7 +10,7 @@ FROM eclipse-temurin:21-jre-ubi9-minimal
 
 LABEL author="Bruno Ziswiler"
 LABEL description="PV Logger KPI Exporter"
-LABEL version="1.4.9
+LABEL version="1.4.9"
 
 RUN mkdir -p "/opt/pvlogger/"
 COPY --from=build "/workspace/pvlogger-kpi-exporter/build/libs/pvlogger-kpi-exporter-all.jar" "/opt/pvlogger/kpi-exporter.jar"
