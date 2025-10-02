@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+#
+# Script: build-angular.sh
+# Purpose: Build Angular frontend using Docker container
+# Dependencies: docker
+# Exit codes: 0=success, 1=error, 127=missing dependency (from require-command.sh)
+#
 
 # exit on error
 set -e

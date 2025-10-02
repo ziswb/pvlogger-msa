@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+#
+# Script: replace_path_by_home.sh
+# Purpose: Replace REPLACE_PATH placeholder with user's HOME directory in files
+# Dependencies: sed, cat
+# Exit codes: 0=success, 1=error, 127=missing dependency (from require-command.sh)
+#
 
 # exit on error
 set -e

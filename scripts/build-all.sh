@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+#
+# Script: build-all.sh
+# Purpose: Build Docker images for all PV Logger components in parallel
+# Dependencies: docker, grep, sed (via build.sh)
+# Exit codes: 0=success, 1=error, 124=timeout, 127=missing dependency (from require-command.sh)
+#
 
 # exit on error
 set -e
@@ -7,8 +13,11 @@ set -u
 # return the command that was the reason behind the failure
 set -o pipefail
 
-# determine script location
-SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
+# better diagnostics on failures
+trap 'echo "Error on line $LINENO" >&2' ERR
+
+# determine script location (physical path)
+SCRIPT_DIR=$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 
 help()
 {
@@ -25,8 +34,12 @@ help()
 declare -a pids
 
 waitPids() {
-    while [ ${#pids[@]} -ne 0 ]; do
-        echo "Waiting for pids:" "${pids[@]}"
+    local timeout=2700  # 45 minutes timeout
+    local elapsed=0
+    local check_interval=5  # Check every 5 seconds
+    
+    while [ ${#pids[@]} -ne 0 ] && [ $elapsed -lt $timeout ]; do
+        echo "Waiting for pids (${elapsed}s/${timeout}s):" "${pids[@]}"
         local range
         range=$(eval "echo {0..$((${#pids[@]}-1))}")
         local i
@@ -37,9 +50,39 @@ waitPids() {
             fi
         done
         pids=("${pids[@]}") # Expunge nulls created by unset.
-        sleep 1
+        
+        if [ ${#pids[@]} -ne 0 ]; then
+            sleep $check_interval
+            elapsed=$((elapsed + check_interval))
+        fi
     done
-    echo "Done!"
+    
+    # Handle timeout case
+    if [ $elapsed -ge $timeout ] && [ ${#pids[@]} -ne 0 ]; then
+        echo "Warning: Timeout reached after ${timeout}s, terminating remaining processes..." >&2
+        for pid in "${pids[@]}"; do
+            if kill -0 "$pid" 2>/dev/null; then
+                echo "Terminating process $pid" >&2
+                kill -TERM "$pid" 2>/dev/null || true
+            fi
+        done
+        
+        # Give processes 10 seconds to terminate gracefully
+        sleep 10
+        
+        # Force kill any remaining processes
+        for pid in "${pids[@]}"; do
+            if kill -0 "$pid" 2>/dev/null; then
+                echo "Force killing process $pid" >&2
+                kill -KILL "$pid" 2>/dev/null || true
+            fi
+        done
+        
+        echo "Build timeout exceeded. Some builds may have failed." >&2
+        exit 124
+    fi
+    
+    echo "All builds completed successfully!"
 }
 
 addPid() {
@@ -50,14 +93,14 @@ addPid() {
 }
 
 OPTSTRING=":v:lh"
-passed_ops=""
+declare -a passed_args=()
 
 while getopts $OPTSTRING option
 do
   case "${option}" in
-    v) passed_ops="${passed_ops} -${option} ${OPTARG}"
+    v) passed_args+=("-v" "${OPTARG}")
        ;;
-    l) passed_ops="${passed_ops} -${option}"
+    l) passed_args+=("-l")
        ;;
     h) help
        exit 0
@@ -71,7 +114,7 @@ do
   esac
 done
 
-echo "passed_ops: ${passed_ops}"
+echo "passed_args: ${passed_args[*]}"
 
 PV_LOGGER_MODULES=(
   "pvlogger-frontend"
@@ -91,9 +134,9 @@ echo "                       START BUILDING"
 echo "###############################################################"
 
 for module in "${PV_LOGGER_MODULES[@]}"; do
-  echo "executing ${SCRIPT_DIR}/build.sh ${passed_ops} -c $module"
-  eval "${SCRIPT_DIR}/build.sh ${passed_ops} -c $module" >/dev/null 2>&1 &
-  addPid "Building $module" $!
+  echo "executing ${SCRIPT_DIR}/build.sh ${passed_args[*]} -c ${module}"
+  "${SCRIPT_DIR}/build.sh" "${passed_args[@]}" -c "${module}" >/dev/null 2>&1 &
+  addPid "Building ${module}" $!
 done
 
 waitPids

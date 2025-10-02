@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+#
+# Script: build.sh
+# Purpose: Build Docker images for PV Logger components
+# Dependencies: docker, grep, sed
+# Exit codes: 0=success, 1=error, 127=missing dependency (from require-command.sh)
+#
 
 # exit on error
 set -e
@@ -79,9 +85,24 @@ if [ -z "${version// }" ]; then
   exit 1
 fi
 
-if (! docker stats --no-stream &> /dev/null); then
-  echo "Docker is not running";
-  exit 1;
+# Validate Docker daemon is accessible
+if ! docker info >/dev/null 2>&1; then
+    echo "Error: Docker daemon not accessible. Please ensure Docker is running." >&2
+    exit 1
+fi
+
+# Validate component directory exists
+if [[ ! -d "${SCRIPT_DIR}/../${PV_LOGGER_COMPONENT}" ]]; then
+    echo "Error: Component directory not found: ${PV_LOGGER_COMPONENT}" >&2
+    echo "Available components in parent directory:" >&2
+    ls -1 "${SCRIPT_DIR}/../" | grep "^pvlogger-" || echo "  No pvlogger components found" >&2
+    exit 1
+fi
+
+# Validate Dockerfile exists
+if [[ ! -f "${SCRIPT_DIR}/../${PV_LOGGER_COMPONENT}/docker/Dockerfile" ]]; then
+    echo "Error: Dockerfile not found at: ${PV_LOGGER_COMPONENT}/docker/Dockerfile" >&2
+    exit 1
 fi
 
 echo "Building pv logger component '${PV_LOGGER_COMPONENT}' version '${version}' and pushing to '${registry}/${REGISTRY_PATH}'"
