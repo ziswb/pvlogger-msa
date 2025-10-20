@@ -10,7 +10,7 @@ FROM eclipse-temurin:21-jre-ubi9-minimal
 
 LABEL author="Bruno Ziswiler"
 LABEL description="Job Trigger for PV Logger"
-LABEL version="1.4.9"
+LABEL version="1.4.10"
 
 RUN mkdir -p "/opt/pvlogger/"
 COPY --from=build "/workspace/pvlogger-heartbeat/build/libs/pvlogger-heartbeat-all.jar" "/opt/pvlogger/heartbeat.jar"
