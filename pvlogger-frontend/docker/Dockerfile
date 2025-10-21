@@ -19,8 +19,6 @@ USER bziswiler
 
 ENV DATA_ACCESSOR_HOST="pvlogger-modbus-data-accessor-service.pvlogger.svc.cluster.local"
 ENV DATA_ACCESSOR_PORT="8083"
-ENV ACTIVEMQ_HOST="activemq.activemq.svc.cluster.local"
-ENV ACTIVEMQ_PORT="61616"
 ENV TZ="Europe/Zurich"
 
 ENTRYPOINT [ \

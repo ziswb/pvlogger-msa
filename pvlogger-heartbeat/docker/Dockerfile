@@ -17,10 +17,6 @@ COPY --from=build "/workspace/pvlogger-heartbeat/build/libs/pvlogger-heartbeat-a
 RUN useradd -u 1000 bziswiler
 USER bziswiler
 
-ENV POSTGRESQL_HOST="postgres-service.postgresql.svc.cluster.local"
-ENV POSTGRESQL_PORT="5432"
-ENV ACTIVEMQ_HOST="activemq.activemq.svc.cluster.local"
-ENV ACTIVEMQ_PORT="61616"
 ENV TZ="Europe/Zurich"
 
 ENTRYPOINT [ \
