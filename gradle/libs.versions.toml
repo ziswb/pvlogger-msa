@@ -27,12 +27,14 @@ lightbendConfigVersion = "1.4.3"
 retrofitVersion = "3.0.0"
 digitalpetriModbusVersion = "1.2.2"
 okioVersion = "3.9.0"
+config4kVersion = "0.7.0"
 
 [libraries]
 commons-csv = { module = "org.apache.commons:commons-csv", version.ref = "commonsCsvVersion" }
 reactivecircus-cache = { module = "io.github.reactivecircus.cache4k:cache4k", version.ref = "cacheVersion" }
 
 lightbend-config = { module = "com.typesafe:config", version.ref = "lightbendConfigVersion" }
+config4k = { module = "io.github.config4k:config4k", version.ref = "config4kVersion" }
 
 prometheus-pushgateway = { module = "io.prometheus:simpleclient_pushgateway", version.ref = "prometheusVersion" }
 
