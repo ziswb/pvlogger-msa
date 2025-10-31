@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.modbus.tcp.frame
+package ch.bziswiler.pvlogger.modbus.api.tcp
 
 import kotlinx.serialization.Serializable
 

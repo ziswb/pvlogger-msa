@@ -1,5 +1,7 @@
 package ch.bziswiler.pvlogger.modbus.tcp.frame
 
+import ch.bziswiler.pvlogger.modbus.api.tcp.FunctionCode
+import ch.bziswiler.pvlogger.modbus.api.tcp.MbapHeader
 import ch.bziswiler.pvlogger.modbus.tcp.encode
 import kotlinx.serialization.Serializable
 import okio.BufferedSink

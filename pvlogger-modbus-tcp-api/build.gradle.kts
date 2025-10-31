@@ -24,6 +24,9 @@ repositories {
 dependencies {
     // Kotlinx serialization
     implementation(libs.kotlinx.serialization.json)
+
+    // Okio for in-memory encode/decode
+    implementation(libs.okio)
 }
 
 tasks.test {

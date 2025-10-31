@@ -3,9 +3,10 @@ package ch.bziswiler.pvlogger.modbus.tcp.request
 import ch.bziswiler.pvlogger.modbus.api.ModbusRegisterValue
 import ch.bziswiler.pvlogger.modbus.api.meta.JobId
 import ch.bziswiler.pvlogger.modbus.api.meta.RequestId
-import ch.bziswiler.pvlogger.modbus.tcp.frame.FunctionCode
-import ch.bziswiler.pvlogger.modbus.tcp.frame.FunctionCode.Companion.from
-import ch.bziswiler.pvlogger.modbus.tcp.readUByte
+import ch.bziswiler.pvlogger.modbus.api.tcp.FunctionCode
+import ch.bziswiler.pvlogger.modbus.api.tcp.FunctionCode.Companion.from
+import ch.bziswiler.pvlogger.modbus.api.tcp.ModbusRequest
+import ch.bziswiler.pvlogger.modbus.api.tcp.readUByte
 import ch.bziswiler.pvlogger.modbus.tcp.response.ModbusRegisterValueResponse
 import mu.KotlinLogging
 import okio.BufferedSource

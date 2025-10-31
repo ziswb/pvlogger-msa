@@ -1,9 +1,7 @@
-package ch.bziswiler.pvlogger.modbus.tcp.response
+package ch.bziswiler.pvlogger.modbus.api.tcp
 
 import ch.bziswiler.pvlogger.modbus.api.meta.JobId
 import ch.bziswiler.pvlogger.modbus.api.meta.RequestId
-import ch.bziswiler.pvlogger.modbus.tcp.frame.FunctionCode
-import ch.bziswiler.pvlogger.modbus.tcp.frame.MbapHeader
 import kotlinx.serialization.Serializable
 import java.time.LocalDateTime
 

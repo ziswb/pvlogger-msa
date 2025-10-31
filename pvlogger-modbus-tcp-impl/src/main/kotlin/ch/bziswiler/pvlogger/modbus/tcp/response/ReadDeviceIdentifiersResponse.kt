@@ -2,9 +2,10 @@ package ch.bziswiler.pvlogger.modbus.tcp.response
 
 import ch.bziswiler.pvlogger.modbus.api.meta.JobId
 import ch.bziswiler.pvlogger.modbus.api.meta.RequestId
+import ch.bziswiler.pvlogger.modbus.api.tcp.FunctionCode
+import ch.bziswiler.pvlogger.modbus.api.tcp.MbapHeader
+import ch.bziswiler.pvlogger.modbus.api.tcp.ModbusResponse
 import ch.bziswiler.pvlogger.modbus.tcp.ModbusObject
-import ch.bziswiler.pvlogger.modbus.tcp.frame.FunctionCode
-import ch.bziswiler.pvlogger.modbus.tcp.frame.MbapHeader
 import java.time.LocalDateTime
 
 data class ReadDeviceIdentifiersResponse(

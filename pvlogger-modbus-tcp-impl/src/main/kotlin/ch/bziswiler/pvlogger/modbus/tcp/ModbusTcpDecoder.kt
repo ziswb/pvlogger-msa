@@ -1,5 +1,6 @@
 package ch.bziswiler.pvlogger.modbus.tcp
 
+import ch.bziswiler.pvlogger.modbus.api.tcp.readUByte
 import okio.BufferedSource
 
 @OptIn(ExperimentalUnsignedTypes::class)

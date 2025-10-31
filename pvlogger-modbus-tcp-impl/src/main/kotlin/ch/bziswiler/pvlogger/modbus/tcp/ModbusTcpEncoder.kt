@@ -1,7 +1,9 @@
 package ch.bziswiler.pvlogger.modbus.tcp
 
-import ch.bziswiler.pvlogger.modbus.tcp.frame.FunctionCode
-import ch.bziswiler.pvlogger.modbus.tcp.frame.MbapHeader
+import ch.bziswiler.pvlogger.modbus.api.tcp.FunctionCode
+import ch.bziswiler.pvlogger.modbus.api.tcp.MbapHeader
+import ch.bziswiler.pvlogger.modbus.api.tcp.writeUByte
+import ch.bziswiler.pvlogger.modbus.api.tcp.writeUShort
 import ch.bziswiler.pvlogger.modbus.tcp.frame.UByteData
 import ch.bziswiler.pvlogger.modbus.tcp.frame.UShortData
 import okio.BufferedSink

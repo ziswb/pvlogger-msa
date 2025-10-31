@@ -1,7 +1,8 @@
 package ch.bziswiler.pvlogger.modbus.tcp
 
-import ch.bziswiler.pvlogger.modbus.tcp.request.ModbusRequest
-import ch.bziswiler.pvlogger.modbus.tcp.response.ModbusResponse
+import ch.bziswiler.pvlogger.modbus.api.tcp.ModbusRequest
+import ch.bziswiler.pvlogger.modbus.api.tcp.ModbusResponse
+import ch.bziswiler.pvlogger.modbus.api.tcp.ModbusTcpChannel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -12,17 +13,17 @@ import java.net.InetSocketAddress
 import java.net.Socket
 import java.util.concurrent.TimeoutException
 
-class ModbusTcpChannel(
+class ModbusTcpChannelImpl(
     private val peerHost: String,
     private val port: Int,
     private val delay: Long,
-) {
+) : ModbusTcpChannel {
     private val logger = KotlinLogging.logger {}
     private val readTimeout = 30000L
     private lateinit var socket: Socket
     private val mutex = Mutex()
 
-    suspend fun request(request: ModbusRequest): ModbusResponse =
+    override suspend fun request(request: ModbusRequest): ModbusResponse =
         mutex.withLock {
             logger.debug("ModbusTcpChannel.request()")
             try {
@@ -36,7 +37,7 @@ class ModbusTcpChannel(
             }
         }
 
-    private fun connect(): ModbusTcpChannel {
+    private fun connect(): ModbusTcpChannelImpl {
         logger.debug("ModbusTcpChannel.connect()")
         logger.debug("ModbusTcpChannel connecting to $peerHost:$port")
         socket = Socket()

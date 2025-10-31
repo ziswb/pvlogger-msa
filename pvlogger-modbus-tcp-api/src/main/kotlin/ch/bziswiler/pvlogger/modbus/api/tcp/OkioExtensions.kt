@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.modbus.tcp
+package ch.bziswiler.pvlogger.modbus.api.tcp
 
 import okio.Buffer
 import okio.BufferedSink

@@ -2,14 +2,15 @@ package ch.bziswiler.pvlogger.modbus.tcp.request
 
 import ch.bziswiler.pvlogger.modbus.api.meta.JobId
 import ch.bziswiler.pvlogger.modbus.api.meta.RequestId
+import ch.bziswiler.pvlogger.modbus.api.tcp.FunctionCode
+import ch.bziswiler.pvlogger.modbus.api.tcp.FunctionCode.Companion.from
+import ch.bziswiler.pvlogger.modbus.api.tcp.MbapHeader
+import ch.bziswiler.pvlogger.modbus.api.tcp.ModbusRequest
+import ch.bziswiler.pvlogger.modbus.api.tcp.readUByte
 import ch.bziswiler.pvlogger.modbus.tcp.ModbusObject
 import ch.bziswiler.pvlogger.modbus.tcp.decodeModbusObject
 import ch.bziswiler.pvlogger.modbus.tcp.frame.AduFrame
-import ch.bziswiler.pvlogger.modbus.tcp.frame.FunctionCode
-import ch.bziswiler.pvlogger.modbus.tcp.frame.FunctionCode.Companion.from
-import ch.bziswiler.pvlogger.modbus.tcp.frame.MbapHeader
 import ch.bziswiler.pvlogger.modbus.tcp.frame.UByteData
-import ch.bziswiler.pvlogger.modbus.tcp.readUByte
 import ch.bziswiler.pvlogger.modbus.tcp.response.ReadDeviceIdentifiersResponse
 import mu.KotlinLogging
 import okio.BufferedSink
