@@ -1,10 +1,9 @@
-package ch.bziswiler.pvlogger.shared.unit
+package ch.bziswiler.pvlogger.modbus.api.units
 
 import kotlinx.serialization.Serializable
-import java.io.Serializable as JavaSerializable
 
 @Serializable
-data class W(val w: Double) : JavaSerializable {
+data class W(val w: Double) {
 
     fun toKW() = KW(w.div(1000.0))
 

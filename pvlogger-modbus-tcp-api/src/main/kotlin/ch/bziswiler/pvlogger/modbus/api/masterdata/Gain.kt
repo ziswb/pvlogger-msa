@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.shared.masterdata.modbus
+package ch.bziswiler.pvlogger.modbus.api.masterdata
 
 enum class Gain(val raw: String) {
     ONE("1"),

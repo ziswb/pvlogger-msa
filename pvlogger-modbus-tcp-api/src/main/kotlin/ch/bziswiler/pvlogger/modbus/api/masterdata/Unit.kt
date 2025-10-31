@@ -1,8 +1,8 @@
-package ch.bziswiler.pvlogger.shared.masterdata.modbus
+package ch.bziswiler.pvlogger.modbus.api.masterdata
 
-import ch.bziswiler.pvlogger.shared.unit.KW
-import ch.bziswiler.pvlogger.shared.unit.KWh
-import ch.bziswiler.pvlogger.shared.unit.W
+import ch.bziswiler.pvlogger.modbus.api.units.KW
+import ch.bziswiler.pvlogger.modbus.api.units.KWh
+import ch.bziswiler.pvlogger.modbus.api.units.W
 
 enum class Unit(val raw: List<String>) {
     PERCENT(listOf("%")),

@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.shared.masterdata.modbus
+package ch.bziswiler.pvlogger.modbus.api.masterdata
 
 enum class Type(val raw: List<String>, val description: String) {
     U16(listOf("U16", "UINT16"), "Unsigned integer (16 bits)"),

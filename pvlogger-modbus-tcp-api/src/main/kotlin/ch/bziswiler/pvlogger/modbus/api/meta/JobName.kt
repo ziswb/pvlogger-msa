@@ -1,8 +1,6 @@
-package ch.bziswiler.pvlogger.shared.job.meta
+package ch.bziswiler.pvlogger.modbus.api.meta
 
-import java.io.Serializable
-
-enum class JobName(val value: String) : Serializable {
+enum class JobName(val value: String) {
     DYNAMIC_DATA_JOB("modbus.dynamic.run"),
     STATIC_DATA_JOB("modbus.static.run"),
     DEVICE_IDS_JOB("modbus.devids.run"),

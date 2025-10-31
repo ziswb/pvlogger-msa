@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.shared.masterdata.modbus
+package ch.bziswiler.pvlogger.modbus.api.masterdata
 
 enum class ReadWrite(val description: String) {
     RO("Data that is readable only"),
