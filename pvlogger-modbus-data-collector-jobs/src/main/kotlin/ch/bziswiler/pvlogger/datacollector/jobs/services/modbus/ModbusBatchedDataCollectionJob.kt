@@ -1,21 +1,20 @@
 package ch.bziswiler.pvlogger.datacollector.jobs.services.modbus
 
-import ch.bziswiler.pvlogger.datacollector.jobs.configuration.AppConfig
-import ch.bziswiler.pvlogger.datacollector.jobs.modbus.tcp.ModbusTcpChannel
-import ch.bziswiler.pvlogger.datacollector.jobs.modbus.tcp.request.ReadRegistersValueRequest
+import ch.bziswiler.pvlogger.datacollector.jobs.configuration.Settings
 import ch.bziswiler.pvlogger.datacollector.jobs.services.IdProvider
 import ch.bziswiler.pvlogger.datacollector.jobs.services.messaging.JobSchedulerMessageSender
 import ch.bziswiler.pvlogger.datacollector.jobs.services.messaging.StoreModbusValuesMessageSender
-import ch.bziswiler.pvlogger.shared.job.meta.JobId
+import ch.bziswiler.pvlogger.modbus.api.masterdata.Category
+import ch.bziswiler.pvlogger.modbus.api.masterdata.DeviceType
+import ch.bziswiler.pvlogger.modbus.api.masterdata.dto.ModbusRegisterDefinition
+import ch.bziswiler.pvlogger.modbus.api.meta.JobId
+import ch.bziswiler.pvlogger.modbus.api.tcp.ModbusRequest
+import ch.bziswiler.pvlogger.modbus.api.tcp.ModbusResponse
+import ch.bziswiler.pvlogger.modbus.api.tcp.ModbusTcpChannel
+import ch.bziswiler.pvlogger.modbus.tcp.request.ReadRegistersValueRequest
+import ch.bziswiler.pvlogger.modbus.tcp.response.ModbusRegisterValueResponse
 import ch.bziswiler.pvlogger.shared.job.tags.JobFinishedMessageTag
 import ch.bziswiler.pvlogger.shared.job.tags.StoreModbusRegisterValuesMessageTag
-import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category
-import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType
-import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType.INVERTER
-import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType.METER
-import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
-import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusRegisterValueResponse
-import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusResponse
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.Timer
 import kotlinx.coroutines.runBlocking
@@ -24,18 +23,17 @@ import java.time.LocalDateTime.now
 
 @OptIn(ExperimentalUnsignedTypes::class)
 abstract class ModbusBatchedDataCollectionJob(
-    config: AppConfig,
+    settings: Settings,
     private val channel: ModbusTcpChannel,
     private val idProvider: IdProvider,
     private val masterDataService: MasterDataService,
     private val persistenceMessageSender: StoreModbusValuesMessageSender,
-    private val jobSchedulerMessageSender: JobSchedulerMessageSender
+    private val jobSchedulerMessageSender: JobSchedulerMessageSender,
 ) : ModbusDataCollectionJob {
-
     private val logger = KotlinLogging.logger {}
 
-    private val meterDeviceIds = config.modbusTcpConfig.meterDeviceIds
-    private val inverterDeviceIds = config.modbusTcpConfig.inverterDeviceIds
+    private val meterDeviceIds = settings.modbusTcpConfig.meterDeviceIds
+    private val inverterDeviceIds = settings.modbusTcpConfig.inverterDeviceIds
     private val deviceIdToDeviceTypesMap = mutableMapOf<UByte, List<DeviceType>>()
 
     protected abstract val metricTimer: Timer
@@ -44,31 +42,46 @@ abstract class ModbusBatchedDataCollectionJob(
 
     init {
         meterDeviceIds
-            .intersect(inverterDeviceIds).toSet()
-            .associateWith { listOf(INVERTER, METER) }
+            .intersect(inverterDeviceIds)
+            .toSet()
+            .associateWith { listOf(DeviceType.INVERTER, DeviceType.METER) }
             .forEach { entry -> deviceIdToDeviceTypesMap[entry.key] = entry.value }
         inverterDeviceIds
-            .minus(meterDeviceIds).toSet()
-            .associateWith { listOf(INVERTER) }
+            .minus(meterDeviceIds)
+            .toSet()
+            .associateWith { listOf(DeviceType.INVERTER) }
             .forEach { entry -> deviceIdToDeviceTypesMap[entry.key] = entry.value }
         meterDeviceIds
-            .minus(inverterDeviceIds).toSet()
-            .associateWith { listOf(METER) }
+            .minus(inverterDeviceIds)
+            .toSet()
+            .associateWith { listOf(DeviceType.METER) }
             .forEach { entry -> deviceIdToDeviceTypesMap[entry.key] = entry.value }
     }
-
 
     private fun storeResponse(response: ModbusResponse) {
         logger.debug("ModbusBatchedDataCollectionJob.storeResponse()")
         when (response) {
-            is ModbusRegisterValueResponse -> persistenceMessageSender.tagAndSendMessage(response, StoreModbusRegisterValuesMessageTag())
+            is ModbusRegisterValueResponse ->
+                persistenceMessageSender.tagAndSendMessage(
+                    response,
+                    StoreModbusRegisterValuesMessageTag(),
+                )
+
             else -> throw UnsupportedOperationException("'storeResponse()' does not support '${response::class.java.canonicalName}'")
         }
     }
 
-    private fun jobSucceeded(jobId: JobId) = jobSchedulerMessageSender.tagAndSendMessage(jobSucceededMessageObject(jobId), JobFinishedMessageTag(jobName))
+    private fun jobSucceeded(jobId: JobId) =
+        jobSchedulerMessageSender.tagAndSendMessage(
+            jobSucceededMessageObject(jobId),
+            JobFinishedMessageTag(jobName),
+        )
 
-    private fun jobFailed(jobId: JobId) = jobSchedulerMessageSender.tagAndSendMessage(jobFailedMessageObject(jobId), JobFinishedMessageTag(jobName))
+    private fun jobFailed(jobId: JobId) =
+        jobSchedulerMessageSender.tagAndSendMessage(
+            jobFailedMessageObject(jobId),
+            JobFinishedMessageTag(jobName),
+        )
 
     final override fun execute() {
         metricCounter.increment()
@@ -88,7 +101,11 @@ abstract class ModbusBatchedDataCollectionJob(
         }
     }
 
-    private fun fetchRegisterValues(jobId: JobId, deviceId: UByte, deviceTypes: List<DeviceType>) {
+    private fun fetchRegisterValues(
+        jobId: JobId,
+        deviceId: UByte,
+        deviceTypes: List<DeviceType>,
+    ) {
         logger.debug { "ModbusInverterBatchedDataCollectionJobScaffold.readAndStoreRegisterValues()" }
         listOfRegisterDefinitionLists(deviceTypes).forEach { registerDefinitions ->
             runCatching {
@@ -104,13 +121,14 @@ abstract class ModbusBatchedDataCollectionJob(
         }
     }
 
-    private fun listOfRegisterDefinitionLists(deviceTypes: List<DeviceType>) = registerDefinitionList(
-        deviceTypes,
-        categories
-    ).fold(mutableListOf<MutableList<ModbusRegisterDefinition>>()) { list, definition ->
-        updateListOfRegisterDefinitions(list, definition)
-        list
-    }
+    private fun listOfRegisterDefinitionLists(deviceTypes: List<DeviceType>) =
+        registerDefinitionList(
+            deviceTypes,
+            categories,
+        ).fold(mutableListOf<MutableList<ModbusRegisterDefinition>>()) { list, definition ->
+            updateListOfRegisterDefinitions(list, definition)
+            list
+        }
 
     private fun updateListOfRegisterDefinitions(
         list: MutableList<MutableList<ModbusRegisterDefinition>>,
@@ -131,10 +149,11 @@ abstract class ModbusBatchedDataCollectionJob(
         return (lastRegister.registerAddress.value + lastRegister.quantity.value) != nextRegister.registerAddress.value
     }
 
-    private fun requestRegisterValues(request: ReadRegistersValueRequest): ModbusResponse = runBlocking {
-        logger.debug("ModbusInverterBatchedDataCollectionJobScaffold.requestRegisterValues()")
-        channel.request(request)
-    }
+    private fun requestRegisterValues(request: ModbusRequest): ModbusResponse =
+        runBlocking {
+            logger.debug("ModbusInverterBatchedDataCollectionJobScaffold.requestRegisterValues()")
+            channel.request(request)
+        }
 
     private fun buildRequest(
         jobId: JobId,
@@ -143,6 +162,7 @@ abstract class ModbusBatchedDataCollectionJob(
     ) = ReadRegistersValueRequest(jobId.id, now(), idProvider.nextRequestId, deviceId, registerDefinitions)
 
     private fun registerDefinitionList(
-        deviceTypes: List<DeviceType>, categories: List<Category>
+        deviceTypes: List<DeviceType>,
+        categories: List<Category>,
     ) = masterDataService.fetchRegisterDefinitions(deviceTypes, categories)
 }

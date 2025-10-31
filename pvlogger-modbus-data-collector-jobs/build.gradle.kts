@@ -50,6 +50,7 @@ dependencies {
 
     // Shared modbus-resources
     implementation(project(":pvlogger-modbus-tcp-api"))
+    implementation(project(":pvlogger-modbus-tcp-impl"))
 
     // Dependency Injection (Kodein)
     implementation(libs.kodein.di)

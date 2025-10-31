@@ -10,11 +10,14 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
-class MetricsPusher(private val config: MetricsPushConfig) {
+class MetricsPusher(
+    private val config: MetricsPushConfig,
+) {
     private val logger = KotlinLogging.logger {}
-    private val scheduler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor { r ->
-        Thread(r, "metrics-pusher").apply { isDaemon = true }
-    }
+    private val scheduler: ScheduledExecutorService =
+        Executors.newSingleThreadScheduledExecutor { r ->
+            Thread(r, "metrics-pusher").apply { isDaemon = true }
+        }
     private var scheduled: ScheduledFuture<*>? = null
     private var pushGateway: PushGateway? = null
 
@@ -30,14 +33,17 @@ class MetricsPusher(private val config: MetricsPushConfig) {
         }
         pushGateway = PushGateway(config.url)
         val interval = if (config.intervalSeconds > 0) config.intervalSeconds else 15L
-        logger.info { "Starting metrics pusher to ${config.url} every ${interval}s with job='${config.job}' and grouping=${config.grouping}" }
-        scheduled = scheduler.scheduleAtFixedRate({
-            try {
-                pushGateway?.pushAdd(registry.prometheusRegistry, config.job, config.grouping)
-            } catch (e: IOException) {
-                logger.warn(e) { "Failed to push metrics to ${config.url}" }
-            }
-        }, interval, interval, TimeUnit.SECONDS)
+        logger.info {
+            "Starting metrics pusher to ${config.url} every ${interval}s with job='${config.job}' and grouping=${config.grouping}"
+        }
+        scheduled =
+            scheduler.scheduleAtFixedRate({
+                try {
+                    pushGateway?.pushAdd(registry.prometheusRegistry, config.job, config.grouping)
+                } catch (e: IOException) {
+                    logger.warn(e) { "Failed to push metrics to ${config.url}" }
+                }
+            }, interval, interval, TimeUnit.SECONDS)
     }
 
     fun stop(deleteFromGateway: Boolean = true) {
@@ -57,7 +63,8 @@ class MetricsPusher(private val config: MetricsPushConfig) {
         scheduler.shutdown()
     }
 
-    private fun findPrometheusRegistry(): PrometheusMeterRegistry? {
-        return Metrics.globalRegistry.registries.firstOrNull { it is PrometheusMeterRegistry } as? PrometheusMeterRegistry
-    }
+    private fun findPrometheusRegistry(): PrometheusMeterRegistry? =
+        Metrics.globalRegistry.registries.firstOrNull {
+            it is PrometheusMeterRegistry
+        } as? PrometheusMeterRegistry
 }

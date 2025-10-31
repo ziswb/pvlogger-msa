@@ -1,12 +1,12 @@
 package ch.bziswiler.pvlogger.datacollector.jobs.services.modbus.impl
 
-import ch.bziswiler.pvlogger.datacollector.jobs.configuration.AppConfig
-import ch.bziswiler.pvlogger.datacollector.jobs.modbus.tcp.ModbusTcpChannel
-import ch.bziswiler.pvlogger.datacollector.jobs.modbus.tcp.request.ReadDeviceListRequest
+import ch.bziswiler.pvlogger.datacollector.jobs.configuration.Settings
 import ch.bziswiler.pvlogger.datacollector.jobs.services.IdProvider
 import ch.bziswiler.pvlogger.datacollector.jobs.services.messaging.StoreModbusValuesMessageSender
-import ch.bziswiler.pvlogger.shared.job.meta.JobId
-import ch.bziswiler.pvlogger.shared.job.meta.JobName.DEVICE_LIST_JOB
+import ch.bziswiler.pvlogger.modbus.api.meta.JobId
+import ch.bziswiler.pvlogger.modbus.api.meta.JobName
+import ch.bziswiler.pvlogger.modbus.api.tcp.ModbusTcpChannel
+import ch.bziswiler.pvlogger.modbus.tcp.request.ReadDeviceListRequest
 import ch.bziswiler.pvlogger.shared.job.status.JobStatusMessageFactory.deviceListDataCollectionJobFailedMessage
 import ch.bziswiler.pvlogger.shared.job.status.JobStatusMessageFactory.deviceListDataCollectionJobSucceededMessage
 import io.micrometer.core.instrument.Metrics
@@ -16,13 +16,12 @@ import java.time.Duration
 import java.time.LocalDateTime.now
 
 class ModbusDeviceListCollectionJob(
-    config: AppConfig,
+    settings: Settings,
     channel: ModbusTcpChannel,
     idProvider: IdProvider,
-    persistenceMessageSender: StoreModbusValuesMessageSender
-) : ModbusDeviceIdentifiersCollectionJob(config, channel, idProvider, persistenceMessageSender) {
-
-    override val jobName = DEVICE_LIST_JOB
+    persistenceMessageSender: StoreModbusValuesMessageSender,
+) : ModbusDeviceIdentifiersCollectionJob(settings, channel, idProvider, persistenceMessageSender) {
+    override val jobName = JobName.DEVICE_LIST_JOB
 
     private val logger = KotlinLogging.logger {}
     private val counter = Metrics.counter("modbus-device-list-collection-job-execution")

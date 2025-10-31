@@ -1,17 +1,17 @@
 package ch.bziswiler.pvlogger.datacollector.jobs.services.modbus.impl
 
-import ch.bziswiler.pvlogger.datacollector.jobs.configuration.AppConfig
-import ch.bziswiler.pvlogger.datacollector.jobs.modbus.tcp.ModbusTcpChannel
-import ch.bziswiler.pvlogger.datacollector.jobs.modbus.tcp.request.ReadDeviceIdentifiersRequest
+import ch.bziswiler.pvlogger.datacollector.jobs.configuration.Settings
 import ch.bziswiler.pvlogger.datacollector.jobs.services.IdProvider
 import ch.bziswiler.pvlogger.datacollector.jobs.services.messaging.StoreModbusValuesMessageSender
 import ch.bziswiler.pvlogger.datacollector.jobs.services.modbus.ModbusDataCollectionJob
-import ch.bziswiler.pvlogger.shared.job.meta.JobId
-import ch.bziswiler.pvlogger.shared.job.meta.JobName.DEVICE_IDS_JOB
+import ch.bziswiler.pvlogger.modbus.api.meta.JobId
+import ch.bziswiler.pvlogger.modbus.api.meta.JobName
+import ch.bziswiler.pvlogger.modbus.api.tcp.ModbusTcpChannel
+import ch.bziswiler.pvlogger.modbus.tcp.request.ReadDeviceIdentifiersRequest
+import ch.bziswiler.pvlogger.modbus.tcp.response.ReadDeviceIdentifiersResponse
 import ch.bziswiler.pvlogger.shared.job.status.JobStatusMessageFactory.deviceIdsDataCollectionJobFailedMessage
 import ch.bziswiler.pvlogger.shared.job.status.JobStatusMessageFactory.deviceIdsDataCollectionJobSucceededMessage
 import ch.bziswiler.pvlogger.shared.job.tags.StoreModbusRegisterValuesMessageTag
-import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ReadDeviceIdentifiersResponse
 import io.micrometer.core.instrument.Metrics
 import io.micrometer.core.instrument.Timer
 import kotlinx.coroutines.runBlocking
@@ -21,17 +21,16 @@ import java.time.LocalDateTime.now
 
 @OptIn(ExperimentalUnsignedTypes::class)
 open class ModbusDeviceIdentifiersCollectionJob(
-    config: AppConfig,
+    settings: Settings,
     private val channel: ModbusTcpChannel,
     protected val idProvider: IdProvider,
-    private val persistenceMessageSender: StoreModbusValuesMessageSender
+    private val persistenceMessageSender: StoreModbusValuesMessageSender,
 ) : ModbusDataCollectionJob {
-
-    override val jobName = DEVICE_IDS_JOB
+    override val jobName = JobName.DEVICE_IDS_JOB
 
     private val logger = KotlinLogging.logger {}
 
-    private val inverterDeviceIds = config.modbusTcpConfig.inverterDeviceIds
+    private val inverterDeviceIds = settings.modbusTcpConfig.inverterDeviceIds
     private val counter = Metrics.counter("modbus-device-identifiers-collection-job-execution")
     private val timer =
         Timer
@@ -52,9 +51,10 @@ open class ModbusDeviceIdentifiersCollectionJob(
 
     override fun jobFailedMessageObject(jobId: JobId) = deviceIdsDataCollectionJobFailedMessage(jobId)
 
-    private fun executeForEachDeviceId(jobId: String) = inverterDeviceIds.forEach { deviceId ->
-        executeForSingleDeviceId(jobId, deviceId)
-    }
+    private fun executeForEachDeviceId(jobId: String) =
+        inverterDeviceIds.forEach { deviceId ->
+            executeForSingleDeviceId(jobId, deviceId)
+        }
 
     private fun executeForSingleDeviceId(
         jobId: String,

@@ -6,22 +6,24 @@ import com.typesafe.config.ConfigFactory
 import java.io.File
 
 object AppConfig {
-
-    private val externalPaths = listOfNotNull(
-        System.getProperty("config.file"), // -Dconfig.file=/path/file.conf
-        System.getenv("CONFIG_FILE"),          // or CONFIG_FILE=/path/file.conf
-        "/config/application.conf"                     // K8s mount default
-    )
+    private val externalPaths =
+        listOfNotNull(
+            System.getProperty("config.file"), // -Dconfig.file=/path/file.conf
+            System.getenv("CONFIG_FILE"), // or CONFIG_FILE=/path/file.conf
+            "/config/application.conf", // K8s mount default
+        )
 
     fun load(): Config {
         val defaults = ConfigFactory.parseResources("application.conf")
-        val externals = externalPaths
-            .mapNotNull { path -> File(path).takeIf { it.exists() }?.let(ConfigFactory::parseFile) }
-            // first in list should win, so fold with withFallback in left-to-right order
-            .fold(ConfigFactory.empty()) { acc, c -> c.withFallback(acc) }
+        val externals =
+            externalPaths
+                .mapNotNull { path -> File(path).takeIf { it.exists() }?.let(ConfigFactory::parseFile) }
+                // first in list should win, so fold with withFallback in left-to-right order
+                .fold(ConfigFactory.empty()) { acc, c -> c.withFallback(acc) }
 
         // Precedence: sys props > env > external files > defaults
-        return ConfigFactory.systemProperties()
+        return ConfigFactory
+            .systemProperties()
             .withFallback(ConfigFactory.systemEnvironment())
             .withFallback(externals)
             .withFallback(defaults)
@@ -34,12 +36,12 @@ data class Settings(
     val serverConfig: ServerConfig,
     val modbusTcpConfig: ModbusTcpConfig,
     val mqConfig: MqConfig,
-    val metricsPushConfig: MetricsPushConfig
+    val metricsPushConfig: MetricsPushConfig,
 )
 
 data class MasterDataConfig(
     val host: String,
-    val port: Int
+    val port: Int,
 )
 
 data class ServerConfig(
@@ -51,7 +53,7 @@ data class MetricsPushConfig(
     val url: String,
     val job: String,
     val intervalSeconds: Long,
-    val grouping: Map<String, String>
+    val grouping: Map<String, String>,
 )
 
 @OptIn(ExperimentalUnsignedTypes::class)
