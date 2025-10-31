@@ -48,6 +48,9 @@ dependencies {
     // Shared pvlogger-resources
     implementation(project(":pvlogger-shared"))
 
+    // Shared modbus-resources
+    implementation(project(":pvlogger-modbus-tcp-api"))
+
     // Dependency Injection (Kodein)
     implementation(libs.kodein.di)
 
