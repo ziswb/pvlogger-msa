@@ -18,10 +18,8 @@ application {
     mainClass.set("ch.bziswiler.pvlogger.datacollector.ApplicationKt")
 }
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
+kotlin {
+    jvmToolchain(21)
 }
 
 repositories {

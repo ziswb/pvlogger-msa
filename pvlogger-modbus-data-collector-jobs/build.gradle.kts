@@ -4,7 +4,7 @@ plugins {
     idea
 }
 
-group = "ch.bziswiler.pvlogger"
+group = "ch.bziswiler"
 version = "0.0.1"
 
 idea {
