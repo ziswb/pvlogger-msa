@@ -26,12 +26,13 @@ class JsonFileService(exportConfig: ExportConfig, private val directoryService: 
     private val fileNameDateFormatter = Format { yearMonthDayPattern();char('_');hour();char('-');minute();char('-');second();char('-');secondFraction(3) }
     private val path = exportConfig.path
     private val name = exportConfig.name
-    private val myJson = Json {
-        prettyPrint = true
-        isLenient = true
+
+    private val json = Json {
         ignoreUnknownKeys = true
+        isLenient = true
         allowSpecialFloatingPointValues = true
         encodeDefaults = true
+        prettyPrint = true
     }
 
     private fun DateTimeFormatBuilder.WithDateTime.yearMonthDayPattern() {
@@ -82,5 +83,5 @@ class JsonFileService(exportConfig: ExportConfig, private val directoryService: 
         return file
     }
 
-    private fun exportRecordToJson(record: KpiExportRecord, file: File) = myJson.encodeToString(record).let { file.writeText(it) }
+    private fun exportRecordToJson(record: KpiExportRecord, file: File) = json.encodeToString(record).let { file.writeText(it) }
 }

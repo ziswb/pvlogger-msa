@@ -8,8 +8,9 @@ import java.nio.file.attribute.BasicFileAttributes
 import java.time.LocalDateTime
 import java.time.ZoneOffset.UTC
 
-class DirectoryService(exportConfig: ExportConfig) {
-
+class DirectoryService(
+    exportConfig: ExportConfig,
+) {
     private val logger = KotlinLogging.logger {}
     private val path = exportConfig.path
     private val noOlderThanDateTime get() = LocalDateTime.now().minusHours(48).toInstant(UTC)
@@ -17,12 +18,18 @@ class DirectoryService(exportConfig: ExportConfig) {
     fun cleanUpExportDirectory() {
         val noOlderThanDateTime = noOlderThanDateTime
         logger.info { "Inspecting files in folder $path for candidates to delete (older than '$noOlderThanDateTime')" }
-        File(path).listFiles()?.filter { file ->
-            Files.readAttributes(file.toPath(), BasicFileAttributes::class.java).creationTime().toInstant()
-                .isBefore(noOlderThanDateTime)
-        }?.sorted()?.forEach { file ->
-            logger.info { "Deleting $file" }
-            file.delete()
-        }
+        File(path)
+            .listFiles()
+            ?.filter { file ->
+                Files
+                    .readAttributes(file.toPath(), BasicFileAttributes::class.java)
+                    .creationTime()
+                    .toInstant()
+                    .isBefore(noOlderThanDateTime)
+            }?.sorted()
+            ?.forEach { file ->
+                logger.info { "Deleting $file" }
+                file.delete()
+            }
     }
 }
