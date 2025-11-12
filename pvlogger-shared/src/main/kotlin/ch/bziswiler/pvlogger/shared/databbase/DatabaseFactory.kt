@@ -10,7 +10,6 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.lang.Thread.sleep
 import java.util.concurrent.atomic.AtomicInteger
-import javax.sql.DataSource
 
 class DatabaseFactory(private val dbConfig: DatabaseConfig) {
 
@@ -18,12 +17,18 @@ class DatabaseFactory(private val dbConfig: DatabaseConfig) {
     private val maxRetries = 30
     private val sleepMs: Long = 15000
     private val retryCounter = AtomicInteger(0)
+    private var datasource: HikariDataSource? = null
 
     fun connect() {
-        connect(hikari(dbConfig.dbServerUrl))
+        datasource = hikari(dbConfig.dbServerUrl)
+        connect(datasource!!)
         assertDatabaseExists()
         connect(hikari(dbConfig.dbServerCanonicalUrl))
         migrateDatabase()
+    }
+
+    fun close() {
+        datasource?.close()
     }
 
     private fun assertDatabaseExists() {
@@ -48,7 +53,7 @@ class DatabaseFactory(private val dbConfig: DatabaseConfig) {
         configure().dataSource(dbConfig.dbServerCanonicalUrl, dbConfig.user, dbConfig.password).load().migrate()
     }
 
-    private fun hikari(dbServerUrl: String): DataSource {
+    private fun hikari(dbServerUrl: String): HikariDataSource {
         val config = HikariConfig().apply {
             driverClassName = dbConfig.driverClass
             jdbcUrl = dbServerUrl
