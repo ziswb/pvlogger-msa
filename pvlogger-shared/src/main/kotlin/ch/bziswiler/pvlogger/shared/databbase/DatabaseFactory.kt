@@ -11,8 +11,9 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import java.lang.Thread.sleep
 import java.util.concurrent.atomic.AtomicInteger
 
-class DatabaseFactory(private val dbConfig: DatabaseConfig) {
-
+class DatabaseFactory(
+    private val dbConfig: DatabaseConfig,
+) {
     private val logger = KotlinLogging.logger {}
     private val maxRetries = 30
     private val sleepMs: Long = 15000
@@ -23,7 +24,9 @@ class DatabaseFactory(private val dbConfig: DatabaseConfig) {
         datasource = hikari(dbConfig.dbServerUrl)
         connect(datasource!!)
         assertDatabaseExists()
-        connect(hikari(dbConfig.dbServerCanonicalUrl))
+        close()
+        datasource = hikari(dbConfig.dbServerCanonicalUrl)
+        connect(datasource!!)
         migrateDatabase()
     }
 
@@ -37,9 +40,10 @@ class DatabaseFactory(private val dbConfig: DatabaseConfig) {
         }
     }
 
-    private fun databaseDoesNotExist(): Boolean = transaction {
-        SchemaUtils.listDatabases().find { it == dbConfig.dbName }.isNullOrEmpty()
-    }
+    private fun databaseDoesNotExist(): Boolean =
+        transaction {
+            SchemaUtils.listDatabases().find { it == dbConfig.dbName }.isNullOrEmpty()
+        }
 
     private fun createDatabase() {
         transaction {
@@ -54,16 +58,17 @@ class DatabaseFactory(private val dbConfig: DatabaseConfig) {
     }
 
     private fun hikari(dbServerUrl: String): HikariDataSource {
-        val config = HikariConfig().apply {
-            driverClassName = dbConfig.driverClass
-            jdbcUrl = dbServerUrl
-            username = dbConfig.user
-            password = dbConfig.password
-            maximumPoolSize = dbConfig.maxPoolSize
-            isAutoCommit = false
-            transactionIsolation = "TRANSACTION_REPEATABLE_READ"
-            validate()
-        }
+        val config =
+            HikariConfig().apply {
+                driverClassName = dbConfig.driverClass
+                jdbcUrl = dbServerUrl
+                username = dbConfig.user
+                password = dbConfig.password
+                maximumPoolSize = dbConfig.maxPoolSize
+                isAutoCommit = false
+                transactionIsolation = "TRANSACTION_REPEATABLE_READ"
+                validate()
+            }
         return tryConnectingToDatabase(config)
     }
 

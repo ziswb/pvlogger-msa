@@ -22,7 +22,6 @@ import ch.bziswiler.pvlogger.fusionsolar.webservice.FusionSolarConnection
 import ch.bziswiler.pvlogger.fusionsolar.webservice.FusionSolarDataAccess
 import ch.bziswiler.pvlogger.fusionsolar.webservice.FusionSolarDataType.DEVICE_5_MIN_KPI
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType.INVERTER
-import io.ktor.http.Url
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import mu.KotlinLogging
@@ -59,12 +58,12 @@ class FusionSolarDataAccessImpl(config: FusionSolarConfig) : FusionSolarDataAcce
 
     override suspend fun fetchStationRealTimeData(): StationRealKpiResponse {
         assertStationCodes()
-        return connection.executeRequest(Url(stationRealKpiUrl), StationRealKpiRequest(stationCode))
+        return connection.executeRequest(stationRealKpiUrl, StationRealKpiRequest(stationCode))
     }
 
     override suspend fun fetchStationHourlyData(): KpiStationHourResponse {
         assertStationCodes()
-        return connection.executeRequest(Url(kpiStationHourUrl), KpiStationExtendedRequest(stationCode, requestTime()))
+        return connection.executeRequest(kpiStationHourUrl, KpiStationExtendedRequest(stationCode, requestTime()))
     }
 
     override suspend fun fetchStationDailyData(): KpiStationExtendedResponse = fetchExtendedResponse(kpiStationDayUrl)
@@ -76,13 +75,13 @@ class FusionSolarDataAccessImpl(config: FusionSolarConfig) : FusionSolarDataAcce
 
     override suspend fun fetchDevicesRealTimeData(): DevRealKpiResponse {
         assertDeviceIds()
-        return connection.executeRequest(Url(devRealKpiUrl), DevRealKpiRequest(deviceIds, stringInverterTypeId))
+        return connection.executeRequest(devRealKpiUrl, DevRealKpiRequest(deviceIds, stringInverterTypeId))
     }
 
     override suspend fun fetchDevicesFiveMinutesData(collectTime: Instant): DevFiveMinutesResponse {
         assertDeviceIds()
         return connection.executeRequest(
-            Url(devFiveMinutesUrl),
+            devFiveMinutesUrl,
             DevPeriodicDataRequest(deviceIds, INVERTER.deviceTypeId, collectTime.toEpochMilli())
         )
     }
@@ -90,7 +89,7 @@ class FusionSolarDataAccessImpl(config: FusionSolarConfig) : FusionSolarDataAcce
     override suspend fun fetchDevicesDailyData(): DevKpiDayResponse {
         assertDeviceIds()
         return connection.executeRequest(
-            Url(devFiveMinutesUrl),
+            devFiveMinutesUrl,
             DevPeriodicDataRequest(deviceIds, INVERTER.deviceTypeId, requestTime())
         )
     }
@@ -124,7 +123,7 @@ class FusionSolarDataAccessImpl(config: FusionSolarConfig) : FusionSolarDataAcce
 
     private suspend fun fetchExtendedResponse(urlString: String): KpiStationExtendedResponse {
         assertStationCodes()
-        return connection.executeRequest(Url(urlString), KpiStationExtendedRequest(stationCode, requestTime()))
+        return connection.executeRequest(urlString, KpiStationExtendedRequest(stationCode, requestTime()))
     }
 
     private fun requestTime() = now().toInstant().toEpochMilli()
@@ -153,7 +152,7 @@ class FusionSolarDataAccessImpl(config: FusionSolarConfig) : FusionSolarDataAcce
     private suspend fun updateStationCode() {
         logger.info { "updating station code" }
         stationCode = connection.executeRequest<EmptyObject, StationListResponse>(
-            Url(stationListUrl),
+            stationListUrl,
             EmptyObject()
         ).data!!.first().stationCode
         logger.info { "station code is '$stationCode'" }
@@ -161,7 +160,7 @@ class FusionSolarDataAccessImpl(config: FusionSolarConfig) : FusionSolarDataAcce
 
     private suspend fun updateDeviceIds() {
         logger.info { "updating device ids" }
-        connection.executeRequest<DevListRequest, DevListResponse>(Url(devListUrl), DevListRequest(stationCode))
+        connection.executeRequest<DevListRequest, DevListResponse>(devListUrl, DevListRequest(stationCode))
             .data!!
             .groupBy { devData -> devData.devTypeId }
             .filter { entry -> entry.key == stringInverterTypeId }

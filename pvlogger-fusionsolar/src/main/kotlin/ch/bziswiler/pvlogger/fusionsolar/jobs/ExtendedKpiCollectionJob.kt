@@ -8,34 +8,19 @@ import ch.bziswiler.pvlogger.fusionsolar.schema.save
 import ch.bziswiler.pvlogger.fusionsolar.webservice.FusionSolarDataAccess
 import ch.bziswiler.pvlogger.fusionsolar.webservice.FusionSolarDataType
 import ch.bziswiler.pvlogger.shared.job.PvJob
-import io.micrometer.core.instrument.Metrics
-import io.micrometer.core.instrument.Timer
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.time.Duration
 
 class ExtendedKpiCollectionJob(private val dataAccess: FusionSolarDataAccess) : PvJob {
 
     private val logger = KotlinLogging.logger {}
-    private val counter = Metrics.counter("extended-data-collection-job-execution")
-    private val timer = Timer
-        .builder("extended_data_collection_job_timer")
-        .publishPercentiles(0.5, 0.95)
-        .publishPercentileHistogram()
-        .serviceLevelObjectives(Duration.ofMillis(1500))
-        .minimumExpectedValue(Duration.ofMillis(100))
-        .maximumExpectedValue(Duration.ofMillis(10000))
-        .register(Metrics.globalRegistry)
 
     override fun execute() {
-        counter.increment()
-        timer.recordCallable {
-            logger.debug { "ExtendedKpiCollectionJob.execute()" }
-            fetchAndSaveDayData()
-            fetchAndSaveMonthData()
-            fetchAndSaveYearData()
-        }
+        logger.debug { "ExtendedKpiCollectionJob.execute()" }
+        fetchAndSaveDayData()
+        fetchAndSaveMonthData()
+        fetchAndSaveYearData()
     }
 
     private fun fetchAndSaveYearData() = runCatching {

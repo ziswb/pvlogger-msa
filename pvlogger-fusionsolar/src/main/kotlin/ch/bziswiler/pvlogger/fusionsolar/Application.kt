@@ -1,37 +1,54 @@
 package ch.bziswiler.pvlogger.fusionsolar
 
-import ch.bziswiler.pvlogger.fusionsolar.configuration.appModule
-import ch.bziswiler.pvlogger.fusionsolar.configuration.configureDatabases
-import ch.bziswiler.pvlogger.fusionsolar.configuration.configureMonitoring
-import ch.bziswiler.pvlogger.fusionsolar.configuration.setupConfig
-import ch.bziswiler.pvlogger.shared.messaging.MqReceiverComposer
-import io.ktor.server.application.Application
-import io.ktor.server.application.install
-import io.ktor.server.netty.EngineMain
-import io.ktor.server.plugins.callloging.CallLogging
-import org.koin.ktor.ext.inject
-import org.koin.ktor.plugin.Koin
-import org.koin.logger.slf4jLogger
-import org.slf4j.event.Level
+import ch.bziswiler.pvlogger.fusionsolar.configuration.AppConfig
+import ch.bziswiler.pvlogger.fusionsolar.jobs.DeviceFiveMinutesKpiCollectionJob
+import ch.bziswiler.pvlogger.fusionsolar.jobs.DeviceKpiCollectionJob
+import ch.bziswiler.pvlogger.fusionsolar.jobs.ExtendedKpiCollectionJob
+import ch.bziswiler.pvlogger.fusionsolar.jobs.StationKpiCollectionJob
+import ch.bziswiler.pvlogger.fusionsolar.webservice.impl.FusionSolarDataAccessImpl
+import ch.bziswiler.pvlogger.shared.databbase.DatabaseFactory
+import ch.bziswiler.pvlogger.shared.job.PvJob
+import ch.bziswiler.pvlogger.shared.job.meta.JobName
+import mu.KotlinLogging
 
-fun main(args: Array<String>) = EngineMain.main(args)
+private val logger = KotlinLogging.logger {}
 
-@Suppress("unused")
-fun Application.module(testing: Boolean = false) {
-    if (!testing) {
-        install(Koin) {
-            slf4jLogger()
-            modules(appModule)
-        }
-    }
-    install(CallLogging) { level = Level.TRACE }
-    setupConfig()
-    configureMonitoring()
-    configureDatabases()
+fun main(args: Array<String>) {
     startServices()
 }
 
-fun Application.startServices() {
-    val composer by inject<MqReceiverComposer>()
-    composer.compose()
-}
+private fun startServices() =
+    logger
+        .info { "Starting job execution" }
+        .also {
+            val databaseFactory = DatabaseFactory(AppConfig.databaseConfig)
+            databaseFactory.connect()
+            val job: PvJob
+            val fusionSolarDataAccess = FusionSolarDataAccessImpl(AppConfig.fusionSolarConfig)
+            when (AppConfig.fusionSolarConfig.jobName) {
+                JobName.DEVICE_5MIN_KPI_JOB.value -> {
+                    job = DeviceFiveMinutesKpiCollectionJob(fusionSolarDataAccess)
+                }
+
+                JobName.DEVICE_KPI_JOB.value -> {
+                    job = DeviceKpiCollectionJob(fusionSolarDataAccess)
+                }
+
+                JobName.EXTENDED_KPI_JOB.value -> {
+                    job = ExtendedKpiCollectionJob(fusionSolarDataAccess)
+                }
+
+                JobName.STATION_KPI_JOB.value -> {
+                    job = StationKpiCollectionJob(fusionSolarDataAccess)
+                }
+
+                else -> throw IllegalArgumentException("Unsupported job name: '${AppConfig.fusionSolarConfig.jobName}'")
+            }
+            try {
+                job.execute()
+            } finally {
+                databaseFactory.close()
+            }
+        }.also {
+            logger.info { "Finished executing job" }
+        }
