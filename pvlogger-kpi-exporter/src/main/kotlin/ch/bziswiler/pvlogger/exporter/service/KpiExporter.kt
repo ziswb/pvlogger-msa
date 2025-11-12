@@ -1,7 +1,6 @@
-package ch.bziswiler.pvlogger.exporter.messaging
+package ch.bziswiler.pvlogger.exporter.service
 
 import ch.bziswiler.pvlogger.exporter.rest.DataAccessorRestProxy
-import ch.bziswiler.pvlogger.exporter.service.ExportService
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 

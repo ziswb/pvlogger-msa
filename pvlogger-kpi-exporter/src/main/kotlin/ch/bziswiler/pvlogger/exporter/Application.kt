@@ -1,10 +1,10 @@
 package ch.bziswiler.pvlogger.exporter
 
 import ch.bziswiler.pvlogger.exporter.configuration.AppConfig
-import ch.bziswiler.pvlogger.exporter.messaging.KpiExporter
 import ch.bziswiler.pvlogger.exporter.rest.DataAccessorRestProxy
 import ch.bziswiler.pvlogger.exporter.service.DirectoryService
 import ch.bziswiler.pvlogger.exporter.service.JsonFileService
+import ch.bziswiler.pvlogger.exporter.service.KpiExporter
 import mu.KotlinLogging
 
 private val logger = KotlinLogging.logger {}
