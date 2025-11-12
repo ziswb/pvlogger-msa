@@ -6,7 +6,6 @@ plugins {
 }
 
 group = "ch.bziswiler"
-version = "0.0.1"
 
 idea {
     module {
