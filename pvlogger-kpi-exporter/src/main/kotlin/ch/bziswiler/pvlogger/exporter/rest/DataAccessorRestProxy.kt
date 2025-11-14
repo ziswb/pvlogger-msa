@@ -1,7 +1,7 @@
 package ch.bziswiler.pvlogger.exporter.rest
 
 import ch.bziswiler.pvlogger.exporter.configuration.ModbusDataAccessConfig
-import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_DATA_VERSION_PATH
+import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_API_V1_PATH
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_LATEST_KPI_PATH
 import ch.bziswiler.pvlogger.shared.rest.KpiValuesDto
 import kotlinx.coroutines.runBlocking
@@ -32,7 +32,7 @@ class DataAccessorRestProxy(
     }
 
     private interface KpiValuesApi {
-        @GET("${DATA_ACCESSOR_READ_DATA_VERSION_PATH}/${DATA_ACCESSOR_READ_LATEST_KPI_PATH}")
+        @GET("${DATA_ACCESSOR_API_V1_PATH}/${DATA_ACCESSOR_READ_LATEST_KPI_PATH}")
         fun retrieveKpiValues(): Call<ResponseBody>
     }
 
