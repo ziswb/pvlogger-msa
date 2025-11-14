@@ -1,6 +1,12 @@
 package ch.bziswiler.pvlogger.datacollector.services.rest
 
+import ch.bziswiler.pvlogger.datacollector.configuration.MasterDataConfig
+import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusRegisterValueResponse
 import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusResponse
+import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ReadDeviceIdentifiersResponse
+import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_API_V1_PATH
+import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_STORE_DEVICE_ID_VALUES
+import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_STORE_MODBUS_VALUES
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -23,9 +29,11 @@ private val json =
         ignoreUnknownKeys = true
     }
 
-private val myclient = OkHttpClient()
+private val myClient = OkHttpClient()
 
-class StoreModbusValuesMessageSender {
+class StoreModbusValuesMessageSender(
+    private val config: MasterDataConfig,
+) {
     fun sendValuesToStore(data: ModbusResponse) {
         val batch =
             DataBatch(
@@ -33,28 +41,31 @@ class StoreModbusValuesMessageSender {
                 record = data,
             )
 
-        val targetUrl =
-            System.getenv("PERSIST_ENDPOINT") ?: "http://data-persist.default.svc.cluster.local/v1/data-batch"
+        when (data) {
+            is ModbusRegisterValueResponse -> {
+                sendBatch(batch, DATA_ACCESSOR_STORE_MODBUS_VALUES)
+            }
 
-        sendBatch(batch, targetUrl)
+            is ReadDeviceIdentifiersResponse -> {
+                sendBatch(batch, DATA_ACCESSOR_STORE_DEVICE_ID_VALUES)
+            }
+        }
     }
 
     private fun sendBatch(
         batch: DataBatch,
         targetUrl: String,
     ) {
-        val jsonString: String = json.encodeToString(batch)
-
-        val body = jsonString.toRequestBody("application/json".toMediaType())
-
+        val body = json.encodeToString<DataBatch>(batch).toRequestBody("application/json".toMediaType())
+        val path = "http://${config.host}:${config.port}/${DATA_ACCESSOR_API_V1_PATH}/$targetUrl"
         val request =
             Request
                 .Builder()
-                .url(targetUrl)
+                .url(path)
                 .post(body)
                 .build()
 
-        myclient.newCall(request).execute().use { response ->
+        myClient.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
                 error("Failed to send batch: HTTP ${response.code} - ${response.message}")
             }
