@@ -1,6 +1,6 @@
 package ch.bziswiler.pvlogger.datacollector.modbus.tcp
 
-import ch.bziswiler.pvlogger.datacollector.configuration.AppConfig
+import ch.bziswiler.pvlogger.datacollector.configuration.ModbusTcpConfig
 import ch.bziswiler.pvlogger.datacollector.modbus.tcp.request.ModbusRequest
 import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusResponse
 import kotlinx.coroutines.delay
@@ -12,14 +12,14 @@ import java.net.InetSocketAddress
 import java.net.Socket
 import java.util.concurrent.TimeoutException
 
-class ModbusTcpChannel(config: AppConfig) {
+class ModbusTcpChannel(config: ModbusTcpConfig) {
     private val logger = KotlinLogging.logger {}
     private val readTimeout = 30000L
     private lateinit var socket: Socket
     private val mutex = Mutex()
-    private val peerHost = config.modbusTcpConfig.host
-    private val port = config.modbusTcpConfig.port
-    private val delay = config.modbusTcpConfig.delay
+    private val peerHost = config.host
+    private val port = config.port
+    private val delay = config.delay
 
     suspend fun request(request: ModbusRequest): ModbusResponse = mutex.withLock {
         logger.debug("ModbusTcpChannel.request()")

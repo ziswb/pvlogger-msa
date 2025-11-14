@@ -6,9 +6,12 @@ import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.FunctionCode.FunctionCodes.
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.FunctionCode.FunctionCodes.UNKNOWN
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.FunctionCode.FunctionCodes.WRITE_MULTIPLE_REGISTERS
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.FunctionCode.FunctionCodes.WRITE_SINGLE_REGISTER
-import java.io.Serializable
+import kotlinx.serialization.Serializable
 
-open class FunctionCode(val value: UByte) : Serializable {
+@Serializable
+open class FunctionCode(
+    val value: UByte,
+) {
     object ReadRegisters : FunctionCode(READ_REGISTERS.value) {
         private fun readResolve(): Any = ReadRegisters
     }

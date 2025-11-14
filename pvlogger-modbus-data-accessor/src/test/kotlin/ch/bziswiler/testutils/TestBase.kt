@@ -2,10 +2,9 @@ package ch.bziswiler.testutils
 
 import ch.bziswiler.pvlogger.dataaccessor.configuration.AppConfig
 import ch.bziswiler.pvlogger.dataaccessor.configuration.appModule
-import ch.bziswiler.pvlogger.dataaccessor.messaging.StoreModbusValuesMessageHandler
+import ch.bziswiler.pvlogger.dataaccessor.messaging.StoreModbusValuesHandler
 import ch.bziswiler.pvlogger.dataaccessor.module
 import ch.bziswiler.pvlogger.shared.databbase.DatabaseFactory
-import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
 import ch.bziswiler.pvlogger.shared.messaging.MessageReceiver
 import ch.bziswiler.pvlogger.shared.messaging.MqSessionFactory
 import ch.bziswiler.pvlogger.shared.messaging.QueueName.PERSIST_MODBUS
@@ -33,7 +32,7 @@ abstract class TestBase : KoinTest {
                 module(testing = true)
                 org.koin.dsl.module {
                     single<AppConfig> { AppConfig() }
-                    single<MessageHandler> { StoreModbusValuesMessageHandler() }
+                    single<StoreModbusValuesHandler> { StoreModbusValuesHandler() }
                     single<MqSessionFactory> { ActiveMqSessionFactory(get<AppConfig>().mqConfig) }
                     single<MessageReceiver<Queue>> { ActiveMqQueueReceiver(get<MqSessionFactory>(), PERSIST_MODBUS) }
                     single<DatabaseFactory> { DatabaseFactory(get<AppConfig>().databaseConfig) }
@@ -56,7 +55,7 @@ abstract class TestBase : KoinTest {
                         "messagequeue.clientId" to "pvlogger-modbus-data-accessor",
                         "messagequeue.user" to "artemis",
                         "messagequeue.passwd" to "artemis",
-                        "messagequeue.brokerUrl" to ""
+                        "messagequeue.brokerUrl" to "",
                     )
             }
             applicationTestBuilder.invoke(this)

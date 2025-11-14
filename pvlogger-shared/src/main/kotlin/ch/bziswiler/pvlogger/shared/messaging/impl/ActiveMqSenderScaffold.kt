@@ -2,6 +2,7 @@ package ch.bziswiler.pvlogger.shared.messaging.impl
 
 import ch.bziswiler.pvlogger.shared.messaging.MqSessionFactory
 import ch.bziswiler.pvlogger.shared.messaging.Name
+import ch.bziswiler.pvlogger.shared.messaging.PvLoggerKpiData
 import ch.bziswiler.pvlogger.shared.messaging.TaggedMessageSender
 import ch.bziswiler.pvlogger.shared.messaging.TagsAsMessageSender
 import ch.bziswiler.pvlogger.shared.tags.MessageTag
@@ -51,10 +52,11 @@ abstract class ActiveMqSenderScaffold(internal val mqSessionFactory: MqSessionFa
         session.close()
     }
 
-    override fun tagAndSendMessage(message: Serializable, tag: MessageTag) {
+    // TODO: clean up / was just to make it compile
+    override fun tagAndSendMessage(message: PvLoggerKpiData, tag: MessageTag) {
         logger.debug { "Sending message ..." }
         val session = mqSessionFactory.session
-        val taggedMessage = session.createObjectMessage(message)
+        val taggedMessage = session.createObjectMessage(message as Serializable)
         taggedMessage.setStringProperty(tag.key, tag.value)
         messageProducer(session).send(taggedMessage)
         logger.debug {

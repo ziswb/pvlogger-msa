@@ -2,6 +2,7 @@ package ch.bziswiler.pvlogger.shared.messaging
 
 import ch.bziswiler.pvlogger.shared.unit.W
 import ch.bziswiler.pvlogger.shared.unit.Wh
+import kotlinx.serialization.Serializable
 
 /**
  * Was formerly:
@@ -19,7 +20,7 @@ import ch.bziswiler.pvlogger.shared.unit.Wh
  * val dailyEnergySelfCovered: Double = selfConsumed
  * }
  */
-@kotlinx.serialization.Serializable
+@Serializable
 data class PvLoggerKpiData(
     val jobId: String,
     val dateCreated: Long,
@@ -32,5 +33,5 @@ data class PvLoggerKpiData(
     val exported: Wh,
     val imported: Wh,
     val consumed: Wh,
-    val selfConsumed: Wh
-) : java.io.Serializable
+    val selfConsumed: Wh,
+)

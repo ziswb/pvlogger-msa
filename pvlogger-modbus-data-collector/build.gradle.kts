@@ -1,11 +1,11 @@
 plugins {
     alias(libs.plugins.jvm)
+    alias(libs.plugins.serialization)
     application
     idea
 }
 
 group = "ch.bziswiler"
-version = "0.0.1"
 
 idea {
     module {
@@ -27,23 +27,17 @@ repositories {
 }
 
 dependencies {
-    // Messaging
-    implementation(libs.activemq.core)
-    implementation(libs.activemq.client)
-
-    // Digitalpetri Modbus TCP for Modbus communication
-//    implementation(libs.digitalpetri.modbus.tcp)
+    // Retrofit HTTP client
+    implementation(libs.retrofit)
 
     // Okio for in-memory encode/decode
     implementation(libs.okio)
 
-    // Retrofit HTTP client
-    implementation(libs.retrofit)
-
-    // Kotlinx serialization
-    implementation(libs.kotlinx.serialization.json)
     // Coroutines
     implementation(libs.kotlinx.coroutines)
+
+    // Kotlinx serialization (pure Kotlin)
+    implementation(libs.kotlinx.serialization.json)
 
     // Logging
     implementation(libs.logback.classic)
@@ -52,15 +46,10 @@ dependencies {
     // Shared pvlogger-resources
     implementation(project(":pvlogger-shared"))
 
-    // Dependency Injection (Kodein)
-    implementation(libs.kodein.di)
+    // Testing
+    testImplementation(libs.kotlin.test)
+}
 
-    // Monitoring
-    implementation(libs.micrometer.registry.prometheus)
-    implementation(libs.prometheus.pushgateway)
-
-    // Config (Lightbend Typesafe Config)
-    implementation(libs.lightbend.config)
-
-    testImplementation(libs.kotlin.test.junit)
+tasks.test {
+    useJUnitPlatform()
 }
