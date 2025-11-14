@@ -38,8 +38,9 @@ abstract class BaseApplicationTest : KoinTest {
                         "messagequeue.user" to "artemis",
                         "messagequeue.passwd" to "artemis",
                         "messagequeue.brokerUrl" to "vm://localhost?broker.persistent=false",
-                        "job.lateEvening" to "22:00"
-
+                        "job.lateEvening" to "22:00",
+                        "crepuscular.host" to "localhost",
+                        "crepuscular.port" to "8089",
                     )
             }
             applicationTestBuilder.invoke(this)

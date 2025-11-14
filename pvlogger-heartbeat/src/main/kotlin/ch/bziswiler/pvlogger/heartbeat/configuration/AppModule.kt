@@ -21,5 +21,5 @@ val appModule = module {
     single<DatabaseFactory> { DatabaseFactory(get<AppConfig>().databaseConfig) }
     single<JobSchedulerManager> { JobSchedulerManager(get<AppConfig>()) }
     single<JobScheduler> { JobScheduler(get<JobSchedulerManager>()) }
-    single<JobFactory> { PvLoggerJobFactory(get<JobScheduler>(), get<SunriseSunsetRestProxy>(), get<TagsAsMessageSender>()) }
+    single<JobFactory> { PvLoggerJobFactory(get<TagsAsMessageSender>()) }
 }

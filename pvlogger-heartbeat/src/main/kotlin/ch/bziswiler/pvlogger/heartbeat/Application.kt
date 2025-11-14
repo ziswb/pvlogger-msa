@@ -32,12 +32,12 @@ fun Application.module(testing: Boolean = false) {
             slf4jLogger()
             modules(appModule)
         }
+        setupConfig()
+        configureDatabases()
+        setUpJobs()
+        configureMonitoring()
+        contentNegotiation()
     }
-    setupConfig()
-    configureDatabases()
-    setUpJobs()
-    configureMonitoring()
-    contentNegotiation()
     environment.monitor.subscribe(ApplicationStopping) {
         logger.info("Shutting down application...")
     }
