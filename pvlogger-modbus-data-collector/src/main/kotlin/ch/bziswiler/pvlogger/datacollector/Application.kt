@@ -1,49 +1,65 @@
 package ch.bziswiler.pvlogger.datacollector
 
-import ch.bziswiler.pvlogger.datacollector.configuration.appModule
-import ch.bziswiler.pvlogger.datacollector.configuration.configureMonitoring
-import ch.bziswiler.pvlogger.datacollector.configuration.setupConfig
-import ch.bziswiler.pvlogger.shared.messaging.MqReceiverComposer
-import io.ktor.server.application.Application
-import io.ktor.server.application.ApplicationStopPreparing
-import io.ktor.server.application.ApplicationStopped
-import io.ktor.server.application.ApplicationStopping
-import io.ktor.server.application.install
-import io.ktor.server.netty.EngineMain
-import io.ktor.server.plugins.callloging.CallLogging
+import ch.bziswiler.pvlogger.datacollector.configuration.AppConfig
+import ch.bziswiler.pvlogger.datacollector.modbus.tcp.ModbusTcpChannel
+import ch.bziswiler.pvlogger.datacollector.services.IdProvider
+import ch.bziswiler.pvlogger.datacollector.services.modbus.impl.ModbusBatchedDynamicDataCollectionJob
+import ch.bziswiler.pvlogger.datacollector.services.modbus.impl.ModbusBatchedStaticDataCollectionJob
+import ch.bziswiler.pvlogger.datacollector.services.modbus.impl.ModbusDeviceIdentifiersCollectionJob
+import ch.bziswiler.pvlogger.datacollector.services.modbus.impl.ModbusDeviceListCollectionJob
+import ch.bziswiler.pvlogger.datacollector.services.rest.MasterDataService
+import ch.bziswiler.pvlogger.datacollector.services.rest.StoreModbusValuesMessageSender
+import ch.bziswiler.pvlogger.shared.job.meta.JobName
 import mu.KotlinLogging
-import org.koin.ktor.ext.inject
-import org.koin.ktor.plugin.Koin
-import org.koin.logger.slf4jLogger
-import org.slf4j.event.Level
 
 private val logger = KotlinLogging.logger {}
 
-fun main(args: Array<String>) = EngineMain.main(args)
-
-fun Application.module(testing: Boolean = false) {
-    if (!testing) {
-        install(Koin) {
-            slf4jLogger()
-            modules(appModule)
-        }
-    }
-    install(CallLogging) { level = Level.TRACE }
-    setupConfig()
-    configureMonitoring()
+fun main(args: Array<String>) {
     startServices()
-    environment.monitor.subscribe(ApplicationStopping) {
-        logger.info("Shutting down application...")
-    }
-    environment.monitor.subscribe(ApplicationStopped) {
-        logger.info("Application stopped.")
-    }
-    environment.monitor.subscribe(ApplicationStopPreparing) {
-        logger.info("Preparing to stop application...")
-    }
 }
 
-fun Application.startServices() {
-    val composer by inject<MqReceiverComposer>()
-    composer.compose()
+private fun startServices() {
+    val job: JobName = JobName.valueOf(AppConfig.jobConfig.name)
+    val tcpConfig = AppConfig.modbusTcpConfig
+    val mdConfig = AppConfig.masterDataConfig
+    println()
+    val channel = ModbusTcpChannel(tcpConfig)
+    val persistenceMessageSender = StoreModbusValuesMessageSender()
+    when (job) {
+        JobName.DYNAMIC_DATA_JOB ->
+            ModbusBatchedDynamicDataCollectionJob(
+                tcpConfig,
+                channel,
+                IdProvider(),
+                MasterDataService(mdConfig),
+                persistenceMessageSender,
+            ).execute()
+
+        JobName.DEVICE_IDS_JOB ->
+            ModbusDeviceIdentifiersCollectionJob(
+                tcpConfig,
+                channel,
+                IdProvider(),
+                persistenceMessageSender,
+            ).execute()
+
+        JobName.DEVICE_LIST_JOB ->
+            ModbusDeviceListCollectionJob(
+                tcpConfig,
+                channel,
+                IdProvider(),
+                persistenceMessageSender,
+            ).execute()
+
+        JobName.STATIC_DATA_JOB ->
+            ModbusBatchedStaticDataCollectionJob(
+                tcpConfig,
+                channel,
+                IdProvider(),
+                MasterDataService(mdConfig),
+                persistenceMessageSender,
+            ).execute()
+
+        else -> logger.warn { "Unsupported job name: '$job'" }
+    }
 }

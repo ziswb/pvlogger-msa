@@ -5,33 +5,39 @@ import ch.bziswiler.pvlogger.shared.job.meta.RequestId
 import ch.bziswiler.pvlogger.shared.modbus.ModbusRegisterValue
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.FunctionCode
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.MbapHeader
-import java.io.IOException
-import java.io.ObjectInputStream
-import java.io.ObjectOutputStream
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Serializer
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
+// TODO: extract
+@Serializer(forClass = LocalDate::class)
+class LocalDateTimeSerializer : KSerializer<LocalDateTime> {
+    private val formatter: DateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
+
+    override fun serialize(
+        encoder: Encoder,
+        value: LocalDateTime,
+    ) {
+        encoder.encodeString(value.format(formatter))
+    }
+
+    override fun deserialize(decoder: Decoder): LocalDateTime = LocalDateTime.parse(decoder.decodeString(), formatter)
+}
+
+@Serializable
 data class ModbusRegisterValueResponse(
     override var jobId: JobId,
     override val requestId: RequestId,
-    override var requestTime: LocalDateTime,
-    override var responseTime: LocalDateTime,
+    @Serializable(with = LocalDateTimeSerializer::class) override var requestTime: LocalDateTime,
+    @Serializable(with = LocalDateTimeSerializer::class) override var responseTime: LocalDateTime,
     override var header: MbapHeader,
     override var functionCode: FunctionCode,
     override var numberOfBytes: UByte,
-    var registerValues: List<ModbusRegisterValue<*>>,
-) : ModbusResponse {
-
-    @Throws(IOException::class)
-    @Suppress("unused")
-    override fun writeObject(oos: ObjectOutputStream) {
-        super.writeObject(oos)
-        oos.writeObject(registerValues)
-    }
-
-    @Throws(IOException::class)
-    @Suppress("unused", "UNCHECKED_CAST")
-    override fun readObject(ois: ObjectInputStream) {
-        super.readObject(ois)
-        this.registerValues = ois.readObject() as List<ModbusRegisterValue<*>>
-    }
-}
+    @Contextual var registerValues: List<ModbusRegisterValue<*>>,
+) : ModbusResponse

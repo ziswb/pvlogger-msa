@@ -1,5 +1,8 @@
 package ch.bziswiler.pvlogger.shared.job.meta
 
-import java.io.Serializable
+import kotlinx.serialization.Serializable
 
-data class JobId(val id: String) : Serializable
+@Serializable
+data class JobId(
+    val id: String,
+)

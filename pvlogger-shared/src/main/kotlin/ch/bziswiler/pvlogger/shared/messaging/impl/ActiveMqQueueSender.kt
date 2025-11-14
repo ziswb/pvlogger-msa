@@ -1,7 +1,9 @@
 package ch.bziswiler.pvlogger.shared.messaging.impl
 
 import ch.bziswiler.pvlogger.shared.messaging.MqSessionFactory
+import ch.bziswiler.pvlogger.shared.messaging.PvLoggerKpiData
 import ch.bziswiler.pvlogger.shared.messaging.QueueName
+import ch.bziswiler.pvlogger.shared.tags.MessageTag
 import javax.jms.Queue
 
 /*
@@ -12,4 +14,12 @@ open class ActiveMqQueueSender(mqSessionFactory: MqSessionFactory, name: QueueNa
 
     override val destination: Queue
         get() = mqSessionFactory.session.createQueue(name.value)
+
+    // TODO: clean up / was just to make it compile
+    override fun tagAndSendMessage(
+        message: PvLoggerKpiData,
+        tag: MessageTag
+    ) {
+        TODO("Not yet implemented")
+    }
 }

@@ -24,8 +24,8 @@ import ch.bziswiler.pvlogger.shared.modbus.ModbusRegisterValue
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.FunctionCode.ReadRegisters
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.MbapHeader
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.UShortData
-import io.ktor.utils.io.ByteReadChannel
-import io.ktor.utils.io.ByteWriteChannel
+import okio.BufferedSink
+import okio.BufferedSource
 import java.time.LocalDateTime
 
 class ReadRegistersValueRequest(
@@ -48,14 +48,14 @@ class ReadRegistersValueRequest(
             UShortData(listOf(registerAddress, numberOfRegistersInBytes)),
         )
 
-    override suspend fun encode(channel: ByteWriteChannel) = frame.encode(channel)
+    override suspend fun encode(sink: BufferedSink) = frame.encode(sink)
 
-    override suspend fun readRegisters(channel: ByteReadChannel) =
+    override suspend fun readRegisters(channel: BufferedSource) =
         registers.fold(listOf<ModbusRegisterValue<*>>()) { list, register ->
             list.plus(readRegisterValue(register, channel))
         }
 
-    private suspend fun readRegisterValue(register: ModbusRegisterDefinition, channel: ByteReadChannel) =
+    private suspend fun readRegisterValue(register: ModbusRegisterDefinition, channel: BufferedSource) =
         when (register.type) {
             U16 -> ModbusRegisterUShortValue(register, channel.readUShort())
             U32 -> ModbusRegisterUIntValue(register, channel.readUInt())
