@@ -27,9 +27,9 @@ abstract class BaseApplicationTest : KoinTest {
                     MapApplicationConfig(
                         "ktor.server.isProd" to "false",
                         "database.driverClass" to "org.h2.Driver",
-                        "database.dbServerUrl" to "jdbc:h2:mem:mem;DATABASE_TO_UPPER=false;MODE=PostgreSQL",
+                        "database.dbServerUrl" to "jdbc:h2:mem:mem;DATABASE_TO_UPPER=false;MODE=PostgreSQL;INIT=CREATE SCHEMA IF NOT EXISTS public\\;SET SCHEMA public\\;",
                         "database.dbName" to "pvmasterdata",
-                        "database.dbServerCanonicalUrl" to "jdbc:h2:mem:mem;DATABASE_TO_UPPER=false;MODE=PostgreSQL",
+                        "database.dbServerCanonicalUrl" to "jdbc:h2:mem:mem;DATABASE_TO_UPPER=false;MODE=PostgreSQL;INIT=CREATE SCHEMA IF NOT EXISTS public\\;SET SCHEMA public\\;",
                         "database.user" to "sa",
                         "database.password" to "",
                         "database.maxPoolSize" to "1",
