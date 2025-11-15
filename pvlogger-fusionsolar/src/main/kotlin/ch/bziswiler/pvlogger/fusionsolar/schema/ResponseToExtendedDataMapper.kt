@@ -6,7 +6,6 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
 
@@ -25,8 +24,8 @@ class ResponseToExtendedDataMapper {
 
         private fun saveOrUpdateMapping(responseId: EntityID<Int>, data: KpiStationExtendedData, type: FusionSolarDataType) {
             FsResponseToStationExtendedData
-                .slice(FsResponseToStationExtendedData.responseId)
-                .select { FsResponseToStationExtendedData.collectTime.eq(data.collectTime).and(
+                .select(FsResponseToStationExtendedData.responseId)
+                .where { FsResponseToStationExtendedData.collectTime.eq(data.collectTime).and(
                     FsResponseToStationExtendedData.type.eq(type)) }
                 .toList().let { rows ->
                     if (rows.isEmpty()) {
