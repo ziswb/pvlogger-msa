@@ -24,7 +24,7 @@ private fun startServices() {
     val mdConfig = AppConfig.masterDataConfig
     println()
     val channel = ModbusTcpChannel(tcpConfig)
-    val persistenceMessageSender = StoreModbusValuesMessageSender()
+    val persistenceMessageSender = StoreModbusValuesMessageSender(AppConfig.masterDataConfig)
     when (job) {
         JobName.DYNAMIC_DATA_JOB ->
             ModbusBatchedDynamicDataCollectionJob(
