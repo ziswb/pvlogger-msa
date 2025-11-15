@@ -10,5 +10,6 @@ class StoreModbusValuesHandler {
         when (data) {
             is ModbusRegisterValueResponse -> ModbusDao.store(data)
             is ReadDeviceIdentifiersResponse -> ModbusDao.store(data)
+            else -> throw IllegalArgumentException("Unsupported response type ${data.javaClass.name}")
         }
 }
