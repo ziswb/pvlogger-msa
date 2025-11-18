@@ -1,24 +1,16 @@
-FROM eclipse-temurin:21-jdk AS build
+FROM golang:1.25.4-alpine AS golang
 
-ENV GRADLE_USER_HOME="/workspace/gradle_home"
-ADD . /workspace
+WORKDIR /app
+COPY ./pvlogger-kpi-exporter/app/ .
 
-WORKDIR /workspace
-RUN ./gradlew :pvlogger-kpi-exporter:clean :pvlogger-kpi-exporter:build
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o /exporter .
 
-FROM eclipse-temurin:21-jre-ubi9-minimal
+FROM gcr.io/distroless/static-debian12
 
 LABEL author="Bruno Ziswiler"
 LABEL description="PV Logger KPI Exporter"
-LABEL version="1.5.5"
+LABEL version="2.0.4"
 
-RUN mkdir -p "/opt/pvlogger/"
-COPY --from=build "/workspace/pvlogger-kpi-exporter/build/distributions/pvlogger-kpi-exporter.tar" "/opt/pvlogger/"
-RUN tar -xvf "/opt/pvlogger/pvlogger-kpi-exporter.tar" -C "/opt/pvlogger/"
-RUN microdnf -y update && microdnf install -y findutils
-RUN useradd -u 1000 pvlogger
-USER pvlogger
+COPY --from=golang /exporter .
 
-ENV TZ="Europe/Zurich"
-
-ENTRYPOINT [ "/opt/pvlogger/pvlogger-kpi-exporter/bin/pvlogger-kpi-exporter" ]
+ENTRYPOINT ["/exporter"]

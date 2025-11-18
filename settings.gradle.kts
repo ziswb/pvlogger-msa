@@ -9,7 +9,6 @@ include(
     "pvlogger-heartbeat",
     "pvlogger-infrastructure",
     "pvlogger-kpi-aggregator",
-    "pvlogger-kpi-exporter",
     "pvlogger-masterdata-server",
     "pvlogger-message-queue",
     "pvlogger-modbus-data-accessor",
