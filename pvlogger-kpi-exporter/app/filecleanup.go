@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -23,8 +24,9 @@ func cleanupFiles(path string) {
 	}
 	for _, f := range dir {
 		if shouldDelete(f) {
-			log.Default().Println("Deleting file: " + f.Name())
-			err := os.Remove(f.Name())
+			fp := filepath.Join(path, f.Name())
+			log.Default().Println("Deleting file: " + fp)
+			err := os.Remove(fp)
 			if err != nil {
 				log.Println(err)
 			}
