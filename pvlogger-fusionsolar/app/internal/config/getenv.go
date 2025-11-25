@@ -5,6 +5,10 @@ import (
 	"strconv"
 )
 
+type FsJobConfig struct {
+	JobName string
+}
+
 type FusionSolarConfig struct {
 	Username    string
 	Password    string
@@ -12,6 +16,7 @@ type FusionSolarConfig struct {
 	Path        string
 	Protocol    string
 	StationCode string
+	DevIds      string
 }
 
 type DatabaseConfig struct {
@@ -22,6 +27,12 @@ type DatabaseConfig struct {
 	DbName   string
 }
 
+func JobConfig() FsJobConfig {
+	return FsJobConfig{
+		JobName: getEnv("JOB_NAME", "STATION_REAL_KPI"),
+	}
+}
+
 func FsConfig() FusionSolarConfig {
 	return FusionSolarConfig{
 		Username:    getEnv("USERNAME", "<fusionsolar-user>"),
@@ -30,6 +41,7 @@ func FsConfig() FusionSolarConfig {
 		Path:        getEnv("FS_PATH", "/thirdData"),
 		Protocol:    getEnv("FS_PROTOCOL", "https"),
 		StationCode: getEnv("FS_STATION_CODE", "NE=<station-code>"),
+		DevIds:      getEnv("FS_DEV_TYPE_ID", "<dev-id>,<dev-id>"),
 	}
 }
 

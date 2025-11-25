@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"log"
-	"net/http"
 	"pvlogger/internal/auth"
 	"pvlogger/internal/config"
 	"pvlogger/internal/database"
@@ -30,7 +29,7 @@ func FetchStationRealTimeData(token auth.Token) (*model.StationRealKpiResponse, 
 	return response, nil
 }
 
-func SaveResponse(response *model.StationRealKpiResponse) error {
+func SaveStationRealKpiResponse(response *model.StationRealKpiResponse) error {
 	log.Default().Println("Saving response to database...")
 	db, err := database.NewDatabase(config.DbConfig().Host, config.DbConfig().Port, config.DbConfig().DbName, config.DbConfig().Username, config.DbConfig().Password)
 	if err != nil {
@@ -42,15 +41,15 @@ func SaveResponse(response *model.StationRealKpiResponse) error {
 			log.Fatal(err)
 		}
 	}(db.Conn, db.Ctx)
-	responseId, err := insertFsResponseGeneric(response, db)
+	responseId, err := insertStationRealKpiResponseParams(response, db)
 	if err != nil {
 		return err
 	}
-	err = insertFsResponseParams(response, responseId, db)
+	err = insertStationRealKpiResponseBasicParams(response, responseId, db)
 	if err != nil {
 		return err
 	}
-	err = insertFsStationRealKpi(response, responseId, db)
+	err = insertStationRealKpi(response, responseId, db)
 	if err != nil {
 		return err
 	}
@@ -58,40 +57,43 @@ func SaveResponse(response *model.StationRealKpiResponse) error {
 	return nil
 }
 
-func insertFsResponseGeneric(response *model.StationRealKpiResponse, db *database.Database) (int32, error) {
-	log.Default().Println("Saving generic response to database...")
+func insertStationRealKpiResponseParams(response *model.StationRealKpiResponse, db *database.Database) (int32, error) {
+	log.Default().Println("Saving Station Real Kpi response to database...")
 	raw, err := json.RawMessage.MarshalJSON(response.Body)
 	if err != nil {
 		return 0, err
 	}
-	responseParams := database.InsertFsResponseParams{
-		FailCode:  int32(response.JSON200.FailCode),
-		Message:   messageAsPgText(response),
-		Raw:       raw,
-		Success:   boolOrFalse(response),
-		Timestamp: pgtype.Timestamp{Valid: true, Time: time.Now()},
-	}
-	insertedFsResponse, err := database.New(db.Conn).InsertFsResponse(db.Ctx, responseParams)
-	if err != nil {
-		return 0, err
-	}
-	log.Default().Println("Generic response saved successfully.")
-	return insertedFsResponse.ID, nil
+	failCode := int32(response.JSON200.FailCode)
+	message := messageAsPgTextStnKpi(response)
+	success := boolOrFalseStnKpi(response)
+	timestamp := pgtype.Timestamp{Valid: true, Time: time.Now()}
+	i, err := insertFsResponseParams(failCode, message, raw, success, timestamp, err, db)
+	log.Default().Println("Station Real Kpi response saved successfully.")
+	return i, err
 }
 
-func insertFsResponseParams(response *model.StationRealKpiResponse, responseId int32, db *database.Database) error {
+func insertStationRealKpiResponseBasicParams(response *model.StationRealKpiResponse, responseId int32, db *database.Database) error {
+	log.Default().Println("Saving Station Real Kpi response params to database...")
+	currentTime := pgtype.Int8{Valid: true, Int64: *response.JSON200.Params.CurrentTime}
+	stationCodes := pgtype.Text{Valid: true, String: *response.JSON200.Params.StationCodes}
+	err := insertFsResponseParamsBasicParams(currentTime, responseId, stationCodes, db)
+	log.Default().Println("Station Real Kpi response params saved successfully.")
+	return err
+}
+
+func insertFsResponseParamsBasicParams(currentTime pgtype.Int8, responseId int32, stationCodes pgtype.Text, db *database.Database) error {
 	log.Default().Println("Saving response params to database...")
 	responseParamsBasic := database.InsertFsResponseParamsBasicParams{
-		CurrentTime:  pgtype.Int8{Valid: true, Int64: *response.JSON200.Params.CurrentTime},
+		CurrentTime:  currentTime,
 		Response:     responseId,
-		StationCodes: pgtype.Text{Valid: true, String: *response.JSON200.Params.StationCodes},
+		StationCodes: stationCodes,
 	}
 	err := database.New(db.Conn).InsertFsResponseParamsBasic(db.Ctx, responseParamsBasic)
 	log.Default().Println("Response params saved successfully.")
 	return err
 }
 
-func insertFsStationRealKpi(response *model.StationRealKpiResponse, responseId int32, db *database.Database) error {
+func insertStationRealKpi(response *model.StationRealKpiResponse, responseId int32, db *database.Database) error {
 	log.Default().Println("Saving station real kpi to database...")
 	data := *response.JSON200.Data
 	for i := 0; i < len(data); i++ {
@@ -113,26 +115,4 @@ func insertFsStationRealKpi(response *model.StationRealKpiResponse, responseId i
 	}
 	log.Default().Println("Station real kpi saved successfully.")
 	return nil
-}
-
-func boolOrFalse(response *model.StationRealKpiResponse) bool {
-	if response.JSON200 != nil && response.JSON200.Success != nil {
-		return *response.JSON200.Success
-	}
-	return false
-}
-
-func messageAsPgText(response *model.StationRealKpiResponse) pgtype.Text {
-	if response.JSON200 != nil && response.JSON200.Message != nil {
-		return pgtype.Text{Valid: true, String: *response.JSON200.Message}
-	}
-	return pgtype.Text{Valid: false, String: ""}
-}
-
-func addTokenClientOption(token auth.Token) model.ClientOption {
-	return model.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
-		log.Default().Println("Adding token to request...")
-		req.Header.Set("XSRF-TOKEN", token.Token)
-		return nil
-	})
 }

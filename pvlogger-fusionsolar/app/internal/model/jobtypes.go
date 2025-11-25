@@ -1,5 +1,7 @@
 package model
 
+import "strings"
+
 type FusionSolarDataType int
 
 const (
@@ -22,4 +24,13 @@ var fsDataTypeNames = [...]string{
 
 func (fsDataType FusionSolarDataType) String() string {
 	return fsDataTypeNames[fsDataType]
+}
+
+func ParseString(name string) FusionSolarDataType {
+	for i, name := range fsDataTypeNames {
+		if name == strings.ToUpper(name) {
+			return FusionSolarDataType(i)
+		}
+	}
+	return -1
 }
