@@ -77,7 +77,7 @@ fi
 PV_LOGGER_COMPONENT="$component"
 
 if [ -z "${version}" ]; then
-  version="$(${GREP_CMD} -e 'LABEL version=\"\([0-9.]*\)\"' "${SCRIPT_DIR}/../${PV_LOGGER_COMPONENT}/docker/Dockerfile" | ${SED_CMD} -e 's/LABEL version=\"\([0-9.]*\)\"/\1/')";
+  version="$(${GREP_CMD} -e 'LABEL version="\([0-9.]*\)"' "${SCRIPT_DIR}/../${PV_LOGGER_COMPONENT}/docker/Dockerfile" | ${SED_CMD} -e 's/LABEL version=\"\([0-9.]*\)\"/\1/')";
 fi
 
 if [ -z "${version// }" ]; then
