@@ -10,7 +10,7 @@ FROM eclipse-temurin:21-jre-ubi9-minimal
 
 LABEL author="Bruno Ziswiler"
 LABEL description="Data Collector from Huawei Fusion Solar Cloud"
-LABEL version="1.5.8"
+LABEL version="1.5.9"
 
 RUN mkdir -p "/opt/pvlogger/"
 COPY --from=build "/workspace/pvlogger-fusionsolar/build/distributions/pvlogger-fusionsolar.tar" "/opt/pvlogger/"

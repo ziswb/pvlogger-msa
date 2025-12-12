@@ -7,6 +7,7 @@ import io.ktor.util.logging.error
 import mu.KotlinLogging
 import org.apache.activemq.ActiveMQConnectionFactory
 import java.lang.Thread.sleep
+import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 import javax.jms.Connection
 import javax.jms.ExceptionListener
@@ -42,7 +43,7 @@ class ActiveMqSessionFactory(
     private fun connect(): Connection = with(ActiveMQConnectionFactory(mqConfig.brokerUrl)) {
         userName = mqConfig.user
         password = mqConfig.passwd
-        clientID = mqConfig.clientId
+        clientID = (System.getenv("HOSTNAME") ?: "unknown_host") + "-" + mqConfig.clientId + "-" + UUID.randomUUID().toString()
         exceptionListener = ExceptionListener() { jmsException ->
             run {
                 logger.warn(jmsException) { "MQ connection error: $jmsException" }
