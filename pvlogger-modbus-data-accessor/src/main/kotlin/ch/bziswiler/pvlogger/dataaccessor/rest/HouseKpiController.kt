@@ -11,8 +11,8 @@ import ch.bziswiler.pvlogger.dataaccessor.database.schema.HousePowerKpiTable.own
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.HousePowerKpiTable.solarPower
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.HousePowerKpiTable.solarToGridPower
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorParameterNames.DATE
+import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_API_V1_PATH
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_DATA_TODAY_VALUES_PATH
-import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_DATA_VERSION_PATH
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_LATEST_KPI_PATH
 import ch.bziswiler.pvlogger.shared.rest.KpiValuesDto
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
@@ -41,7 +41,7 @@ private const val TWO_DECIMALS = "#.##"
 private const val DATE_PATTERN = "yyyy-M-d"
 
 fun Route.readHouseKpiValues() {
-    route("/$DATA_ACCESSOR_READ_DATA_VERSION_PATH/$DATA_ACCESSOR_READ_DATA_TODAY_VALUES_PATH") {
+    route("/$DATA_ACCESSOR_API_V1_PATH/$DATA_ACCESSOR_READ_DATA_TODAY_VALUES_PATH") {
         get { call.respond(OK, HouseKpiController.todaysKpis()) }
         get("/{$DATE}") {
             call.parameters[DATE]?.let { date ->
@@ -49,7 +49,7 @@ fun Route.readHouseKpiValues() {
             } ?: call.respond(BadRequest)
         }
     }
-    route("/$DATA_ACCESSOR_READ_DATA_VERSION_PATH/$DATA_ACCESSOR_READ_LATEST_KPI_PATH") {
+    route("/$DATA_ACCESSOR_API_V1_PATH/$DATA_ACCESSOR_READ_LATEST_KPI_PATH") {
         get {
             when (val kpi = HouseKpiController.latestKpi()) {
                 null -> call.respond(NotFound)
