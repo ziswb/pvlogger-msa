@@ -38,7 +38,7 @@ type MasterDataService struct {
 	httpClient *http.Client
 }
 
-func NewMasterDataService(config MasterDataConfig) *MasterDataService {
+func NewMasterDataService(config *MasterDataConfig) *MasterDataService {
 	return &MasterDataService{
 		baseURL: fmt.Sprintf("http://%s:%d", config.Host, config.Port),
 		httpClient: &http.Client{
@@ -50,7 +50,7 @@ func NewMasterDataService(config MasterDataConfig) *MasterDataService {
 func (s *MasterDataService) FetchRegisterDefinitions(
 	deviceTypes []string,
 	categories []string,
-) ([]model.ModbusRegisterDefinition, error) {
+) (*[]model.ModbusRegisterDefinition, error) {
 	log.Default().Println("Fetching master data...")
 	devTypesParam := joinStrings(deviceTypes)
 	categoriesParam := joinStrings(categories)
@@ -88,12 +88,11 @@ func (s *MasterDataService) FetchRegisterDefinitions(
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	log.Default().Println(string(body))
 	var definitions []model.ModbusRegisterDefinition
 	if err := json.Unmarshal(body, &definitions); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
 	log.Default().Println("Fetched master data successfully.")
-	return definitions, nil
+	return &definitions, nil
 }

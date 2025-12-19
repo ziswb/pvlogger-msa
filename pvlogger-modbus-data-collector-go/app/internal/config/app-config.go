@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"strconv"
+	"strings"
 )
 
 type MasterDataConfig struct {
@@ -12,12 +13,24 @@ type MasterDataConfig struct {
 	MasterDataPath string
 }
 
+type DeviceIdConfig struct {
+	MeterDeviceIds    []uint8
+	InverterDeviceIds []uint8
+}
+
 func MdConfig() MasterDataConfig {
 	return MasterDataConfig{
 		Host:           getEnv("MD_HOST", "localhost"),
 		Port:           getIntEnv("MD_PORT", "8081"),
 		Protocol:       getEnv("MD_PROTOCOL", "http"),
 		MasterDataPath: getEnv("MD_PATH", "/master-data"),
+	}
+}
+
+func DevIdConfig() DeviceIdConfig {
+	return DeviceIdConfig{
+		MeterDeviceIds:    getUbyteArrayEnv("METER_DEVICE_IDS", "1"),
+		InverterDeviceIds: getUbyteArrayEnv("INVERTER_DEVICE_IDS", "1,16"),
 	}
 }
 
@@ -35,4 +48,23 @@ func getIntEnv(key, fallback string) int {
 		panic(err)
 	}
 	return value
+}
+
+func getUbyteArrayEnv(key, fallback string) []uint8 {
+	value := os.Getenv(key)
+	var parts []string
+	if len(value) == 0 {
+		parts = strings.Split(fallback, ",")
+	} else {
+		parts = strings.Split(value, ",")
+	}
+	var result []uint8
+	for _, id := range parts {
+		safeId, err := strconv.Atoi(id)
+		if err != nil {
+			panic(err)
+		}
+		result = append(result, uint8(safeId))
+	}
+	return result
 }
