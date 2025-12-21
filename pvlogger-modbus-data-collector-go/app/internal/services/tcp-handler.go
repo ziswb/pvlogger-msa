@@ -81,7 +81,7 @@ func (handler *TcpHandler) WriteRequest(request *ReadHoldingRegistersValueReques
 		return
 	}
 
-	time.Sleep(1 * time.Second) // matches what you discovered
+	//time.Sleep(1 * time.Second) // matches what you discovered
 
 	mbap := make([]byte, 7)
 	if _, err := io.ReadFull(conn, mbap); err != nil { /* handle */
