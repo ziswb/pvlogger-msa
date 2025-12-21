@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"pvlogger-modbus-data-collector-go/app/internal/config"
-	"pvlogger-modbus-data-collector-go/app/internal/model"
+	"pvlogger-modbus-data-collector-go/app/internal/modbus"
 	"strings"
 	"time"
 )
@@ -18,14 +18,6 @@ const (
 	paramCategories     = "categories"
 	paramValueSeparator = ";"
 )
-
-func joinStrings(categories []string) string {
-	strs := make([]string, len(categories))
-	for i, c := range categories {
-		strs[i] = c
-	}
-	return strings.Join(strs, paramValueSeparator)
-}
 
 type MasterDataConfig struct {
 	Protocol string
@@ -50,10 +42,10 @@ func NewMasterDataService(config *MasterDataConfig) *MasterDataService {
 func (s *MasterDataService) FetchRegisterDefinitions(
 	deviceTypes []string,
 	categories []string,
-) (*[]model.ModbusRegisterDefinition, error) {
-	log.Default().Println("Fetching master data...")
-	devTypesParam := joinStrings(deviceTypes)
-	categoriesParam := joinStrings(categories)
+) (*[]modbus.ModbusRegisterDefinition, error) {
+	log.Default().Println("Fetching master data ...")
+	devTypesParam := strings.Join(deviceTypes, paramValueSeparator)
+	categoriesParam := strings.Join(categories, paramValueSeparator)
 
 	reqURL, err := url.Parse(s.baseURL + config.MdConfig().MasterDataPath)
 	if err != nil {
@@ -77,18 +69,17 @@ func (s *MasterDataService) FetchRegisterDefinitions(
 		}
 	}(resp.Body)
 
-	log.Default().Println("Response status: " + resp.Status)
+	log.Default().Println("Response status:" + resp.Status)
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
-	log.Default().Println("Response body:")
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	var definitions []model.ModbusRegisterDefinition
+	var definitions []modbus.ModbusRegisterDefinition
 	if err := json.Unmarshal(body, &definitions); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}

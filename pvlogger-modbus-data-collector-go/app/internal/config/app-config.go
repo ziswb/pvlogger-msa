@@ -18,6 +18,11 @@ type DeviceIdConfig struct {
 	InverterDeviceIds []uint8
 }
 
+type ModbusCfg struct {
+	Host string
+	Port int
+}
+
 func MdConfig() MasterDataConfig {
 	return MasterDataConfig{
 		Host:           getEnv("MD_HOST", "localhost"),
@@ -31,6 +36,13 @@ func DevIdConfig() DeviceIdConfig {
 	return DeviceIdConfig{
 		MeterDeviceIds:    getUbyteArrayEnv("METER_DEVICE_IDS", "1"),
 		InverterDeviceIds: getUbyteArrayEnv("INVERTER_DEVICE_IDS", "1,16"),
+	}
+}
+
+func ModbusConfig() ModbusCfg {
+	return ModbusCfg{
+		Host: getEnv("MODBUS_HOSTNAME", "<dongle-ip>"),
+		Port: getIntEnv("MODBUS_PORT", "502"),
 	}
 }
 

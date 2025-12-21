@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	log.Default().Println("Starting...")
+	log.Default().Println("Starting ...")
 	//host := config.MdConfig().Host
 	//port := config.MdConfig().Port
 	//proto := config.MdConfig().Protocol
