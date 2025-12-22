@@ -26,7 +26,7 @@ type MasterDataService struct {
 
 func NewMasterDataService(config *config.MasterDataConfig) *MasterDataService {
 	return &MasterDataService{
-		baseURL: fmt.Sprintf("http://%s:%d", config.Host, config.Port),
+		baseURL: fmt.Sprintf("%s://%s:%d", config.Protocol, config.Host, config.Port),
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
