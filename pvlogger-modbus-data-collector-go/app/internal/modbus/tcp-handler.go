@@ -1,11 +1,10 @@
-package services
+package modbus
 
 import (
 	"encoding/binary"
 	"io"
 	"log"
 	"net"
-	"pvlogger-modbus-data-collector-go/app/internal/modbus"
 	"time"
 )
 
@@ -38,7 +37,7 @@ func (h *TcpHandler) Close() error {
 	return h.conn.Close()
 }
 
-func (h *TcpHandler) connect() error {
+func (h *TcpHandler) Connect() error {
 	if h.conn == nil {
 		log.Default().Printf("---------------------------------------")
 		log.Default().Println("Connecting to Modbus device ...")
@@ -88,9 +87,9 @@ func (h *TcpHandler) WriteRequest(request *ReadHoldingRegistersValueRequest) err
 		log.Default().Printf("Error reading rest: %v", err)
 		return nil
 	}
-	mbapHeader := modbus.NewMbapHeaderFromBytes(headerBytes)
+	mbapHeader := NewMbapHeaderFromBytes(headerBytes)
 	log.Default().Printf("MBAP Header: %v", mbapHeader)
-	functionCode := modbus.NewFunctionCodeFromByte(rest[0])
+	functionCode := NewFunctionCodeFromByte(rest[0])
 	log.Default().Printf("Function Code: %v", functionCode)
 	numberOfBytes := rest[1]
 	log.Default().Printf("Number of Bytes: %v", numberOfBytes)

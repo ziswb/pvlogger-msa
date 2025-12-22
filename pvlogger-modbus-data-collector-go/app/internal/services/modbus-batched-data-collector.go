@@ -61,20 +61,20 @@ func fetchRegisterValues(jobId string, deviceId modbus.UByte, deviceTypes []stri
 		return
 	}
 	url := fmt.Sprintf("%s:%d", config.ModbusConfig().Host, config.ModbusConfig().Port)
-	tcpHandler := NewTcpHandler(url, config.ModbusConfig().Timeout)
-	defer func(tcpHandler *TcpHandler) {
+	tcpHandler := modbus.NewTcpHandler(url, config.ModbusConfig().Timeout)
+	defer func(tcpHandler *modbus.TcpHandler) {
 		err := tcpHandler.Close()
 		if err != nil {
 			log.Default().Println("Error closing Modbus connection:", err)
 		}
 	}(tcpHandler)
-	err = tcpHandler.connect()
+	err = tcpHandler.Connect()
 	if err != nil {
 		log.Default().Println("Error connecting to Modbus device:", err)
 		return
 	}
 	for _, regDefs := range *listOfRegDefs {
-		request := ReadHoldingRegistersValueRequest{
+		request := modbus.ReadHoldingRegistersValueRequest{
 			JobId:               jobId,
 			RequestTime:         time.Now(),
 			TransactionId:       modbus.UShort(LastTransactionId.Add(1)),
