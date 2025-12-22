@@ -2,7 +2,6 @@ package modbus
 
 import (
 	"encoding/binary"
-	"log"
 )
 
 const bytesPerUShort = 2
@@ -20,8 +19,5 @@ func (m *ModbusRequestData) EncodeToBytes() []byte {
 	var d = make([]byte, m.NumberOfBytes())
 	binary.BigEndian.PutUint16(d[0:], m.StartingAddress)
 	binary.BigEndian.PutUint16(d[2:], m.NumberOfRegisters)
-	log.Default().Println("ModbusRequestData Starting Address: ", m.StartingAddress)
-	log.Default().Println("ModbusRequestData Number of Registers: ", m.NumberOfRegisters)
-	log.Default().Println("ModbusRequestData Bytes: ", len(d), " bytes", d)
 	return d
 }

@@ -22,7 +22,6 @@ func (header *MbapHeader) EncodeToBytes() []byte {
 	binary.BigEndian.PutUint16(bytes[2:], header.ProtocolType)
 	binary.BigEndian.PutUint16(bytes[4:], header.DataLength)
 	bytes[6] = header.LogicDeviceId
-	log.Default().Println("Header Bytes: ", len(bytes))
 	return bytes
 }
 

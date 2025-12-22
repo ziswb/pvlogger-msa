@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"pvlogger-modbus-data-collector-go/app/internal/modbus"
 	"time"
 )
 
@@ -56,14 +57,8 @@ func (h *TcpHandler) connect() error {
 }
 
 func (h *TcpHandler) WriteRequest(request *ReadHoldingRegistersValueRequest) {
-
 	bytes := request.EncodeToBytes()
-
-	log.Default().Println("#bytes: ", len(bytes))
-	log.Default().Println("Bytes: ", bytes)
-
-	err := h.conn.SetWriteDeadline(time.Now().Add(h.writeTimeout))
-	if err != nil {
+	if err := h.conn.SetWriteDeadline(time.Now().Add(h.writeTimeout)); err != nil {
 		log.Default().Printf("Error setting Modbus connection deadline: %v", err)
 		return
 	}
@@ -71,72 +66,29 @@ func (h *TcpHandler) WriteRequest(request *ReadHoldingRegistersValueRequest) {
 		log.Default().Printf("Error writing Modbus frame: %v", err)
 		return
 	}
-
-	err = h.conn.SetReadDeadline(time.Now().Add(h.readTimeout))
-	if err != nil {
+	if err := h.conn.SetReadDeadline(time.Now().Add(h.readTimeout)); err != nil {
 		log.Default().Printf("Error setting Modbus connection deadline: %v", err)
 		return
 	}
-
-	//time.Sleep(1 * time.Second) // matches what you discovered
-
-	mbap := make([]byte, 7)
-	if _, err := io.ReadFull(h.conn, mbap); err != nil { /* handle */
+	headerBytes := make([]byte, 7)
+	if _, err := io.ReadFull(h.conn, headerBytes); err != nil {
 		log.Default().Printf("Error reading header: %v", err)
 		return
 	}
-	log.Default().Println("MBAP: ", mbap)
-	// mbap[4:6] = length (UnitID + PDU)
-	length := int(binary.BigEndian.Uint16(mbap[4:6]))
+	length := int(binary.BigEndian.Uint16(headerBytes[4:6]))
 	remaining := length - 1
 	rest := make([]byte, remaining)
-	if _, err := io.ReadFull(h.conn, rest); err != nil { /* handle */
+	if _, err := io.ReadFull(h.conn, rest); err != nil {
 		log.Default().Printf("Error reading rest: %v", err)
 		return
 	}
-	log.Default().Println("Rest: ", rest)
-
-	// full response = append(mbap, rest...)
-
-	//write, err := sock.Write(bytes)
-	//if err != nil {
-	//	return
-	//}
-	//if write != len(bytes) {
-	//	log.Default().Printf("Error writing Modbus frame: %v", err)
-	//	return
-	//}
-	//headerBytes := make([]byte, 7)
-	//log.Default().Println("Reading Modbus frame...")
-	//_, err = io.ReadFull(sock, headerBytes)
-	//if err != nil {
-	//	log.Default().Printf("Error reading Modbus frame: %v", err)
-	//	return
-	//}
-	//mbapHeader := modbus.NewMbapHeaderFromBytes(headerBytes)
-	//log.Default().Printf("MBAP Header: %v", mbapHeader)
-	//fcBytes := make([]byte, 1)
-	//_, err = sock.Read(fcBytes)
-	//if err != nil {
-	//	log.Default().Printf("Error reading Modbus frame: %v", err)
-	//	return
-	//}
-	//functionCode := modbus.NewFunctionCodeFromBytes(fcBytes)
-	//log.Default().Printf("Function Code: %v", functionCode)
-	//numberOfBytes := make([]byte, 1)
-	//_, err = sock.Read(numberOfBytes)
-	//if err != nil {
-	//	log.Default().Printf("Error reading Modbus frame: %v", err)
-	//	return
-	//}
-	//log.Default().Printf("Number of Bytes: %v", numberOfBytes)
-	//dataBytes := make([]byte, numberOfBytes[0])
-	//_, err = sock.Read(dataBytes)
-	//if err != nil {
-	//	log.Default().Printf("Error reading Modbus frame: %v", err)
-	//	return
-	//}
-	//log.Default().Printf("Data Bytes: %v", dataBytes)
+	mbapHeader := modbus.NewMbapHeaderFromBytes(headerBytes)
+	log.Default().Printf("MBAP Header: %v", mbapHeader)
+	functionCode := modbus.NewFunctionCodeFromByte(rest[0])
+	log.Default().Printf("Function Code: %v", functionCode)
+	numberOfBytes := rest[1]
+	log.Default().Printf("Number of Bytes: %v", numberOfBytes)
+	log.Default().Printf("Data Bytes: %v", rest[2:])
 	log.Default().Printf("---------------------------------------")
 	log.Default().Printf("")
 }
