@@ -7,8 +7,8 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"pvlogger-modbus-data-collector-go/app/internal/config"
-	"pvlogger-modbus-data-collector-go/app/internal/modbus"
+	"pvlogger-modbus-data-collector-go/internal/config"
+	"pvlogger-modbus-data-collector-go/internal/modbus"
 	"strings"
 	"time"
 )

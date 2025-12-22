@@ -2,7 +2,7 @@ package main
 
 import (
 	"log"
-	"pvlogger-modbus-data-collector-go/app/internal/services"
+	"pvlogger-modbus-data-collector-go/internal/services"
 )
 
 func main() {
