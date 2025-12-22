@@ -31,9 +31,6 @@ dependencies {
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
 
-    // Messaging
-    implementation(libs.activemq.core)
-
     // Database
     implementation(libs.exposed.core)
     implementation(libs.exposed.dao)

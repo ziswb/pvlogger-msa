@@ -2,14 +2,8 @@ package ch.bziswiler.testutils
 
 import ch.bziswiler.pvlogger.dataaccessor.configuration.AppConfig
 import ch.bziswiler.pvlogger.dataaccessor.configuration.appModule
-import ch.bziswiler.pvlogger.dataaccessor.messaging.StoreModbusValuesHandler
 import ch.bziswiler.pvlogger.dataaccessor.module
 import ch.bziswiler.pvlogger.shared.databbase.DatabaseFactory
-import ch.bziswiler.pvlogger.shared.messaging.MessageReceiver
-import ch.bziswiler.pvlogger.shared.messaging.MqSessionFactory
-import ch.bziswiler.pvlogger.shared.messaging.QueueName.PERSIST_MODBUS
-import ch.bziswiler.pvlogger.shared.messaging.impl.ActiveMqQueueReceiver
-import ch.bziswiler.pvlogger.shared.messaging.impl.ActiveMqSessionFactory
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
@@ -17,7 +11,6 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.koin.test.KoinTest
 import org.koin.test.junit5.KoinTestExtension
-import javax.jms.Queue
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class TestBase : KoinTest {
@@ -32,9 +25,6 @@ abstract class TestBase : KoinTest {
                 module(testing = true)
                 org.koin.dsl.module {
                     single<AppConfig> { AppConfig() }
-                    single<StoreModbusValuesHandler> { StoreModbusValuesHandler() }
-                    single<MqSessionFactory> { ActiveMqSessionFactory(get<AppConfig>().mqConfig) }
-                    single<MessageReceiver<Queue>> { ActiveMqQueueReceiver(get<MqSessionFactory>(), PERSIST_MODBUS) }
                     single<DatabaseFactory> { DatabaseFactory(get<AppConfig>().databaseConfig) }
                 }
             }

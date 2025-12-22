@@ -34,10 +34,6 @@ repositories {
 }
 
 dependencies {
-    // Messaging
-    implementation(libs.activemq.core)
-    implementation(libs.activemq.client)
-
     // Ktor
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.ktor.server.caching.headers)
