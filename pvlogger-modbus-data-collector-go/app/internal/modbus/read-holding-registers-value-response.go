@@ -20,8 +20,8 @@ func NewModbusRegisterValue(definition ModbusRegisterDefinition, value any) *Mod
 }
 
 type ModbusRegisterValueResponse struct {
-	JobId         string                 `json:"jobId"`
-	TransactionId uint16                 `json:"requestId"`
+	JobId         JobId                  `json:"jobId"`
+	TransactionId RequestId              `json:"requestId"`
 	RequestTime   time.Time              `json:"requestTime"`
 	ResponseTime  time.Time              `json:"responseTime"`
 	Header        MbapHeader             `json:"header"`
@@ -30,7 +30,7 @@ type ModbusRegisterValueResponse struct {
 	Values        []*ModbusRegisterValue `json:"registerValues"`
 }
 
-func NewModbusRegisterValueResponseFromBytes(regDefs []ModbusRegisterDefinition, jobId string, transactionId uint16, requestTime time.Time, header MbapHeader, bytes []byte) *ModbusRegisterValueResponse {
+func NewModbusRegisterValueResponseFromBytes(regDefs []ModbusRegisterDefinition, jobId JobId, transactionId RequestId, requestTime time.Time, header MbapHeader, bytes []byte) *ModbusRegisterValueResponse {
 	functionCode := NewFunctionCodeFromByte(bytes[0])
 	numberOfBytes := bytes[1]
 	values := readRegisterValues(regDefs, bytes[2:])

@@ -47,14 +47,14 @@ func updateDeviceIdToDeviceTypesMap(deviceIdToTypesMap map[modbus.UByte][]string
 
 func Execute() {
 	var deviceIdToTypesMap = NewDeviceIdToTypesMap()
-	jobId := uuid.New().String()
+	jobId := modbus.NewJobId(uuid.New().String())
 	log.Default().Println("Executing Job ID:", jobId)
 	for deviceId, deviceTypes := range deviceIdToTypesMap {
 		fetchRegisterValues(jobId, deviceId, deviceTypes)
 	}
 }
 
-func fetchRegisterValues(jobId string, deviceId modbus.UByte, deviceTypes []string) {
+func fetchRegisterValues(jobId modbus.JobId, deviceId modbus.UByte, deviceTypes []string) {
 	log.Default().Println("Fetching register values for Device ID:", deviceId, "having Device Types:", deviceTypes)
 	registerDefinitionsList, err := listsOfConsecutiveRegisters(deviceTypes)
 	if err != nil {
@@ -78,7 +78,7 @@ func fetchRegisterValues(jobId string, deviceId modbus.UByte, deviceTypes []stri
 		request := modbus.ReadHoldingRegistersValueRequest{
 			JobId:               jobId,
 			RequestTime:         time.Now(),
-			TransactionId:       modbus.UShort(LastTransactionId.Add(1)),
+			TransactionId:       modbus.NewRequestId(modbus.UShort(LastTransactionId.Add(1))),
 			LogicDeviceId:       deviceId,
 			RegisterDefinitions: *&registerDefinitions,
 		}
