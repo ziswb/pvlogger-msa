@@ -61,39 +61,36 @@ func (h *TcpHandler) Connect() error {
 	return nil
 }
 
-func (h *TcpHandler) WriteRequest(request *ReadHoldingRegistersValueRequest) error {
+func (h *TcpHandler) FetchModbusRegisterValues(request *ReadHoldingRegistersValueRequest) (*ModbusRegisterValueResponse, error) {
 	bytes := request.EncodeToBytes()
 	if err := h.conn.SetWriteDeadline(time.Now().Add(h.writeTimeout)); err != nil {
 		log.Default().Printf("Error setting Modbus connection deadline: %v", err)
-		return err
+		return nil, err
 	}
 	if err := writeFull(h.conn, bytes); err != nil { /* handle */
 		log.Default().Printf("Error writing Modbus frame: %v", err)
-		return err
+		return nil, err
 	}
 	if err := h.conn.SetReadDeadline(time.Now().Add(h.readTimeout)); err != nil {
 		log.Default().Printf("Error setting Modbus connection deadline: %v", err)
-		return nil
+		return nil, nil
 	}
 	headerBytes := make([]byte, 7)
 	if _, err := io.ReadFull(h.conn, headerBytes); err != nil {
 		log.Default().Printf("Error reading header: %v", err)
-		return nil
+		return nil, nil
 	}
 	length := int(binary.BigEndian.Uint16(headerBytes[4:6]))
 	remaining := length - 1
 	rest := make([]byte, remaining)
 	if _, err := io.ReadFull(h.conn, rest); err != nil {
 		log.Default().Printf("Error reading rest: %v", err)
-		return nil
+		return nil, nil
 	}
 	mbapHeader := NewMbapHeaderFromBytes(headerBytes)
-	log.Default().Printf("MBAP Header: %v", mbapHeader)
-	response := NewModbusRegisterValueResponseFromBytes(request.JobId, request.TransactionId, request.RequestTime, mbapHeader, rest)
-	log.Default().Printf("Modbus Register Value Response: %v", response)
+	response := NewModbusRegisterValueResponseFromBytes(request.RegisterDefinitions, request.JobId, request.TransactionId, request.RequestTime, mbapHeader, rest)
 	log.Default().Printf("---------------------------------------")
-	log.Default().Printf("")
-	return nil
+	return response, nil
 }
 
 func writeFull(w io.Writer, b []byte) error {

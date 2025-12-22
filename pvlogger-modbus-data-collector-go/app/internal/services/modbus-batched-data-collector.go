@@ -55,7 +55,7 @@ func Execute() {
 
 func fetchRegisterValues(jobId string, deviceId modbus.UByte, deviceTypes []string) {
 	log.Default().Println("Fetching register values for Device ID:", deviceId, "having Device Types:", deviceTypes)
-	listOfRegDefs, err := listsOfConsecutiveRegisters(deviceTypes)
+	registerDefinitionsList, err := listsOfConsecutiveRegisters(deviceTypes)
 	if err != nil {
 		log.Default().Println("Error getting register definitions:", err)
 		return
@@ -73,17 +73,22 @@ func fetchRegisterValues(jobId string, deviceId modbus.UByte, deviceTypes []stri
 		log.Default().Println("Error connecting to Modbus device:", err)
 		return
 	}
-	for _, regDefs := range *listOfRegDefs {
+	for _, registerDefinitions := range *registerDefinitionsList {
 		request := modbus.ReadHoldingRegistersValueRequest{
 			JobId:               jobId,
 			RequestTime:         time.Now(),
 			TransactionId:       modbus.UShort(LastTransactionId.Add(1)),
 			DeviceId:            deviceId,
-			RegisterDefinitions: *&regDefs,
+			RegisterDefinitions: *&registerDefinitions,
 		}
-		err = tcpHandler.WriteRequest(&request)
+		response, err := tcpHandler.FetchModbusRegisterValues(&request)
 		if err != nil {
 			log.Default().Println("Error requesting register values:", err)
+			return
+		}
+		err = storeResponse(response)
+		if err != nil {
+			log.Default().Println("Error storing response:", err)
 			return
 		}
 	}
@@ -128,4 +133,9 @@ func isNotSuccessor(registers [][]modbus.ModbusRegisterDefinition, nextRegister 
 	lastRegisterAddress := lastRegister.RegisterAddress.Value
 	nextRegisterAddress := lastRegisterAddress + lastRegister.Quantity.Value
 	return nextRegister.RegisterAddress.Value != nextRegisterAddress
+}
+
+func storeResponse(response *modbus.ModbusRegisterValueResponse) error {
+	log.Default().Println("Response:", response)
+	return nil
 }
