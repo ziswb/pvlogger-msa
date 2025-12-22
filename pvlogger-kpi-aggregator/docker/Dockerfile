@@ -1,10 +1,10 @@
-FROM eclipse-temurin:21-jdk AS build
+FROM gradle:8-jdk21-alpine AS build
 
 ENV GRADLE_USER_HOME="/workspace/gradle_home"
 ADD . /workspace
 
 WORKDIR /workspace
-RUN ./gradlew :pvlogger-kpi-aggregator:clean :pvlogger-kpi-aggregator:buildFatJar
+RUN gradle :pvlogger-kpi-aggregator:clean :pvlogger-kpi-aggregator:buildFatJar
 
 FROM eclipse-temurin:21-jre-ubi9-minimal
 
