@@ -78,7 +78,7 @@ func fetchRegisterValues(jobId string, deviceId modbus.UByte, deviceTypes []stri
 			JobId:               jobId,
 			RequestTime:         time.Now(),
 			TransactionId:       modbus.UShort(LastTransactionId.Add(1)),
-			DeviceId:            deviceId,
+			LogicDeviceId:       deviceId,
 			RegisterDefinitions: *&registerDefinitions,
 		}
 		response, err := tcpHandler.FetchModbusRegisterValues(&request)

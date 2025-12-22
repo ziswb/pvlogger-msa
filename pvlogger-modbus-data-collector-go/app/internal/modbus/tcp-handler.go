@@ -73,22 +73,25 @@ func (h *TcpHandler) FetchModbusRegisterValues(request *ReadHoldingRegistersValu
 	}
 	if err := h.conn.SetReadDeadline(time.Now().Add(h.readTimeout)); err != nil {
 		log.Default().Printf("Error setting Modbus connection deadline: %v", err)
-		return nil, nil
+		return nil, err
 	}
 	headerBytes := make([]byte, 7)
 	if _, err := io.ReadFull(h.conn, headerBytes); err != nil {
 		log.Default().Printf("Error reading header: %v", err)
-		return nil, nil
-	}
-	length := int(binary.BigEndian.Uint16(headerBytes[4:6]))
-	remaining := length - 1
-	rest := make([]byte, remaining)
-	if _, err := io.ReadFull(h.conn, rest); err != nil {
-		log.Default().Printf("Error reading rest: %v", err)
-		return nil, nil
+		return nil, err
 	}
 	mbapHeader := NewMbapHeaderFromBytes(headerBytes)
-	response := NewModbusRegisterValueResponseFromBytes(request.RegisterDefinitions, request.JobId, request.TransactionId, request.RequestTime, mbapHeader, rest)
+	dataLength := int(binary.BigEndian.Uint16(headerBytes[4:6]))
+	// The Length field is defined as the number of bytes following the first 6 bytes of the header
+	// i.e., it includes the Logic Device ID (1 byte) + Function Code (1 byte) + Data
+	// Since we have read 7 bytes (including the Logic Device ID), we need to subtract 1 byte from the data length
+	remaining := dataLength - 1
+	pduBytes := make([]byte, remaining)
+	if _, err := io.ReadFull(h.conn, pduBytes); err != nil {
+		log.Default().Printf("Error reading rest: %v", err)
+		return nil, err
+	}
+	response := NewModbusRegisterValueResponseFromBytes(request.RegisterDefinitions, request.JobId, request.TransactionId, request.RequestTime, mbapHeader, pduBytes)
 	log.Default().Printf("---------------------------------------")
 	return response, nil
 }

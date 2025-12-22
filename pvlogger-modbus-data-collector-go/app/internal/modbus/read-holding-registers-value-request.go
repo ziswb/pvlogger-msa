@@ -9,7 +9,7 @@ type ReadHoldingRegistersValueRequest struct {
 	JobId               string
 	RequestTime         time.Time
 	TransactionId       UShort
-	DeviceId            UByte
+	LogicDeviceId       UByte
 	RegisterDefinitions []ModbusRegisterDefinition
 }
 
@@ -31,7 +31,7 @@ func (r *ReadHoldingRegistersValueRequest) EncodeToBytes() []byte {
 		ProtocolIdentifier: r.TransactionId,
 		ProtocolType:       DefaultProtocolType,
 		DataLength:         UShort(2 + modbusData.NumberOfBytes()), // logic device id + function code + payload
-		LogicDeviceId:      r.DeviceId,
+		LogicDeviceId:      r.LogicDeviceId,
 	}
 	functionCode := ReadRegisters
 	aduFrame := NewAduFrame(mbapHeader, functionCode, modbusData)
