@@ -1,6 +1,5 @@
 package modbus
 
 type RegisterAddress struct {
-	RegisterAddress int `json:"registerAddress"`
-	Value           int `json:"value"`
+	Value int `json:"value"`
 }
