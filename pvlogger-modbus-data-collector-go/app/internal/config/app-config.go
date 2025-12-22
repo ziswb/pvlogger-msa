@@ -25,8 +25,8 @@ type ModbusCfg struct {
 	Timeout time.Duration
 }
 
-func MdConfig() MasterDataConfig {
-	return MasterDataConfig{
+func MdConfig() *MasterDataConfig {
+	return &MasterDataConfig{
 		Host:           getEnv("MD_HOST", "localhost"),
 		Port:           getIntEnv("MD_PORT", "8081"),
 		Protocol:       getEnv("MD_PROTOCOL", "http"),

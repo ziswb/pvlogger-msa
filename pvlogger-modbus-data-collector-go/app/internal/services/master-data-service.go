@@ -19,18 +19,12 @@ const (
 	paramValueSeparator = ";"
 )
 
-type MasterDataConfig struct {
-	Protocol string
-	Host     string
-	Port     int
-}
-
 type MasterDataService struct {
 	baseURL    string
 	httpClient *http.Client
 }
 
-func NewMasterDataService(config *MasterDataConfig) *MasterDataService {
+func NewMasterDataService(config *config.MasterDataConfig) *MasterDataService {
 	return &MasterDataService{
 		baseURL: fmt.Sprintf("http://%s:%d", config.Host, config.Port),
 		httpClient: &http.Client{

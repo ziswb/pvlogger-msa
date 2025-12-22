@@ -114,10 +114,7 @@ func listsOfConsecutiveRegisters(deviceTypes []string) (*[][]modbus.ModbusRegist
 
 func fetchRegisterDefinitionsFromMasterData(deviceTypes []string) (*[]modbus.ModbusRegisterDefinition, error) {
 	log.Default().Println("Getting register definitions for DeviceTypes", deviceTypes, "...")
-	host := config.MdConfig().Host
-	port := config.MdConfig().Port
-	proto := config.MdConfig().Protocol
-	definitions, err := NewMasterDataService(&MasterDataConfig{Protocol: proto, Host: host, Port: port}).FetchRegisterDefinitions(deviceTypes, Categories)
+	definitions, err := NewMasterDataService(config.MdConfig()).FetchRegisterDefinitions(deviceTypes, Categories)
 	if err != nil {
 		return &[]modbus.ModbusRegisterDefinition{}, err
 	}
