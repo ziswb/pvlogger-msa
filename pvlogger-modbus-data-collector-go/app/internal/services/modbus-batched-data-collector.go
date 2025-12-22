@@ -1,10 +1,11 @@
 package services
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
-	"pvlogger-modbus-data-collector-go/app/internal/config"
-	"pvlogger-modbus-data-collector-go/app/internal/modbus"
+	"pvlogger-modbus-data-collector-go/internal/config"
+	"pvlogger-modbus-data-collector-go/internal/modbus"
 	"sync/atomic"
 	"time"
 
@@ -134,5 +135,14 @@ func isNotSuccessor(registers [][]modbus.ModbusRegisterDefinition, nextRegister 
 
 func storeResponse(response *modbus.ModbusRegisterValueResponse) error {
 	log.Default().Println("Response:", response)
+	jsonResponse, err := json.MarshalIndent(response, "", "  ")
+	if err != nil {
+		return err
+	}
+	log.Default().Println("JSON Response:", string(jsonResponse))
+	err = NewPersistingService(config.DataAccessorCfg()).StoreModbusValues(response)
+	if err != nil {
+		return err
+	}
 	return nil
 }
