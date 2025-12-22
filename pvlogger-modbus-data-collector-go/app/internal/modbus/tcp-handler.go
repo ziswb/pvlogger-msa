@@ -89,11 +89,8 @@ func (h *TcpHandler) WriteRequest(request *ReadHoldingRegistersValueRequest) err
 	}
 	mbapHeader := NewMbapHeaderFromBytes(headerBytes)
 	log.Default().Printf("MBAP Header: %v", mbapHeader)
-	functionCode := NewFunctionCodeFromByte(rest[0])
-	log.Default().Printf("Function Code: %v", functionCode)
-	numberOfBytes := rest[1]
-	log.Default().Printf("Number of Bytes: %v", numberOfBytes)
-	log.Default().Printf("Data Bytes: %v", rest[2:])
+	response := NewModbusRegisterValueResponseFromBytes(request.JobId, request.TransactionId, request.RequestTime, mbapHeader, rest)
+	log.Default().Printf("Modbus Register Value Response: %v", response)
 	log.Default().Printf("---------------------------------------")
 	log.Default().Printf("")
 	return nil
