@@ -9,7 +9,7 @@ import (
 type ReadHoldingRegistersValueRequest struct {
 	JobId               string
 	RequestTime         time.Time
-	RequestIdId         modbus.UShort
+	TransactionId       modbus.UShort
 	DeviceId            modbus.UByte
 	RegisterDefinitions []modbus.ModbusRegisterDefinition
 }
@@ -29,7 +29,7 @@ func (r *ReadHoldingRegistersValueRequest) EncodeToBytes() []byte {
 		NumberOfRegisters: numberOfBytes,
 	}
 	mbapHeader := modbus.MbapHeader{
-		ProtocolIdentifier: r.RequestIdId,
+		ProtocolIdentifier: r.TransactionId,
 		ProtocolType:       modbus.DefaultProtocolType,
 		DataLength:         modbus.UShort(2 + modbusData.NumberOfBytes()), // logic device id + function code + payload
 		LogicDeviceId:      r.DeviceId,

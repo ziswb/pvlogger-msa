@@ -4,6 +4,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type MasterDataConfig struct {
@@ -19,8 +20,9 @@ type DeviceIdConfig struct {
 }
 
 type ModbusCfg struct {
-	Host string
-	Port int
+	Host    string
+	Port    int
+	Timeout time.Duration
 }
 
 func MdConfig() MasterDataConfig {
@@ -41,8 +43,9 @@ func DevIdConfig() DeviceIdConfig {
 
 func ModbusConfig() ModbusCfg {
 	return ModbusCfg{
-		Host: getEnv("MODBUS_HOSTNAME", "<dongle-ip>"),
-		Port: getIntEnv("MODBUS_PORT", "502"),
+		Host:    getEnv("MODBUS_HOSTNAME", "<dongle-ip>"),
+		Port:    getIntEnv("MODBUS_PORT", "502"),
+		Timeout: time.Duration(getIntEnv("MODBUS_TIMEOUT", "5")) * time.Second,
 	}
 }
 

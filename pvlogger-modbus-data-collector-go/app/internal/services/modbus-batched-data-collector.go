@@ -21,8 +21,8 @@ const (
 )
 
 var (
-	Categories = []string{DynamicCategory, AlarmCategory}
-	RequestId  = atomic.Int32{}
+	Categories        = []string{DynamicCategory, AlarmCategory}
+	LastTransactionId = atomic.Int32{}
 )
 
 type DeviceIdToTypesMap map[modbus.UByte][]string
@@ -45,7 +45,6 @@ func updateDeviceIdToDeviceTypesMap(deviceIdToTypesMap map[modbus.UByte][]string
 }
 
 func Execute() {
-	log.Default().Println("Executing modbus batched dynamic data collection job ...")
 	var deviceIdToTypesMap = NewDeviceIdToTypesMap()
 	jobId := uuid.New().String()
 	log.Default().Println("Executing Job ID:", jobId)
@@ -61,39 +60,33 @@ func fetchRegisterValues(jobId string, deviceId modbus.UByte, deviceTypes []stri
 		log.Default().Println("Error getting register definitions:", err)
 		return
 	}
-	for idx, regDefs := range *listOfRegDefs {
-		request := buildRequest(jobId, deviceId, &regDefs)
-		log.Default().Println("Request number:", idx, "| Request Id:", request.RequestIdId, "| #Definitions:", len(request.RegisterDefinitions), "| Request Data:", request.EncodeToBytes())
-		requestRegisterValues(request)
-	}
-}
-
-func buildRequest(jobId string, deviceId modbus.UByte, regDefs *[]modbus.ModbusRegisterDefinition) *ReadHoldingRegistersValueRequest {
-	return &ReadHoldingRegistersValueRequest{
-		JobId:               jobId,
-		RequestTime:         time.Now(),
-		RequestIdId:         modbus.UShort(RequestId.Add(1)),
-		DeviceId:            deviceId,
-		RegisterDefinitions: *regDefs,
-	}
-}
-
-func requestRegisterValues(request *ReadHoldingRegistersValueRequest) {
 	url := fmt.Sprintf("%s:%d", config.ModbusConfig().Host, config.ModbusConfig().Port)
-	timeout := 5 * time.Second
-	tcpHandler := NewTcpHandler(url, timeout)
+	tcpHandler := NewTcpHandler(url, config.ModbusConfig().Timeout)
 	defer func(tcpHandler *TcpHandler) {
 		err := tcpHandler.Close()
 		if err != nil {
 			log.Default().Println("Error closing Modbus connection:", err)
 		}
 	}(tcpHandler)
-	err := tcpHandler.connect()
+	err = tcpHandler.connect()
 	if err != nil {
 		log.Default().Println("Error connecting to Modbus device:", err)
 		return
 	}
-	tcpHandler.WriteRequest(request)
+	for _, regDefs := range *listOfRegDefs {
+		request := ReadHoldingRegistersValueRequest{
+			JobId:               jobId,
+			RequestTime:         time.Now(),
+			TransactionId:       modbus.UShort(LastTransactionId.Add(1)),
+			DeviceId:            deviceId,
+			RegisterDefinitions: *&regDefs,
+		}
+		err = tcpHandler.WriteRequest(&request)
+		if err != nil {
+			log.Default().Println("Error requesting register values:", err)
+			return
+		}
+	}
 }
 
 func listsOfConsecutiveRegisters(deviceTypes []string) (*[][]modbus.ModbusRegisterDefinition, error) {
