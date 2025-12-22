@@ -8,14 +8,12 @@ import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.MbapHeader
 import kotlinx.serialization.Serializable
 import java.time.LocalDateTime
 
-private const val ONE_BYTE = 0xFF
-
 @Serializable
 data class ReadDeviceIdentifiersResponse(
     override var jobId: JobId,
     override val requestId: RequestId,
-    @Serializable(with = LocalDateTimeSerializer::class) override var requestTime: LocalDateTime,
-    @Serializable(with = LocalDateTimeSerializer::class) override var responseTime: LocalDateTime,
+    @Serializable(with = LocalDateTimeFromRfc3339Serializer::class) override var requestTime: LocalDateTime,
+    @Serializable(with = LocalDateTimeFromRfc3339Serializer::class) override var responseTime: LocalDateTime,
     override var header: MbapHeader,
     override var functionCode: FunctionCode,
     override var numberOfBytes: UByte,
