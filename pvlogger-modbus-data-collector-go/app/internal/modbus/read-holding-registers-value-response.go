@@ -11,8 +11,8 @@ import (
 // Value contains the concrete Go type (UShort, UInt, Short, int32, string, etc.)
 // determined at runtime based on ModbusRegisterDefinition.Type.
 type ModbusRegisterValue struct {
-	Definition ModbusRegisterDefinition
-	Value      any
+	Definition ModbusRegisterDefinition `json:"definition"`
+	Value      any                      `json:"value"`
 }
 
 func NewModbusRegisterValue(definition ModbusRegisterDefinition, value any) *ModbusRegisterValue {
@@ -20,14 +20,14 @@ func NewModbusRegisterValue(definition ModbusRegisterDefinition, value any) *Mod
 }
 
 type ModbusRegisterValueResponse struct {
-	JobId         string
-	TransactionId uint16
-	RequestTime   time.Time
-	ResponseTime  time.Time
-	Header        MbapHeader
-	FunctionCode  FunctionCode
-	NumberOfBytes UByte
-	Values        []*ModbusRegisterValue
+	JobId         string                 `json:"jobId"`
+	TransactionId uint16                 `json:"requestId"`
+	RequestTime   time.Time              `json:"requestTime"`
+	ResponseTime  time.Time              `json:"responseTime"`
+	Header        MbapHeader             `json:"header"`
+	FunctionCode  FunctionCode           `json:"functionCode"`
+	NumberOfBytes UByte                  `json:"numberOfBytes"`
+	Values        []*ModbusRegisterValue `json:"registerValues"`
 }
 
 func NewModbusRegisterValueResponseFromBytes(regDefs []ModbusRegisterDefinition, jobId string, transactionId uint16, requestTime time.Time, header MbapHeader, bytes []byte) *ModbusRegisterValueResponse {

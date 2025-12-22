@@ -1,26 +1,26 @@
 package modbus
 
-const (
-	ReadRegisters          FunctionCode = 0x03
-	WriteSingleRegister    FunctionCode = 0x06
-	WriteMultipleRegisters FunctionCode = 0x10
-	ReadDeviceIdentifiers  FunctionCode = 0x28
-	AbnormalResponse       FunctionCode = 0x83
-	UnknownResponse        FunctionCode = 0x0
-)
+var ReadRegisters = NewFunctionCode(0x03)
+var WriteSingleRegister = NewFunctionCode(0x06)
+var WriteMultipleRegisters = NewFunctionCode(0x10)
+var ReadDeviceIdentifiers = NewFunctionCode(0x28)
+var AbnormalResponse = NewFunctionCode(0x83)
+var UnknownResponse = NewFunctionCode(0x0)
 
-type FunctionCode UByte
+type FunctionCode struct {
+	Value UByte `json:"value"`
+}
 
 func NewFunctionCode(value UByte) FunctionCode {
-	return FunctionCode(value)
+	return FunctionCode{Value: value}
 }
 
 func (f *FunctionCode) EncodeToBytes() []byte {
-	bytes := []byte{byte(*f)}
+	bytes := []byte{f.Value}
 	return bytes
 }
 
 func NewFunctionCodeFromByte(b byte) FunctionCode {
-	return FunctionCode(b)
+	return FunctionCode{Value: b}
 
 }

@@ -6,10 +6,10 @@ import (
 )
 
 type MbapHeader struct {
-	ProtocolIdentifier UShort
-	ProtocolType       ProtocolType
-	DataLength         UShort
-	LogicDeviceId      UByte
+	ProtocolIdentifier UShort       `json:"protocolIdentifier"`
+	ProtocolType       ProtocolType `json:"protocolType"`
+	DataLength         UShort       `json:"dataLength"`
+	LogicDeviceId      UByte        `json:"logicDeviceId"`
 }
 
 func NewMbapHeader(protocolIdentifier UShort, protocolType ProtocolType, dataLength UShort, logicDeviceId UByte) MbapHeader {
