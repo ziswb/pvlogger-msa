@@ -32,27 +32,21 @@ k8s_yaml([
 
 local_resource('install_traefik', cmd='./scripts/install_traefik.sh')
 
+k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_common_install/files/pvlogger-db-configmap.yaml')
+k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_common_install/files/pvlogger-namespace.yaml')
+
 k8s_yaml(local('./scripts/replace_path_by_home.sh ./tilt-templates/pg-backup-data-pv-template.yaml'))
 k8s_yaml(local('./scripts/replace_path_by_home.sh ./tilt-templates/pg-data-data-pv-template.yaml'))
 k8s_yaml(local('./scripts/replace_path_by_home.sh ./tilt-templates/pg-logs-data-pv-template.yaml'))
 k8s_yaml(local('./scripts/replace_path_by_home.sh ./tilt-templates/pg-os-data-pv-template.yaml'))
-k8s_yaml(local('./scripts/replace_path_by_home.sh ./tilt-templates/mq-data-data-pv-template.yaml'))
-k8s_yaml(local('./scripts/replace_path_by_home.sh ./tilt-templates/mq-log-data-pv-template.yaml'))
 k8s_yaml(local('./scripts/replace_path_by_home.sh ./tilt-templates/kpi-export-data-pv-template.yaml'))
-
 k8s_yaml('pvlogger-infrastructure/workload-setup/roles/postgresql_create_namespace/files/postgresql-namespace.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/postgresql_install/files/postgresql-pvc-backups.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/postgresql_install/files/postgresql-pvc-data.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/postgresql_install/files/postgresql-pvc-logs.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/postgresql_install/files/postgresql-pvc-os.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/postgresql_install/files/postgresql-deployment.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/postgresql_install/files/postgresql-service.yaml')
-
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/activemq/files/activemq-namespace.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/activemq/files/activemq-claim0-persistentvolumeclaim.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/activemq/files/activemq-claim1-persistentvolumeclaim.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/activemq/files/activemq-deployment.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/activemq/files/activemq-service.yaml')
+k8s_yaml('./tilt-templates/postgresql-pvc-backups.yaml')
+k8s_yaml('./tilt-templates/postgresql-pvc-data.yaml')
+k8s_yaml('./tilt-templates/postgresql-pvc-logs.yaml')
+k8s_yaml('./tilt-templates/postgresql-pvc-os.yaml')
+k8s_yaml('./tilt-templates/postgresql-deployment.yaml')
+k8s_yaml('./tilt-templates/postgresql-service.yaml')
 
 pv_pw_yml = """
 apiVersion: v1
@@ -68,10 +62,6 @@ k8s_yaml([
     blob(pv_pw_yml)
 ])
 
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_common_install/files/pvlogger-namespace.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_heartbeat_install/files/pvlogger-heartbeat-deployment.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_heartbeat_install/files/pvlogger-heartbeat-service.yaml')
-
 k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_masterdata_server_install/files/pvlogger-masterdata-server-deployment.yaml')
 k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_masterdata_server_install/files/pvlogger-masterdata-server-service.yaml')
 
@@ -85,24 +75,24 @@ metadata:
   name: lwip-config
   namespace: pvlogger
 data:
-  lwip_host: "pvlogger-modbus-mock-server-service.pvlogger.svc.cluster.local"
-  lwip_port: "8502"
+  MODBUS_HOSTNAME: "pvlogger-modbus-mock-server-service.pvlogger.svc.cluster.local"
+  MODBUS_PORT: "8502"
+  MODBUS_TIMEOUT: "5"
 """
 k8s_yaml([
     blob(cm_yml)
 ])
 
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_modbus_data_collector_install/files/pvlogger-modbus-data-collector-deployment.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_modbus_data_collector_install/files/pvlogger-modbus-data-collector-service.yaml')
+k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_modbus_data_collector_go_install/files/pvlogger-modbus-data-collector-configmap.yaml')
+k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_modbus_data_collector_go_install/files/pvlogger-modbus-data-collector-deployment.yaml')
 
 k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_modbus_mock_server_install/files/pvlogger-modbus-mock-server-deployment.yaml')
 k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_modbus_mock_server_install/files/pvlogger-modbus-mock-server-service.yaml')
 
 k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_kpi_aggregator_install/files/pvlogger-kpi-aggregator-deployment.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_kpi_aggregator_install/files/pvlogger-kpi-aggregator-service.yaml')
 
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_kpi_exporter_install/files/pvlogger-kpi-exporter-deployment.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_kpi_exporter_install/files/pvlogger-kpi-exporter-service.yaml')
+k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_kpi_exporter_install/files/pvlogger-kpi-exporter-cm.yaml')
+k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_kpi_exporter_install/files/pvlogger-kpi-exporter-cronjob.yaml')
 k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_kpi_exporter_install/files/pvlogger-kpi-exporter-pvc.yaml')
 
 tf_mw_yml = """
@@ -166,7 +156,13 @@ k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_frontend_install
 k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_frontend_install/files/pvlogger-frontend-service.yaml')
 
 k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_sunrise_sunset_install/files/pvlogger-crepuscular-deployment.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_sunrise_sunset_install/files/pvlogger-crepuscular-service.yaml')
 
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_fusionsolar_install/files/pvlogger-fusionsolar-deployment.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_fusionsolar_install/files/pvlogger-fusionsolar-service.yaml')
+k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_fusionsolar_install/files/pvlogger-fusionsolar-cm.yaml')
+k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_fusionsolar_install/files/pvlogger-fusionsolar-cm-1.yaml')
+k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_fusionsolar_install/files/pvlogger-fusionsolar-cm-2.yaml')
+k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_fusionsolar_install/files/pvlogger-fusionsolar-cm-3.yaml')
+k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_fusionsolar_install/files/pvlogger-fusionsolar-cm-4.yaml')
+k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_fusionsolar_install/files/pvlogger-fusionsolar-cronjob-1.yaml')
+k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_fusionsolar_install/files/pvlogger-fusionsolar-cronjob-2.yaml')
+k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_fusionsolar_install/files/pvlogger-fusionsolar-cronjob-3.yaml')
+k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_fusionsolar_install/files/pvlogger-fusionsolar-cronjob-4.yaml')
