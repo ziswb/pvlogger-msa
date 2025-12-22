@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"log"
 	"pvlogger-modbus-data-collector-go/app/internal/config"
 	"pvlogger-modbus-data-collector-go/app/internal/modbus"
@@ -78,14 +79,20 @@ func buildRequest(jobId string, deviceId modbus.UByte, regDefs *[]modbus.ModbusR
 }
 
 func requestRegisterValues(request *ReadHoldingRegistersValueRequest) {
-	// TODO
-	for _, registerDefinition := range request.RegisterDefinitions {
-		registerAddress := registerDefinition.RegisterAddress.Value
-		numberOfBytes := registerDefinition.Quantity.Value
-		registerType := registerDefinition.Type
-		log.Default().Println("Register Address:", registerAddress, "| Register Type:", registerType, "| Number of Bytes:", numberOfBytes)
+	url := fmt.Sprintf("%s:%d", config.ModbusConfig().Host, config.ModbusConfig().Port)
+	timeout := 5 * time.Second
+	tcpHandler := NewTcpHandler(url, timeout)
+	defer func(tcpHandler *TcpHandler) {
+		err := tcpHandler.Close()
+		if err != nil {
+			log.Default().Println("Error closing Modbus connection:", err)
+		}
+	}(tcpHandler)
+	err := tcpHandler.connect()
+	if err != nil {
+		log.Default().Println("Error connecting to Modbus device:", err)
+		return
 	}
-	tcpHandler := NewTcpHandler()
 	tcpHandler.WriteRequest(request)
 }
 
