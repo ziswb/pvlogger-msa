@@ -20,6 +20,7 @@ type DataAccessorConfig struct {
 	Protocol              string
 	BasePath              string
 	StoreModbusValuesPath string
+	StoreKpiValuesPath    string
 }
 
 type DeviceIdConfig struct {
@@ -49,6 +50,7 @@ func DataAccessorCfg() *DataAccessorConfig {
 		Protocol:              getEnv("DA_PROTOCOL", "http"),
 		BasePath:              getEnv("DA_BASE_PATH", "/v1"),
 		StoreModbusValuesPath: getEnv("DA_STORE_MODBUS_VALUES_PATH", "/store-modbus-values"),
+		StoreKpiValuesPath:    getEnv("DA_STORE_KPI_VALUES_PATH", "/store-kpi-values"),
 	}
 }
 

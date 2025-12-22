@@ -3,6 +3,7 @@ package fusionsolar
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log"
 	"pvlogger/internal/auth"
 	"pvlogger/internal/config"
@@ -33,7 +34,7 @@ func FetchDeviceRealData(token auth.Token) (*model.DeviceRealKpiResponse, error)
 }
 
 func SaveDeviceRealKpiResponse(response *model.DeviceRealKpiResponse) error {
-	log.Default().Println("Saving Device Real Kpi response to database...")
+	log.Default().Println("Saving Device Real Kpi Response to database...")
 	db, err := database.NewDatabase(config.DbConfig().Host, config.DbConfig().Port, config.DbConfig().DbName, config.DbConfig().Username, config.DbConfig().Password)
 	if err != nil {
 		return err
@@ -61,7 +62,7 @@ func SaveDeviceRealKpiResponse(response *model.DeviceRealKpiResponse) error {
 }
 
 func insertDeviceRealKpiResponseParams(response *model.DeviceRealKpiResponse, db *database.Database) (int32, error) {
-	log.Default().Println("Saving Device Real Kpi response to database...")
+	log.Default().Println("Saving Device Real Kpi Response Params to database...")
 	raw, err := json.RawMessage.MarshalJSON(response.Body)
 	if err != nil {
 		return 0, err
@@ -76,7 +77,10 @@ func insertDeviceRealKpiResponseParams(response *model.DeviceRealKpiResponse, db
 }
 
 func insertDeviceRealKpiResponseBasicParams(response *model.DeviceRealKpiResponse, responseId int32, db *database.Database) error {
-	log.Default().Println("Saving Device Real Kpi response to database...")
+	log.Default().Println("Saving Device Real Kpi Basic Params  to database...")
+	if response.JSON200.Params == nil {
+		return errors.New("'response.JSON200.Params' is nil")
+	}
 	currentTime := pgtype.Int8{Valid: true, Int64: *response.JSON200.Params.CurrentTime}
 	devIds := pgtype.Text{Valid: true, String: *response.JSON200.Params.DevIds}
 	err := insertFsResponseParamsDevice(currentTime, responseId, devIds, db)
