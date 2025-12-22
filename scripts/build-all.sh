@@ -125,6 +125,7 @@ PV_LOGGER_MODULES=(
   "pvlogger-masterdata-server"
   "pvlogger-modbus-data-accessor"
   "pvlogger-modbus-data-collector"
+  "pvlogger-modbus-data-collector-go"
   "pvlogger-modbus-mock-server"
   "pvlogger-sunrise-sunset"
 )
