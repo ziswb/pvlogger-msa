@@ -3,6 +3,7 @@ package fusionsolar
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log"
 	"pvlogger/internal/auth"
 	"pvlogger/internal/config"
@@ -74,6 +75,9 @@ func insertStationRealKpiResponseParams(response *model.StationRealKpiResponse, 
 
 func insertStationRealKpiResponseBasicParams(response *model.StationRealKpiResponse, responseId int32, db *database.Database) error {
 	log.Default().Println("Saving Station Real Kpi response params to database...")
+	if response.JSON200.Params == nil {
+		return errors.New("'response.JSON200.Params' is nil")
+	}
 	currentTime := pgtype.Int8{Valid: true, Int64: *response.JSON200.Params.CurrentTime}
 	stationCodes := pgtype.Text{Valid: true, String: *response.JSON200.Params.StationCodes}
 	err := insertFsResponseParamsBasicParams(currentTime, responseId, stationCodes, db)
