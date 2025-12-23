@@ -89,8 +89,6 @@ k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_modbus_data_coll
 k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_modbus_mock_server_install/files/pvlogger-modbus-mock-server-deployment.yaml')
 k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_modbus_mock_server_install/files/pvlogger-modbus-mock-server-service.yaml')
 
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_kpi_aggregator_install/files/pvlogger-kpi-aggregator-deployment.yaml')
-
 k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_kpi_exporter_install/files/pvlogger-kpi-exporter-cm.yaml')
 k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_kpi_exporter_install/files/pvlogger-kpi-exporter-cronjob.yaml')
 k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_kpi_exporter_install/files/pvlogger-kpi-exporter-pvc.yaml')

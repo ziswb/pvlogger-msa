@@ -45,13 +45,14 @@ func updateDeviceIdToDeviceTypesMap(deviceIdToTypesMap map[modbus.UByte][]string
 	}
 }
 
-func Execute() {
+func FetchModbusDynamicRegisterValues() *modbus.JobId {
 	var deviceIdToTypesMap = NewDeviceIdToTypesMap()
 	jobId := modbus.NewJobId(uuid.New().String())
-	log.Default().Println("Executing Job ID:", jobId)
+	log.Default().Println("Fetching Modbus Dynamic Register Values. Job ID:", jobId)
 	for deviceId, deviceTypes := range deviceIdToTypesMap {
 		fetchRegisterValues(jobId, deviceId, deviceTypes)
 	}
+	return &jobId
 }
 
 func fetchRegisterValues(jobId modbus.JobId, deviceId modbus.UByte, deviceTypes []string) {

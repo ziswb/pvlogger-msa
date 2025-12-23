@@ -29,7 +29,7 @@ func NewPersistingService(config *config.DataAccessorConfig) *PersistingService 
 
 func (s *PersistingService) StoreModbusValues(response *modbus.ModbusRegisterValueResponse) error {
 	log.Default().Println("Storing modbus values ...")
-	postURL, err := url.Parse(s.baseURL + config.DataAccessorCfg().BasePath + config.DataAccessorCfg().StoreModbusValuesPath)
+	postURL, err := url.Parse(fmt.Sprintf("%s/%s/%s", s.baseURL, config.DataAccessorCfg().BasePath, config.DataAccessorCfg().StoreModbusValuesPath))
 	if err != nil {
 		return fmt.Errorf("failed to parse URL: %w", err)
 	}
