@@ -1,19 +1,19 @@
 package kpis
 
 type KW struct {
-	kw float64
+	Kw float64 `json:"kw"`
 }
 
 type W struct {
-	w float64
+	W float64 `json:"w"`
 }
 
 type KWh struct {
-	kwh float64
+	Kwh float64 `json:"kwh"`
 }
 
 type Wh struct {
-	wh float64
+	Wh float64 `json:"wh"`
 }
 
 func NewW(w float64) W {
@@ -33,49 +33,49 @@ func NewKWh(kwh float64) KWh {
 }
 
 func (o W) ToW() W {
-	return W{o.w}
+	return W{o.W}
 }
 
 func (o W) ToKW() KW {
-	return KW{o.w / 1000}
+	return KW{o.W / 1000}
 }
 
 func (o KW) ToW() W {
-	return W{o.kw * 1000}
+	return W{o.Kw * 1000}
 }
 
 func (o KW) ToKW() KW {
-	return KW{o.kw}
+	return KW{o.Kw}
 }
 
 func (o Wh) ToWh() Wh {
-	return Wh{o.wh}
+	return Wh{o.Wh}
 }
 
 func (o Wh) ToKWh() KWh {
-	return KWh{o.wh / 1000}
+	return KWh{o.Wh / 1000}
 }
 
 func (k KWh) ToWh() Wh {
-	return Wh{k.kwh * 1000}
+	return Wh{k.Kwh * 1000}
 }
 
 func (k KWh) ToKWh() KWh {
-	return KWh{k.kwh}
+	return KWh{k.Kwh}
 }
 
 func (k W) minus(o W) W {
-	return W{k.w - o.w}
+	return W{k.W - o.W}
 }
 
 func (k W) plus(o W) W {
-	return W{k.w + o.w}
+	return W{k.W + o.W}
 }
 
 func (k KWh) plus(o KWh) KWh {
-	return KWh{k.kwh + o.kwh}
+	return KWh{k.Kwh + o.Kwh}
 }
 
 func (k KWh) minus(o KWh) KWh {
-	return KWh{k.kwh - o.kwh}
+	return KWh{k.Kwh - o.Kwh}
 }
