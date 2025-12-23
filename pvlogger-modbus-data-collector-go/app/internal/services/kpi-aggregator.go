@@ -2,16 +2,17 @@ package services
 
 import (
 	"log"
+	"pvlogger-modbus-data-collector-go/internal/config"
 	"pvlogger-modbus-data-collector-go/internal/kpis"
 	"pvlogger-modbus-data-collector-go/internal/modbus"
 	"time"
 )
 
-func AggregateKpisFor(jobId *modbus.JobId) *kpis.PvLoggerKpiData {
+func AggregateKpisFor(jobId *modbus.JobId) {
 	log.Default().Println("Aggregating KPIs Job ID:", jobId)
 	liveKpis := collectLiveKpis(jobId)
 	todayKpis := collectEnergiesTodaySoFar(jobId)
-	return &kpis.PvLoggerKpiData{
+	kpiValues := kpis.PvLoggerKpiData{
 		JobId:         jobId.Id,
 		DateCreated:   time.Now().UnixMilli(),
 		Producing:     liveKpis.Producing(),
@@ -24,6 +25,11 @@ func AggregateKpisFor(jobId *modbus.JobId) *kpis.PvLoggerKpiData {
 		Imported:      todayKpis.Imported().ToWh(),
 		Consumed:      todayKpis.Consumed().ToWh(),
 		SelfConsumed:  todayKpis.SelfConsumed().ToWh(),
+	}
+	err := NewPersistingService(config.DataAccessorCfg()).StoreKpiValues(&kpiValues)
+	if err != nil {
+		log.Default().Println("Failed to store kpi values:", err)
+		return
 	}
 }
 
