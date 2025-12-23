@@ -119,7 +119,6 @@ echo "passed_args: ${passed_args[*]}"
 PV_LOGGER_MODULES=(
   "pvlogger-frontend"
   "pvlogger-fusionsolar"
-  "pvlogger-heartbeat"
   "pvlogger-kpi-aggregator"
   "pvlogger-kpi-exporter"
   "pvlogger-masterdata-server"
