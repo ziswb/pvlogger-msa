@@ -84,7 +84,7 @@ k8s_yaml([
 ])
 
 k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_modbus_data_collector_go_install/files/pvlogger-modbus-data-collector-configmap.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_modbus_data_collector_go_install/files/pvlogger-modbus-data-collector-deployment.yaml')
+k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_modbus_data_collector_go_install/files/pvlogger-modbus-data-collector-cronjob.yaml')
 
 k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_modbus_mock_server_install/files/pvlogger-modbus-mock-server-deployment.yaml')
 k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_modbus_mock_server_install/files/pvlogger-modbus-mock-server-service.yaml')
