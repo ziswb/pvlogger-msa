@@ -10,11 +10,26 @@ import (
 	"pvlogger-modbus-data-collector-go/internal/kpis"
 	"pvlogger-modbus-data-collector-go/internal/modbus"
 	"strconv"
+	"strings"
+	"time"
 )
 
+type DataAccessorService struct {
+	baseURL    string
+	httpClient *http.Client
+}
+
+func NewDataAccessorService(config *config.DataAccessorConfig) *DataAccessorService {
+	return &DataAccessorService{
+		baseURL: fmt.Sprintf("%s://%s:%d", config.Protocol, config.Host, config.Port),
+		httpClient: &http.Client{
+			Timeout: 30 * time.Second,
+		},
+	}
+}
+
 func InverterActivePower(jobId *modbus.JobId) *kpis.InverterActivePower {
-	mdSvc := NewMasterDataService(config.MdConfig())
-	md, err := mdSvc.MasterDataForInverterActivePower()
+	md, err := NewMasterDataService(config.MdConfig()).MasterDataForInverterActivePower()
 	if err != nil {
 		log.Default().Println("Error retrieving master data for inverter active power:", err)
 		return kpis.NewInverterActivePower(
@@ -29,8 +44,7 @@ func InverterActivePower(jobId *modbus.JobId) *kpis.InverterActivePower {
 }
 
 func MeterActivePower(jobId *modbus.JobId) *kpis.MeterActivePower {
-	mdSvc := NewMasterDataService(config.MdConfig())
-	md, err := mdSvc.MasterDataForSmartMeterActivePower()
+	md, err := NewMasterDataService(config.MdConfig()).MasterDataForSmartMeterActivePower()
 	if err != nil {
 		log.Default().Println("Error retrieving master data for smart meter active power:", err)
 		return kpis.NewMeterActivePower(
@@ -45,8 +59,7 @@ func MeterActivePower(jobId *modbus.JobId) *kpis.MeterActivePower {
 }
 
 func InverterEnergyToday(jobId *modbus.JobId) *kpis.InverterEnergyToday {
-	mdSvc := NewMasterDataService(config.MdConfig())
-	md, err := mdSvc.MasterDataForInverterEnergyYield()
+	md, err := NewMasterDataService(config.MdConfig()).MasterDataForInverterEnergyYield()
 	if err != nil {
 		log.Default().Println("Error retrieving master data for inverter energy yield:", err)
 		return kpis.NewInverterEnergyToday(
@@ -55,14 +68,13 @@ func InverterEnergyToday(jobId *modbus.JobId) *kpis.InverterEnergyToday {
 		)
 	}
 	return kpis.NewInverterEnergyToday(
-		retrieveLatestRegisterValuesAggregated(md, config.DevIdConfig().MeterDeviceIds, jobId),
+		retrieveLatestRegisterValuesAggregated(md, config.DevIdConfig().InverterDeviceIds, jobId),
 		kpis.ParseUnitFromString(md.Unit),
 	)
 }
 
 func MeterEnergyToday() *kpis.MeterEnergyToday {
-	mdSvc := NewMasterDataService(config.MdConfig())
-	mdImported, err := mdSvc.MasterDataForMeterImportedEnergy()
+	mdImported, err := NewMasterDataService(config.MdConfig()).MasterDataForMeterImportedEnergy()
 	if err != nil {
 		log.Default().Println("Error retrieving master data for meter imported energy:", err)
 		return kpis.NewMeterEnergyToday(
@@ -72,7 +84,7 @@ func MeterEnergyToday() *kpis.MeterEnergyToday {
 			kpis.Unit{},
 		)
 	}
-	mdExported, err := mdSvc.MasterDataForMeterExportedEnergy()
+	mdExported, err := NewMasterDataService(config.MdConfig()).MasterDataForMeterExportedEnergy()
 	if err != nil {
 		log.Default().Println("Error retrieving master data for meter exported energy:", err)
 		return kpis.NewMeterEnergyToday(
@@ -99,79 +111,36 @@ func retrieveLatestRegisterValuesAggregated(masterData *modbus.ModbusRegisterDef
 }
 
 func retrieveLatestRegisterValue(registerDefinition *modbus.ModbusRegisterDefinition, deviceId uint8, jobId *modbus.JobId) float64 {
-	host := config.DataAccessorCfg().Host
-	port := config.DataAccessorCfg().Port
-	protocol := config.DataAccessorCfg().Protocol
-	readLatestRegisterValuePath := config.DataAccessorCfg().ReadLatestRegisterValuePath
-	getUrl, err := url.Parse(
-		fmt.Sprintf(
-			"%s://%s:%d/%s/%s/%d/%d/%s",
-			protocol,
-			host,
-			port,
-			readLatestRegisterValuePath,
-			registerDefinition.Type,
-			deviceId,
-			registerDefinition.RegisterAddress.Value,
-			jobId.Id,
-		),
-	)
-	if err != nil {
-		log.Default().Println("Error creating url for latest register value:", err)
-		return 0.0
+	pathSegments := []string{
+		config.DataAccessorCfg().ReadLatestRegisterValuePath,
+		registerDefinition.Type,
+		string(deviceId),
+		strconv.Itoa(registerDefinition.RegisterAddress.Value),
+		jobId.Id,
 	}
-	log.Default().Println("Fetching latest register value from " + getUrl.String())
-	response, err := http.Get(getUrl.String())
-	if err != nil {
-		log.Default().Println("Error retrieving latest register value:", err)
-		return 0.0
-	}
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			log.Default().Println(err.Error())
-		}
-	}(response.Body)
-	if response.StatusCode != http.StatusOK {
-		log.Default().Println("Error retrieving latest register value: response status is not OK: " + response.Status)
-		return 0.0
-	}
-	log.Default().Println("Response status: " + response.Status)
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		log.Default().Println("Error reading latest register value response body:", err)
-		return 0.0
-	}
-	log.Default().Println("Received message: " + string(body))
-	latestRegisterValue := toFloat64OrDefault(string(body), 0.0)
-	gain := toFloat64OrDefault(registerDefinition.Gain, 1.0)
-	return latestRegisterValue / gain
+	return retrieveValue(registerDefinition, pathSegments)
 }
 
 func retrieveEnergyTodaySoFar(registerDefinition *modbus.ModbusRegisterDefinition) float64 {
-	host := config.DataAccessorCfg().Host
-	port := config.DataAccessorCfg().Port
-	protocol := config.DataAccessorCfg().Protocol
-	readLatestRegisterValuePath := config.DataAccessorCfg().ReadKwTodaySoFarPath
-	getUrl, err := url.Parse(
-		fmt.Sprintf(
-			"%s://%s:%d/%s/%s/%d",
-			protocol,
-			host,
-			port,
-			readLatestRegisterValuePath,
-			registerDefinition.Type,
-			registerDefinition.RegisterAddress.Value,
-		),
-	)
+	pathSegments := []string{
+		config.DataAccessorCfg().ReadKwTodaySoFarPath,
+		registerDefinition.Type,
+		strconv.Itoa(registerDefinition.RegisterAddress.Value),
+	}
+	return retrieveValue(registerDefinition, pathSegments)
+}
+
+func retrieveValue(registerDefinition *modbus.ModbusRegisterDefinition, pathSegments []string) float64 {
+	service := NewDataAccessorService(config.DataAccessorCfg())
+	getUrl, err := url.Parse(fmt.Sprintf("%s/%s", service.baseURL, strings.Join(pathSegments, "/")))
 	if err != nil {
-		log.Default().Println("Error creating url for energy today so far:", err)
+		log.Default().Println("Error creating url for retrieving value:", err)
 		return 0.0
 	}
-	log.Default().Println("Retrieving energy today so far from url: " + getUrl.String())
-	response, err := http.Get(getUrl.String())
+	log.Default().Println("Retrieving value from url: " + getUrl.String())
+	response, err := service.httpClient.Get(getUrl.String())
 	if err != nil {
-		log.Default().Println("Error retrieving energy today so far:", err)
+		log.Default().Println("Error retrieving value:", err)
 		return 0.0
 	}
 	defer func(Body io.ReadCloser) {
@@ -181,18 +150,23 @@ func retrieveEnergyTodaySoFar(registerDefinition *modbus.ModbusRegisterDefinitio
 		}
 	}(response.Body)
 	if response.StatusCode != http.StatusOK {
-		log.Default().Println("Error retrieving energy today so far: response status is not OK: " + response.Status)
+		log.Default().Println("Error retrieving value; response status is not OK: " + response.Status)
 		return 0.0
 	}
 	log.Default().Println("Response status: " + response.Status)
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		log.Default().Println("Error reading energy today so far response body:", err)
+		log.Default().Println("Error reading response body:", err)
 		return 0.0
 	}
 	log.Default().Println("Received message: " + string(body))
-	energyTodaySoFar := toFloat64OrDefault(string(body), 0.0)
-	return energyTodaySoFar
+	value := toFloat64OrDefault(string(body), 0.0)
+	gain := toFloat64OrDefault(kpis.NewGainFromString(registerDefinition.Gain).String(), 1.0)
+	result := value / gain
+	log.Default().Println("Value retrieved: " + fmt.Sprintf("%f", value))
+	log.Default().Println("Gain(" + fmt.Sprintf("%s", registerDefinition.Gain) + "): " + fmt.Sprintf("%f", gain))
+	log.Default().Println("Calculated value: " + fmt.Sprintf("%f", result))
+	return result
 }
 
 func computeImportedEnergyToday(deviceIds []modbus.UByte) float64 {
