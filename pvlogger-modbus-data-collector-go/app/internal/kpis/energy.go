@@ -37,11 +37,11 @@ func (o W) ToW() W {
 }
 
 func (o W) ToKW() KW {
-	return KW{o.W / 1000}
+	return KW{o.W / 1000.0}
 }
 
 func (o KW) ToW() W {
-	return W{o.Kw * 1000}
+	return W{o.Kw * 1000.0}
 }
 
 func (o KW) ToKW() KW {
@@ -53,11 +53,11 @@ func (o Wh) ToWh() Wh {
 }
 
 func (o Wh) ToKWh() KWh {
-	return KWh{o.Wh / 1000}
+	return KWh{o.Wh / 1000.0}
 }
 
 func (k KWh) ToWh() Wh {
-	return Wh{k.Kwh * 1000}
+	return Wh{k.Kwh * 1000.0}
 }
 
 func (k KWh) ToKWh() KWh {

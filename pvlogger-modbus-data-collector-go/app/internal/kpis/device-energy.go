@@ -54,14 +54,14 @@ func (m *MeterActivePower) Exporting() W {
 	if m.power > 0 {
 		return m.sourceUnit.toW(m.power)
 	}
-	return m.sourceUnit.toW(0)
+	return m.sourceUnit.toW(0.0)
 }
 
 func (m *MeterActivePower) Importing() W {
 	if m.power < 0 {
 		return m.sourceUnit.toW(abs(m.power))
 	}
-	return m.sourceUnit.toW(0)
+	return m.sourceUnit.toW(0.0)
 }
 
 type MeterEnergyToday struct {
