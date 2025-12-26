@@ -1,24 +1,18 @@
-FROM eclipse-temurin:21-jdk AS build
+FROM golang:1.25.4-alpine AS golang
 
-ENV GRADLE_USER_HOME="/workspace/gradle_home"
-ADD . /workspace
+WORKDIR /app
+COPY ./pvlogger-fusionsolar/app/ .
 
-WORKDIR /workspace
-RUN ./gradlew :pvlogger-fusionsolar:clean :pvlogger-fusionsolar:build
+RUN go mod download
+RUN go mod verify
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o /fusionsolar .
 
-FROM eclipse-temurin:21-jre-ubi9-minimal
+FROM gcr.io/distroless/static-debian12
 
 LABEL author="Bruno Ziswiler"
-LABEL description="Data Collector from Huawei Fusion Solar Cloud"
-LABEL version="1.5.9"
+LABEL description="PV Logger Fusion Solar"
+LABEL version="2.0.1"
 
-RUN mkdir -p "/opt/pvlogger/"
-COPY --from=build "/workspace/pvlogger-fusionsolar/build/distributions/pvlogger-fusionsolar.tar" "/opt/pvlogger/"
-RUN tar -xvf "/opt/pvlogger/pvlogger-fusionsolar.tar" -C "/opt/pvlogger/"
-RUN microdnf -y update && microdnf install -y findutils
-RUN useradd -u 1000 bziswiler
-USER bziswiler
+COPY --from=golang /fusionsolar .
 
-ENV TZ="Europe/Zurich"
-
-ENTRYPOINT [ "/opt/pvlogger/pvlogger-fusionsolar/bin/pvlogger-fusionsolar" ]
+ENTRYPOINT ["/fusionsolar"]

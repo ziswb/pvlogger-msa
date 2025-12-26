@@ -1,9 +1,7 @@
 package ch.bziswiler.pvlogger.frontend.plugins
 
-import ch.bziswiler.pvlogger.shared.job.tags.KpisCreatedMessageTag
-import ch.bziswiler.pvlogger.shared.messaging.MessageHandler
-import ch.bziswiler.pvlogger.shared.messaging.MqReceiverComposer
-import ch.bziswiler.pvlogger.shared.messaging.PvLoggerKpiData
+import ch.bziswiler.pvlogger.frontend.configuration.AppConfig
+import ch.bziswiler.pvlogger.frontend.rest.DataAccessorRestProxy
 import ch.bziswiler.pvlogger.shared.rest.FrontendPaths.FRONTEND_READ_LIVE_DATA_VALUES_PATH
 import ch.bziswiler.pvlogger.shared.rest.KpiValuesDto
 import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
@@ -16,18 +14,22 @@ import io.ktor.server.websocket.sendSerialized
 import io.ktor.server.websocket.timeout
 import io.ktor.server.websocket.webSocket
 import io.ktor.websocket.Frame
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.time.delay
 import kotlinx.serialization.json.Json
 import mu.KotlinLogging
-import org.koin.java.KoinJavaComponent.inject
+import org.koin.ktor.ext.inject
 import java.time.Duration
 import java.time.Duration.ofSeconds
-import javax.jms.Message
-import javax.jms.ObjectMessage
+import java.util.concurrent.Executors
+import kotlin.coroutines.CoroutineContext
 
 private val logger = KotlinLogging.logger {}
 private val Int.Seconds: Duration get() = ofSeconds(toLong())
@@ -51,20 +53,23 @@ fun Application.configureWebSockets() {
 
     val flow = MutableSharedFlow<KpiValuesDto>()
     val sharedFlow = flow.asSharedFlow()
-    val composer by inject<MqReceiverComposer>(MqReceiverComposer::class.java)
-
-    composer.addMessageHandler(KpiMessageHandler(flow))
-    composer.compose()
+    val config by inject<AppConfig>()
+    val dataAccessorRestProxy = DataAccessorRestProxy(config.dataAccessorConfig)
+    val notificationProducer = NotificationProducer(flow, dataAccessorRestProxy)
 
     routing {
         webSocket("/$FRONTEND_READ_LIVE_DATA_VALUES_PATH") {
-            val job = launch {
-                sharedFlow.collect { kpiDto ->
-                    logger.debug { "WebSocket: Sending KPI values DTO '$kpiDto'...'" }
-                    sendSerialized(kpiDto)
-                    logger.info { "WebSocket: KPI values sent!" }
+            val delay = 60.Seconds
+            val notificationProducerScheduler = NotificationProducerScheduler(notificationProducer, delay, delay)
+            notificationProducerScheduler.start()
+            val job =
+                launch {
+                    sharedFlow.collect { kpiDto ->
+                        logger.debug { "WebSocket: Sending KPI values DTO '$kpiDto'...'" }
+                        sendSerialized(kpiDto)
+                        logger.info { "WebSocket: KPI values sent!" }
+                    }
                 }
-            }
             runCatching {
                 incoming.consumeEach { frame ->
                     when (frame) {
@@ -75,50 +80,54 @@ fun Application.configureWebSockets() {
             }.onFailure { exception ->
                 logger.info(exception) { "WebSocket: Received exception" }
             }.also {
+                notificationProducerScheduler.stop()
                 job.cancel()
             }
         }
     }
 }
 
-internal class KpiMessageHandler(private val sharedFlow: MutableSharedFlow<KpiValuesDto>) : MessageHandler {
-
-    override val messageSelector = KpisCreatedMessageTag().toSelector()
-
-    override fun onMessage(message: Message?) = when (message) {
-        is ObjectMessage -> handleObjectMessage(message)
-        else -> logger.info { "message is not an 'object' message! -> $message" }
-    }
-
-    private fun handleObjectMessage(message: ObjectMessage) = when (val obj = message.`object`) {
-        is PvLoggerKpiData -> runBlocking { logger.info { "New KPIs received: '$obj'" }.let { sharedFlow.emit(obj.toKpiValuesDto()) } }
-        else -> logger.info { "message.object is not 'pv logger kpi data'! -> '$obj'" }
+class NotificationProducer(val flow: MutableSharedFlow<KpiValuesDto>, val dataAccessorRestProxy: DataAccessorRestProxy) {
+    val logger = KotlinLogging.logger {}
+    suspend fun produce() {
+        logger.debug { "NotificationProducer: Producing..." }
+        dataAccessorRestProxy.retrieveLatestKpis()?.let {
+            logger.debug { "NotificationProducer: Emitting KPI values DTO '$it'..." }
+            flow.emit(it)
+        }
     }
 }
 
+class NotificationProducerScheduler(
+    val service: NotificationProducer,
+    val interval: Duration,
+    val initialDelay: Duration?,
+) : CoroutineScope {
+    private val job = Job()
+    private val singleThreadExecutor = Executors.newSingleThreadExecutor()
+    val logger = KotlinLogging.logger {}
 
-private fun PvLoggerKpiData.toKpiValuesDto(): KpiValuesDto = KpiValuesDto(
-    createdAt = this.dateCreated,
-//val solarPower: Double = producing
-    solarPower = this.producing.toKW().kw,
-// gridPower = gridToHousePower - solarToGridPower
-    gridPower = (this.importing - this.exporting).toKW().kw,
-//val solarToGridPower: Double = exporting
-    solarToGridPower = this.exporting.toKW().kw,
-//val solarToHousePower: Double = selfConsuming
-    solarToHousePower = this.selfConsuming.toKW().kw,
-//val gridToHousePower: Double = importing
-    gridToHousePower = this.importing.toKW().kw,
-//val ownConsumption: Double = consuming
-    ownConsumption = this.consuming.toKW().kw,
-//val dailyEnergyYield: Double = produced
-    dailyEnergyYield = this.produced.toKWh().kWh,
-//val dailyEnergySelfCovered: Double = selfConsumed
-    dailyEnergySelfCovered = this.selfConsumed.toKWh().kWh,
-//val dailyEnergyExported: Double = exported
-    dailyEnergyExported = this.exported.toKWh().kWh,
-//val dailyEnergyImported: Double = imported
-    dailyEnergyImported = this.imported.toKWh().kWh,
-//val dailyEnergyConsumed: Double = consumed
-    dailyEnergyConsumed = this.consumed.toKWh().kWh
-)
+    override val coroutineContext: CoroutineContext
+        get() = job + singleThreadExecutor.asCoroutineDispatcher()
+
+    fun stop() {
+        job.cancel()
+        singleThreadExecutor.shutdown()
+    }
+
+    fun start() =
+        launch {
+            logger.debug { "Starting NotificationProducerScheduler with interval '$interval' and initial delay '$initialDelay'" }
+            initialDelay?.let {
+                logger.debug { "Waiting for initial delay '$initialDelay'" }
+                delay(it)
+            }
+            while (isActive) {
+                logger.debug { "NotificationProducerScheduler: Producing..." }
+                service.produce()
+                logger.debug { "NotificationProducerScheduler: Produced! Waiting for next interval '$interval'..." }
+                delay(interval)
+            }
+            logger.debug { "NotificationProducerScheduler: Stopping..." }
+    }
+}

@@ -1,16 +1,16 @@
-FROM eclipse-temurin:21-jdk AS build
+FROM gradle:8-jdk21-alpine AS build
 
 ENV GRADLE_USER_HOME="/workspace/gradle_home"
 ADD . /workspace
 
 WORKDIR /workspace
-RUN ./gradlew :pvlogger-frontend:clean :pvlogger-frontend:buildFatJar
+RUN gradle :pvlogger-frontend:clean :pvlogger-frontend:buildFatJar
 
 FROM eclipse-temurin:21-jre-ubi9-minimal
 
 LABEL author="Bruno Ziswiler"
 LABEL description="Frontend for PV Logger"
-LABEL version="1.4.11"
+LABEL version="2.1.0"
 
 RUN mkdir -p "/opt/pvlogger/"
 COPY --from=build "/workspace/pvlogger-frontend/build/libs/pvlogger-frontend-all.jar" "/opt/pvlogger/frontend.jar"

@@ -7,4 +7,6 @@ object DataAccessorPaths {
     const val DATA_ACCESSOR_READ_DATA_TODAY_VALUES_PATH = "daydata"
     const val DATA_ACCESSOR_READ_LATEST_KPI_PATH = "read-latest-kpi"
     const val DATA_ACCESSOR_STORE_MODBUS_VALUES = "store-modbus-values"
+    const val DATA_ACCESSOR_STORE_DEVICE_ID_VALUES = "store-device-id-values"
+    const val DATA_ACCESSOR_STORE_KPI_VALUES = "store-kpi-values"
 }

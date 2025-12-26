@@ -1,24 +1,8 @@
 package ch.bziswiler.pvlogger.shared.modbus
 
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
-import java.io.IOException
-import java.io.ObjectInputStream
-import java.io.ObjectOutputStream
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class ModbusRegisterIntValue(override var definition: ModbusRegisterDefinition, override var value: Int) :
-    ModbusRegisterValue<Int> {
-
-    @Throws(IOException::class)
-    @Suppress("unused")
-    override fun writeObject(oos: ObjectOutputStream) {
-        super.writeObject(oos)
-        oos.writeInt(value)
-    }
-
-    @Throws(IOException::class)
-    @Suppress("unused")
-    override fun readObject(ois: ObjectInputStream) {
-        super.readObject(ois)
-        this.value = ois.readInt()
-    }
-}
+    ModbusRegisterValue<Int>

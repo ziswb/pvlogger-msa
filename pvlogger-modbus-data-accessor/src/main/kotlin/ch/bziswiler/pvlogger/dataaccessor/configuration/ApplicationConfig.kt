@@ -1,14 +1,12 @@
 package ch.bziswiler.pvlogger.dataaccessor.configuration
 
 import ch.bziswiler.pvlogger.shared.configuration.DatabaseConfig
-import ch.bziswiler.pvlogger.shared.messaging.config.MqConfig
 import io.ktor.server.application.Application
 import org.koin.ktor.ext.inject
 
 class AppConfig {
     lateinit var databaseConfig: DatabaseConfig
     lateinit var serverConfig: ServerConfig
-    lateinit var mqConfig: MqConfig
 }
 
 data class ServerConfig(
@@ -19,7 +17,6 @@ fun Application.setupConfig() {
     val appConfig by inject<AppConfig>()
     readServerConfig(appConfig)
     readDbConfig(appConfig)
-    readMqConfig(appConfig)
 }
 
 private fun Application.readServerConfig(appConfig: AppConfig) = with(environment.config.config("ktor.server")) {
@@ -37,15 +34,4 @@ private fun Application.readDbConfig(appConfig: AppConfig) = with(environment.co
         password = property("password").getString(),
         maxPoolSize = property("maxPoolSize").getString().toInt()
     )
-}
-
-private fun Application.readMqConfig(appConfig: AppConfig) = with(environment.config.config("messagequeue")) {
-    appConfig.apply {
-        mqConfig = MqConfig(
-            clientId = property("clientId").getString(),
-            user = property("user").getString(),
-            passwd = property("passwd").getString(),
-            brokerUrl = property("brokerUrl").getString()
-        )
-    }
 }

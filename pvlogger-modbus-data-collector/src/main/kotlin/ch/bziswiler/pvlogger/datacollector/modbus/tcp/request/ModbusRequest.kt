@@ -5,8 +5,8 @@ import ch.bziswiler.pvlogger.datacollector.modbus.tcp.readUShort
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.FunctionCode
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.MbapHeader
 import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusResponse
-import io.ktor.utils.io.ByteReadChannel
-import io.ktor.utils.io.ByteWriteChannel
+import okio.BufferedSink
+import okio.BufferedSource
 import java.time.LocalDateTime
 
 interface ModbusRequest {
@@ -17,15 +17,15 @@ interface ModbusRequest {
     val logicDeviceId: UByte
     val functionCode: FunctionCode
 
-    suspend fun encode(channel: ByteWriteChannel)
+    suspend fun encode(sink: BufferedSink)
 
-    suspend fun decode(channel: ByteReadChannel): ModbusResponse
+    suspend fun decode(source: BufferedSource): ModbusResponse
 
-    suspend fun readHeader(channel: ByteReadChannel) =
+    suspend fun readHeader(source: BufferedSource) =
         MbapHeader(
-            protocolIdentifier = channel.readUShort(),
-            protocolType = channel.readUShort(),
-            dataLength = channel.readUShort(),
-            logicDeviceId = channel.readUByte(),
+            protocolIdentifier = source.readUShort(),
+            protocolType = source.readUShort(),
+            dataLength = source.readUShort(),
+            logicDeviceId = source.readUByte(),
         )
 }

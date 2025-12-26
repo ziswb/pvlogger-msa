@@ -5,18 +5,15 @@ import ch.bziswiler.pvlogger.shared.job.meta.RequestId
 import ch.bziswiler.pvlogger.shared.modbus.ModbusObject
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.FunctionCode
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.MbapHeader
-import java.io.IOException
-import java.io.ObjectInputStream
-import java.io.ObjectOutputStream
+import kotlinx.serialization.Serializable
 import java.time.LocalDateTime
 
-private const val ONE_BYTE = 0xFF
-
+@Serializable
 data class ReadDeviceIdentifiersResponse(
     override var jobId: JobId,
     override val requestId: RequestId,
-    override var requestTime: LocalDateTime,
-    override var responseTime: LocalDateTime,
+    @Serializable(with = LocalDateTimeFromRfc3339Serializer::class) override var requestTime: LocalDateTime,
+    @Serializable(with = LocalDateTimeFromRfc3339Serializer::class) override var responseTime: LocalDateTime,
     override var header: MbapHeader,
     override var functionCode: FunctionCode,
     override var numberOfBytes: UByte,
@@ -28,33 +25,6 @@ data class ReadDeviceIdentifiersResponse(
     var numberOfObjects: UByte,
     var objectList: List<ModbusObject>,
 ) : ModbusResponse {
-
-    @Throws(IOException::class)
-    @Suppress("unused")
-    override fun writeObject(oos: ObjectOutputStream) {
-        super.writeObject(oos)
-        oos.writeInt(meiType.toInt())
-        oos.writeInt(readDevIdCode.toInt())
-        oos.writeInt(consistencyLevel.toInt())
-        oos.writeInt(more.toInt())
-        oos.writeInt(nextObjectId.toInt())
-        oos.writeInt(numberOfObjects.toInt())
-        oos.writeObject(objectList)
-    }
-
-    @Throws(IOException::class)
-    @Suppress("unused", "UNCHECKED_CAST")
-    override fun readObject(ois: ObjectInputStream) {
-        super.readObject(ois)
-        this.meiType = (ois.readInt() and ONE_BYTE).toUByte()
-        this.readDevIdCode = (ois.readInt() and ONE_BYTE).toUByte()
-        this.consistencyLevel = (ois.readInt() and ONE_BYTE).toUByte()
-        this.more = (ois.readInt() and ONE_BYTE).toUByte()
-        this.nextObjectId = (ois.readInt() and ONE_BYTE).toUByte()
-        this.numberOfObjects = (ois.readInt() and ONE_BYTE).toUByte()
-        this.objectList = ois.readObject() as List<ModbusObject>
-    }
-
     override fun toString(): String =
         """
         MEI Type: $meiType

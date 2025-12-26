@@ -1,0 +1,115 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: postgresql
+  labels:
+    app: postgres
+  name: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgresql
+  template:
+    metadata:
+      name: postgresql
+      labels:
+        app: postgresql
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - image: postgres:17.2
+          imagePullPolicy: IfNotPresent
+          name: postgresql
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1004
+          args:
+            - "-c"
+            - "log_directory=/postgresql/pglogs/logs"
+            - "-c"
+            - "data_directory=/postgresql/pgdata/data"
+          ports:
+            - containerPort: 5432
+              name: tcp-postgres
+              protocol: TCP
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql-secret
+                  key: POSTGRES_PASSWORD
+            - name: PGDATA
+              value: /postgresql/pgdata/data
+            - name: PG_LOG
+              value: /postgresql/pglogs/logs
+            - name: POSTGRES_USER
+              value: "postgres"
+            - name: POSTGRES_DB
+              value: "postgres"
+            - name: TZ
+              value: "Europe/Zurich"
+          volumeMounts:
+            - mountPath: /postgresql/pgdata
+              name: pgdata
+              readOnly: false
+            - mountPath: /var/opt/pgsql
+              name: pgsqlos
+              readOnly: false
+            - mountPath: /postgresql/backup
+              name: pgbackup
+              readOnly: false
+            - mountPath: /postgresql/pglogs
+              name: pglogs
+              readOnly: false
+            - mountPath: /dev/shm
+              name: shmem
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - -e
+                - exec pg_isready -d postgres -h 0.0.0.0 -p 5432 -U postgres
+            failureThreshold: 6
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - -e
+                - exec pg_isready -d postgres -h 0.0.0.0 -p 5432 -U postgres
+            failureThreshold: 6
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: 750m
+              memory: 500Mi
+            limits:
+              cpu: 750m
+              memory: 500Mi
+      volumes:
+        - name: shmem
+          emptyDir:
+            medium: Memory
+            sizeLimit: 2Gi
+        - name: pgdata
+          persistentVolumeClaim:
+            claimName: postgres-data-pvc
+        - name: pgsqlos
+          persistentVolumeClaim:
+            claimName: postgres-os-pvc
+        - name: pgbackup
+          persistentVolumeClaim:
+            claimName: postgres-backup-pvc
+        - name: pglogs
+          persistentVolumeClaim:
+            claimName: postgres-log-pvc

@@ -75,7 +75,10 @@ object RegisterReader {
                 LIMIT 1;
                 """.trimIndent()
             ) { resultSet ->
-                resultSet.next()
+                val hasNext = resultSet.next()
+                if (hasNext.not()) {
+                    return@exec 0
+                }
                 resultSet.getInt(kWhColumn)
             }
         }
