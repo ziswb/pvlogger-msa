@@ -114,7 +114,7 @@ func retrieveLatestRegisterValue(registerDefinition *modbus.ModbusRegisterDefini
 	pathSegments := []string{
 		config.DataAccessorCfg().ReadLatestRegisterValuePath,
 		registerDefinition.Type,
-		string(deviceId),
+		strconv.Itoa(int(deviceId)),
 		strconv.Itoa(registerDefinition.RegisterAddress.Value),
 		jobId.Id,
 	}
