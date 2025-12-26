@@ -5,11 +5,6 @@ type KpiLiveData struct {
 	MeterActivePower    *MeterActivePower
 }
 
-type KpiTodayData struct {
-	InverterTodayEnergy *InverterEnergyToday
-	MeterTodayEnergy    *MeterEnergyToday
-}
-
 func (k *KpiLiveData) Producing() W {
 	return k.InverterActivePower.Producing()
 }
@@ -28,6 +23,11 @@ func (k *KpiLiveData) Consuming() W {
 
 func (k *KpiLiveData) SelfConsuming() W {
 	return k.Producing().minus(k.Exporting())
+}
+
+type KpiTodayData struct {
+	InverterTodayEnergy *InverterEnergyToday
+	MeterTodayEnergy    *MeterEnergyToday
 }
 
 func (k *KpiTodayData) Produced() KWh {
