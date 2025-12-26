@@ -14,7 +14,7 @@ func AggregateKpisFor(jobId *modbus.JobId) {
 	todayKpis := collectEnergiesTodaySoFar(jobId)
 	kpiValues := kpis.PvLoggerKpiData{
 		JobId:         jobId.Id,
-		DateCreated:   time.Now().UnixMilli(),
+		DateCreated:   time.Now().Add(1 * time.Hour).UnixMilli(),
 		Producing:     liveKpis.Producing(),
 		Exporting:     liveKpis.Exporting(),
 		Importing:     liveKpis.Importing(),
