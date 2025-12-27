@@ -7,6 +7,7 @@ import (
 	"net"
 	"pvlogger-modbus-data-collector-go/internal/modbus/model"
 	"pvlogger-modbus-data-collector-go/internal/modbus/request"
+	"pvlogger-modbus-data-collector-go/internal/modbus/response"
 	"time"
 )
 
@@ -63,7 +64,7 @@ func (h *TcpHandler) Connect() error {
 	return nil
 }
 
-func (h *TcpHandler) FetchRegisterValues(request *request.ReadHoldingRegistersValueRequest) (*RegisterValueResponse, error) {
+func (h *TcpHandler) FetchRegisterValues(request *request.ReadHoldingRegistersValueRequest) (*response.RegisterValueResponse, error) {
 	bytes := request.EncodeToBytes()
 	if err := h.conn.SetWriteDeadline(time.Now().Add(h.writeTimeout)); err != nil {
 		log.Default().Printf("Error setting Modbus connection deadline: %v", err)
@@ -93,9 +94,9 @@ func (h *TcpHandler) FetchRegisterValues(request *request.ReadHoldingRegistersVa
 		log.Default().Printf("Error reading rest: %v", err)
 		return nil, err
 	}
-	response := NewRegisterValueResponseFromBytes(request.RegisterDefinitions, request.JobId, request.TransactionId, request.RequestTime, mbapHeader, pduBytes)
+	valueResponse := response.NewRegisterValueResponseFromBytes(request.RegisterDefinitions, request.JobId, request.TransactionId, request.RequestTime, mbapHeader, pduBytes)
 	log.Default().Printf("---------------------------------------")
-	return response, nil
+	return valueResponse, nil
 }
 
 func writeFull(w io.Writer, b []byte) error {

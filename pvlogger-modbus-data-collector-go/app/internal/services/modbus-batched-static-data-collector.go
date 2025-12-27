@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// TODO: The categories are not respected!
 const (
 	StaticCategory = "STATIC"
 	ConfigCategory = "CONFIG"

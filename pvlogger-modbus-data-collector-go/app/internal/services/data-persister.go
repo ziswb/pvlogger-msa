@@ -10,7 +10,7 @@ import (
 	"net/url"
 	"pvlogger-modbus-data-collector-go/internal/config"
 	"pvlogger-modbus-data-collector-go/internal/kpis"
-	"pvlogger-modbus-data-collector-go/internal/modbus"
+	"pvlogger-modbus-data-collector-go/internal/modbus/response"
 	"time"
 )
 
@@ -28,7 +28,7 @@ func NewPersistingService(config *config.DataAccessorConfig) *PersistingService 
 	}
 }
 
-func (s *PersistingService) StoreValues(valueResponse *modbus.RegisterValueResponse) error {
+func (s *PersistingService) StoreValues(valueResponse *response.RegisterValueResponse) error {
 	log.Default().Println("Storing modbus values ...")
 	storeModbusValuesPath := config.DataAccessorCfg().StoreModbusValuesPath
 	return s.storeValues(valueResponse, storeModbusValuesPath)

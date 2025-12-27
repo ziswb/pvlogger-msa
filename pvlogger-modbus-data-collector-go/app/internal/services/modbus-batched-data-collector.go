@@ -8,6 +8,7 @@ import (
 	"pvlogger-modbus-data-collector-go/internal/modbus"
 	"pvlogger-modbus-data-collector-go/internal/modbus/model"
 	"pvlogger-modbus-data-collector-go/internal/modbus/request"
+	"pvlogger-modbus-data-collector-go/internal/modbus/response"
 	"sync/atomic"
 	"time"
 )
@@ -62,19 +63,19 @@ func fetchRegisterValues(jobId model.JobId, deviceId model.UByte, deviceTypes []
 		return
 	}
 	for _, registerDefinitions := range *registerDefinitionsList {
-		request := request.ReadHoldingRegistersValueRequest{
+		valueRequest := request.ReadHoldingRegistersValueRequest{
 			JobId:               jobId,
 			RequestTime:         time.Now(),
 			TransactionId:       model.NewRequestId(model.UShort(LastTransactionId.Add(1))),
 			LogicDeviceId:       deviceId,
 			RegisterDefinitions: *&registerDefinitions,
 		}
-		response, err := tcpHandler.FetchRegisterValues(&request)
+		valueResponse, err := tcpHandler.FetchRegisterValues(&valueRequest)
 		if err != nil {
 			log.Default().Println("Error requesting register values:", err)
 			return
 		}
-		err = storeResponse(response)
+		err = storeResponse(valueResponse)
 		if err != nil {
 			log.Default().Println("Error storing response:", err)
 			return
@@ -120,7 +121,7 @@ func isNotSuccessor(registers [][]model.RegisterDefinition, nextRegister model.R
 	return nextRegister.RegisterAddress.Value != nextRegisterAddress
 }
 
-func storeResponse(response *modbus.RegisterValueResponse) error {
+func storeResponse(response *response.RegisterValueResponse) error {
 	log.Default().Println("Response:", response)
 	jsonResponse, err := json.MarshalIndent(response, "", "  ")
 	if err != nil {
