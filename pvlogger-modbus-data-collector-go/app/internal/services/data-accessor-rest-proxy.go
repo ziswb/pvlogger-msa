@@ -102,7 +102,7 @@ func MeterEnergyToday() *kpis.MeterEnergyToday {
 	)
 }
 
-func retrieveLatestRegisterValuesAggregated(masterData *model.ModbusRegisterDefinition, deviceIds []model.UByte, jobId *model.JobId) float64 {
+func retrieveLatestRegisterValuesAggregated(masterData *model.RegisterDefinition, deviceIds []model.UByte, jobId *model.JobId) float64 {
 	var sum = 0.0
 	for _, deviceId := range deviceIds {
 		sum += retrieveLatestRegisterValue(masterData, deviceId, jobId)
@@ -110,7 +110,7 @@ func retrieveLatestRegisterValuesAggregated(masterData *model.ModbusRegisterDefi
 	return sum
 }
 
-func retrieveLatestRegisterValue(registerDefinition *model.ModbusRegisterDefinition, deviceId uint8, jobId *model.JobId) float64 {
+func retrieveLatestRegisterValue(registerDefinition *model.RegisterDefinition, deviceId uint8, jobId *model.JobId) float64 {
 	pathSegments := []string{
 		config.DataAccessorCfg().ReadLatestRegisterValuePath,
 		registerDefinition.Type,
@@ -121,7 +121,7 @@ func retrieveLatestRegisterValue(registerDefinition *model.ModbusRegisterDefinit
 	return retrieveValue(registerDefinition, pathSegments)
 }
 
-func retrieveEnergyTodaySoFar(registerDefinition *model.ModbusRegisterDefinition) float64 {
+func retrieveEnergyTodaySoFar(registerDefinition *model.RegisterDefinition) float64 {
 	pathSegments := []string{
 		config.DataAccessorCfg().ReadKwTodaySoFarPath,
 		registerDefinition.Type,
@@ -130,7 +130,7 @@ func retrieveEnergyTodaySoFar(registerDefinition *model.ModbusRegisterDefinition
 	return retrieveValue(registerDefinition, pathSegments)
 }
 
-func retrieveValue(registerDefinition *model.ModbusRegisterDefinition, pathSegments []string) float64 {
+func retrieveValue(registerDefinition *model.RegisterDefinition, pathSegments []string) float64 {
 	service := NewDataAccessorService(config.DataAccessorCfg())
 	getUrl, err := url.Parse(fmt.Sprintf("%s/%s", service.baseURL, strings.Join(pathSegments, "/")))
 	if err != nil {
@@ -189,7 +189,7 @@ func computeExportedEnergyToday(deviceIds []model.UByte) float64 {
 	return sumUp(deviceIds, md)
 }
 
-func sumUp(deviceIds []model.UByte, md *model.ModbusRegisterDefinition) float64 {
+func sumUp(deviceIds []model.UByte, md *model.RegisterDefinition) float64 {
 	var energyToday = 0.0
 	for i := 0; i < len(deviceIds); i++ {
 		energyToday += retrieveEnergyTodaySoFar(md)

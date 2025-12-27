@@ -69,7 +69,7 @@ func fetchRegisterValues(jobId model.JobId, deviceId model.UByte, deviceTypes []
 			LogicDeviceId:       deviceId,
 			RegisterDefinitions: *&registerDefinitions,
 		}
-		response, err := tcpHandler.FetchModbusRegisterValues(&request)
+		response, err := tcpHandler.FetchRegisterValues(&request)
 		if err != nil {
 			log.Default().Println("Error requesting register values:", err)
 			return
@@ -82,16 +82,16 @@ func fetchRegisterValues(jobId model.JobId, deviceId model.UByte, deviceTypes []
 	}
 }
 
-func listsOfConsecutiveRegisters(deviceTypes []string) (*[][]model.ModbusRegisterDefinition, error) {
+func listsOfConsecutiveRegisters(deviceTypes []string) (*[][]model.RegisterDefinition, error) {
 	registerDefinitions, err := fetchRegisterDefinitionsFromMasterData(deviceTypes)
 	if err != nil {
 		log.Default().Println("Error getting register definitions:", err)
-		return &[][]model.ModbusRegisterDefinition{}, nil
+		return &[][]model.RegisterDefinition{}, nil
 	}
-	var listsOfConsecutiveRegisters [][]model.ModbusRegisterDefinition
+	var listsOfConsecutiveRegisters [][]model.RegisterDefinition
 	for _, registerDefinition := range *registerDefinitions {
 		if isNotSuccessor(listsOfConsecutiveRegisters, registerDefinition) {
-			listsOfConsecutiveRegisters = append(listsOfConsecutiveRegisters, []model.ModbusRegisterDefinition{registerDefinition})
+			listsOfConsecutiveRegisters = append(listsOfConsecutiveRegisters, []model.RegisterDefinition{registerDefinition})
 		} else {
 			listsOfConsecutiveRegisters[len(listsOfConsecutiveRegisters)-1] = append(listsOfConsecutiveRegisters[len(listsOfConsecutiveRegisters)-1], registerDefinition)
 		}
@@ -100,17 +100,17 @@ func listsOfConsecutiveRegisters(deviceTypes []string) (*[][]model.ModbusRegiste
 	return &listsOfConsecutiveRegisters, nil
 }
 
-func fetchRegisterDefinitionsFromMasterData(deviceTypes []string) (*[]model.ModbusRegisterDefinition, error) {
+func fetchRegisterDefinitionsFromMasterData(deviceTypes []string) (*[]model.RegisterDefinition, error) {
 	log.Default().Println("Getting register definitions for DeviceTypes", deviceTypes, "...")
 	definitions, err := NewMasterDataService(config.MdConfig()).FetchRegisterDefinitions(deviceTypes, Categories)
 	if err != nil {
-		return &[]model.ModbusRegisterDefinition{}, err
+		return &[]model.RegisterDefinition{}, err
 	}
 	log.Default().Printf("Got register definitions")
 	return definitions, nil
 }
 
-func isNotSuccessor(registers [][]model.ModbusRegisterDefinition, nextRegister model.ModbusRegisterDefinition) bool {
+func isNotSuccessor(registers [][]model.RegisterDefinition, nextRegister model.RegisterDefinition) bool {
 	if len(registers) == 0 {
 		return true
 	}
@@ -120,14 +120,14 @@ func isNotSuccessor(registers [][]model.ModbusRegisterDefinition, nextRegister m
 	return nextRegister.RegisterAddress.Value != nextRegisterAddress
 }
 
-func storeResponse(response *modbus.ModbusRegisterValueResponse) error {
+func storeResponse(response *modbus.RegisterValueResponse) error {
 	log.Default().Println("Response:", response)
 	jsonResponse, err := json.MarshalIndent(response, "", "  ")
 	if err != nil {
 		return err
 	}
 	log.Default().Println("JSON Response:", string(jsonResponse))
-	err = NewPersistingService(config.DataAccessorCfg()).StoreModbusValues(response)
+	err = NewPersistingService(config.DataAccessorCfg()).StoreValues(response)
 	if err != nil {
 		return err
 	}

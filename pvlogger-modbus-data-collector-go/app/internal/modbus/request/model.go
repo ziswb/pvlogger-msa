@@ -10,5 +10,5 @@ type ReadHoldingRegistersValueRequest struct {
 	RequestTime         time.Time
 	TransactionId       model.RequestId
 	LogicDeviceId       model.UByte
-	RegisterDefinitions []model.ModbusRegisterDefinition
+	RegisterDefinitions []model.RegisterDefinition
 }

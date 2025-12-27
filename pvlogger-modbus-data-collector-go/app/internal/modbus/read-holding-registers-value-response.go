@@ -8,34 +8,34 @@ import (
 	"time"
 )
 
-// ModbusRegisterValue holds a decoded register value.
+// RegisterValue holds a decoded register value.
 // Value contains the concrete Go type (UShort, UInt, Short, int32, string, etc.)
-// determined at runtime based on ModbusRegisterDefinition.Type.
-type ModbusRegisterValue struct {
-	Definition model.ModbusRegisterDefinition `json:"definition"`
-	Value      any                            `json:"value"`
+// determined at runtime based on RegisterDefinition.Type.
+type RegisterValue struct {
+	Definition model.RegisterDefinition `json:"definition"`
+	Value      any                      `json:"value"`
 }
 
-func NewModbusRegisterValue(definition model.ModbusRegisterDefinition, value any) *ModbusRegisterValue {
-	return &ModbusRegisterValue{Definition: definition, Value: value}
+func NewRegisterValue(definition model.RegisterDefinition, value any) *RegisterValue {
+	return &RegisterValue{Definition: definition, Value: value}
 }
 
-type ModbusRegisterValueResponse struct {
-	JobId         model.JobId            `json:"jobId"`
-	TransactionId model.RequestId        `json:"requestId"`
-	RequestTime   time.Time              `json:"requestTime"`
-	ResponseTime  time.Time              `json:"responseTime"`
-	Header        model.MbapHeader       `json:"header"`
-	FunctionCode  model.FunctionCode     `json:"functionCode"`
-	NumberOfBytes model.UByte            `json:"numberOfBytes"`
-	Values        []*ModbusRegisterValue `json:"registerValues"`
+type RegisterValueResponse struct {
+	JobId         model.JobId        `json:"jobId"`
+	TransactionId model.RequestId    `json:"requestId"`
+	RequestTime   time.Time          `json:"requestTime"`
+	ResponseTime  time.Time          `json:"responseTime"`
+	Header        model.MbapHeader   `json:"header"`
+	FunctionCode  model.FunctionCode `json:"functionCode"`
+	NumberOfBytes model.UByte        `json:"numberOfBytes"`
+	Values        []*RegisterValue   `json:"registerValues"`
 }
 
-func NewModbusRegisterValueResponseFromBytes(regDefs []model.ModbusRegisterDefinition, jobId model.JobId, transactionId model.RequestId, requestTime time.Time, header model.MbapHeader, bytes []byte) *ModbusRegisterValueResponse {
+func NewRegisterValueResponseFromBytes(regDefs []model.RegisterDefinition, jobId model.JobId, transactionId model.RequestId, requestTime time.Time, header model.MbapHeader, bytes []byte) *RegisterValueResponse {
 	functionCode := model.NewFunctionCodeFromByte(bytes[0])
 	numberOfBytes := bytes[1]
 	values := readRegisterValues(regDefs, bytes[2:])
-	return &ModbusRegisterValueResponse{
+	return &RegisterValueResponse{
 		JobId:         jobId,
 		TransactionId: transactionId,
 		RequestTime:   requestTime,
@@ -48,9 +48,9 @@ func NewModbusRegisterValueResponseFromBytes(regDefs []model.ModbusRegisterDefin
 }
 
 // readRegisterValues decodes multiple register values from payload bytes.
-// Each value's concrete Go type is determined by its ModbusRegisterDefinition.Type.
-func readRegisterValues(registerDefinitions []model.ModbusRegisterDefinition, payload []byte) []*ModbusRegisterValue {
-	var values []*ModbusRegisterValue
+// Each value's concrete Go type is determined by its RegisterDefinition.Type.
+func readRegisterValues(registerDefinitions []model.RegisterDefinition, payload []byte) []*RegisterValue {
+	var values []*RegisterValue
 	offset := 0
 	for _, registerDefinition := range registerDefinitions {
 		byteCount := registerDefinition.Quantity.Value * 2 // each register is 2 bytes
@@ -68,54 +68,54 @@ func readRegisterValues(registerDefinitions []model.ModbusRegisterDefinition, pa
 }
 
 // readRegisterValue decodes a single register value.
-// The returned ModbusRegisterValue.Value contains the concrete Go type:
+// The returned RegisterValue.Value contains the concrete Go type:
 //   - RegisterTypeU16 / RegisterTypeBitfield16 -> UShort (uint16)
 //   - RegisterTypeU32 / RegisterTypeBitfield32 -> UInt (uint32)
 //   - RegisterTypeI16 -> Short (int16)
 //   - RegisterTypeI32 -> int32
 //   - RegisterTypeSTR -> string
 //   - RegisterTypeMLD -> []Short
-func readRegisterValue(register model.ModbusRegisterDefinition, payload []byte) *ModbusRegisterValue {
+func readRegisterValue(register model.RegisterDefinition, payload []byte) *RegisterValue {
 	switch model.ToRegisterType(register.Type) {
 	case model.RegisterTypeU16:
 		if len(payload) < 2 {
 			log.Default().Printf("Error reading register value: payload length %d < 2", len(payload))
 			return nil
 		}
-		return NewModbusRegisterValue(register, model.UShort(binary.BigEndian.Uint16(payload[0:2])))
+		return NewRegisterValue(register, model.UShort(binary.BigEndian.Uint16(payload[0:2])))
 	case model.RegisterTypeU32:
 		if len(payload) < 4 {
 			log.Default().Printf("Error reading register value: payload length %d < 4", len(payload))
 			return nil
 		}
-		return NewModbusRegisterValue(register, model.UInt(binary.BigEndian.Uint32(payload[0:4])))
+		return NewRegisterValue(register, model.UInt(binary.BigEndian.Uint32(payload[0:4])))
 	case model.RegisterTypeI16:
 		if len(payload) < 2 {
 			log.Default().Printf("Error reading register value: payload length %d < 2", len(payload))
 			return nil
 		}
-		return NewModbusRegisterValue(register, model.Short(int16(binary.BigEndian.Uint16(payload[0:2]))))
+		return NewRegisterValue(register, model.Short(int16(binary.BigEndian.Uint16(payload[0:2]))))
 	case model.RegisterTypeI32:
 		if len(payload) < 4 {
 			log.Default().Printf("Error reading register value: payload length %d < 4", len(payload))
 			return nil
 		}
-		return NewModbusRegisterValue(register, int32(binary.BigEndian.Uint32(payload[0:4])))
+		return NewRegisterValue(register, int32(binary.BigEndian.Uint32(payload[0:4])))
 	case model.RegisterTypeSTR:
 		s := strings.TrimRight(string(payload), "\x00 ")
-		return NewModbusRegisterValue(register, s)
+		return NewRegisterValue(register, s)
 	case model.RegisterTypeBitfield16:
 		if len(payload) < 2 {
 			log.Default().Printf("Error reading register value: payload length %d < 2", len(payload))
 			return nil
 		}
-		return NewModbusRegisterValue(register, model.UShort(binary.BigEndian.Uint16(payload[0:2])))
+		return NewRegisterValue(register, model.UShort(binary.BigEndian.Uint16(payload[0:2])))
 	case model.RegisterTypeBitfield32:
 		if len(payload) < 4 {
 			log.Default().Printf("Error reading register value: payload length %d < 4", len(payload))
 			return nil
 		}
-		return NewModbusRegisterValue(register, model.UInt(binary.BigEndian.Uint32(payload[0:4])))
+		return NewRegisterValue(register, model.UInt(binary.BigEndian.Uint32(payload[0:4])))
 	case model.RegisterTypeMLD:
 		if len(payload)%2 != 0 {
 			log.Default().Printf("Error reading register value: payload length %d is not a multiple of 2", len(payload))
@@ -127,7 +127,7 @@ func readRegisterValue(register model.ModbusRegisterDefinition, payload []byte) 
 				mld = append(mld, model.Short(int16(binary.BigEndian.Uint16(payload[i:i+2]))))
 			}
 		}
-		return NewModbusRegisterValue(register, mld)
+		return NewRegisterValue(register, mld)
 	}
 	return nil
 }

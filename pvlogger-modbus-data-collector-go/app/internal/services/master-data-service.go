@@ -44,7 +44,7 @@ func NewMasterDataService(config *config.MasterDataConfig) *MasterDataService {
 func (s *MasterDataService) FetchRegisterDefinitions(
 	deviceTypes []string,
 	categories []string,
-) (*[]model.ModbusRegisterDefinition, error) {
+) (*[]model.RegisterDefinition, error) {
 	log.Default().Println("Fetching master data ...")
 	devTypesParam := strings.Join(deviceTypes, paramValueSeparator)
 	categoriesParam := strings.Join(categories, paramValueSeparator)
@@ -80,7 +80,7 @@ func (s *MasterDataService) FetchRegisterDefinitions(
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
-	var definitions []model.ModbusRegisterDefinition
+	var definitions []model.RegisterDefinition
 	log.Default().Println("Received message: " + string(body))
 	if err := json.Unmarshal(body, &definitions); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
@@ -90,27 +90,27 @@ func (s *MasterDataService) FetchRegisterDefinitions(
 	return &definitions, nil
 }
 
-func (s *MasterDataService) MasterDataForSmartMeterActivePower() (*model.ModbusRegisterDefinition, error) {
+func (s *MasterDataService) MasterDataForSmartMeterActivePower() (*model.RegisterDefinition, error) {
 	return s.fetchMasterDataFor(smartMeterActivePowerRegisterAddress.Value)
 }
 
-func (s *MasterDataService) MasterDataForInverterActivePower() (*model.ModbusRegisterDefinition, error) {
+func (s *MasterDataService) MasterDataForInverterActivePower() (*model.RegisterDefinition, error) {
 	return s.fetchMasterDataFor(inverterActivePowerRegisterAddress.Value)
 }
 
-func (s *MasterDataService) MasterDataForInverterEnergyYield() (*model.ModbusRegisterDefinition, error) {
+func (s *MasterDataService) MasterDataForInverterEnergyYield() (*model.RegisterDefinition, error) {
 	return s.fetchMasterDataFor(inverterDailyEnergyYieldRegisterAddress.Value)
 }
 
-func (s *MasterDataService) MasterDataForMeterExportedEnergy() (*model.ModbusRegisterDefinition, error) {
+func (s *MasterDataService) MasterDataForMeterExportedEnergy() (*model.RegisterDefinition, error) {
 	return s.fetchMasterDataFor(smartMeterExportedEnergyRegisterAddress.Value)
 }
 
-func (s *MasterDataService) MasterDataForMeterImportedEnergy() (*model.ModbusRegisterDefinition, error) {
+func (s *MasterDataService) MasterDataForMeterImportedEnergy() (*model.RegisterDefinition, error) {
 	return s.fetchMasterDataFor(smartMeterImportedEnergyRegisterAddress.Value)
 }
 
-func (s *MasterDataService) fetchMasterDataFor(registerAddress int) (*model.ModbusRegisterDefinition, error) {
+func (s *MasterDataService) fetchMasterDataFor(registerAddress int) (*model.RegisterDefinition, error) {
 	baseURL := s.baseURL
 	masterDataPath := config.MdConfig().MasterDataPath
 	reqURL, err := url.Parse(fmt.Sprintf("%s/%s/%d", baseURL, masterDataPath, registerAddress))
@@ -136,7 +136,7 @@ func (s *MasterDataService) fetchMasterDataFor(registerAddress int) (*model.Modb
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
-	registerDefinition := model.ModbusRegisterDefinition{}
+	registerDefinition := model.RegisterDefinition{}
 	log.Default().Println("Received message: " + string(body))
 	err = json.Unmarshal(body, &registerDefinition)
 	if err != nil {

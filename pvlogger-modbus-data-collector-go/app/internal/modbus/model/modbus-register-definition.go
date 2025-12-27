@@ -1,6 +1,6 @@
 package model
 
-type ModbusRegisterDefinition struct {
+type RegisterDefinition struct {
 	No              int             `json:"no"`
 	Name            string          `json:"name"`
 	ReadWrite       string          `json:"readWrite"`

@@ -63,7 +63,7 @@ func (h *TcpHandler) Connect() error {
 	return nil
 }
 
-func (h *TcpHandler) FetchModbusRegisterValues(request *request.ReadHoldingRegistersValueRequest) (*ModbusRegisterValueResponse, error) {
+func (h *TcpHandler) FetchRegisterValues(request *request.ReadHoldingRegistersValueRequest) (*RegisterValueResponse, error) {
 	bytes := request.EncodeToBytes()
 	if err := h.conn.SetWriteDeadline(time.Now().Add(h.writeTimeout)); err != nil {
 		log.Default().Printf("Error setting Modbus connection deadline: %v", err)
@@ -93,7 +93,7 @@ func (h *TcpHandler) FetchModbusRegisterValues(request *request.ReadHoldingRegis
 		log.Default().Printf("Error reading rest: %v", err)
 		return nil, err
 	}
-	response := NewModbusRegisterValueResponseFromBytes(request.RegisterDefinitions, request.JobId, request.TransactionId, request.RequestTime, mbapHeader, pduBytes)
+	response := NewRegisterValueResponseFromBytes(request.RegisterDefinitions, request.JobId, request.TransactionId, request.RequestTime, mbapHeader, pduBytes)
 	log.Default().Printf("---------------------------------------")
 	return response, nil
 }

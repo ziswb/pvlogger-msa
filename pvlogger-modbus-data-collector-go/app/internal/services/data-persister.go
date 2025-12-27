@@ -28,10 +28,10 @@ func NewPersistingService(config *config.DataAccessorConfig) *PersistingService 
 	}
 }
 
-func (s *PersistingService) StoreModbusValues(modbusValues *modbus.ModbusRegisterValueResponse) error {
+func (s *PersistingService) StoreValues(valueResponse *modbus.RegisterValueResponse) error {
 	log.Default().Println("Storing modbus values ...")
 	storeModbusValuesPath := config.DataAccessorCfg().StoreModbusValuesPath
-	return s.storeValues(modbusValues, storeModbusValuesPath)
+	return s.storeValues(valueResponse, storeModbusValuesPath)
 }
 
 func (s *PersistingService) StoreKpiValues(kpiValues *kpis.PvLoggerKpiData) error {
