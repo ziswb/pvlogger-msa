@@ -1,4 +1,4 @@
-package modbus
+package model
 
 const (
 	CharSet                          = "ISO-8859-5"

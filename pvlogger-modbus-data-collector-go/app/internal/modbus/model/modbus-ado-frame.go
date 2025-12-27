@@ -1,4 +1,4 @@
-package modbus
+package model
 
 type AduFrame struct {
 	Header       MbapHeader

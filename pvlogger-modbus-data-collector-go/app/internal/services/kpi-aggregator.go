@@ -4,11 +4,11 @@ import (
 	"log"
 	"pvlogger-modbus-data-collector-go/internal/config"
 	"pvlogger-modbus-data-collector-go/internal/kpis"
-	"pvlogger-modbus-data-collector-go/internal/modbus"
+	"pvlogger-modbus-data-collector-go/internal/modbus/model"
 	"time"
 )
 
-func AggregateKpisFor(jobId *modbus.JobId) {
+func AggregateKpisFor(jobId *model.JobId) {
 	log.Default().Println("Aggregating KPIs Job ID:", jobId)
 	liveKpis := collectLiveKpis(jobId)
 	todayKpis := collectEnergiesTodaySoFar(jobId)
@@ -33,7 +33,7 @@ func AggregateKpisFor(jobId *modbus.JobId) {
 	}
 }
 
-func collectLiveKpis(jobId *modbus.JobId) *kpis.KpiLiveData {
+func collectLiveKpis(jobId *model.JobId) *kpis.KpiLiveData {
 	myInverterActivePower := InverterActivePower(jobId)
 	myMeterActivePower := MeterActivePower(jobId)
 	return &kpis.KpiLiveData{
@@ -42,7 +42,7 @@ func collectLiveKpis(jobId *modbus.JobId) *kpis.KpiLiveData {
 	}
 }
 
-func collectEnergiesTodaySoFar(jobId *modbus.JobId) *kpis.KpiTodayData {
+func collectEnergiesTodaySoFar(jobId *model.JobId) *kpis.KpiTodayData {
 	myInverterActivePower := InverterEnergyToday(jobId)
 	myMeterActivePower := MeterEnergyToday()
 	return &kpis.KpiTodayData{

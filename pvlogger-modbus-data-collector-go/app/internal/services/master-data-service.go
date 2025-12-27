@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"pvlogger-modbus-data-collector-go/internal/config"
-	"pvlogger-modbus-data-collector-go/internal/modbus"
+	"pvlogger-modbus-data-collector-go/internal/modbus/model"
 	"strings"
 	"time"
 )
@@ -20,11 +20,11 @@ const (
 )
 
 var (
-	smartMeterActivePowerRegisterAddress    = modbus.RegisterAddress{Value: 37113} // -> W
-	inverterActivePowerRegisterAddress      = modbus.RegisterAddress{Value: 32080} // -> kW
-	smartMeterExportedEnergyRegisterAddress = modbus.RegisterAddress{Value: 37119} // -> kWh
-	smartMeterImportedEnergyRegisterAddress = modbus.RegisterAddress{Value: 37121} // -> kWh
-	inverterDailyEnergyYieldRegisterAddress = modbus.RegisterAddress{Value: 32114} // -> kWh
+	smartMeterActivePowerRegisterAddress    = model.RegisterAddress{Value: 37113} // -> W
+	inverterActivePowerRegisterAddress      = model.RegisterAddress{Value: 32080} // -> kW
+	smartMeterExportedEnergyRegisterAddress = model.RegisterAddress{Value: 37119} // -> kWh
+	smartMeterImportedEnergyRegisterAddress = model.RegisterAddress{Value: 37121} // -> kWh
+	inverterDailyEnergyYieldRegisterAddress = model.RegisterAddress{Value: 32114} // -> kWh
 )
 
 type MasterDataService struct {
@@ -44,7 +44,7 @@ func NewMasterDataService(config *config.MasterDataConfig) *MasterDataService {
 func (s *MasterDataService) FetchRegisterDefinitions(
 	deviceTypes []string,
 	categories []string,
-) (*[]modbus.ModbusRegisterDefinition, error) {
+) (*[]model.ModbusRegisterDefinition, error) {
 	log.Default().Println("Fetching master data ...")
 	devTypesParam := strings.Join(deviceTypes, paramValueSeparator)
 	categoriesParam := strings.Join(categories, paramValueSeparator)
@@ -80,7 +80,7 @@ func (s *MasterDataService) FetchRegisterDefinitions(
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
-	var definitions []modbus.ModbusRegisterDefinition
+	var definitions []model.ModbusRegisterDefinition
 	log.Default().Println("Received message: " + string(body))
 	if err := json.Unmarshal(body, &definitions); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
@@ -90,27 +90,27 @@ func (s *MasterDataService) FetchRegisterDefinitions(
 	return &definitions, nil
 }
 
-func (s *MasterDataService) MasterDataForSmartMeterActivePower() (*modbus.ModbusRegisterDefinition, error) {
+func (s *MasterDataService) MasterDataForSmartMeterActivePower() (*model.ModbusRegisterDefinition, error) {
 	return s.fetchMasterDataFor(smartMeterActivePowerRegisterAddress.Value)
 }
 
-func (s *MasterDataService) MasterDataForInverterActivePower() (*modbus.ModbusRegisterDefinition, error) {
+func (s *MasterDataService) MasterDataForInverterActivePower() (*model.ModbusRegisterDefinition, error) {
 	return s.fetchMasterDataFor(inverterActivePowerRegisterAddress.Value)
 }
 
-func (s *MasterDataService) MasterDataForInverterEnergyYield() (*modbus.ModbusRegisterDefinition, error) {
+func (s *MasterDataService) MasterDataForInverterEnergyYield() (*model.ModbusRegisterDefinition, error) {
 	return s.fetchMasterDataFor(inverterDailyEnergyYieldRegisterAddress.Value)
 }
 
-func (s *MasterDataService) MasterDataForMeterExportedEnergy() (*modbus.ModbusRegisterDefinition, error) {
+func (s *MasterDataService) MasterDataForMeterExportedEnergy() (*model.ModbusRegisterDefinition, error) {
 	return s.fetchMasterDataFor(smartMeterExportedEnergyRegisterAddress.Value)
 }
 
-func (s *MasterDataService) MasterDataForMeterImportedEnergy() (*modbus.ModbusRegisterDefinition, error) {
+func (s *MasterDataService) MasterDataForMeterImportedEnergy() (*model.ModbusRegisterDefinition, error) {
 	return s.fetchMasterDataFor(smartMeterImportedEnergyRegisterAddress.Value)
 }
 
-func (s *MasterDataService) fetchMasterDataFor(registerAddress int) (*modbus.ModbusRegisterDefinition, error) {
+func (s *MasterDataService) fetchMasterDataFor(registerAddress int) (*model.ModbusRegisterDefinition, error) {
 	baseURL := s.baseURL
 	masterDataPath := config.MdConfig().MasterDataPath
 	reqURL, err := url.Parse(fmt.Sprintf("%s/%s/%d", baseURL, masterDataPath, registerAddress))
@@ -136,7 +136,7 @@ func (s *MasterDataService) fetchMasterDataFor(registerAddress int) (*modbus.Mod
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
-	registerDefinition := modbus.ModbusRegisterDefinition{}
+	registerDefinition := model.ModbusRegisterDefinition{}
 	log.Default().Println("Received message: " + string(body))
 	err = json.Unmarshal(body, &registerDefinition)
 	if err != nil {

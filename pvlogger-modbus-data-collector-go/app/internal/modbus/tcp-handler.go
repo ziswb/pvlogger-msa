@@ -5,6 +5,8 @@ import (
 	"io"
 	"log"
 	"net"
+	"pvlogger-modbus-data-collector-go/internal/modbus/model"
+	"pvlogger-modbus-data-collector-go/internal/modbus/request"
 	"time"
 )
 
@@ -61,7 +63,7 @@ func (h *TcpHandler) Connect() error {
 	return nil
 }
 
-func (h *TcpHandler) FetchModbusRegisterValues(request *ReadHoldingRegistersValueRequest) (*ModbusRegisterValueResponse, error) {
+func (h *TcpHandler) FetchModbusRegisterValues(request *request.ReadHoldingRegistersValueRequest) (*ModbusRegisterValueResponse, error) {
 	bytes := request.EncodeToBytes()
 	if err := h.conn.SetWriteDeadline(time.Now().Add(h.writeTimeout)); err != nil {
 		log.Default().Printf("Error setting Modbus connection deadline: %v", err)
@@ -80,7 +82,7 @@ func (h *TcpHandler) FetchModbusRegisterValues(request *ReadHoldingRegistersValu
 		log.Default().Printf("Error reading header: %v", err)
 		return nil, err
 	}
-	mbapHeader := NewMbapHeaderFromBytes(headerBytes)
+	mbapHeader := model.NewMbapHeaderFromBytes(headerBytes)
 	dataLength := int(binary.BigEndian.Uint16(headerBytes[4:6]))
 	// The Length field is defined as the number of bytes following the first 6 bytes of the header
 	// i.e., it includes the Logic Device ID (1 byte) + Function Code (1 byte) + Data

@@ -1,0 +1,31 @@
+package request
+
+import (
+	"log"
+	"pvlogger-modbus-data-collector-go/internal/modbus/model"
+)
+
+func (r *ReadHoldingRegistersValueRequest) EncodeToBytes() []byte {
+	if len(r.RegisterDefinitions) == 0 {
+		log.Default().Println("No register definitions found")
+		return []byte{}
+	}
+	registerAddress := model.UShort(r.RegisterDefinitions[0].RegisterAddress.Value)
+	numberOfBytes := model.UShort(0)
+	for _, regDef := range r.RegisterDefinitions {
+		numberOfBytes += model.UShort(regDef.Quantity.Value)
+	}
+	modbusData := model.ModbusRequestData{
+		StartingAddress:   registerAddress,
+		NumberOfRegisters: numberOfBytes,
+	}
+	mbapHeader := model.MbapHeader{
+		ProtocolIdentifier: r.TransactionId.Id,
+		ProtocolType:       model.DefaultProtocolType,
+		DataLength:         model.UShort(2 + modbusData.NumberOfBytes()), // logic device id + function code + payload
+		LogicDeviceId:      r.LogicDeviceId,
+	}
+	functionCode := model.ReadRegisters
+	aduFrame := model.NewAduFrame(mbapHeader, functionCode, modbusData)
+	return aduFrame.EncodeToBytes()
+}

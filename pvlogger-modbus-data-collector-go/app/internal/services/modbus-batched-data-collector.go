@@ -6,6 +6,8 @@ import (
 	"log"
 	"pvlogger-modbus-data-collector-go/internal/config"
 	"pvlogger-modbus-data-collector-go/internal/modbus"
+	"pvlogger-modbus-data-collector-go/internal/modbus/model"
+	"pvlogger-modbus-data-collector-go/internal/modbus/request"
 	"sync/atomic"
 	"time"
 )
@@ -20,16 +22,16 @@ var (
 	LastTransactionId = atomic.Int32{}
 )
 
-type DeviceIdToTypesMap map[modbus.UByte][]string
+type DeviceIdToTypesMap map[model.UByte][]string
 
 func NewDeviceIdToTypesMap() DeviceIdToTypesMap {
-	var deviceIdToTypesMap = make(map[modbus.UByte][]string)
+	var deviceIdToTypesMap = make(map[model.UByte][]string)
 	updateDeviceIdToDeviceTypesMap(deviceIdToTypesMap, config.DevIdConfig().MeterDeviceIds, MeterDeviceType)
 	updateDeviceIdToDeviceTypesMap(deviceIdToTypesMap, config.DevIdConfig().InverterDeviceIds, InverterDeviceType)
 	return deviceIdToTypesMap
 }
 
-func updateDeviceIdToDeviceTypesMap(deviceIdToTypesMap map[modbus.UByte][]string, devIds []modbus.UByte, deviceType string) {
+func updateDeviceIdToDeviceTypesMap(deviceIdToTypesMap map[model.UByte][]string, devIds []model.UByte, deviceType string) {
 	for _, id := range devIds {
 		if len(deviceIdToTypesMap[id]) == 0 {
 			deviceIdToTypesMap[id] = []string{deviceType}
@@ -39,7 +41,7 @@ func updateDeviceIdToDeviceTypesMap(deviceIdToTypesMap map[modbus.UByte][]string
 	}
 }
 
-func fetchRegisterValues(jobId modbus.JobId, deviceId modbus.UByte, deviceTypes []string) {
+func fetchRegisterValues(jobId model.JobId, deviceId model.UByte, deviceTypes []string) {
 	log.Default().Println("Fetching register values for Device ID:", deviceId, "having Device Types:", deviceTypes)
 	registerDefinitionsList, err := listsOfConsecutiveRegisters(deviceTypes)
 	if err != nil {
@@ -60,10 +62,10 @@ func fetchRegisterValues(jobId modbus.JobId, deviceId modbus.UByte, deviceTypes 
 		return
 	}
 	for _, registerDefinitions := range *registerDefinitionsList {
-		request := modbus.ReadHoldingRegistersValueRequest{
+		request := request.ReadHoldingRegistersValueRequest{
 			JobId:               jobId,
 			RequestTime:         time.Now(),
-			TransactionId:       modbus.NewRequestId(modbus.UShort(LastTransactionId.Add(1))),
+			TransactionId:       model.NewRequestId(model.UShort(LastTransactionId.Add(1))),
 			LogicDeviceId:       deviceId,
 			RegisterDefinitions: *&registerDefinitions,
 		}
@@ -80,16 +82,16 @@ func fetchRegisterValues(jobId modbus.JobId, deviceId modbus.UByte, deviceTypes 
 	}
 }
 
-func listsOfConsecutiveRegisters(deviceTypes []string) (*[][]modbus.ModbusRegisterDefinition, error) {
+func listsOfConsecutiveRegisters(deviceTypes []string) (*[][]model.ModbusRegisterDefinition, error) {
 	registerDefinitions, err := fetchRegisterDefinitionsFromMasterData(deviceTypes)
 	if err != nil {
 		log.Default().Println("Error getting register definitions:", err)
-		return &[][]modbus.ModbusRegisterDefinition{}, nil
+		return &[][]model.ModbusRegisterDefinition{}, nil
 	}
-	var listsOfConsecutiveRegisters [][]modbus.ModbusRegisterDefinition
+	var listsOfConsecutiveRegisters [][]model.ModbusRegisterDefinition
 	for _, registerDefinition := range *registerDefinitions {
 		if isNotSuccessor(listsOfConsecutiveRegisters, registerDefinition) {
-			listsOfConsecutiveRegisters = append(listsOfConsecutiveRegisters, []modbus.ModbusRegisterDefinition{registerDefinition})
+			listsOfConsecutiveRegisters = append(listsOfConsecutiveRegisters, []model.ModbusRegisterDefinition{registerDefinition})
 		} else {
 			listsOfConsecutiveRegisters[len(listsOfConsecutiveRegisters)-1] = append(listsOfConsecutiveRegisters[len(listsOfConsecutiveRegisters)-1], registerDefinition)
 		}
@@ -98,17 +100,17 @@ func listsOfConsecutiveRegisters(deviceTypes []string) (*[][]modbus.ModbusRegist
 	return &listsOfConsecutiveRegisters, nil
 }
 
-func fetchRegisterDefinitionsFromMasterData(deviceTypes []string) (*[]modbus.ModbusRegisterDefinition, error) {
+func fetchRegisterDefinitionsFromMasterData(deviceTypes []string) (*[]model.ModbusRegisterDefinition, error) {
 	log.Default().Println("Getting register definitions for DeviceTypes", deviceTypes, "...")
 	definitions, err := NewMasterDataService(config.MdConfig()).FetchRegisterDefinitions(deviceTypes, Categories)
 	if err != nil {
-		return &[]modbus.ModbusRegisterDefinition{}, err
+		return &[]model.ModbusRegisterDefinition{}, err
 	}
 	log.Default().Printf("Got register definitions")
 	return definitions, nil
 }
 
-func isNotSuccessor(registers [][]modbus.ModbusRegisterDefinition, nextRegister modbus.ModbusRegisterDefinition) bool {
+func isNotSuccessor(registers [][]model.ModbusRegisterDefinition, nextRegister model.ModbusRegisterDefinition) bool {
 	if len(registers) == 0 {
 		return true
 	}

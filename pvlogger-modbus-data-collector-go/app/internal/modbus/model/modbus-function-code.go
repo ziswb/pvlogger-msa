@@ -1,4 +1,4 @@
-package modbus
+package model
 
 var ReadRegisters = NewFunctionCode(0x03)
 var WriteSingleRegister = NewFunctionCode(0x06)

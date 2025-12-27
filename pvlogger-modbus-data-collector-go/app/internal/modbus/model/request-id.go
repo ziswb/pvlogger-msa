@@ -1,4 +1,4 @@
-package modbus
+package model
 
 type RequestId struct {
 	Id UShort `json:"id"`

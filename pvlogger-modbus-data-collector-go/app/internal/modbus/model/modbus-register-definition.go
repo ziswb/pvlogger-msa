@@ -1,4 +1,4 @@
-package modbus
+package model
 
 type ModbusRegisterDefinition struct {
 	No              int             `json:"no"`

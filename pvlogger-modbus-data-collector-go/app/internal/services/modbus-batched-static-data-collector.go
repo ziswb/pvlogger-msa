@@ -2,7 +2,7 @@ package services
 
 import (
 	"log"
-	"pvlogger-modbus-data-collector-go/internal/modbus"
+	"pvlogger-modbus-data-collector-go/internal/modbus/model"
 
 	"github.com/google/uuid"
 )
@@ -12,9 +12,9 @@ const (
 	ConfigCategory = "CONFIG"
 )
 
-func FetchModbusStaticRegisterValues() *modbus.JobId {
+func FetchModbusStaticRegisterValues() *model.JobId {
 	var deviceIdToTypesMap = NewDeviceIdToTypesMap()
-	jobId := modbus.NewJobId(uuid.New().String())
+	jobId := model.NewJobId(uuid.New().String())
 	log.Default().Println("Fetching Modbus Static Register Values. Job ID:", jobId)
 	for deviceId, deviceTypes := range deviceIdToTypesMap {
 		fetchRegisterValues(jobId, deviceId, deviceTypes)

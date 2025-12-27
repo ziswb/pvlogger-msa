@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"pvlogger-modbus-data-collector-go/internal/config"
 	"pvlogger-modbus-data-collector-go/internal/kpis"
-	"pvlogger-modbus-data-collector-go/internal/modbus"
+	"pvlogger-modbus-data-collector-go/internal/modbus/model"
 	"strconv"
 	"strings"
 	"time"
@@ -28,7 +28,7 @@ func NewDataAccessorService(config *config.DataAccessorConfig) *DataAccessorServ
 	}
 }
 
-func InverterActivePower(jobId *modbus.JobId) *kpis.InverterActivePower {
+func InverterActivePower(jobId *model.JobId) *kpis.InverterActivePower {
 	md, err := NewMasterDataService(config.MdConfig()).MasterDataForInverterActivePower()
 	if err != nil {
 		log.Default().Println("Error retrieving master data for inverter active power:", err)
@@ -43,7 +43,7 @@ func InverterActivePower(jobId *modbus.JobId) *kpis.InverterActivePower {
 	)
 }
 
-func MeterActivePower(jobId *modbus.JobId) *kpis.MeterActivePower {
+func MeterActivePower(jobId *model.JobId) *kpis.MeterActivePower {
 	md, err := NewMasterDataService(config.MdConfig()).MasterDataForSmartMeterActivePower()
 	if err != nil {
 		log.Default().Println("Error retrieving master data for smart meter active power:", err)
@@ -58,7 +58,7 @@ func MeterActivePower(jobId *modbus.JobId) *kpis.MeterActivePower {
 	)
 }
 
-func InverterEnergyToday(jobId *modbus.JobId) *kpis.InverterEnergyToday {
+func InverterEnergyToday(jobId *model.JobId) *kpis.InverterEnergyToday {
 	md, err := NewMasterDataService(config.MdConfig()).MasterDataForInverterEnergyYield()
 	if err != nil {
 		log.Default().Println("Error retrieving master data for inverter energy yield:", err)
@@ -102,7 +102,7 @@ func MeterEnergyToday() *kpis.MeterEnergyToday {
 	)
 }
 
-func retrieveLatestRegisterValuesAggregated(masterData *modbus.ModbusRegisterDefinition, deviceIds []modbus.UByte, jobId *modbus.JobId) float64 {
+func retrieveLatestRegisterValuesAggregated(masterData *model.ModbusRegisterDefinition, deviceIds []model.UByte, jobId *model.JobId) float64 {
 	var sum = 0.0
 	for _, deviceId := range deviceIds {
 		sum += retrieveLatestRegisterValue(masterData, deviceId, jobId)
@@ -110,7 +110,7 @@ func retrieveLatestRegisterValuesAggregated(masterData *modbus.ModbusRegisterDef
 	return sum
 }
 
-func retrieveLatestRegisterValue(registerDefinition *modbus.ModbusRegisterDefinition, deviceId uint8, jobId *modbus.JobId) float64 {
+func retrieveLatestRegisterValue(registerDefinition *model.ModbusRegisterDefinition, deviceId uint8, jobId *model.JobId) float64 {
 	pathSegments := []string{
 		config.DataAccessorCfg().ReadLatestRegisterValuePath,
 		registerDefinition.Type,
@@ -121,7 +121,7 @@ func retrieveLatestRegisterValue(registerDefinition *modbus.ModbusRegisterDefini
 	return retrieveValue(registerDefinition, pathSegments)
 }
 
-func retrieveEnergyTodaySoFar(registerDefinition *modbus.ModbusRegisterDefinition) float64 {
+func retrieveEnergyTodaySoFar(registerDefinition *model.ModbusRegisterDefinition) float64 {
 	pathSegments := []string{
 		config.DataAccessorCfg().ReadKwTodaySoFarPath,
 		registerDefinition.Type,
@@ -130,7 +130,7 @@ func retrieveEnergyTodaySoFar(registerDefinition *modbus.ModbusRegisterDefinitio
 	return retrieveValue(registerDefinition, pathSegments)
 }
 
-func retrieveValue(registerDefinition *modbus.ModbusRegisterDefinition, pathSegments []string) float64 {
+func retrieveValue(registerDefinition *model.ModbusRegisterDefinition, pathSegments []string) float64 {
 	service := NewDataAccessorService(config.DataAccessorCfg())
 	getUrl, err := url.Parse(fmt.Sprintf("%s/%s", service.baseURL, strings.Join(pathSegments, "/")))
 	if err != nil {
@@ -169,7 +169,7 @@ func retrieveValue(registerDefinition *modbus.ModbusRegisterDefinition, pathSegm
 	return result
 }
 
-func computeImportedEnergyToday(deviceIds []modbus.UByte) float64 {
+func computeImportedEnergyToday(deviceIds []model.UByte) float64 {
 	mdSvc := NewMasterDataService(config.MdConfig())
 	md, err := mdSvc.MasterDataForMeterImportedEnergy()
 	if err != nil {
@@ -179,7 +179,7 @@ func computeImportedEnergyToday(deviceIds []modbus.UByte) float64 {
 	return sumUp(deviceIds, md)
 }
 
-func computeExportedEnergyToday(deviceIds []modbus.UByte) float64 {
+func computeExportedEnergyToday(deviceIds []model.UByte) float64 {
 	mdSvc := NewMasterDataService(config.MdConfig())
 	md, err := mdSvc.MasterDataForMeterExportedEnergy()
 	if err != nil {
@@ -189,7 +189,7 @@ func computeExportedEnergyToday(deviceIds []modbus.UByte) float64 {
 	return sumUp(deviceIds, md)
 }
 
-func sumUp(deviceIds []modbus.UByte, md *modbus.ModbusRegisterDefinition) float64 {
+func sumUp(deviceIds []model.UByte, md *model.ModbusRegisterDefinition) float64 {
 	var energyToday = 0.0
 	for i := 0; i < len(deviceIds); i++ {
 		energyToday += retrieveEnergyTodaySoFar(md)

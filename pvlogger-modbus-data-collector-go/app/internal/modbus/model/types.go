@@ -1,4 +1,4 @@
-package modbus
+package model
 
 type UByte = uint8
 type UShort = uint16

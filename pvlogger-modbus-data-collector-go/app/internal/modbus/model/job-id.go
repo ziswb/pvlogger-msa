@@ -1,4 +1,4 @@
-package modbus
+package model
 
 type JobId struct {
 	Id string `json:"id"`
