@@ -8,17 +8,11 @@ import (
 	"pvlogger-modbus-data-collector-go/internal/modbus"
 	"sync/atomic"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 const (
 	MeterDeviceType    = "METER"
 	InverterDeviceType = "INVERTER"
-)
-const (
-	DynamicCategory = "DYNAMIC"
-	AlarmCategory   = "ALARM"
 )
 
 var (
@@ -43,16 +37,6 @@ func updateDeviceIdToDeviceTypesMap(deviceIdToTypesMap map[modbus.UByte][]string
 			deviceIdToTypesMap[id] = append(deviceIdToTypesMap[id], deviceType)
 		}
 	}
-}
-
-func FetchModbusDynamicRegisterValues() *modbus.JobId {
-	var deviceIdToTypesMap = NewDeviceIdToTypesMap()
-	jobId := modbus.NewJobId(uuid.New().String())
-	log.Default().Println("Fetching Modbus Dynamic Register Values. Job ID:", jobId)
-	for deviceId, deviceTypes := range deviceIdToTypesMap {
-		fetchRegisterValues(jobId, deviceId, deviceTypes)
-	}
-	return &jobId
 }
 
 func fetchRegisterValues(jobId modbus.JobId, deviceId modbus.UByte, deviceTypes []string) {
