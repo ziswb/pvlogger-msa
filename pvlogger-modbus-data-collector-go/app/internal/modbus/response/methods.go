@@ -4,8 +4,9 @@ import (
 	"encoding/binary"
 	"log"
 	"pvlogger-modbus-data-collector-go/internal/modbus/model"
-	"strings"
 	"time"
+
+	"golang.org/x/text/encoding/charmap"
 )
 
 func NewRegisterValueResponseFromBytes(regDefs []model.RegisterDefinition, jobId model.JobId, transactionId model.RequestId, requestTime time.Time, header model.MbapHeader, bytes []byte) *RegisterValueResponse {
@@ -79,7 +80,11 @@ func readRegisterValue(register model.RegisterDefinition, payload []byte) *Regis
 		}
 		return NewRegisterValue(register, int32(binary.BigEndian.Uint32(payload[0:4])))
 	case model.RegisterTypeSTR:
-		s := strings.TrimRight(string(payload), "\x00 ")
+		s, err := charmap.ISO8859_5.NewDecoder().Bytes(payload)
+		if err != nil {
+			log.Default().Printf("Error reading register value: %v", err)
+			return NewRegisterValue(register, "ERROR")
+		}
 		return NewRegisterValue(register, s)
 	case model.RegisterTypeBitfield16:
 		if len(payload) < 2 {
