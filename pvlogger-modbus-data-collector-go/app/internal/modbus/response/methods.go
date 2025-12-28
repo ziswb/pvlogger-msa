@@ -56,60 +56,92 @@ func readRegisterValues(registerDefinitions []model.RegisterDefinition, payload 
 func readRegisterValue(register model.RegisterDefinition, payload []byte) *RegisterValue {
 	switch model.ToRegisterType(register.Type) {
 	case model.RegisterTypeU16:
-		if len(payload) < 2 {
-			log.Default().Printf("Error reading register value: payload length %d < 2", len(payload))
-			return nil
-		}
-		return NewRegisterValue(register, model.UShort(binary.BigEndian.Uint16(payload[0:2])))
+		return handleU16(register, payload)
 	case model.RegisterTypeU32:
-		if len(payload) < 4 {
-			log.Default().Printf("Error reading register value: payload length %d < 4", len(payload))
-			return nil
-		}
-		return NewRegisterValue(register, model.UInt(binary.BigEndian.Uint32(payload[0:4])))
+		return handleU32(register, payload)
 	case model.RegisterTypeI16:
-		if len(payload) < 2 {
-			log.Default().Printf("Error reading register value: payload length %d < 2", len(payload))
-			return nil
-		}
-		return NewRegisterValue(register, model.Short(int16(binary.BigEndian.Uint16(payload[0:2]))))
+		return handleI16(register, payload)
 	case model.RegisterTypeI32:
-		if len(payload) < 4 {
-			log.Default().Printf("Error reading register value: payload length %d < 4", len(payload))
-			return nil
-		}
-		return NewRegisterValue(register, int32(binary.BigEndian.Uint32(payload[0:4])))
+		return handleI32(register, payload)
 	case model.RegisterTypeSTR:
-		s, err := charmap.ISO8859_5.NewDecoder().Bytes(payload)
-		if err != nil {
-			log.Default().Printf("Error reading register value: %v", err)
-			return NewRegisterValue(register, "ERROR")
-		}
-		return NewRegisterValue(register, s)
+		return handleStr(register, payload)
 	case model.RegisterTypeBitfield16:
-		if len(payload) < 2 {
-			log.Default().Printf("Error reading register value: payload length %d < 2", len(payload))
-			return nil
-		}
-		return NewRegisterValue(register, model.UShort(binary.BigEndian.Uint16(payload[0:2])))
+		return handleBitField16(register, payload)
 	case model.RegisterTypeBitfield32:
-		if len(payload) < 4 {
-			log.Default().Printf("Error reading register value: payload length %d < 4", len(payload))
-			return nil
-		}
-		return NewRegisterValue(register, model.UInt(binary.BigEndian.Uint32(payload[0:4])))
+		return handleBitField32(register, payload)
 	case model.RegisterTypeMLD:
-		if len(payload)%2 != 0 {
-			log.Default().Printf("Error reading register value: payload length %d is not a multiple of 2", len(payload))
-			return nil
-		}
-		var mld []model.Short
-		for i, _ := range payload {
-			if i%2 == 0 {
-				mld = append(mld, model.Short(int16(binary.BigEndian.Uint16(payload[i:i+2]))))
-			}
-		}
-		return NewRegisterValue(register, mld)
+		return handleMld(register, payload)
 	}
 	return nil
+}
+
+func handleU16(register model.RegisterDefinition, payload []byte) *RegisterValue {
+	if len(payload) < 2 {
+		log.Default().Printf("Error reading register value: payload length %d < 2", len(payload))
+		return nil
+	}
+	return NewRegisterValue(register, model.UShort(binary.BigEndian.Uint16(payload[0:2])))
+}
+
+func handleU32(register model.RegisterDefinition, payload []byte) *RegisterValue {
+	if len(payload) < 4 {
+		log.Default().Printf("Error reading register value: payload length %d < 4", len(payload))
+		return nil
+	}
+	return NewRegisterValue(register, model.UInt(binary.BigEndian.Uint32(payload[0:4])))
+}
+
+func handleI16(register model.RegisterDefinition, payload []byte) *RegisterValue {
+	if len(payload) < 2 {
+		log.Default().Printf("Error reading register value: payload length %d < 2", len(payload))
+		return nil
+	}
+	return NewRegisterValue(register, model.Short(int16(binary.BigEndian.Uint16(payload[0:2]))))
+}
+
+func handleI32(register model.RegisterDefinition, payload []byte) *RegisterValue {
+	if len(payload) < 4 {
+		log.Default().Printf("Error reading register value: payload length %d < 4", len(payload))
+		return nil
+	}
+	return NewRegisterValue(register, int32(binary.BigEndian.Uint32(payload[0:4])))
+}
+
+func handleStr(register model.RegisterDefinition, payload []byte) *RegisterValue {
+	s, err := charmap.ISO8859_5.NewDecoder().Bytes(payload)
+	if err != nil {
+		log.Default().Printf("Error reading register value: %v", err)
+		return NewRegisterValue(register, "ERROR")
+	}
+	return NewRegisterValue(register, s)
+}
+
+func handleBitField16(register model.RegisterDefinition, payload []byte) *RegisterValue {
+	if len(payload) < 2 {
+		log.Default().Printf("Error reading register value: payload length %d < 2", len(payload))
+		return nil
+	}
+	return NewRegisterValue(register, model.UShort(binary.BigEndian.Uint16(payload[0:2])))
+}
+
+func handleBitField32(register model.RegisterDefinition, payload []byte) *RegisterValue {
+	if len(payload) < 4 {
+		log.Default().Printf("Error reading register value: payload length %d < 4", len(payload))
+		return nil
+	}
+	return NewRegisterValue(register, model.UInt(binary.BigEndian.Uint32(payload[0:4])))
+}
+
+func handleMld(register model.RegisterDefinition, payload []byte) *RegisterValue {
+	if len(payload)%2 != 0 {
+		log.Default().Printf("Error reading register value: payload length %d is not a multiple of 2", len(payload))
+		return nil
+	}
+	var mld []model.Short
+	for i, _ := range payload {
+		if i%2 == 0 {
+			mld = append(mld, model.Short(int16(binary.BigEndian.Uint16(payload[i:i+2]))))
+		}
+	}
+	return NewRegisterValue(register, mld)
 }
