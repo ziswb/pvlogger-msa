@@ -1,22 +1,22 @@
 package model
 
-type DeviceType int
+type DeviceType string
 
 const (
-	InverterDeviceType DeviceType = 1
-	MeterDeviceType    DeviceType = 47
+	InverterDeviceType DeviceType = "INVERTER"
+	MeterDeviceType    DeviceType = "METER"
 )
 
-func (dt DeviceType) Int() int {
-	return int(dt)
-}
 func (dt DeviceType) String() string {
+	return string(dt)
+}
+func (dt DeviceType) Int() int {
 	switch dt {
 	case InverterDeviceType:
-		return "INVERTER"
+		return 1
 	case MeterDeviceType:
-		return "METER"
+		return 47
 	default:
-		return "UNKNOWN"
+		return -1
 	}
 }

@@ -1,8 +1,10 @@
 package jobs
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"net"
 	"pvlogger-modbus-data-collector-go/internal/config"
 	"pvlogger-modbus-data-collector-go/internal/modbus"
 	"pvlogger-modbus-data-collector-go/internal/modbus/model"
@@ -60,6 +62,10 @@ func (s *RequestService) newRegisterValueRequest(deviceId model.UByte, registerD
 func (s *RequestService) Close() {
 	log.Default().Println("Closing Modbus connection...")
 	err := s.tcpHandler.Close()
+	if errors.Is(err, net.ErrClosed) {
+		log.Default().Println("Modbus connection already closed")
+		return
+	}
 	if err != nil {
 		log.Default().Println("Error closing Modbus connection:", err)
 	}
@@ -69,7 +75,7 @@ func (s *RequestService) Connect() {
 	log.Default().Println("Connecting to Modbus device...")
 	err := s.tcpHandler.Connect()
 	if err != nil {
-		log.Default().Println("Error connecting to Modbus device:", err)
+		log.Default().Fatal("Error connecting to Modbus device:", err)
 	}
 }
 

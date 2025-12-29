@@ -2,6 +2,7 @@ package jobs
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"pvlogger-modbus-data-collector-go/internal/modbus/model"
 	"pvlogger-modbus-data-collector-go/internal/modbus/response"
@@ -9,7 +10,7 @@ import (
 )
 
 func (s *RequestService) ExecuteFetchRegisterValuesJob() {
-	log.Default().Println("Executing FetchDynamicRegisterValuesJob")
+	log.Default().Println(fmt.Sprintf("Executing FetchDynamicRegisterValuesJob for Job ID '%s'", s.jobId.Id))
 	for deviceId, deviceTypes := range s.deviceIdToTypesMap {
 		s.fetchRegisterValues(deviceId, deviceTypes)
 	}
@@ -22,11 +23,12 @@ func (s *RequestService) fetchRegisterValues(deviceId model.UByte, deviceTypes [
 		log.Default().Println("Error getting register definitions:", err)
 		return
 	}
-	s.Connect()
 	defer s.Close()
 	for _, registerDefinitions := range *registerDefinitionsList {
 		valueRequest := s.newRegisterValueRequest(deviceId, registerDefinitions)
+		s.Connect()
 		valueResponse, err := s.tcpHandler.FetchRegisterValues(valueRequest)
+		s.Close()
 		if err != nil {
 			log.Default().Println("Error requesting register values:", err)
 			return

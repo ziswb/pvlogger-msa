@@ -41,41 +41,40 @@ func (h *TcpHandler) Close() error {
 }
 
 func (h *TcpHandler) Connect() error {
-	if h.conn == nil {
-		log.Default().Printf("---------------------------------------")
-		log.Default().Println("Connecting to Modbus device ...")
-		conn, err := (&net.Dialer{Timeout: h.timeout, KeepAlive: 30 * time.Second}).Dial("tcp", h.address)
-		if err != nil {
-			return err
-		}
-		sock := conn.(*net.TCPConn)
-		err = sock.SetKeepAlive(true)
-		if err != nil {
-			return err
-		}
-		err = sock.SetNoDelay(true)
-		if err != nil {
-			return err
-		}
-		h.conn = conn
-		time.Sleep(h.sleep) // huawei modbus is not ready for requests immediately after connection
-		log.Default().Printf("---------------------------------------")
+	log.Default().Printf("---------------------------------------")
+	log.Default().Println("Connecting to Modbus device ...")
+	conn, err := (&net.Dialer{Timeout: h.timeout, KeepAlive: 30 * time.Second}).Dial("tcp", h.address)
+	if err != nil {
+		return err
 	}
+	sock := conn.(*net.TCPConn)
+	err = sock.SetKeepAlive(true)
+	if err != nil {
+		return err
+	}
+	err = sock.SetNoDelay(true)
+	if err != nil {
+		return err
+	}
+	h.conn = conn
+	time.Sleep(h.sleep) // huawei modbus is not ready for requests immediately after connection
+	if err := h.conn.SetWriteDeadline(time.Now().Add(h.writeTimeout)); err != nil {
+		log.Default().Printf("Error setting Modbus connection write deadline: %v", err)
+		return err
+	}
+	if err := h.conn.SetReadDeadline(time.Now().Add(h.readTimeout)); err != nil {
+		log.Default().Printf("Error setting Modbus connection read deadline: %v", err)
+		return err
+	}
+	log.Default().Printf("---------------------------------------")
 	return nil
 }
 
 func (h *TcpHandler) FetchRegisterValues(request *request.ReadHoldingRegistersValueRequest) (*response.RegisterValueResponse, error) {
+	log.Default().Println("Fetching register values ...")
 	bytes := request.EncodeToBytes()
-	if err := h.conn.SetWriteDeadline(time.Now().Add(h.writeTimeout)); err != nil {
-		log.Default().Printf("Error setting Modbus connection write deadline: %v", err)
-		return nil, err
-	}
 	if err := writeFull(h.conn, bytes); err != nil { /* handle */
 		log.Default().Printf("Error writing Modbus frame: %v", err)
-		return nil, err
-	}
-	if err := h.conn.SetReadDeadline(time.Now().Add(h.readTimeout)); err != nil {
-		log.Default().Printf("Error setting Modbus connection read deadline: %v", err)
 		return nil, err
 	}
 	headerBytes := make([]byte, 7)
