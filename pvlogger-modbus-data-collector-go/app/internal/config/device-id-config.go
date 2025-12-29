@@ -1,8 +1,10 @@
 package config
 
+import "pvlogger-modbus-data-collector-go/internal/modbus/model"
+
 type DeviceIdConfig struct {
-	MeterDeviceIds    []uint8
-	InverterDeviceIds []uint8
+	MeterDeviceIds    []model.UByte
+	InverterDeviceIds []model.UByte
 }
 
 func DevIdConfig() DeviceIdConfig {

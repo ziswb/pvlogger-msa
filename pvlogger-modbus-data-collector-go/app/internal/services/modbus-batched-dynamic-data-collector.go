@@ -3,21 +3,12 @@ package services
 import (
 	"log"
 	"pvlogger-modbus-data-collector-go/internal/modbus/model"
-
-	"github.com/google/uuid"
-)
-
-const (
-	DynamicCategory = "DYNAMIC"
-	AlarmCategory   = "ALARM"
+	"pvlogger-modbus-data-collector-go/internal/services/jobs"
 )
 
 func FetchModbusDynamicRegisterValues() *model.JobId {
-	var deviceIdToTypesMap = NewDeviceIdToTypesMap()
-	jobId := model.NewJobId(uuid.New().String())
-	log.Default().Println("Fetching Modbus Dynamic Register Values. Job ID:", jobId)
-	for deviceId, deviceTypes := range deviceIdToTypesMap {
-		fetchRegisterValues(jobId, deviceId, deviceTypes)
-	}
-	return &jobId
+	log.Default().Println("Fetching Modbus Dynamic Register Values")
+	service := jobs.NewRequestService([]model.Category{model.DynamicCategory, model.AlarmCategory})
+	service.ExecuteFetchRegisterValuesJob()
+	return service.JobId()
 }

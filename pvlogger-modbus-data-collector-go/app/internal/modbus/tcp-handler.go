@@ -67,7 +67,7 @@ func (h *TcpHandler) Connect() error {
 func (h *TcpHandler) FetchRegisterValues(request *request.ReadHoldingRegistersValueRequest) (*response.RegisterValueResponse, error) {
 	bytes := request.EncodeToBytes()
 	if err := h.conn.SetWriteDeadline(time.Now().Add(h.writeTimeout)); err != nil {
-		log.Default().Printf("Error setting Modbus connection deadline: %v", err)
+		log.Default().Printf("Error setting Modbus connection write deadline: %v", err)
 		return nil, err
 	}
 	if err := writeFull(h.conn, bytes); err != nil { /* handle */
@@ -75,7 +75,7 @@ func (h *TcpHandler) FetchRegisterValues(request *request.ReadHoldingRegistersVa
 		return nil, err
 	}
 	if err := h.conn.SetReadDeadline(time.Now().Add(h.readTimeout)); err != nil {
-		log.Default().Printf("Error setting Modbus connection deadline: %v", err)
+		log.Default().Printf("Error setting Modbus connection read deadline: %v", err)
 		return nil, err
 	}
 	headerBytes := make([]byte, 7)
@@ -94,7 +94,7 @@ func (h *TcpHandler) FetchRegisterValues(request *request.ReadHoldingRegistersVa
 		log.Default().Printf("Error reading rest: %v", err)
 		return nil, err
 	}
-	valueResponse := response.NewRegisterValueResponseFromBytes(request.RegisterDefinitions, request.JobId, request.TransactionId, request.RequestTime, mbapHeader, pduBytes)
+	valueResponse := response.NewRegisterValueResponseFromBytes(request.RegisterDefinitions, request.JobId, request.RequestId, request.RequestTime, mbapHeader, pduBytes)
 	log.Default().Printf("---------------------------------------")
 	return valueResponse, nil
 }

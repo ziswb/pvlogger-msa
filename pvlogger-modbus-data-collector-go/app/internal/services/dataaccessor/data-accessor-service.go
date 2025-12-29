@@ -1,4 +1,4 @@
-package services
+package dataaccessor
 
 import (
 	"fmt"
@@ -11,25 +11,10 @@ import (
 	"pvlogger-modbus-data-collector-go/internal/modbus/model"
 	"strconv"
 	"strings"
-	"time"
 )
 
-type DataAccessorService struct {
-	baseURL    string
-	httpClient *http.Client
-}
-
-func NewDataAccessorService(config *config.DataAccessorConfig) *DataAccessorService {
-	return &DataAccessorService{
-		baseURL: fmt.Sprintf("%s://%s:%d", config.Protocol, config.Host, config.Port),
-		httpClient: &http.Client{
-			Timeout: 30 * time.Second,
-		},
-	}
-}
-
-func InverterActivePower(jobId *model.JobId) *kpis.InverterActivePower {
-	md, err := NewMasterDataService(config.MdConfig()).MasterDataForInverterActivePower()
+func (s *DataAccessorService) InverterActivePower(jobId *model.JobId) *kpis.InverterActivePower {
+	md, err := s.masterDataService.MasterDataForInverterActivePower()
 	if err != nil {
 		log.Default().Println("Error retrieving master data for inverter active power:", err)
 		return kpis.NewInverterActivePower(
@@ -38,13 +23,13 @@ func InverterActivePower(jobId *model.JobId) *kpis.InverterActivePower {
 		)
 	}
 	return kpis.NewInverterActivePower(
-		retrieveLatestRegisterValuesAggregated(md, config.DevIdConfig().InverterDeviceIds, jobId),
+		s.retrieveLatestRegisterValuesAggregated(md, config.DevIdConfig().InverterDeviceIds, jobId),
 		kpis.ParseUnitFromString(md.Unit),
 	)
 }
 
-func MeterActivePower(jobId *model.JobId) *kpis.MeterActivePower {
-	md, err := NewMasterDataService(config.MdConfig()).MasterDataForSmartMeterActivePower()
+func (s *DataAccessorService) MeterActivePower(jobId *model.JobId) *kpis.MeterActivePower {
+	md, err := s.masterDataService.MasterDataForSmartMeterActivePower()
 	if err != nil {
 		log.Default().Println("Error retrieving master data for smart meter active power:", err)
 		return kpis.NewMeterActivePower(
@@ -53,13 +38,13 @@ func MeterActivePower(jobId *model.JobId) *kpis.MeterActivePower {
 		)
 	}
 	return kpis.NewMeterActivePower(
-		retrieveLatestRegisterValuesAggregated(md, config.DevIdConfig().MeterDeviceIds, jobId),
+		s.retrieveLatestRegisterValuesAggregated(md, config.DevIdConfig().MeterDeviceIds, jobId),
 		kpis.ParseUnitFromString(md.Unit),
 	)
 }
 
-func InverterEnergyToday(jobId *model.JobId) *kpis.InverterEnergyToday {
-	md, err := NewMasterDataService(config.MdConfig()).MasterDataForInverterEnergyYield()
+func (s *DataAccessorService) InverterEnergyToday(jobId *model.JobId) *kpis.InverterEnergyToday {
+	md, err := s.masterDataService.MasterDataForInverterEnergyYield()
 	if err != nil {
 		log.Default().Println("Error retrieving master data for inverter energy yield:", err)
 		return kpis.NewInverterEnergyToday(
@@ -68,13 +53,13 @@ func InverterEnergyToday(jobId *model.JobId) *kpis.InverterEnergyToday {
 		)
 	}
 	return kpis.NewInverterEnergyToday(
-		retrieveLatestRegisterValuesAggregated(md, config.DevIdConfig().InverterDeviceIds, jobId),
+		s.retrieveLatestRegisterValuesAggregated(md, config.DevIdConfig().InverterDeviceIds, jobId),
 		kpis.ParseUnitFromString(md.Unit),
 	)
 }
 
-func MeterEnergyToday() *kpis.MeterEnergyToday {
-	mdImported, err := NewMasterDataService(config.MdConfig()).MasterDataForMeterImportedEnergy()
+func (s *DataAccessorService) MeterEnergyToday() *kpis.MeterEnergyToday {
+	mdImported, err := s.masterDataService.MasterDataForMeterImportedEnergy()
 	if err != nil {
 		log.Default().Println("Error retrieving master data for meter imported energy:", err)
 		return kpis.NewMeterEnergyToday(
@@ -84,7 +69,7 @@ func MeterEnergyToday() *kpis.MeterEnergyToday {
 			kpis.Unit{},
 		)
 	}
-	mdExported, err := NewMasterDataService(config.MdConfig()).MasterDataForMeterExportedEnergy()
+	mdExported, err := s.masterDataService.MasterDataForMeterExportedEnergy()
 	if err != nil {
 		log.Default().Println("Error retrieving master data for meter exported energy:", err)
 		return kpis.NewMeterEnergyToday(
@@ -95,22 +80,22 @@ func MeterEnergyToday() *kpis.MeterEnergyToday {
 		)
 	}
 	return kpis.NewMeterEnergyToday(
-		computeImportedEnergyToday(config.DevIdConfig().MeterDeviceIds),
+		s.computeImportedEnergyToday(config.DevIdConfig().MeterDeviceIds),
 		kpis.ParseUnitFromString(mdImported.Unit),
-		computeExportedEnergyToday(config.DevIdConfig().MeterDeviceIds),
+		s.computeExportedEnergyToday(config.DevIdConfig().MeterDeviceIds),
 		kpis.ParseUnitFromString(mdExported.Unit),
 	)
 }
 
-func retrieveLatestRegisterValuesAggregated(masterData *model.RegisterDefinition, deviceIds []model.UByte, jobId *model.JobId) float64 {
+func (s *DataAccessorService) retrieveLatestRegisterValuesAggregated(masterData *model.RegisterDefinition, deviceIds []model.UByte, jobId *model.JobId) float64 {
 	var sum = 0.0
 	for _, deviceId := range deviceIds {
-		sum += retrieveLatestRegisterValue(masterData, deviceId, jobId)
+		sum += s.retrieveLatestRegisterValue(masterData, deviceId, jobId)
 	}
 	return sum
 }
 
-func retrieveLatestRegisterValue(registerDefinition *model.RegisterDefinition, deviceId uint8, jobId *model.JobId) float64 {
+func (s *DataAccessorService) retrieveLatestRegisterValue(registerDefinition *model.RegisterDefinition, deviceId uint8, jobId *model.JobId) float64 {
 	pathSegments := []string{
 		config.DataAccessorCfg().ReadLatestRegisterValuePath,
 		registerDefinition.Type,
@@ -118,37 +103,31 @@ func retrieveLatestRegisterValue(registerDefinition *model.RegisterDefinition, d
 		strconv.Itoa(registerDefinition.RegisterAddress.Value),
 		jobId.Id,
 	}
-	return retrieveValue(registerDefinition, pathSegments)
+	return s.retrieveValue(registerDefinition, pathSegments)
 }
 
-func retrieveEnergyTodaySoFar(registerDefinition *model.RegisterDefinition) float64 {
+func (s *DataAccessorService) retrieveEnergyTodaySoFar(registerDefinition *model.RegisterDefinition) float64 {
 	pathSegments := []string{
 		config.DataAccessorCfg().ReadKwTodaySoFarPath,
 		registerDefinition.Type,
 		strconv.Itoa(registerDefinition.RegisterAddress.Value),
 	}
-	return retrieveValue(registerDefinition, pathSegments)
+	return s.retrieveValue(registerDefinition, pathSegments)
 }
 
-func retrieveValue(registerDefinition *model.RegisterDefinition, pathSegments []string) float64 {
-	service := NewDataAccessorService(config.DataAccessorCfg())
-	getUrl, err := url.Parse(fmt.Sprintf("%s/%s", service.baseURL, strings.Join(pathSegments, "/")))
+func (s *DataAccessorService) retrieveValue(registerDefinition *model.RegisterDefinition, pathSegments []string) float64 {
+	getUrl, err := url.Parse(fmt.Sprintf("%s/%s", s.baseURL, strings.Join(pathSegments, "/")))
 	if err != nil {
 		log.Default().Println("Error creating url for retrieving value:", err)
 		return 0.0
 	}
 	log.Default().Println("Retrieving value from url: " + getUrl.String())
-	response, err := service.httpClient.Get(getUrl.String())
+	response, err := s.httpClient.Get(getUrl.String())
+	defer s.close(response)
 	if err != nil {
 		log.Default().Println("Error retrieving value:", err)
 		return 0.0
 	}
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			log.Default().Println(err.Error())
-		}
-	}(response.Body)
 	if response.StatusCode != http.StatusOK {
 		log.Default().Println("Error retrieving value; response status is not OK: " + response.Status)
 		return 0.0
@@ -169,30 +148,28 @@ func retrieveValue(registerDefinition *model.RegisterDefinition, pathSegments []
 	return result
 }
 
-func computeImportedEnergyToday(deviceIds []model.UByte) float64 {
-	mdSvc := NewMasterDataService(config.MdConfig())
-	md, err := mdSvc.MasterDataForMeterImportedEnergy()
+func (s *DataAccessorService) computeImportedEnergyToday(deviceIds []model.UByte) float64 {
+	md, err := s.masterDataService.MasterDataForMeterImportedEnergy()
 	if err != nil {
 		log.Default().Println("Error retrieving master data for meter imported energy:", err)
 		return 0.0
 	}
-	return sumUp(deviceIds, md)
+	return s.sumUp(deviceIds, md)
 }
 
-func computeExportedEnergyToday(deviceIds []model.UByte) float64 {
-	mdSvc := NewMasterDataService(config.MdConfig())
-	md, err := mdSvc.MasterDataForMeterExportedEnergy()
+func (s *DataAccessorService) computeExportedEnergyToday(deviceIds []model.UByte) float64 {
+	md, err := s.masterDataService.MasterDataForMeterExportedEnergy()
 	if err != nil {
 		log.Default().Println("Error retrieving master data for meter imported energy:", err)
 		return 0.0
 	}
-	return sumUp(deviceIds, md)
+	return s.sumUp(deviceIds, md)
 }
 
-func sumUp(deviceIds []model.UByte, md *model.RegisterDefinition) float64 {
+func (s *DataAccessorService) sumUp(deviceIds []model.UByte, md *model.RegisterDefinition) float64 {
 	var energyToday = 0.0
 	for i := 0; i < len(deviceIds); i++ {
-		energyToday += retrieveEnergyTodaySoFar(md)
+		energyToday += s.retrieveEnergyTodaySoFar(md)
 	}
 	return energyToday
 }
@@ -203,4 +180,13 @@ func toFloat64OrDefault(text string, fallback float64) float64 {
 		return fallback
 	}
 	return value
+}
+
+func (s *DataAccessorService) close(response *http.Response) {
+	if response != nil && response.Body != nil {
+		err := response.Body.Close()
+		if err != nil {
+			log.Default().Println("Error closing response body:", err)
+		}
+	}
 }

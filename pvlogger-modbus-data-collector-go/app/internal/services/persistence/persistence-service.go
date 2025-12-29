@@ -1,4 +1,4 @@
-package services
+package persistence
 
 import (
 	"bytes"
@@ -11,22 +11,7 @@ import (
 	"pvlogger-modbus-data-collector-go/internal/config"
 	"pvlogger-modbus-data-collector-go/internal/kpis"
 	"pvlogger-modbus-data-collector-go/internal/modbus/response"
-	"time"
 )
-
-type PersistingService struct {
-	baseURL    string
-	httpClient *http.Client
-}
-
-func NewPersistingService(config *config.DataAccessorConfig) *PersistingService {
-	return &PersistingService{
-		baseURL: fmt.Sprintf("%s://%s:%d", config.Protocol, config.Host, config.Port),
-		httpClient: &http.Client{
-			Timeout: 30 * time.Second,
-		},
-	}
-}
 
 func (s *PersistingService) StoreValues(valueResponse *response.RegisterValueResponse) error {
 	log.Default().Println("Storing modbus values ...")
@@ -65,10 +50,10 @@ func (s *PersistingService) storeValues(values any, storagePath string) error {
 		log.Default().Println("Failed to send request:", err)
 		return err
 	}
-	defer func(Body io.ReadCloser) {
+	defer func(body io.ReadCloser) {
 		log.Default().Printf("---------------------------------------")
 		log.Default().Println("Closing response body ...")
-		err := Body.Close()
+		err := body.Close()
 		if err != nil {
 			log.Default().Println("Failed to close response body:", err)
 		}

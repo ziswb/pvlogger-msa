@@ -20,7 +20,7 @@ func (r *ReadHoldingRegistersValueRequest) EncodeToBytes() []byte {
 		NumberOfRegisters: numberOfBytes,
 	}
 	mbapHeader := model.MbapHeader{
-		ProtocolIdentifier: r.TransactionId.Id,
+		ProtocolIdentifier: r.RequestId.Id,
 		ProtocolType:       model.DefaultProtocolType,
 		DataLength:         model.UShort(2 + modbusData.NumberOfBytes()), // logic device id + function code + payload
 		LogicDeviceId:      r.LogicDeviceId,

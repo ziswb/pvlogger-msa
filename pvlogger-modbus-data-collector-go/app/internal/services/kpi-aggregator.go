@@ -5,6 +5,8 @@ import (
 	"pvlogger-modbus-data-collector-go/internal/config"
 	"pvlogger-modbus-data-collector-go/internal/kpis"
 	"pvlogger-modbus-data-collector-go/internal/modbus/model"
+	"pvlogger-modbus-data-collector-go/internal/services/dataaccessor"
+	"pvlogger-modbus-data-collector-go/internal/services/persistence"
 	"time"
 )
 
@@ -26,7 +28,7 @@ func AggregateKpisFor(jobId *model.JobId) {
 		Consumed:      todayKpis.Consumed().ToWh(),
 		SelfConsumed:  todayKpis.SelfConsumed().ToWh(),
 	}
-	err := NewPersistingService(config.DataAccessorCfg()).StoreKpiValues(&kpiValues)
+	err := persistence.NewPersistingService(config.DataAccessorCfg()).StoreKpiValues(&kpiValues)
 	if err != nil {
 		log.Default().Println("Failed to store kpi values:", err)
 		return
@@ -34,8 +36,8 @@ func AggregateKpisFor(jobId *model.JobId) {
 }
 
 func collectLiveKpis(jobId *model.JobId) *kpis.KpiLiveData {
-	myInverterActivePower := InverterActivePower(jobId)
-	myMeterActivePower := MeterActivePower(jobId)
+	myInverterActivePower := dataaccessor.NewDataAccessorService().InverterActivePower(jobId)
+	myMeterActivePower := dataaccessor.NewDataAccessorService().MeterActivePower(jobId)
 	return &kpis.KpiLiveData{
 		InverterActivePower: myInverterActivePower,
 		MeterActivePower:    myMeterActivePower,
@@ -43,8 +45,8 @@ func collectLiveKpis(jobId *model.JobId) *kpis.KpiLiveData {
 }
 
 func collectEnergiesTodaySoFar(jobId *model.JobId) *kpis.KpiTodayData {
-	myInverterActivePower := InverterEnergyToday(jobId)
-	myMeterActivePower := MeterEnergyToday()
+	myInverterActivePower := dataaccessor.NewDataAccessorService().InverterEnergyToday(jobId)
+	myMeterActivePower := dataaccessor.NewDataAccessorService().MeterEnergyToday()
 	return &kpis.KpiTodayData{
 		InverterTodayEnergy: myInverterActivePower,
 		MeterTodayEnergy:    myMeterActivePower,

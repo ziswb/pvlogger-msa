@@ -1,4 +1,4 @@
-package services
+package masterdata
 
 import (
 	"encoding/json"
@@ -10,44 +10,15 @@ import (
 	"pvlogger-modbus-data-collector-go/internal/config"
 	"pvlogger-modbus-data-collector-go/internal/modbus/model"
 	"strings"
-	"time"
 )
-
-const (
-	paramDevTypes       = "deviceTypes"
-	paramCategories     = "categories"
-	paramValueSeparator = ";"
-)
-
-var (
-	smartMeterActivePowerRegisterAddress    = model.RegisterAddress{Value: 37113} // -> W
-	inverterActivePowerRegisterAddress      = model.RegisterAddress{Value: 32080} // -> kW
-	smartMeterExportedEnergyRegisterAddress = model.RegisterAddress{Value: 37119} // -> kWh
-	smartMeterImportedEnergyRegisterAddress = model.RegisterAddress{Value: 37121} // -> kWh
-	inverterDailyEnergyYieldRegisterAddress = model.RegisterAddress{Value: 32114} // -> kWh
-)
-
-type MasterDataService struct {
-	baseURL    string
-	httpClient *http.Client
-}
-
-func NewMasterDataService(config *config.MasterDataConfig) *MasterDataService {
-	return &MasterDataService{
-		baseURL: fmt.Sprintf("%s://%s:%d", config.Protocol, config.Host, config.Port),
-		httpClient: &http.Client{
-			Timeout: 30 * time.Second,
-		},
-	}
-}
 
 func (s *MasterDataService) FetchRegisterDefinitions(
-	deviceTypes []string,
-	categories []string,
+	deviceTypes []model.DeviceType,
+	categories []model.Category,
 ) (*[]model.RegisterDefinition, error) {
 	log.Default().Println("Fetching master data ...")
-	devTypesParam := strings.Join(deviceTypes, paramValueSeparator)
-	categoriesParam := strings.Join(categories, paramValueSeparator)
+	devTypesParam := strings.Join(arrayOfDeviceTypesToArrayOfStrings(deviceTypes), paramValueSeparator)
+	categoriesParam := strings.Join(arrayOfCategoriesToArrayOfStrings(categories), paramValueSeparator)
 
 	reqURL, err := url.Parse(fmt.Sprintf("%s/%s", s.baseURL, config.MdConfig().MasterDataPath))
 	if err != nil {
@@ -61,15 +32,10 @@ func (s *MasterDataService) FetchRegisterDefinitions(
 
 	log.Default().Println("Fetching master data from " + reqURL.String())
 	resp, err := s.httpClient.Get(reqURL.String())
+	defer s.close(resp)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch master data: %w", err)
 	}
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			log.Default().Println(err.Error())
-		}
-	}(resp.Body)
 
 	log.Default().Println("Response status:" + resp.Status)
 	if resp.StatusCode != http.StatusOK {
@@ -119,15 +85,10 @@ func (s *MasterDataService) fetchMasterDataFor(registerAddress int) (*model.Regi
 	}
 	log.Default().Println("Retrieving master data for register address: " + reqURL.String())
 	resp, err := s.httpClient.Get(reqURL.String())
+	defer s.close(resp)
 	if err != nil {
 		return nil, err
 	}
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			log.Default().Println(err.Error())
-		}
-	}(resp.Body)
 	log.Default().Println("Response status:" + resp.Status)
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
@@ -143,4 +104,29 @@ func (s *MasterDataService) fetchMasterDataFor(registerAddress int) (*model.Regi
 		return nil, err
 	}
 	return &registerDefinition, nil
+}
+
+func (s *MasterDataService) close(response *http.Response) {
+	if response != nil && response.Body != nil {
+		err := response.Body.Close()
+		if err != nil {
+			log.Default().Println(err.Error())
+		}
+	}
+}
+
+func arrayOfCategoriesToArrayOfStrings(categories []model.Category) []string {
+	var texts []string
+	for _, text := range categories {
+		texts = append(texts, text.String())
+	}
+	return texts
+}
+
+func arrayOfDeviceTypesToArrayOfStrings(deviceTypes []model.DeviceType) []string {
+	var texts []string
+	for _, text := range deviceTypes {
+		texts = append(texts, text.String())
+	}
+	return texts
 }

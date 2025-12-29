@@ -3,22 +3,10 @@ package services
 import (
 	"log"
 	"pvlogger-modbus-data-collector-go/internal/modbus/model"
-
-	"github.com/google/uuid"
+	"pvlogger-modbus-data-collector-go/internal/services/jobs"
 )
 
-// TODO: The categories are not respected!
-const (
-	StaticCategory = "STATIC"
-	ConfigCategory = "CONFIG"
-)
-
-func FetchModbusStaticRegisterValues() *model.JobId {
-	var deviceIdToTypesMap = NewDeviceIdToTypesMap()
-	jobId := model.NewJobId(uuid.New().String())
-	log.Default().Println("Fetching Modbus Static Register Values. Job ID:", jobId)
-	for deviceId, deviceTypes := range deviceIdToTypesMap {
-		fetchRegisterValues(jobId, deviceId, deviceTypes)
-	}
-	return &jobId
+func FetchModbusStaticRegisterValues() {
+	log.Default().Println("Fetching Modbus Static Register Values")
+	jobs.NewRequestService([]model.Category{model.StaticCategory, model.ConfigCategory}).ExecuteFetchRegisterValuesJob()
 }

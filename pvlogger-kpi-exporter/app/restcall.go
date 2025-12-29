@@ -18,8 +18,8 @@ func fetchKpis() *KpiValues {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
+	defer func(body io.ReadCloser) {
+		err := body.Close()
 		if err != nil {
 			log.Default().Println(err.Error())
 		}
