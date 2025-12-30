@@ -47,8 +47,8 @@ func FsConfig() FusionSolarConfig {
 
 func DbConfig() DatabaseConfig {
 	return DatabaseConfig{
-		Username: getEnv("DB_USERNAME", "postgres"),
-		Password: getEnvChecked("DB_PASSWORD"),
+		Username: getEnv("POSTGRESQL_USERNAME", "postgres"),
+		Password: getEnvChecked("POSTGRES_PASSWORD"),
 		Host:     getEnv("POSTGRESQL_HOST", "<central-host>"),
 		Port:     getIntEnv("POSTGRESQL_PORT", "5433"),
 		DbName:   getEnv("DB_NAME", "fsdata"),
