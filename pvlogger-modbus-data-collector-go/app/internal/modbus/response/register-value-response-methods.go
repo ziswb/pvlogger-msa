@@ -1,6 +1,7 @@
 package response
 
 import (
+	"encoding/base64"
 	"encoding/binary"
 	"log"
 	"pvlogger-modbus-data-collector-go/internal/modbus/model"
@@ -108,12 +109,22 @@ func handleI32(register model.RegisterDefinition, payload []byte) *RegisterValue
 }
 
 func handleStr(register model.RegisterDefinition, payload []byte) *RegisterValue {
+	log.Default().Printf("Handling STR: raw payload: %q", payload)
 	s, err := charmap.ISO8859_5.NewDecoder().Bytes(payload)
 	if err != nil {
 		log.Default().Printf("Error reading register value: %v", err)
 		return NewRegisterValue(register, "ERROR")
 	}
-	return NewRegisterValue(register, s)
+	log.Default().Printf("Handling STR: read ISO8859-5 value: %q", s)
+	text := make([]byte, base64.StdEncoding.DecodedLen(len(s)))
+	decodedBytes, err := base64.StdEncoding.Decode(text, s)
+	if err != nil {
+		log.Default().Printf("Error decoding string register value: %v", err)
+		return NewRegisterValue(register, "ERROR")
+	}
+	text = text[:decodedBytes]
+	log.Default().Printf("Handling STR: decoded base64 string to: %q", text)
+	return NewRegisterValue(register, text)
 }
 
 func handleBitField16(register model.RegisterDefinition, payload []byte) *RegisterValue {
