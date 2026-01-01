@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"pvlogger-modbus-data-collector-go/internal/config"
+	"pvlogger-modbus-data-collector-go/internal/logging"
 	"pvlogger-modbus-data-collector-go/internal/modbus/model"
 	"strings"
 )
@@ -16,13 +16,13 @@ func (s *MasterDataService) FetchRegisterDefinitions(
 	deviceTypes []model.DeviceType,
 	categories []model.Category,
 ) (*[]model.RegisterDefinition, error) {
-	log.Default().Println("Fetching master data ...")
+	logging.Info("fetching master data")
 	devTypesParam := strings.Join(arrayOfDeviceTypesToArrayOfStrings(deviceTypes), paramValueSeparator)
 	categoriesParam := strings.Join(arrayOfCategoriesToArrayOfStrings(categories), paramValueSeparator)
 
 	reqURL, err := url.Parse(fmt.Sprintf("%s/%s", s.baseURL, config.MdConfig().MasterDataPath))
 	if err != nil {
-		log.Default().Fatal("failed to parse URL", err)
+		logging.Fatal("failed to parse URL", "error", err)
 	}
 
 	q := reqURL.Query()
@@ -30,29 +30,29 @@ func (s *MasterDataService) FetchRegisterDefinitions(
 	q.Set(paramCategories, categoriesParam)
 	reqURL.RawQuery = q.Encode()
 
-	log.Default().Printf("Fetching master data from %s", reqURL.String())
+	logging.Debug("fetching master data", "url", reqURL.String())
 	resp, err := s.httpClient.Get(reqURL.String())
 	defer s.close(resp)
 	if err != nil {
-		log.Default().Fatal("failed to fetch master data", err)
+		logging.Fatal("failed to fetch master data", "error", err)
 	}
 
-	log.Default().Printf("Response status: %s", resp.Status)
+	logging.Debug("response received", "status", resp.Status)
 	if resp.StatusCode != http.StatusOK {
-		log.Default().Fatalf("unexpected status code: %d", resp.StatusCode)
+		logging.Fatal("unexpected status code", "status_code", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Default().Fatal("failed to read response body", err)
+		logging.Fatal("failed to read response body", "error", err)
 	}
 	var definitions []model.RegisterDefinition
-	log.Default().Println("Received message: " + string(body))
+	logging.Debug("received message", "body", string(body))
 	if err := json.Unmarshal(body, &definitions); err != nil {
-		log.Default().Fatal("failed to unmarshal response", err)
+		logging.Fatal("failed to unmarshal response", "error", err)
 	}
 
-	log.Default().Println("Fetched master data successfully.")
+	logging.Info("fetched master data successfully")
 	return &definitions, nil
 }
 
@@ -81,27 +81,27 @@ func (s *MasterDataService) fetchMasterDataFor(registerAddress int) (*model.Regi
 	masterDataPath := config.MdConfig().MasterDataPath
 	reqURL, err := url.Parse(fmt.Sprintf("%s/%s/%d", baseURL, masterDataPath, registerAddress))
 	if err != nil {
-		log.Default().Fatal("failed to parse URL", err)
+		logging.Fatal("failed to parse URL", "error", err)
 	}
-	log.Default().Printf("Retrieving master data for register address: %s", reqURL.String())
+	logging.Debug("retrieving master data", "url", reqURL.String())
 	resp, err := s.httpClient.Get(reqURL.String())
 	defer s.close(resp)
 	if err != nil {
-		log.Default().Fatal("Error retrieving master data", err)
+		logging.Fatal("error retrieving master data", "error", err)
 	}
-	log.Default().Printf("Response status: %s", resp.Status)
+	logging.Debug("response received", "status", resp.Status)
 	if resp.StatusCode != http.StatusOK {
-		log.Default().Fatalf("unexpected status code: %d", resp.StatusCode)
+		logging.Fatal("unexpected status code", "status_code", resp.StatusCode)
 	}
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Default().Fatalf("failed to read response body: %v", err)
+		logging.Fatal("failed to read response body", "error", err)
 	}
 	registerDefinition := model.RegisterDefinition{}
-	log.Default().Printf("Received message: %s", string(body))
+	logging.Debug("received message", "body", string(body))
 	err = json.Unmarshal(body, &registerDefinition)
 	if err != nil {
-		log.Default().Fatal("Error unmarshalling master data", err)
+		logging.Fatal("error unmarshalling master data", "error", err)
 	}
 	return &registerDefinition, nil
 }
@@ -110,7 +110,7 @@ func (s *MasterDataService) close(response *http.Response) {
 	if response != nil && response.Body != nil {
 		err := response.Body.Close()
 		if err != nil {
-			log.Default().Println(err.Error())
+			logging.Error("error closing response body", "error", err)
 		}
 	}
 }

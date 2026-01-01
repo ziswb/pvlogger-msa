@@ -2,7 +2,7 @@ package model
 
 import (
 	"encoding/binary"
-	"log"
+	"pvlogger-modbus-data-collector-go/internal/logging"
 )
 
 type MbapHeader struct {
@@ -27,7 +27,7 @@ func (header *MbapHeader) EncodeToBytes() []byte {
 
 func NewMbapHeaderFromBytes(bytes []byte) MbapHeader {
 	if len(bytes) != 7 {
-		log.Default().Println("Exactly 7 bytes are necessary for creating an MBAP header (only", len(bytes), "bytes given)")
+		logging.Warn("invalid byte count for MBAP header", "expected", 7, "got", len(bytes))
 		return MbapHeader{}
 	}
 	protocolIdentifier := binary.BigEndian.Uint16(bytes)

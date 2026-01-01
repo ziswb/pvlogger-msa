@@ -1,7 +1,7 @@
 package kpis
 
 import (
-	"log"
+	"pvlogger-modbus-data-collector-go/internal/logging"
 	"strings"
 )
 
@@ -26,9 +26,7 @@ func (u *Unit) toW(value float64) W {
 		return NewW(value)
 	default:
 		{
-			log.Default().Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-			log.Default().Println("unit is", string(u.unitId), "and cannot be converted to W")
-			log.Default().Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+			logging.Warn("unit cannot be converted to W", "unit", string(u.unitId))
 			return NewW(0.0)
 		}
 	}
@@ -42,9 +40,7 @@ func (u *Unit) toKW(value float64) KW {
 		return NewW(value).ToKW()
 	default:
 		{
-			log.Default().Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-			log.Default().Println("unit is", string(u.unitId), "and cannot be converted to kW")
-			log.Default().Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+			logging.Warn("unit cannot be converted to kW", "unit", string(u.unitId))
 			return NewKW(0.0)
 		}
 	}
@@ -58,9 +54,7 @@ func (u *Unit) toKWh(value float64) KWh {
 		return NewWh(value).ToKWh()
 	default:
 		{
-			log.Default().Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-			log.Default().Println("unit is", string(u.unitId), "and cannot be converted to kWh")
-			log.Default().Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+			logging.Warn("unit cannot be converted to kWh", "unit", string(u.unitId))
 			return NewKWh(0.0)
 		}
 	}
@@ -78,9 +72,7 @@ func ParseUnitFromString(text string) Unit {
 		return Unit{UnitKWh}
 	default:
 		{
-			log.Default().Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-			log.Default().Println("Invalid unit: " + text)
-			log.Default().Println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+			logging.Warn("invalid unit, defaulting to W", "unit", text)
 			return Unit{UnitW}
 		}
 	}

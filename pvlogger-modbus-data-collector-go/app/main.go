@@ -1,9 +1,8 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"pvlogger-modbus-data-collector-go/internal/config"
+	"pvlogger-modbus-data-collector-go/internal/logging"
 	"pvlogger-modbus-data-collector-go/internal/services"
 )
 
@@ -15,7 +14,7 @@ const (
 )
 
 func main() {
-	log.Default().Println("Starting ...")
+	logging.Info("starting")
 	jobName := config.JobConfig().JobName
 	switch jobName {
 	case FetchModbusDynamicDataJob:
@@ -28,7 +27,7 @@ func main() {
 			services.FetchModbusStaticRegisterValues()
 		}
 	default:
-		log.Default().Println(fmt.Sprintf("Unknown job name: '%s'", jobName))
+		logging.Fatal("unknown job name", "job_name", jobName)
 	}
-	log.Default().Println("Finished")
+	logging.Info("finished")
 }

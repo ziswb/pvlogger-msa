@@ -5,56 +5,54 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"pvlogger-modbus-data-collector-go/internal/config"
 	"pvlogger-modbus-data-collector-go/internal/kpis"
+	"pvlogger-modbus-data-collector-go/internal/logging"
 	"pvlogger-modbus-data-collector-go/internal/modbus/response"
 )
 
 func (s *PersistingService) StoreValues(valueResponse *response.RegisterValueResponse) error {
-	log.Default().Println("Storing modbus values ...")
+	logging.Debug("storing modbus values")
 	storeModbusValuesPath := config.DataAccessorCfg().StoreModbusValuesPath
 	return s.storeValues(valueResponse, storeModbusValuesPath)
 }
 
 func (s *PersistingService) StoreKpiValues(kpiValues *kpis.PvLoggerKpiData) error {
-	log.Default().Println("Storing kpi values ...")
+	logging.Debug("storing kpi values")
 	storeKpiValuesPath := config.DataAccessorCfg().StoreKpiValuesPath
 	return s.storeValues(kpiValues, storeKpiValuesPath)
 }
 
 func (s *PersistingService) storeValues(values any, storagePath string) error {
-	log.Default().Println("Storing values ...")
+	logging.Debug("storing values")
 	postURL, err := url.Parse(fmt.Sprintf("%s/%s/%s", s.baseURL, config.DataAccessorCfg().BasePath, storagePath))
 	if err != nil {
-		log.Default().Fatal("Failed to parse URL", err)
+		logging.Fatal("failed to parse URL", "error", err)
 	}
-	log.Default().Printf("Store URL: %v", postURL)
+	logging.Debug("store request", "url", postURL.String())
 	var b bytes.Buffer
 	err = json.NewEncoder(&b).Encode(values)
 	if err != nil {
-		log.Default().Fatal("Failed to encode object", err)
+		logging.Fatal("failed to encode object", "error", err)
 	}
 	request, err := http.NewRequest("POST", postURL.String(), &b)
 	if err != nil {
-		log.Default().Fatal("Failed to create request", err)
+		logging.Fatal("failed to create request", "error", err)
 	}
 	request.Header.Set("Content-Type", "application/json")
 	serverResponse, err := s.httpClient.Do(request)
 	if err != nil {
-		log.Default().Fatal("Failed to send request", err)
+		logging.Fatal("failed to send request", "error", err)
 	}
 	defer func(body io.ReadCloser) {
-		log.Default().Printf("---------------------------------------")
-		log.Default().Println("Closing response body ...")
+		logging.Debug("closing response body")
 		err := body.Close()
 		if err != nil {
-			log.Default().Printf("Failed to close response body: %v", err)
+			logging.Error("failed to close response body", "error", err)
 		}
-		log.Default().Printf("---------------------------------------")
 	}(serverResponse.Body)
-	log.Default().Printf("Server response: %v", serverResponse)
+	logging.Debug("server response", "status", serverResponse.Status)
 	return nil
 }

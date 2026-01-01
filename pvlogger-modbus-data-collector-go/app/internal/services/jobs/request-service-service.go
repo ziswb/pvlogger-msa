@@ -2,25 +2,24 @@ package jobs
 
 import (
 	"encoding/json"
-	"fmt"
-	"log"
+	"pvlogger-modbus-data-collector-go/internal/logging"
 	"pvlogger-modbus-data-collector-go/internal/modbus/model"
 	"pvlogger-modbus-data-collector-go/internal/modbus/response"
 	"pvlogger-modbus-data-collector-go/internal/services/masterdata"
 )
 
 func (s *RequestService) ExecuteFetchRegisterValuesJob() {
-	log.Default().Println(fmt.Sprintf("Executing FetchDynamicRegisterValuesJob for Job ID '%s'", s.jobId.Id))
+	logging.Info("executing fetch register values job", "job_id", s.jobId.Id)
 	for deviceId, deviceTypes := range s.deviceIdToTypesMap {
 		s.fetchRegisterValues(deviceId, deviceTypes)
 	}
 }
 
 func (s *RequestService) fetchRegisterValues(deviceId model.UByte, deviceTypes []model.DeviceType) {
-	log.Default().Println("Fetching register values for Device ID:", deviceId, "having Device Types:", deviceTypes)
+	logging.Info("fetching register values", "device_id", deviceId, "device_types", deviceTypes)
 	registerDefinitionsList, err := s.listsOfConsecutiveRegisters(deviceTypes)
 	if err != nil {
-		log.Default().Fatal("Error getting register definitions", err)
+		logging.Fatal("error getting register definitions", "error", err)
 	}
 	defer s.Close()
 	for _, registerDefinitions := range *registerDefinitionsList {
@@ -29,11 +28,11 @@ func (s *RequestService) fetchRegisterValues(deviceId model.UByte, deviceTypes [
 		valueResponse, err := s.tcpHandler.FetchRegisterValues(valueRequest)
 		s.Close()
 		if err != nil {
-			log.Default().Fatal("Error requesting register values", err)
+			logging.Fatal("error requesting register values", "error", err)
 		}
 		err = s.storeResponse(valueResponse)
 		if err != nil {
-			log.Default().Fatal("Error storing response", err)
+			logging.Fatal("error storing response", "error", err)
 		}
 	}
 }
@@ -41,7 +40,7 @@ func (s *RequestService) fetchRegisterValues(deviceId model.UByte, deviceTypes [
 func (s *RequestService) listsOfConsecutiveRegisters(deviceTypes []model.DeviceType) (*[][]model.RegisterDefinition, error) {
 	registerDefinitions, err := s.fetchRegisterDefinitionsFromMasterData(deviceTypes)
 	if err != nil {
-		log.Default().Fatal("Error getting register definitions", err)
+		logging.Fatal("error getting register definitions", "error", err)
 	}
 	var listsOfConsecutiveRegisters [][]model.RegisterDefinition
 	for _, registerDefinition := range *registerDefinitions {
@@ -51,17 +50,17 @@ func (s *RequestService) listsOfConsecutiveRegisters(deviceTypes []model.DeviceT
 			listsOfConsecutiveRegisters[len(listsOfConsecutiveRegisters)-1] = append(listsOfConsecutiveRegisters[len(listsOfConsecutiveRegisters)-1], registerDefinition)
 		}
 	}
-	log.Default().Println("Lists of consecutive registers:", len(listsOfConsecutiveRegisters))
+	logging.Debug("lists of consecutive registers", "count", len(listsOfConsecutiveRegisters))
 	return &listsOfConsecutiveRegisters, nil
 }
 
 func (s *RequestService) fetchRegisterDefinitionsFromMasterData(deviceTypes []model.DeviceType) (*[]model.RegisterDefinition, error) {
-	log.Default().Println("Getting register definitions for DeviceTypes", deviceTypes, "...")
+	logging.Debug("getting register definitions", "device_types", deviceTypes)
 	definitions, err := masterdata.NewMasterDataService().FetchRegisterDefinitions(deviceTypes, s.categories)
 	if err != nil {
-		log.Default().Fatal("Error getting register definitions", err)
+		logging.Fatal("error getting register definitions", "error", err)
 	}
-	log.Default().Printf("Got register definitions")
+	logging.Debug("got register definitions")
 	return definitions, nil
 }
 
@@ -76,15 +75,15 @@ func isNotSuccessor(registers [][]model.RegisterDefinition, nextRegister model.R
 }
 
 func (s *RequestService) storeResponse(response *response.RegisterValueResponse) error {
-	log.Default().Println("Response:", response)
+	logging.Debug("storing response", "response", response)
 	jsonResponse, err := json.MarshalIndent(response, "", "  ")
 	if err != nil {
-		log.Default().Fatal("Error marshalling response", err)
+		logging.Fatal("error marshalling response", "error", err)
 	}
-	log.Default().Println("JSON Response:", string(jsonResponse))
+	logging.Debug("json response", "json", string(jsonResponse))
 	err = s.persistenceService.StoreValues(response)
 	if err != nil {
-		log.Default().Fatal("Error storing response", err)
+		logging.Fatal("error storing response", "error", err)
 	}
 	return nil
 }

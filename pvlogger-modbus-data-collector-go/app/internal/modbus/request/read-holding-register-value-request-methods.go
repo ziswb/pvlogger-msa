@@ -1,13 +1,13 @@
 package request
 
 import (
-	"log"
+	"pvlogger-modbus-data-collector-go/internal/logging"
 	"pvlogger-modbus-data-collector-go/internal/modbus/model"
 )
 
 func (r *ReadHoldingRegistersValueRequest) EncodeToBytes() []byte {
 	if len(r.RegisterDefinitions) == 0 {
-		log.Default().Println("No register definitions found")
+		logging.Warn("no register definitions found")
 		return []byte{}
 	}
 	registerAddress := model.UShort(r.RegisterDefinitions[0].RegisterAddress.Value)

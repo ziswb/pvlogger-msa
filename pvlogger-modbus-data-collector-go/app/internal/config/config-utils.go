@@ -1,8 +1,8 @@
 package config
 
 import (
-	"log"
 	"os"
+	"pvlogger-modbus-data-collector-go/internal/logging"
 	"strconv"
 	"strings"
 )
@@ -18,7 +18,7 @@ func getEnv(key, fallback string) string {
 func getIntEnv(key, fallback string) int {
 	value, err := strconv.Atoi(getEnv(key, fallback))
 	if err != nil {
-		log.Default().Fatalf("Error getting value for int environment variable; key: '%s', err: %v", key, err)
+		logging.Fatal("error getting value for int environment variable", "key", key, "error", err)
 	}
 	return value
 }
@@ -35,7 +35,7 @@ func getUByteArrayEnv(key, fallback string) []uint8 {
 	for _, id := range parts {
 		safeId, err := strconv.Atoi(id)
 		if err != nil {
-			log.Default().Fatalf("Error getting value for ubyte array environment variable; key: '%s', err: %v", key, err)
+			logging.Fatal("error getting value for ubyte array environment variable", "key", key, "error", err)
 		}
 		result = append(result, uint8(safeId))
 	}
