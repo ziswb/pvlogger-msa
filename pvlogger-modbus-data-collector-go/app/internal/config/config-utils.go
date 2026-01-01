@@ -1,6 +1,7 @@
 package config
 
 import (
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -17,7 +18,7 @@ func getEnv(key, fallback string) string {
 func getIntEnv(key, fallback string) int {
 	value, err := strconv.Atoi(getEnv(key, fallback))
 	if err != nil {
-		panic(err)
+		log.Default().Fatalf("Error getting value for int environment variable; key: '%s', err: %v", key, err)
 	}
 	return value
 }
@@ -34,7 +35,7 @@ func getUByteArrayEnv(key, fallback string) []uint8 {
 	for _, id := range parts {
 		safeId, err := strconv.Atoi(id)
 		if err != nil {
-			panic(err)
+			log.Default().Fatalf("Error getting value for ubyte array environment variable; key: '%s', err: %v", key, err)
 		}
 		result = append(result, uint8(safeId))
 	}

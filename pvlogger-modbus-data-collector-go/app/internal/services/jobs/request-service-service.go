@@ -20,8 +20,7 @@ func (s *RequestService) fetchRegisterValues(deviceId model.UByte, deviceTypes [
 	log.Default().Println("Fetching register values for Device ID:", deviceId, "having Device Types:", deviceTypes)
 	registerDefinitionsList, err := s.listsOfConsecutiveRegisters(deviceTypes)
 	if err != nil {
-		log.Default().Println("Error getting register definitions:", err)
-		return
+		log.Default().Fatal("Error getting register definitions", err)
 	}
 	defer s.Close()
 	for _, registerDefinitions := range *registerDefinitionsList {
@@ -30,13 +29,11 @@ func (s *RequestService) fetchRegisterValues(deviceId model.UByte, deviceTypes [
 		valueResponse, err := s.tcpHandler.FetchRegisterValues(valueRequest)
 		s.Close()
 		if err != nil {
-			log.Default().Println("Error requesting register values:", err)
-			return
+			log.Default().Fatal("Error requesting register values", err)
 		}
 		err = s.storeResponse(valueResponse)
 		if err != nil {
-			log.Default().Println("Error storing response:", err)
-			return
+			log.Default().Fatal("Error storing response", err)
 		}
 	}
 }
@@ -44,8 +41,7 @@ func (s *RequestService) fetchRegisterValues(deviceId model.UByte, deviceTypes [
 func (s *RequestService) listsOfConsecutiveRegisters(deviceTypes []model.DeviceType) (*[][]model.RegisterDefinition, error) {
 	registerDefinitions, err := s.fetchRegisterDefinitionsFromMasterData(deviceTypes)
 	if err != nil {
-		log.Default().Println("Error getting register definitions:", err)
-		return &[][]model.RegisterDefinition{}, nil
+		log.Default().Fatal("Error getting register definitions", err)
 	}
 	var listsOfConsecutiveRegisters [][]model.RegisterDefinition
 	for _, registerDefinition := range *registerDefinitions {
@@ -63,7 +59,7 @@ func (s *RequestService) fetchRegisterDefinitionsFromMasterData(deviceTypes []mo
 	log.Default().Println("Getting register definitions for DeviceTypes", deviceTypes, "...")
 	definitions, err := masterdata.NewMasterDataService().FetchRegisterDefinitions(deviceTypes, s.categories)
 	if err != nil {
-		return &[]model.RegisterDefinition{}, err
+		log.Default().Fatal("Error getting register definitions", err)
 	}
 	log.Default().Printf("Got register definitions")
 	return definitions, nil
@@ -83,12 +79,12 @@ func (s *RequestService) storeResponse(response *response.RegisterValueResponse)
 	log.Default().Println("Response:", response)
 	jsonResponse, err := json.MarshalIndent(response, "", "  ")
 	if err != nil {
-		return err
+		log.Default().Fatal("Error marshalling response", err)
 	}
 	log.Default().Println("JSON Response:", string(jsonResponse))
 	err = s.persistenceService.StoreValues(response)
 	if err != nil {
-		return err
+		log.Default().Fatal("Error storing response", err)
 	}
 	return nil
 }

@@ -29,36 +29,32 @@ func (s *PersistingService) storeValues(values any, storagePath string) error {
 	log.Default().Println("Storing values ...")
 	postURL, err := url.Parse(fmt.Sprintf("%s/%s/%s", s.baseURL, config.DataAccessorCfg().BasePath, storagePath))
 	if err != nil {
-		log.Default().Println("Failed to parse URL:", err)
-		return err
+		log.Default().Fatal("Failed to parse URL", err)
 	}
-	log.Default().Println("Store URL:", postURL)
+	log.Default().Printf("Store URL: %v", postURL)
 	var b bytes.Buffer
 	err = json.NewEncoder(&b).Encode(values)
 	if err != nil {
-		log.Default().Println("Failed to encode object:", err)
-		return err
+		log.Default().Fatal("Failed to encode object", err)
 	}
 	request, err := http.NewRequest("POST", postURL.String(), &b)
 	if err != nil {
-		log.Default().Println("Failed to create request:", err)
-		return err
+		log.Default().Fatal("Failed to create request", err)
 	}
 	request.Header.Set("Content-Type", "application/json")
 	serverResponse, err := s.httpClient.Do(request)
 	if err != nil {
-		log.Default().Println("Failed to send request:", err)
-		return err
+		log.Default().Fatal("Failed to send request", err)
 	}
 	defer func(body io.ReadCloser) {
 		log.Default().Printf("---------------------------------------")
 		log.Default().Println("Closing response body ...")
 		err := body.Close()
 		if err != nil {
-			log.Default().Println("Failed to close response body:", err)
+			log.Default().Printf("Failed to close response body: %v", err)
 		}
 		log.Default().Printf("---------------------------------------")
 	}(serverResponse.Body)
-	log.Default().Println("Server response:", serverResponse)
+	log.Default().Printf("Server response: %v", serverResponse)
 	return nil
 }

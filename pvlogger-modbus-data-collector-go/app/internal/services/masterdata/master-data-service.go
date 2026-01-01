@@ -22,7 +22,7 @@ func (s *MasterDataService) FetchRegisterDefinitions(
 
 	reqURL, err := url.Parse(fmt.Sprintf("%s/%s", s.baseURL, config.MdConfig().MasterDataPath))
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse URL: %w", err)
+		log.Default().Fatal("failed to parse URL", err)
 	}
 
 	q := reqURL.Query()
@@ -30,26 +30,26 @@ func (s *MasterDataService) FetchRegisterDefinitions(
 	q.Set(paramCategories, categoriesParam)
 	reqURL.RawQuery = q.Encode()
 
-	log.Default().Println("Fetching master data from " + reqURL.String())
+	log.Default().Printf("Fetching master data from %s", reqURL.String())
 	resp, err := s.httpClient.Get(reqURL.String())
 	defer s.close(resp)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch master data: %w", err)
+		log.Default().Fatal("failed to fetch master data", err)
 	}
 
-	log.Default().Println("Response status:" + resp.Status)
+	log.Default().Printf("Response status: %s", resp.Status)
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		log.Default().Fatalf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
+		log.Default().Fatal("failed to read response body", err)
 	}
 	var definitions []model.RegisterDefinition
 	log.Default().Println("Received message: " + string(body))
 	if err := json.Unmarshal(body, &definitions); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+		log.Default().Fatal("failed to unmarshal response", err)
 	}
 
 	log.Default().Println("Fetched master data successfully.")
@@ -81,27 +81,27 @@ func (s *MasterDataService) fetchMasterDataFor(registerAddress int) (*model.Regi
 	masterDataPath := config.MdConfig().MasterDataPath
 	reqURL, err := url.Parse(fmt.Sprintf("%s/%s/%d", baseURL, masterDataPath, registerAddress))
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse URL: %w", err)
+		log.Default().Fatal("failed to parse URL", err)
 	}
-	log.Default().Println("Retrieving master data for register address: " + reqURL.String())
+	log.Default().Printf("Retrieving master data for register address: %s", reqURL.String())
 	resp, err := s.httpClient.Get(reqURL.String())
 	defer s.close(resp)
 	if err != nil {
-		return nil, err
+		log.Default().Fatal("Error retrieving master data", err)
 	}
-	log.Default().Println("Response status:" + resp.Status)
+	log.Default().Printf("Response status: %s", resp.Status)
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		log.Default().Fatalf("unexpected status code: %d", resp.StatusCode)
 	}
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
+		log.Default().Fatalf("failed to read response body: %v", err)
 	}
 	registerDefinition := model.RegisterDefinition{}
-	log.Default().Println("Received message: " + string(body))
+	log.Default().Printf("Received message: %s", string(body))
 	err = json.Unmarshal(body, &registerDefinition)
 	if err != nil {
-		return nil, err
+		log.Default().Fatal("Error unmarshalling master data", err)
 	}
 	return &registerDefinition, nil
 }

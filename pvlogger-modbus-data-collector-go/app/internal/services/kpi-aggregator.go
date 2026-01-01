@@ -30,8 +30,7 @@ func AggregateKpisFor(jobId *model.JobId) {
 	}
 	err := persistence.NewPersistingService(config.DataAccessorCfg()).StoreKpiValues(&kpiValues)
 	if err != nil {
-		log.Default().Println("Failed to store kpi values:", err)
-		return
+		log.Default().Fatal("Failed to store kpi values", err)
 	}
 }
 
