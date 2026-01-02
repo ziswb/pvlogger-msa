@@ -1,13 +1,12 @@
 package response
 
 import (
-	"encoding/base64"
+	"bytes"
 	"encoding/binary"
 	"pvlogger-modbus-data-collector-go/internal/logging"
 	"pvlogger-modbus-data-collector-go/internal/modbus/model"
+	"strings"
 	"time"
-
-	"golang.org/x/text/encoding/charmap"
 )
 
 func NewRegisterValueResponseFromBytes(regDefs []model.RegisterDefinition, jobId model.JobId, transactionId model.RequestId, requestTime time.Time, header model.MbapHeader, bytes []byte) *RegisterValueResponse {
@@ -108,20 +107,38 @@ func handleI32(register model.RegisterDefinition, payload []byte) *RegisterValue
 }
 
 func handleStr(register model.RegisterDefinition, payload []byte) *RegisterValue {
-	logging.Debug("handling STR", "raw_payload", string(payload))
-	s, err := charmap.ISO8859_5.NewDecoder().Bytes(payload)
-	if err != nil {
-		logging.Fatal("error reading register value", "error", err)
+	logging.Debug("handling STR", "raw_payload", payload)
+	decodedString := decodeHuaweiModbusString(payload)
+	logging.Debug("handling STR", "decoded_payload", decodedString)
+	return NewRegisterValue(register, decodedString)
+}
+
+// decodeHuaweiModbusString decodes a fixed-length Huawei Modbus string.
+//   - payload: raw bytes read from Modbus registers
+//   - NULL (0x00) bytes are treated as spaces
+//   - Multiple trailing spaces are trimmed
+func decodeHuaweiModbusString(payload []byte) string {
+	// Replace any NULL with space
+	for i, b := range payload {
+		if b == 0x00 {
+			payload[i] = ' '
+		}
 	}
-	logging.Debug("handling STR", "iso8859_5_value", string(s))
-	text := make([]byte, base64.StdEncoding.DecodedLen(len(s)))
-	decodedBytes, err := base64.StdEncoding.Decode(text, s)
-	if err != nil {
-		logging.Fatal("error decoding string register value", "error", err)
+	// Collapse internal multiple spaces to a single space
+	out := bytes.Fields(payload) // splits on spaces
+	if len(out) == 0 {
+		return ""
 	}
-	text = text[:decodedBytes]
-	logging.Debug("handling STR", "decoded_base64", string(text))
-	return NewRegisterValue(register, text)
+	// Rejoin with single space
+	return strings.Join(bytesToStrings(out), " ")
+}
+
+func bytesToStrings(b [][]byte) []string {
+	s := make([]string, len(b))
+	for i := range b {
+		s[i] = string(b[i])
+	}
+	return s
 }
 
 func handleBitField16(register model.RegisterDefinition, payload []byte) *RegisterValue {

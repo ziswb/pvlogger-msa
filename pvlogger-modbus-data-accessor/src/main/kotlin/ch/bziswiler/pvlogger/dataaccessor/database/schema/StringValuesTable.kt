@@ -1,6 +1,5 @@
 package ch.bziswiler.pvlogger.dataaccessor.database.schema
 
-import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.stringify
 import ch.bziswiler.pvlogger.shared.modbus.ModbusObject
 import ch.bziswiler.pvlogger.shared.modbus.ModbusRegisterStringValue
 import org.jetbrains.exposed.dao.id.IntIdTable
@@ -24,7 +23,7 @@ object StringValuesTable : IntIdTable("modbus_register_string_values"), ValueSto
         StringValuesTable.insert {
             it[response_id] = responseId
             it[register_address] = modbusObject.objectId.toInt()
-            it[register_value] = modbusObject.objectValue.toByteArray().stringify()
+            it[register_value] = modbusObject.objectValue.toByteArray().toString()
         }
     }
 }

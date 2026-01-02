@@ -8,10 +8,8 @@ import ch.bziswiler.pvlogger.shared.masterdata.modbus.RegisterAddress
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Scope
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Type
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Unit
-import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition.Companion.CHAR_SET
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
-import java.nio.charset.Charset
 
 @Serializable
 data class ModbusRegisterDefinition(
@@ -28,13 +26,4 @@ data class ModbusRegisterDefinition(
     @Contextual
     val scope: Scope,
     val category: Category,
-) {
-    companion object {
-        const val CHAR_SET = "ISO-8859-5"
-    }
-}
-
-fun ByteArray.stringify() = this
-    .toString(Charset.forName(CHAR_SET))
-    .replace("\u0000", " ")
-    .trim()
+)
