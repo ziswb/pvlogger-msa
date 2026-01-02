@@ -28,7 +28,6 @@ import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SortOrder.ASC
 import org.jetbrains.exposed.sql.SortOrder.DESC
 import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.max
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.math.RoundingMode
@@ -84,7 +83,8 @@ object HouseKpiController {
         logger.info { "getting latest KPI" }.let {
             HousePowerKpiTable
                 .selectAll()
-                .where { dateCreated eq dateCreated.max() }
+                .orderBy(dateCreated, DESC)
+                .limit(1)
                 .firstOrNull()
                 ?.let { toKpiValuesDto(it) }
         }
