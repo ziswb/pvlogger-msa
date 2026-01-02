@@ -47,7 +47,6 @@ func (s *MasterDataService) FetchRegisterDefinitions(
 		logging.Fatal("failed to read response body", "error", err)
 	}
 	var definitions []model.RegisterDefinition
-	logging.Debug("received message", "body", string(body))
 	if err := json.Unmarshal(body, &definitions); err != nil {
 		logging.Fatal("failed to unmarshal response", "error", err)
 	}
