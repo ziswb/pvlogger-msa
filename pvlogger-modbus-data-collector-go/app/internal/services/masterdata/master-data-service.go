@@ -15,7 +15,7 @@ import (
 func (s *MasterDataService) FetchRegisterDefinitions(
 	deviceTypes []model.DeviceType,
 	categories []model.Category,
-) (*[]model.RegisterDefinition, error) {
+) *[]model.RegisterDefinition {
 	logging.Info("fetching master data")
 	devTypesParam := strings.Join(arrayOfDeviceTypesToArrayOfStrings(deviceTypes), paramValueSeparator)
 	categoriesParam := strings.Join(arrayOfCategoriesToArrayOfStrings(categories), paramValueSeparator)
@@ -52,7 +52,7 @@ func (s *MasterDataService) FetchRegisterDefinitions(
 	}
 
 	logging.Info("fetched master data successfully")
-	return &definitions, nil
+	return &definitions
 }
 
 func (s *MasterDataService) MasterDataForSmartMeterActivePower() (*model.RegisterDefinition, error) {

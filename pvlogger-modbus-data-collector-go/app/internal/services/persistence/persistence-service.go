@@ -13,19 +13,26 @@ import (
 	"pvlogger-modbus-data-collector-go/internal/modbus/response"
 )
 
-func (s *PersistingService) StoreValues(valueResponse *response.RegisterValueResponse) error {
+func (s *PersistingService) StoreValues(valueResponse *response.RegisterValueResponse) {
 	logging.Debug("storing modbus values")
 	storeModbusValuesPath := config.DataAccessorCfg().StoreModbusValuesPath
-	return s.storeValues(valueResponse, storeModbusValuesPath)
+	s.storeValues(valueResponse, storeModbusValuesPath)
 }
 
-func (s *PersistingService) StoreKpiValues(kpiValues *kpis.PvLoggerKpiData) error {
+func (s *PersistingService) StoreKpiValues(kpiValues *kpis.PvLoggerKpiData) {
 	logging.Debug("storing kpi values")
 	storeKpiValuesPath := config.DataAccessorCfg().StoreKpiValuesPath
-	return s.storeValues(kpiValues, storeKpiValuesPath)
+	s.storeValues(kpiValues, storeKpiValuesPath)
 }
 
-func (s *PersistingService) storeValues(values any, storagePath string) error {
+func (s *PersistingService) StoreDeviceIdentifierValues(resp *response.ReadDeviceIdentifiersResponse) {
+	logging.Info("storing device identifier values")
+	storeDevIdValuesPath := config.DataAccessorCfg().StoreDeviceIdValuesPath
+	// TODO implement currently it's wrong!!
+	s.storeValues(resp.ObjectList, storeDevIdValuesPath)
+}
+
+func (s *PersistingService) storeValues(values any, storagePath string) {
 	logging.Debug("storing values")
 	postURL, err := url.Parse(fmt.Sprintf("%s/%s/%s", s.baseURL, config.DataAccessorCfg().BasePath, storagePath))
 	if err != nil {
@@ -54,5 +61,4 @@ func (s *PersistingService) storeValues(values any, storagePath string) error {
 		}
 	}(serverResponse.Body)
 	logging.Debug("server response", "status", serverResponse.Status)
-	return nil
 }

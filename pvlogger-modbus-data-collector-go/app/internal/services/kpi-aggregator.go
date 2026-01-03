@@ -28,10 +28,7 @@ func AggregateKpisFor(jobId *model.JobId) {
 		Consumed:      todayKpis.Consumed().ToWh(),
 		SelfConsumed:  todayKpis.SelfConsumed().ToWh(),
 	}
-	err := persistence.NewPersistingService(config.DataAccessorCfg()).StoreKpiValues(&kpiValues)
-	if err != nil {
-		logging.Fatal("failed to store kpi values", "error", err)
-	}
+	persistence.NewPersistingService(config.DataAccessorCfg()).StoreKpiValues(&kpiValues)
 }
 
 func collectLiveKpis(jobId *model.JobId) *kpis.KpiLiveData {
