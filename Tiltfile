@@ -83,8 +83,13 @@ k8s_yaml([
     blob(cm_yml)
 ])
 
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_modbus_data_collector_go_install/files/pvlogger-modbus-data-collector-configmap.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_modbus_data_collector_go_install/files/pvlogger-modbus-data-collector-cronjob.yaml')
+k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_modbus_data_collector_go_install/files/pvlogger-modbus-data-collector-configmap-common.yaml')
+k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_modbus_data_collector_go_install/files/pvlogger-modbus-data-collector-configmap-device-identifiers.yaml')
+k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_modbus_data_collector_go_install/files/pvlogger-modbus-data-collector-configmap-dynamic-data.yaml')
+k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_modbus_data_collector_go_install/files/pvlogger-modbus-data-collector-configmap-static-data.yaml')
+k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_modbus_data_collector_go_install/files/pvlogger-modbus-data-collector-cronjob-device-identifiers.yaml')
+k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_modbus_data_collector_go_install/files/pvlogger-modbus-data-collector-cronjob-dynamic-data.yaml')
+k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_modbus_data_collector_go_install/files/pvlogger-modbus-data-collector-cronjob-static-data.yaml')
 
 k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_modbus_mock_server_install/files/pvlogger-modbus-mock-server-deployment.yaml')
 k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_modbus_mock_server_install/files/pvlogger-modbus-mock-server-service.yaml')
