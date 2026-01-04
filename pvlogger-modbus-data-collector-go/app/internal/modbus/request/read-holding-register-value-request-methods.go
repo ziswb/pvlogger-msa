@@ -15,10 +15,7 @@ func (r *ReadHoldingRegistersValueRequest) EncodeToBytes() []byte {
 	for _, regDef := range r.RegisterDefinitions {
 		numberOfBytes += model.UShort(regDef.Quantity.Value)
 	}
-	modbusData := model.ModbusRequestData{
-		StartingAddress:   registerAddress,
-		NumberOfRegisters: numberOfBytes,
-	}
+	modbusData := model.NewModbusRequestDataFromUShortValues(registerAddress, numberOfBytes)
 	mbapHeader := model.MbapHeader{
 		ProtocolIdentifier: r.RequestId.Id,
 		ProtocolType:       model.DefaultProtocolType,

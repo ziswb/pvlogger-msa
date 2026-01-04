@@ -7,17 +7,39 @@ import (
 const bytesPerUShort = 2
 
 type ModbusRequestData struct {
-	StartingAddress   UShort
-	NumberOfRegisters UShort
+	data []byte
+}
+
+func NewModbusRequestDataFromUShortValues(values ...UShort) ModbusRequestData {
+	return ModbusRequestData{
+		data: dataFromUShorts(values...),
+	}
+}
+
+func NewModbusRequestDataFromUByteValues(values ...UByte) ModbusRequestData {
+	return ModbusRequestData{
+		data: dataFromUBytes(values...),
+	}
 }
 
 func (m *ModbusRequestData) NumberOfBytes() int {
-	return 2 * bytesPerUShort
+	return len(m.data) * bytesPerUShort
 }
 
 func (m *ModbusRequestData) EncodeToBytes() []byte {
-	var d = make([]byte, m.NumberOfBytes())
-	binary.BigEndian.PutUint16(d[0:], m.StartingAddress)
-	binary.BigEndian.PutUint16(d[2:], m.NumberOfRegisters)
+	return m.data
+}
+
+func dataFromUBytes(values ...UByte) []byte {
+	var d = make([]byte, len(values))
+	copy(d, values)
+	return d
+}
+
+func dataFromUShorts(values ...UShort) []byte {
+	var d = make([]byte, len(values)*bytesPerUShort)
+	for i, value := range values {
+		binary.BigEndian.PutUint16(d[i*bytesPerUShort:], value)
+	}
 	return d
 }
