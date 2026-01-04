@@ -29,7 +29,7 @@ func (s *PersistingService) StoreDeviceIdentifierValues(resp *response.ReadDevic
 	logging.Info("storing device identifier values")
 	storeDevIdValuesPath := config.DataAccessorCfg().StoreDeviceIdValuesPath
 	// TODO implement currently it's wrong!!
-	s.storeValues(resp.ObjectList, storeDevIdValuesPath)
+	s.storeValues(resp, storeDevIdValuesPath)
 }
 
 func (s *PersistingService) storeValues(values any, storagePath string) {

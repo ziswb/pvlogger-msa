@@ -18,7 +18,7 @@ import (
 
 type DeviceIdToTypesMap map[model.UByte][]model.DeviceType
 
-type RequestService struct {
+type ReadRegisterValuesService struct {
 	jobId              model.JobId
 	lastTransactionId  atomic.Int32
 	categories         []model.Category
@@ -27,8 +27,8 @@ type RequestService struct {
 	persistenceService *persistence.PersistingService
 }
 
-func NewRequestService(categories []model.Category) *RequestService {
-	return &RequestService{
+func NewReadRegisterValuesService(categories []model.Category) *ReadRegisterValuesService {
+	return &ReadRegisterValuesService{
 		jobId:              model.NewJobId(uuid.New().String()),
 		lastTransactionId:  atomic.Int32{},
 		categories:         categories,
@@ -38,18 +38,20 @@ func NewRequestService(categories []model.Category) *RequestService {
 	}
 }
 
-type RequestServiceInterface interface {
-	JobId() model.JobId
-	NextRequestId() model.UShort
-	Close()
-	Connect()
+func NewBasicReadRegisterValuesService() *ReadRegisterValuesService {
+	return &ReadRegisterValuesService{
+		jobId:              model.NewJobId(uuid.New().String()),
+		lastTransactionId:  atomic.Int32{},
+		tcpHandler:         modbus.NewTcpHandler(fmt.Sprintf("%s:%d", config.ModbusConfig().Host, config.ModbusConfig().Port), config.ModbusConfig().Timeout),
+		persistenceService: persistence.NewPersistingService(config.DataAccessorCfg()),
+	}
 }
 
-func (s *RequestService) JobId() *model.JobId {
+func (s *ReadRegisterValuesService) JobId() *model.JobId {
 	return &s.jobId
 }
 
-func (s *RequestService) newRegisterValueRequest(deviceId model.UByte, registerDefinitions []model.RegisterDefinition) *request.ReadHoldingRegistersValueRequest {
+func (s *ReadRegisterValuesService) newReadRegisterValuesRequest(deviceId model.UByte, registerDefinitions []model.RegisterDefinition) *request.ReadHoldingRegistersValueRequest {
 	return &request.ReadHoldingRegistersValueRequest{
 		JobId:               s.jobId,
 		RequestTime:         time.Now(),
@@ -59,7 +61,7 @@ func (s *RequestService) newRegisterValueRequest(deviceId model.UByte, registerD
 	}
 }
 
-func (s *RequestService) Close() {
+func (s *ReadRegisterValuesService) Close() {
 	logging.Debug("closing modbus connection")
 	err := s.tcpHandler.Close()
 	if errors.Is(err, net.ErrClosed) {
@@ -71,7 +73,7 @@ func (s *RequestService) Close() {
 	}
 }
 
-func (s *RequestService) Connect() {
+func (s *ReadRegisterValuesService) Connect() {
 	logging.Debug("connecting to modbus device")
 	err := s.tcpHandler.Connect()
 	if err != nil {
@@ -79,7 +81,7 @@ func (s *RequestService) Connect() {
 	}
 }
 
-func (s *RequestService) NextRequestId() model.UShort {
+func (s *ReadRegisterValuesService) NextRequestId() model.UShort {
 	return model.UShort(s.lastTransactionId.Add(1))
 }
 

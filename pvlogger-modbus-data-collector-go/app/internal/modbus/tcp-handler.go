@@ -6,8 +6,6 @@ import (
 	"net"
 	"pvlogger-modbus-data-collector-go/internal/logging"
 	"pvlogger-modbus-data-collector-go/internal/modbus/model"
-	"pvlogger-modbus-data-collector-go/internal/modbus/request"
-	"pvlogger-modbus-data-collector-go/internal/modbus/response"
 	"time"
 )
 
@@ -67,17 +65,16 @@ func (h *TcpHandler) Connect() error {
 	return nil
 }
 
-func (h *TcpHandler) FetchRegisterValues(request *request.ReadHoldingRegistersValueRequest) (*response.RegisterValueResponse, error) {
-	logging.Debug("fetching register values")
-	bytes := request.EncodeToBytes()
+func (h *TcpHandler) ExecuteRequest(bytes []byte) (*model.MbapHeader, []byte, error) {
+	logging.Debug("executing request")
 	if err := writeFull(h.conn, bytes); err != nil {
-		logging.Error("error writing modbus frame", "error", err)
-		return nil, err
+		logging.Error("error writing bytes", "error", err)
+		return nil, nil, err
 	}
 	headerBytes := make([]byte, 7)
 	if _, err := io.ReadFull(h.conn, headerBytes); err != nil {
-		logging.Error("error reading header", "error", err)
-		return nil, err
+		logging.Error("error reading header bytes", "error", err)
+		return nil, nil, err
 	}
 	mbapHeader := model.NewMbapHeaderFromBytes(headerBytes)
 	dataLength := int(binary.BigEndian.Uint16(headerBytes[4:6]))
@@ -88,10 +85,9 @@ func (h *TcpHandler) FetchRegisterValues(request *request.ReadHoldingRegistersVa
 	pduBytes := make([]byte, remaining)
 	if _, err := io.ReadFull(h.conn, pduBytes); err != nil {
 		logging.Error("error reading rest", "error", err)
-		return nil, err
+		return nil, nil, err
 	}
-	valueResponse := response.NewRegisterValueResponseFromBytes(request.RegisterDefinitions, request.JobId, request.RequestId, request.RequestTime, mbapHeader, pduBytes)
-	return valueResponse, nil
+	return &mbapHeader, pduBytes, nil
 }
 
 func writeFull(w io.Writer, b []byte) error {

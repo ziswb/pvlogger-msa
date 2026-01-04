@@ -8,40 +8,37 @@ import (
 	"pvlogger-modbus-data-collector-go/internal/services/masterdata"
 )
 
-func (s *RequestService) ExecuteFetchRegisterValuesJob() {
+func (s *ReadRegisterValuesService) ExecuteFetchRegisterValuesJob() {
 	logging.Info("executing fetch register values job", "job_id", s.jobId.Id)
 	for deviceId, deviceTypes := range s.deviceIdToTypesMap {
 		s.fetchRegisterValues(deviceId, deviceTypes)
 	}
 }
 
-func (s *RequestService) fetchRegisterValues(deviceId model.UByte, deviceTypes []model.DeviceType) {
+func (s *ReadRegisterValuesService) fetchRegisterValues(deviceId model.UByte, deviceTypes []model.DeviceType) {
 	logging.Info("fetching register values", "device_id", deviceId, "device_types", deviceTypes)
-	registerDefinitionsList, err := s.listsOfConsecutiveRegisters(deviceTypes)
-	if err != nil {
-		logging.Fatal("error getting register definitions", "error", err)
-	}
-	defer s.Close()
+	registerDefinitionsList := s.listsOfConsecutiveRegisters(deviceTypes)
 	for _, registerDefinitions := range *registerDefinitionsList {
-		valueRequest := s.newRegisterValueRequest(deviceId, registerDefinitions)
-		s.Connect()
-		valueResponse, err := s.tcpHandler.FetchRegisterValues(valueRequest)
-		s.Close()
-		if err != nil {
-			logging.Fatal("error requesting register values", "error", err)
-		}
-		err = s.storeResponse(valueResponse)
-		if err != nil {
-			logging.Fatal("error storing response", "error", err)
-		}
+		valueResponse := s.executeRequest(deviceId, registerDefinitions)
+		s.storeResponse(valueResponse)
 	}
 }
 
-func (s *RequestService) listsOfConsecutiveRegisters(deviceTypes []model.DeviceType) (*[][]model.RegisterDefinition, error) {
-	registerDefinitions, err := s.fetchRegisterDefinitionsFromMasterData(deviceTypes)
+func (s *ReadRegisterValuesService) executeRequest(deviceId model.UByte, registerDefinitions []model.RegisterDefinition) *response.RegisterValueResponse {
+	logging.Debug("fetching register values")
+	req := s.newReadRegisterValuesRequest(deviceId, registerDefinitions)
+	s.Connect()
+	defer s.Close()
+	mbapHeader, pduBytes, err := s.tcpHandler.ExecuteRequest(req.EncodeToBytes())
+	s.Close()
 	if err != nil {
-		logging.Fatal("error getting register definitions", "error", err)
+		logging.Fatal("error executing values request", "error", err)
 	}
+	return response.NewRegisterValueResponseFromBytes(req.RegisterDefinitions, req.JobId, req.RequestId, req.RequestTime, *mbapHeader, pduBytes)
+}
+
+func (s *ReadRegisterValuesService) listsOfConsecutiveRegisters(deviceTypes []model.DeviceType) *[][]model.RegisterDefinition {
+	registerDefinitions := s.fetchRegisterDefinitionsFromMasterData(deviceTypes)
 	var listsOfConsecutiveRegisters [][]model.RegisterDefinition
 	for _, registerDefinition := range *registerDefinitions {
 		if isNotSuccessor(listsOfConsecutiveRegisters, registerDefinition) {
@@ -51,17 +48,14 @@ func (s *RequestService) listsOfConsecutiveRegisters(deviceTypes []model.DeviceT
 		}
 	}
 	logging.Debug("lists of consecutive registers", "count", len(listsOfConsecutiveRegisters))
-	return &listsOfConsecutiveRegisters, nil
+	return &listsOfConsecutiveRegisters
 }
 
-func (s *RequestService) fetchRegisterDefinitionsFromMasterData(deviceTypes []model.DeviceType) (*[]model.RegisterDefinition, error) {
+func (s *ReadRegisterValuesService) fetchRegisterDefinitionsFromMasterData(deviceTypes []model.DeviceType) *[]model.RegisterDefinition {
 	logging.Debug("getting register definitions", "device_types", deviceTypes)
-	definitions, err := masterdata.NewMasterDataService().FetchRegisterDefinitions(deviceTypes, s.categories)
-	if err != nil {
-		logging.Fatal("error getting register definitions", "error", err)
-	}
+	definitions := masterdata.NewMasterDataService().FetchRegisterDefinitions(deviceTypes, s.categories)
 	logging.Debug("got register definitions")
-	return definitions, nil
+	return definitions
 }
 
 func isNotSuccessor(registers [][]model.RegisterDefinition, nextRegister model.RegisterDefinition) bool {
@@ -74,16 +68,13 @@ func isNotSuccessor(registers [][]model.RegisterDefinition, nextRegister model.R
 	return nextRegister.RegisterAddress.Value != nextRegisterAddress
 }
 
-func (s *RequestService) storeResponse(response *response.RegisterValueResponse) error {
+func (s *ReadRegisterValuesService) storeResponse(response *response.RegisterValueResponse) {
 	logging.Debug("storing response", "response", response)
 	jsonResponse, err := json.MarshalIndent(response, "", "  ")
 	if err != nil {
 		logging.Fatal("error marshalling response", "error", err)
 	}
 	logging.Debug("json response", "json", string(jsonResponse))
-	err = s.persistenceService.StoreValues(response)
-	if err != nil {
-		logging.Fatal("error storing response", "error", err)
-	}
-	return nil
+	s.persistenceService.StoreValues(response)
+	logging.Fatal("error storing response", "error", err)
 }

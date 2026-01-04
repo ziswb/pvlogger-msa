@@ -1,0 +1,24 @@
+package services
+
+import (
+	"pvlogger-modbus-data-collector-go/internal/logging"
+	"pvlogger-modbus-data-collector-go/internal/modbus/model"
+	"pvlogger-modbus-data-collector-go/internal/services/jobs"
+)
+
+func FetchModbusStaticRegisterValues() {
+	logging.Info("fetching modbus static register values")
+	jobs.NewReadRegisterValuesService([]model.Category{model.StaticCategory, model.ConfigCategory}).ExecuteFetchRegisterValuesJob()
+}
+
+func FetchModbusDynamicRegisterValues() *model.JobId {
+	logging.Info("fetching modbus dynamic register values")
+	service := jobs.NewReadRegisterValuesService([]model.Category{model.DynamicCategory, model.AlarmCategory})
+	service.ExecuteFetchRegisterValuesJob()
+	return service.JobId()
+}
+
+func FetchDeviceIdentifiers() {
+	logging.Info("fetching modbus device identifiers")
+	jobs.NewBasicReadRegisterValuesService().ExecuteFetchDeviceIdentifiersJob()
+}
