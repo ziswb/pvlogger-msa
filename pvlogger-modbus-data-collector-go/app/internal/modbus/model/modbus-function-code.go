@@ -3,7 +3,7 @@ package model
 var ReadRegisters = NewFunctionCode(0x03)
 var WriteSingleRegister = NewFunctionCode(0x06)
 var WriteMultipleRegisters = NewFunctionCode(0x10)
-var ReadDeviceIdentifiers = NewFunctionCode(0x28)
+var ReadDeviceIdentifiers = NewFunctionCode(0x2B)
 var AbnormalResponse = NewFunctionCode(0x83)
 var UnknownResponse = NewFunctionCode(0x0)
 
