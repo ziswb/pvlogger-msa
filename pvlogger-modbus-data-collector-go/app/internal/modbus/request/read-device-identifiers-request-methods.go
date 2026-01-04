@@ -8,8 +8,8 @@ func (r *ReadDeviceIdentifiersRequest) EncodeToBytes() []byte {
 	dataLength := model.UShort(0x05)
 	functionCode := model.ReadDeviceIdentifiers
 	meiType := model.UByte(0x0E)
-	readDevIdCode := model.UByte(0x01)
-	objectId := model.UByte(0x00)
+	readDevIdCode := r.ReadDevIdCode
+	objectId := r.ObjectId
 	mbapHeader := model.MbapHeader{
 		ProtocolIdentifier: r.RequestId.Id,
 		ProtocolType:       model.DefaultProtocolType,

@@ -19,7 +19,7 @@ func (s *ReadRegisterValuesService) fetchRegisterValues(deviceId model.UByte, de
 	registerDefinitionsList := s.listsOfConsecutiveRegisters(deviceTypes)
 	for _, registerDefinitions := range *registerDefinitionsList {
 		logging.Info("fetching register values")
-		req := s.newReadRegisterValuesRequest(deviceId, registerDefinitions)
+		req := s.NewReadRegisterValuesRequest(deviceId, registerDefinitions)
 		s.Connect()
 		mbapHeader, pduBytes, err := s.tcpHandler.ExecuteRequest(req.EncodeToBytes())
 		s.Close()

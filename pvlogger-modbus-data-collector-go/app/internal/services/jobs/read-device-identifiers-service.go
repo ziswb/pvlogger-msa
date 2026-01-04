@@ -36,5 +36,7 @@ func (s *ReadRegisterValuesService) newReadDeviceIdentifiersRequest(deviceId mod
 		RequestTime:   time.Now(),
 		RequestId:     model.NewRequestId(s.NextRequestId()),
 		LogicDeviceId: deviceId,
+		ReadDevIdCode: s.ReadDevIdCode,
+		ObjectId:      s.ObjectId,
 	}
 }

@@ -10,4 +10,6 @@ type ReadDeviceIdentifiersRequest struct {
 	RequestTime   time.Time
 	RequestId     model.RequestId
 	LogicDeviceId model.UByte
+	ReadDevIdCode model.UByte
+	ObjectId      model.UByte
 }

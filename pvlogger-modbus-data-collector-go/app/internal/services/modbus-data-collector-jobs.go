@@ -20,5 +20,10 @@ func FetchModbusDynamicRegisterValues() *model.JobId {
 
 func FetchDeviceIdentifiers() {
 	logging.Info("fetching modbus device identifiers")
-	jobs.NewBasicReadRegisterValuesService().ExecuteFetchDeviceIdentifiersJob()
+	jobs.NewReadDeviceIdentifiersService().ExecuteFetchDeviceIdentifiersJob()
+}
+
+func FetchDeviceList() {
+	logging.Info("fetching modbus device list")
+	jobs.NewReadDeviceListService().ExecuteFetchDeviceIdentifiersJob()
 }
