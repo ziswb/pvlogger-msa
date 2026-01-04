@@ -17,19 +17,19 @@ func (s *ReadRegisterValuesService) ExecuteFetchRegisterValuesJob() {
 func (s *ReadRegisterValuesService) fetchRegisterValues(deviceId model.UByte, deviceTypes []model.DeviceType) {
 	logging.Info("fetching register values", "device_id", deviceId, "device_types", deviceTypes)
 	registerDefinitionsList := s.listsOfConsecutiveRegisters(deviceTypes)
-	s.Connect()
-	defer s.Close()
 	for _, registerDefinitions := range *registerDefinitionsList {
 		logging.Info("fetching register values")
 		req := s.newReadRegisterValuesRequest(deviceId, registerDefinitions)
+		s.Connect()
 		mbapHeader, pduBytes, err := s.tcpHandler.ExecuteRequest(req.EncodeToBytes())
+		s.Close()
 		if err != nil {
 			logging.Fatal("error requesting register values", "error", err)
 		}
 		valueResponse := response.NewRegisterValueResponseFromBytes(req.RegisterDefinitions, req.JobId, req.RequestId, req.RequestTime, *mbapHeader, pduBytes)
 		s.persistenceService.StoreValues(valueResponse)
 	}
-	s.Close()
+	defer s.Close()
 }
 
 func (s *ReadRegisterValuesService) listsOfConsecutiveRegisters(deviceTypes []model.DeviceType) *[][]model.RegisterDefinition {
