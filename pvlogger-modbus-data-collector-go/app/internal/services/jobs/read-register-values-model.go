@@ -62,10 +62,10 @@ func (s *ReadRegisterValuesService) newReadRegisterValuesRequest(deviceId model.
 }
 
 func (s *ReadRegisterValuesService) Close() {
-	logging.Debug("closing modbus connection")
+	logging.Info("closing modbus connection")
 	err := s.tcpHandler.Close()
 	if errors.Is(err, net.ErrClosed) {
-		logging.Debug("modbus connection already closed")
+		logging.Warn("modbus connection already closed")
 		return
 	}
 	if err != nil {
@@ -74,7 +74,7 @@ func (s *ReadRegisterValuesService) Close() {
 }
 
 func (s *ReadRegisterValuesService) Connect() {
-	logging.Debug("connecting to modbus device")
+	logging.Info("connecting to modbus device")
 	err := s.tcpHandler.Connect()
 	if err != nil {
 		logging.Fatal("error connecting to modbus device", "error", err)

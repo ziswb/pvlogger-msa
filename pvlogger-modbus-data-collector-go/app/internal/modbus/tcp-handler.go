@@ -37,7 +37,7 @@ func (h *TcpHandler) Close() error {
 }
 
 func (h *TcpHandler) Connect() error {
-	logging.Debug("connecting to modbus device", "address", h.address)
+	logging.Info("connecting to modbus device", "address", h.address)
 	conn, err := (&net.Dialer{Timeout: h.timeout, KeepAlive: 30 * time.Second}).Dial("tcp", h.address)
 	if err != nil {
 		return err
@@ -66,7 +66,7 @@ func (h *TcpHandler) Connect() error {
 }
 
 func (h *TcpHandler) ExecuteRequest(bytes []byte) (*model.MbapHeader, []byte, error) {
-	logging.Debug("executing request")
+	logging.Info("executing request")
 	if err := writeFull(h.conn, bytes); err != nil {
 		logging.Error("error writing bytes", "error", err)
 		return nil, nil, err

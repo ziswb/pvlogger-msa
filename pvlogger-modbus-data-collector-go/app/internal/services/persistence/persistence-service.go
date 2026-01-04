@@ -14,13 +14,13 @@ import (
 )
 
 func (s *PersistingService) StoreValues(valueResponse *response.RegisterValueResponse) {
-	logging.Debug("storing modbus values")
+	logging.Info("storing modbus values")
 	storeModbusValuesPath := config.DataAccessorCfg().StoreModbusValuesPath
 	s.storeValues(valueResponse, storeModbusValuesPath)
 }
 
 func (s *PersistingService) StoreKpiValues(kpiValues *kpis.PvLoggerKpiData) {
-	logging.Debug("storing kpi values")
+	logging.Info("storing kpi values")
 	storeKpiValuesPath := config.DataAccessorCfg().StoreKpiValuesPath
 	s.storeValues(kpiValues, storeKpiValuesPath)
 }
@@ -28,12 +28,11 @@ func (s *PersistingService) StoreKpiValues(kpiValues *kpis.PvLoggerKpiData) {
 func (s *PersistingService) StoreDeviceIdentifierValues(resp *response.ReadDeviceIdentifiersResponse) {
 	logging.Info("storing device identifier values")
 	storeDevIdValuesPath := config.DataAccessorCfg().StoreDeviceIdValuesPath
-	// TODO implement currently it's wrong!!
 	s.storeValues(resp, storeDevIdValuesPath)
 }
 
 func (s *PersistingService) storeValues(values any, storagePath string) {
-	logging.Debug("storing values")
+	logging.Info("storing values")
 	postURL, err := url.Parse(fmt.Sprintf("%s/%s/%s", s.baseURL, config.DataAccessorCfg().BasePath, storagePath))
 	if err != nil {
 		logging.Fatal("failed to parse URL", "error", err)
@@ -60,5 +59,5 @@ func (s *PersistingService) storeValues(values any, storagePath string) {
 			logging.Error("failed to close response body", "error", err)
 		}
 	}(serverResponse.Body)
-	logging.Debug("server response", "status", serverResponse.Status)
+	logging.Info("values stored", "status", serverResponse.Status)
 }

@@ -19,7 +19,7 @@ func (s *ReadRegisterValuesService) ExecuteFetchDeviceIdentifiersJob() {
 
 func (s *ReadRegisterValuesService) readDeviceIdentifiers(deviceId model.UByte) *response.ReadDeviceIdentifiersResponse {
 	req := s.newReadDeviceIdentifiersRequest(deviceId)
-	logging.Debug("fetching device identifiers")
+	logging.Info("fetching device identifiers")
 	s.Connect()
 	defer s.Close()
 	mbapHeader, pduBytes, err := s.tcpHandler.ExecuteRequest(req.EncodeToBytes())
