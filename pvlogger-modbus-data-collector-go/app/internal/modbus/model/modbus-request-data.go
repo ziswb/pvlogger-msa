@@ -23,7 +23,7 @@ func NewModbusRequestDataFromUByteValues(values ...UByte) ModbusRequestData {
 }
 
 func (m *ModbusRequestData) NumberOfBytes() int {
-	return len(m.data) * bytesPerUShort
+	return len(m.data)
 }
 
 func (m *ModbusRequestData) EncodeToBytes() []byte {
