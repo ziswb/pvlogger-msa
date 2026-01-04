@@ -92,7 +92,7 @@ object ModbusDao {
 
     private fun storeValues(data: ReadDeviceIdentifiersResponse, headerId: EntityID<Int>) =
         data.objectList.forEach { modbusObject: ModbusObject ->
-            if (modbusObject.objectId.toInt() == 21 || modbusObject.objectId.toInt() == 135) {
+            if (modbusObject.objectId.toInt() == 3 || modbusObject.objectId.toInt() == 21 || modbusObject.objectId.toInt() == 135) {
                 logger.trace { "Storing integer value '${data}" }
                 IntegerValueTable.store(headerId.value, modbusObject)
             } else {
