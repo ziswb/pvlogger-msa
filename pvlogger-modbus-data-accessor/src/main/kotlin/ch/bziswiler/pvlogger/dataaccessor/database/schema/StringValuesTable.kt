@@ -23,7 +23,7 @@ object StringValuesTable : IntIdTable("modbus_register_string_values"), ValueSto
         StringValuesTable.insert {
             it[response_id] = responseId
             it[register_address] = modbusObject.objectId.toInt()
-            it[register_value] = modbusObject.objectValue.toByteArray().toString()
+            it[register_value] = modbusObject.objectValue.toByteArray().decodeToString().replace('\u0000', ' ')
         }
     }
 }
