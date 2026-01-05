@@ -122,7 +122,7 @@ PV_LOGGER_MODULES=(
   "pvlogger-kpi-exporter"
   "pvlogger-masterdata-server"
   "pvlogger-modbus-data-accessor"
-  "pvlogger-modbus-data-collector-go"
+  "pvlogger-modbus-data-collector"
   "pvlogger-modbus-mock-server"
   "pvlogger-sunrise-sunset"
 )
