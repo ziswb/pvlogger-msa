@@ -20,7 +20,6 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.time.delay
 import kotlinx.serialization.json.Json
@@ -29,6 +28,7 @@ import org.koin.ktor.ext.inject
 import java.time.Duration
 import java.time.Duration.ofSeconds
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.coroutines.CoroutineContext
 
 private val logger = KotlinLogging.logger {}
@@ -56,11 +56,11 @@ fun Application.configureWebSockets() {
     val config by inject<AppConfig>()
     val dataAccessorRestProxy = DataAccessorRestProxy(config.dataAccessorConfig)
     val notificationProducer = NotificationProducer(flow, dataAccessorRestProxy)
+    val delay = 60.Seconds
+    val notificationProducerScheduler = NotificationProducerScheduler(notificationProducer, delay, delay)
 
     routing {
         webSocket("/$FRONTEND_READ_LIVE_DATA_VALUES_PATH") {
-            val delay = 60.Seconds
-            val notificationProducerScheduler = NotificationProducerScheduler(notificationProducer, delay, delay)
             notificationProducerScheduler.start()
             val job =
                 launch {
@@ -70,19 +70,22 @@ fun Application.configureWebSockets() {
                         logger.info { "WebSocket: KPI values sent!" }
                     }
                 }
-            runCatching {
-                incoming.consumeEach { frame ->
-                    when (frame) {
-                        is Frame.Close -> logger.debug { "WebSocket: Closing websocket" }.also { job.cancel() }
-                        else -> logger.debug { "WebSocket: Received frame '$frame'" }
+            val result =
+                runCatching {
+                    incoming.consumeEach { frame ->
+                        when (frame) {
+                            is Frame.Close -> logger.debug { "WebSocket: Closing websocket" }.also { job.cancel() }
+                            else -> logger.debug { "WebSocket: Received frame '$frame'" }
+                        }
                     }
+                }.also {
+                    logger.info { "WebSocket: Stopping notification producer scheduler and job..." }
+                    notificationProducerScheduler.stop()
+                    job.cancel()
                 }
-            }.onFailure { exception ->
-                logger.info(exception) { "WebSocket: Received exception" }
-            }.also {
-                notificationProducerScheduler.stop()
-                job.cancel()
-            }
+            result
+                .onFailure { logger.error(t = it) { "WebSocket: Received exception" } }
+                .onSuccess { logger.info { "WebSocket: Stopped successfully" } }
         }
     }
 }
@@ -105,29 +108,42 @@ class NotificationProducerScheduler(
 ) : CoroutineScope {
     private val job = Job()
     private val singleThreadExecutor = Executors.newSingleThreadExecutor()
+    private val startedCounter = AtomicInteger()
     val logger = KotlinLogging.logger {}
 
     override val coroutineContext: CoroutineContext
         get() = job + singleThreadExecutor.asCoroutineDispatcher()
 
     fun stop() {
+        logger.debug { "NotificationProducerScheduler: Stopping..." }
+        if (startedCounter.decrementAndGet() > 0) {
+            logger.debug { "NotificationProducerScheduler: Not the last started instance, skipping stop" }
+            return
+        }
         job.cancel()
         singleThreadExecutor.shutdown()
+        logger.debug { "NotificationProducerScheduler: Stopped successfully" }
     }
 
     fun start() =
-        launch {
-            logger.debug { "Starting NotificationProducerScheduler with interval '$interval' and initial delay '$initialDelay'" }
-            initialDelay?.let {
-                logger.debug { "Waiting for initial delay '$initialDelay'" }
-                delay(it)
+        (startedCounter.getAndIncrement() == 0).let {
+            if (it) {
+                launch {
+                    logger.debug { "Starting NotificationProducerScheduler with interval '$interval' and initial delay '$initialDelay'" }
+                    initialDelay?.let {
+                        logger.debug { "Waiting for initial delay '$initialDelay'" }
+                        delay(it)
+                    }
+                    while (startedCounter.get() > 0) {
+                        logger.debug { "NotificationProducerScheduler: Producing..." }
+                        service.produce()
+                        logger.debug { "NotificationProducerScheduler: Produced! Waiting for next interval '$interval'..." }
+                        delay(interval)
+                    }
+                    logger.debug { "NotificationProducerScheduler: Stopping..." }
+                }
+            } else {
+                logger.debug { "NotificationProducerScheduler: Already started, skipping start" }
             }
-            while (isActive) {
-                logger.debug { "NotificationProducerScheduler: Producing..." }
-                service.produce()
-                logger.debug { "NotificationProducerScheduler: Produced! Waiting for next interval '$interval'..." }
-                delay(interval)
-            }
-            logger.debug { "NotificationProducerScheduler: Stopping..." }
-    }
+        }
 }
