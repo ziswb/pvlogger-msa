@@ -11,7 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func insertFsResponseParams(failCode int32, message pgtype.Text, raw []byte, success bool, timestamp pgtype.Timestamp, err error, db *database.Database) (int32, error) {
+func (f FusionSolarAccess) insertFsResponseParams(failCode int32, message pgtype.Text, raw []byte, success bool, timestamp pgtype.Timestamp) (int32, error) {
 	log.Default().Println("Saving fs response params to database...")
 	responseParams := database.InsertFsResponseParams{
 		FailCode:  failCode,
@@ -20,7 +20,7 @@ func insertFsResponseParams(failCode int32, message pgtype.Text, raw []byte, suc
 		Success:   success,
 		Timestamp: timestamp,
 	}
-	insertedFsResponse, err := database.New(db.Conn).InsertFsResponse(db.Ctx, responseParams)
+	insertedFsResponse, err := database.New(f.Dao.Database.Conn).InsertFsResponse(f.Dao.Database.Ctx, responseParams)
 	if err != nil {
 		return 0, err
 	}

@@ -15,23 +15,25 @@ func main() {
 	}
 	name := config.JobConfig().JobName
 	log.Default().Println("name: " + name)
+	fusionSolarAccess := fusionsolar.NewFusionSolarAccess(*token)
+	defer fusionSolarAccess.Close()
 	switch name {
 	case model.STATION_REAL_KPI.String():
-		rtd, err := fusionsolar.FetchStationRealTimeData(*token)
+		err := fusionSolarAccess.FetchStationRealTimeData()
 		if err != nil {
 			log.Fatal(err)
 		}
-		err = fusionsolar.SaveStationRealKpiResponse(rtd)
+		err = fusionSolarAccess.SaveStationRealKpiResponse()
 		if err != nil {
 			log.Fatal(err)
 		}
 		break
 	case model.DEVICE_REAL_KPI.String():
-		rtd, err := fusionsolar.FetchDeviceRealData(*token)
+		err := fusionSolarAccess.FetchDeviceRealData()
 		if err != nil {
 			log.Fatal(err)
 		}
-		err = fusionsolar.SaveDeviceRealKpiResponse(rtd)
+		err = fusionSolarAccess.SaveDeviceRealKpiResponse()
 		if err != nil {
 			log.Fatal(err)
 		}

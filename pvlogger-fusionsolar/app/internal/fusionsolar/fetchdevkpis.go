@@ -5,55 +5,44 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
-	"pvlogger/internal/auth"
 	"pvlogger/internal/config"
 	"pvlogger/internal/database"
 	"pvlogger/internal/model"
 	"strconv"
 	"time"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const devTypeIdStringInverter = 1
 
-func FetchDeviceRealData(token auth.Token) (*model.DeviceRealKpiResponse, error) {
+func (f FusionSolarAccess) FetchDeviceRealData() error {
 	log.Default().Println("Fetching device real data...")
-	client, err := model.NewClientWithResponses(config.FsUrl(), addTokenClientOption(token))
+	client, err := model.NewClientWithResponses(config.FsUrl(), addTokenClientOption(f.token))
 	if err != nil {
-		return nil, err
+		return err
 	}
 	deviceRealKpiJSONRequestBody := model.DeviceRealKpiJSONRequestBody{DevIds: config.FsConfig().DevIds, DevTypeId: devTypeIdStringInverter}
 	response, err := client.DeviceRealKpiWithResponse(context.TODO(), deviceRealKpiJSONRequestBody)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	log.Default().Println("Device real data fetched successfully.")
-	return response, nil
+	f.DevKpiResponse = response
+	return nil
 }
 
-func SaveDeviceRealKpiResponse(response *model.DeviceRealKpiResponse) error {
+func (f FusionSolarAccess) SaveDeviceRealKpiResponse() error {
 	log.Default().Println("Saving Device Real Kpi Response to database...")
-	db, err := database.NewDatabase(config.DbConfig().Host, config.DbConfig().Port, config.DbConfig().DbName, config.DbConfig().Username, config.DbConfig().Password)
+	responseId, err := f.insertDeviceRealKpiResponseParams()
 	if err != nil {
 		return err
 	}
-	defer func(conn *pgx.Conn, ctx context.Context) {
-		err := conn.Close(ctx)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}(db.Conn, db.Ctx)
-	responseId, err := insertDeviceRealKpiResponseParams(response, db)
+	err = f.insertDeviceRealKpiResponseBasicParams(responseId)
 	if err != nil {
 		return err
 	}
-	err = insertDeviceRealKpiResponseBasicParams(response, responseId, db)
-	if err != nil {
-		return err
-	}
-	err = insertDeviceRealKpi(response, responseId, db)
+	err = f.insertDeviceRealKpi(responseId)
 	if err != nil {
 		return err
 	}
@@ -61,48 +50,48 @@ func SaveDeviceRealKpiResponse(response *model.DeviceRealKpiResponse) error {
 	return nil
 }
 
-func insertDeviceRealKpiResponseParams(response *model.DeviceRealKpiResponse, db *database.Database) (int32, error) {
+func (f FusionSolarAccess) insertDeviceRealKpiResponseParams() (int32, error) {
 	log.Default().Println("Saving Device Real Kpi Response Params to database...")
-	raw, err := json.RawMessage.MarshalJSON(response.Body)
+	raw, err := json.RawMessage.MarshalJSON(f.DevKpiResponse.Body)
 	if err != nil {
 		return 0, err
 	}
-	failCode := int32(response.JSON200.FailCode)
-	message := messageAsPgTextDevKpi(response)
-	success := boolOrFalseDevKpi(response)
+	failCode := int32(f.DevKpiResponse.JSON200.FailCode)
+	message := messageAsPgTextDevKpi(f.DevKpiResponse)
+	success := boolOrFalseDevKpi(f.DevKpiResponse)
 	timestamp := pgtype.Timestamp{Valid: true, Time: time.Now()}
-	i, err := insertFsResponseParams(failCode, message, raw, success, timestamp, err, db)
+	i, err := f.insertFsResponseParams(failCode, message, raw, success, timestamp)
 	log.Default().Println("Device Real Kpi response saved successfully.")
 	return i, err
 }
 
-func insertDeviceRealKpiResponseBasicParams(response *model.DeviceRealKpiResponse, responseId int32, db *database.Database) error {
+func (f FusionSolarAccess) insertDeviceRealKpiResponseBasicParams(responseId int32) error {
 	log.Default().Println("Saving Device Real Kpi Basic Params  to database...")
-	if response.JSON200.Params == nil {
+	if f.DevKpiResponse.JSON200.Params == nil {
 		return errors.New("'response.JSON200.Params' is nil")
 	}
-	currentTime := pgtype.Int8{Valid: true, Int64: *response.JSON200.Params.CurrentTime}
-	devIds := pgtype.Text{Valid: true, String: *response.JSON200.Params.DevIds}
-	err := insertFsResponseParamsDevice(currentTime, responseId, devIds, db)
+	currentTime := pgtype.Int8{Valid: true, Int64: *f.DevKpiResponse.JSON200.Params.CurrentTime}
+	devIds := pgtype.Text{Valid: true, String: *f.DevKpiResponse.JSON200.Params.DevIds}
+	err := f.insertFsResponseParamsDevice(currentTime, responseId, devIds)
 	log.Default().Println("Device Real Kpi response saved successfully.")
 	return err
 }
 
-func insertFsResponseParamsDevice(currentTime pgtype.Int8, responseId int32, deviceIds pgtype.Text, db *database.Database) error {
+func (f FusionSolarAccess) insertFsResponseParamsDevice(currentTime pgtype.Int8, responseId int32, deviceIds pgtype.Text) error {
 	log.Default().Println("Saving response params to database...")
 	responseParamsBasic := database.InsertFsResponseParamsDeviceParams{
 		CurrentTime: currentTime,
 		Response:    responseId,
 		DevIds:      deviceIds,
 	}
-	err := database.New(db.Conn).InsertFsResponseParamsDevice(db.Ctx, responseParamsBasic)
+	err := database.New(f.Dao.Database.Conn).InsertFsResponseParamsDevice(f.Dao.Database.Ctx, responseParamsBasic)
 	log.Default().Println("Response params saved successfully.")
 	return err
 }
 
-func insertDeviceRealKpi(response *model.DeviceRealKpiResponse, responseId int32, db *database.Database) error {
+func (f FusionSolarAccess) insertDeviceRealKpi(responseId int32) error {
 	log.Default().Println("Saving device real kpi to database...")
-	data := *response.JSON200.Data
+	data := *f.DevKpiResponse.JSON200.Data
 	for i := 0; i < len(data); i++ {
 		log.Default().Println("Saving device real kpi record '" + strconv.Itoa(i) + "' ...")
 		d := data[i]
@@ -200,7 +189,7 @@ func insertDeviceRealKpi(response *model.DeviceRealKpiResponse, responseId int32
 			TotalCap:      float8entry(d.DataItemMap.TotalCap),
 			Type:          model.DEVICE_REAL_KPI.String(),
 		}
-		err := database.New(db.Conn).InsertFsDeviceRealKpi(db.Ctx, record)
+		err := database.New(f.Dao.Database.Conn).InsertFsDeviceRealKpi(f.Dao.Database.Ctx, record)
 		if err != nil {
 			return err
 		}
