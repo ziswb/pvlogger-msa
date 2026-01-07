@@ -19,21 +19,21 @@ func main() {
 	defer fusionSolarAccess.Close()
 	switch name {
 	case model.STATION_REAL_KPI.String():
-		err := fusionSolarAccess.FetchStationRealTimeData()
+		response, err := fusionSolarAccess.FetchStationRealTimeData()
 		if err != nil {
 			log.Fatal(err)
 		}
-		err = fusionSolarAccess.SaveStationRealKpiResponse()
+		err = fusionSolarAccess.SaveStationRealKpiResponse(response)
 		if err != nil {
 			log.Fatal(err)
 		}
 		break
 	case model.DEVICE_REAL_KPI.String():
-		err := fusionSolarAccess.FetchDeviceRealData()
+		response, err := fusionSolarAccess.FetchDeviceRealData()
 		if err != nil {
 			log.Fatal(err)
 		}
-		err = fusionSolarAccess.SaveDeviceRealKpiResponse()
+		err = fusionSolarAccess.SaveDeviceRealKpiResponse(response)
 		if err != nil {
 			log.Fatal(err)
 		}

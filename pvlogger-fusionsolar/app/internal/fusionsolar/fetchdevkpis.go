@@ -16,33 +16,32 @@ import (
 
 const devTypeIdStringInverter = 1
 
-func (f FusionSolarAccess) FetchDeviceRealData() error {
+func (f FusionSolarAccess) FetchDeviceRealData() (*model.DeviceRealKpiResponse, error) {
 	log.Default().Println("Fetching device real data...")
 	client, err := model.NewClientWithResponses(config.FsUrl(), addTokenClientOption(f.token))
 	if err != nil {
-		return err
+		return nil, err
 	}
 	deviceRealKpiJSONRequestBody := model.DeviceRealKpiJSONRequestBody{DevIds: config.FsConfig().DevIds, DevTypeId: devTypeIdStringInverter}
 	response, err := client.DeviceRealKpiWithResponse(context.TODO(), deviceRealKpiJSONRequestBody)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	log.Default().Println("Device real data fetched successfully.")
-	f.DevKpiResponse = response
-	return nil
+	return response, nil
 }
 
-func (f FusionSolarAccess) SaveDeviceRealKpiResponse() error {
+func (f FusionSolarAccess) SaveDeviceRealKpiResponse(response *model.DeviceRealKpiResponse) error {
 	log.Default().Println("Saving Device Real Kpi Response to database...")
-	responseId, err := f.insertDeviceRealKpiResponseParams()
+	responseId, err := f.insertDeviceRealKpiResponseParams(response)
 	if err != nil {
 		return err
 	}
-	err = f.insertDeviceRealKpiResponseBasicParams(responseId)
+	err = f.insertDeviceRealKpiResponseBasicParams(responseId, response)
 	if err != nil {
 		return err
 	}
-	err = f.insertDeviceRealKpi(responseId)
+	err = f.insertDeviceRealKpi(responseId, response)
 	if err != nil {
 		return err
 	}
@@ -50,28 +49,28 @@ func (f FusionSolarAccess) SaveDeviceRealKpiResponse() error {
 	return nil
 }
 
-func (f FusionSolarAccess) insertDeviceRealKpiResponseParams() (int32, error) {
+func (f FusionSolarAccess) insertDeviceRealKpiResponseParams(response *model.DeviceRealKpiResponse) (int32, error) {
 	log.Default().Println("Saving Device Real Kpi Response Params to database...")
-	raw, err := json.RawMessage.MarshalJSON(f.DevKpiResponse.Body)
+	raw, err := json.RawMessage.MarshalJSON(response.Body)
 	if err != nil {
 		return 0, err
 	}
-	failCode := int32(f.DevKpiResponse.JSON200.FailCode)
-	message := messageAsPgTextDevKpi(f.DevKpiResponse)
-	success := boolOrFalseDevKpi(f.DevKpiResponse)
+	failCode := int32(response.JSON200.FailCode)
+	message := messageAsPgTextDevKpi(response)
+	success := boolOrFalseDevKpi(response)
 	timestamp := pgtype.Timestamp{Valid: true, Time: time.Now()}
 	i, err := f.insertFsResponseParams(failCode, message, raw, success, timestamp)
 	log.Default().Println("Device Real Kpi response saved successfully.")
 	return i, err
 }
 
-func (f FusionSolarAccess) insertDeviceRealKpiResponseBasicParams(responseId int32) error {
+func (f FusionSolarAccess) insertDeviceRealKpiResponseBasicParams(responseId int32, response *model.DeviceRealKpiResponse) error {
 	log.Default().Println("Saving Device Real Kpi Basic Params  to database...")
-	if f.DevKpiResponse.JSON200.Params == nil {
+	if response.JSON200.Params == nil {
 		return errors.New("'response.JSON200.Params' is nil")
 	}
-	currentTime := pgtype.Int8{Valid: true, Int64: *f.DevKpiResponse.JSON200.Params.CurrentTime}
-	devIds := pgtype.Text{Valid: true, String: *f.DevKpiResponse.JSON200.Params.DevIds}
+	currentTime := pgtype.Int8{Valid: true, Int64: *response.JSON200.Params.CurrentTime}
+	devIds := pgtype.Text{Valid: true, String: *response.JSON200.Params.DevIds}
 	err := f.insertFsResponseParamsDevice(currentTime, responseId, devIds)
 	log.Default().Println("Device Real Kpi response saved successfully.")
 	return err
@@ -89,9 +88,9 @@ func (f FusionSolarAccess) insertFsResponseParamsDevice(currentTime pgtype.Int8,
 	return err
 }
 
-func (f FusionSolarAccess) insertDeviceRealKpi(responseId int32) error {
+func (f FusionSolarAccess) insertDeviceRealKpi(responseId int32, response *model.DeviceRealKpiResponse) error {
 	log.Default().Println("Saving device real kpi to database...")
-	data := *f.DevKpiResponse.JSON200.Data
+	data := *response.JSON200.Data
 	for i := 0; i < len(data); i++ {
 		log.Default().Println("Saving device real kpi record '" + strconv.Itoa(i) + "' ...")
 		d := data[i]

@@ -5,17 +5,11 @@ import (
 	"pvlogger/internal/auth"
 	"pvlogger/internal/config"
 	"pvlogger/internal/database"
-	"pvlogger/internal/model"
 )
 
 type FusionSolarAccess struct {
-	DevKpiResponse      *model.DeviceRealKpiResponse
-	Dev5MinKpiResponse  *model.DeviceFiveMinutesKpiResponse
-	DevListResponse     *model.DeviceListResponse
-	StationKpiResponse  *model.StationRealKpiResponse
-	StationListResponse *model.StationListResponse
-	token               auth.Token
-	Dao                 database.Dao
+	token auth.Token
+	Dao   database.Dao
 }
 
 func NewFusionSolarAccess(token auth.Token) *FusionSolarAccess {

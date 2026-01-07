@@ -13,33 +13,32 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func (f FusionSolarAccess) FetchStationRealTimeData() error {
+func (f FusionSolarAccess) FetchStationRealTimeData() (*model.StationRealKpiResponse, error) {
 	log.Default().Println("Fetching station real time data...")
 	client, err := model.NewClientWithResponses(config.FsUrl(), addTokenClientOption(f.token))
 	if err != nil {
-		return err
+		return nil, err
 	}
 	stationRealKpiJSONRequestBody := model.StationRealKpiJSONRequestBody{StationCodes: config.FsConfig().StationCode}
 	response, err := client.StationRealKpiWithResponse(context.TODO(), stationRealKpiJSONRequestBody)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	log.Default().Println("Station real time data fetched successfully.")
-	f.StationKpiResponse = response
-	return nil
+	return response, nil
 }
 
-func (f FusionSolarAccess) SaveStationRealKpiResponse() error {
+func (f FusionSolarAccess) SaveStationRealKpiResponse(response *model.StationRealKpiResponse) error {
 	log.Default().Println("Saving response to database...")
-	responseId, err := f.insertStationRealKpiResponseParams()
+	responseId, err := f.insertStationRealKpiResponseParams(response)
 	if err != nil {
 		return err
 	}
-	err = f.insertStationRealKpiResponseBasicParams(responseId)
+	err = f.insertStationRealKpiResponseBasicParams(responseId, response)
 	if err != nil {
 		return err
 	}
-	err = f.insertStationRealKpi(responseId)
+	err = f.insertStationRealKpi(responseId, response)
 	if err != nil {
 		return err
 	}
@@ -47,28 +46,29 @@ func (f FusionSolarAccess) SaveStationRealKpiResponse() error {
 	return nil
 }
 
-func (f FusionSolarAccess) insertStationRealKpiResponseParams() (int32, error) {
+func (f FusionSolarAccess) insertStationRealKpiResponseParams(response *model.StationRealKpiResponse) (int32, error) {
 	log.Default().Println("Saving Station Real Kpi response to database...")
-	raw, err := json.RawMessage.MarshalJSON(f.StationKpiResponse.Body)
+	raw, err := json.RawMessage.MarshalJSON(response.Body)
 	if err != nil {
 		return 0, err
 	}
-	failCode := int32(f.StationKpiResponse.JSON200.FailCode)
-	message := messageAsPgTextStnKpi(f.StationKpiResponse)
-	success := boolOrFalseStnKpi(f.StationKpiResponse)
+	failCode := int32(response.JSON200.FailCode)
+	message := messageAsPgTextStnKpi(response)
+	success := boolOrFalseStnKpi(response)
 	timestamp := pgtype.Timestamp{Valid: true, Time: time.Now()}
+	log.Default().Printf("failCode: %d, message: %v", failCode, message)
 	i, err := f.insertFsResponseParams(failCode, message, raw, success, timestamp)
 	log.Default().Println("Station Real Kpi response saved successfully.")
 	return i, err
 }
 
-func (f FusionSolarAccess) insertStationRealKpiResponseBasicParams(responseId int32) error {
+func (f FusionSolarAccess) insertStationRealKpiResponseBasicParams(responseId int32, response *model.StationRealKpiResponse) error {
 	log.Default().Println("Saving Station Real Kpi response params to database...")
-	if f.StationKpiResponse.JSON200.Params == nil {
+	if response.JSON200.Params == nil {
 		return errors.New("'response.JSON200.Params' is nil")
 	}
-	currentTime := pgtype.Int8{Valid: true, Int64: *f.StationKpiResponse.JSON200.Params.CurrentTime}
-	stationCodes := pgtype.Text{Valid: true, String: *f.StationKpiResponse.JSON200.Params.StationCodes}
+	currentTime := pgtype.Int8{Valid: true, Int64: *response.JSON200.Params.CurrentTime}
+	stationCodes := pgtype.Text{Valid: true, String: *response.JSON200.Params.StationCodes}
 	err := f.insertFsResponseParamsBasicParams(currentTime, responseId, stationCodes)
 	log.Default().Println("Station Real Kpi response params saved successfully.")
 	return err
@@ -86,9 +86,9 @@ func (f FusionSolarAccess) insertFsResponseParamsBasicParams(currentTime pgtype.
 	return err
 }
 
-func (f FusionSolarAccess) insertStationRealKpi(responseId int32) error {
+func (f FusionSolarAccess) insertStationRealKpi(responseId int32, response *model.StationRealKpiResponse) error {
 	log.Default().Println("Saving station real kpi to database...")
-	data := *f.StationKpiResponse.JSON200.Data
+	data := *response.JSON200.Data
 	for i := 0; i < len(data); i++ {
 		record := database.InsertFsStationRealKpiParams{
 			DayIncome:       float64(data[i].DataItemMap.DayIncome),
