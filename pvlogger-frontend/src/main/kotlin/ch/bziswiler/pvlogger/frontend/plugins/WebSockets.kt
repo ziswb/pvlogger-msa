@@ -61,7 +61,6 @@ fun Application.configureWebSockets() {
 
     routing {
         webSocket("/$FRONTEND_READ_LIVE_DATA_VALUES_PATH") {
-            notificationProducerScheduler.start()
             val job =
                 launch {
                     sharedFlow.collect { kpiDto ->
@@ -72,6 +71,7 @@ fun Application.configureWebSockets() {
                 }
             val result =
                 runCatching {
+                    notificationProducerScheduler.start()
                     incoming.consumeEach { frame ->
                         when (frame) {
                             is Frame.Close -> logger.debug { "WebSocket: Closing websocket" }.also { job.cancel() }
