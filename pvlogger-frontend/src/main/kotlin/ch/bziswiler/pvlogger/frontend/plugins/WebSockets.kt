@@ -115,24 +115,27 @@ class NotificationProducerScheduler(
         get() = job + singleThreadExecutor.asCoroutineDispatcher()
 
     fun stop() {
-        logger.debug { "NotificationProducerScheduler: Stopping..." }
+        logger.debug { "NotificationProducerScheduler: Stopping: Counter before decrement: '${startedCounter.get()}'..." }
         if (startedCounter.decrementAndGet() > 0) {
-            logger.debug { "NotificationProducerScheduler: Not the last started instance, skipping stop" }
+            logger.debug { "NotificationProducerScheduler: Counter after decrement is '${startedCounter.get()}', skipping stop" }
             return
         }
+        logger.debug { "NotificationProducerScheduler: Stopping: Counter after decrement: '${startedCounter.get()}'..." }
         job.cancel()
         singleThreadExecutor.shutdown()
         logger.debug { "NotificationProducerScheduler: Stopped successfully" }
     }
 
-    fun start() =
+    fun start() {
+        logger.debug { "NotificationProducerScheduler: Starting (Counter is '${startedCounter.get()}')..." }
         (startedCounter.getAndIncrement() == 0).let {
+            logger.debug { "NotificationProducerScheduler: Starting: Counter after increment: '${startedCounter.get()}'..." }
             if (it) {
                 launch {
                     logger.debug { "Starting NotificationProducerScheduler with interval '$interval' and initial delay '$initialDelay'" }
                     initialDelay?.let {
                         logger.debug { "Waiting for initial delay '$initialDelay'" }
-                        delay(it)
+                        delay(initialDelay)
                     }
                     while (startedCounter.get() > 0) {
                         logger.debug { "NotificationProducerScheduler: Producing..." }
@@ -146,4 +149,5 @@ class NotificationProducerScheduler(
                 logger.debug { "NotificationProducerScheduler: Already started, skipping start" }
             }
         }
+    }
 }
