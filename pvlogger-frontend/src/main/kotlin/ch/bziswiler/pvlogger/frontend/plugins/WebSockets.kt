@@ -69,6 +69,7 @@ fun Application.configureWebSockets() {
                         logger.info { "WebSocket: KPI values sent!" }
                     }
                 }
+            job.start()
             val result =
                 runCatching {
                     notificationProducerScheduler.start()
@@ -130,6 +131,7 @@ class NotificationProducerScheduler(
         logger.debug { "NotificationProducerScheduler: Starting (Counter is '${startedCounter.get()}')..." }
         (startedCounter.getAndIncrement() == 0).let {
             logger.debug { "NotificationProducerScheduler: Starting: Counter after increment: '${startedCounter.get()}'..." }
+            logger.debug { "NotificationProducerScheduler: Starting: Condition is: '${it}'..." }
             if (it) {
                 launch {
                     logger.debug { "Starting NotificationProducerScheduler with interval '$interval' and initial delay '$initialDelay'" }
@@ -144,7 +146,7 @@ class NotificationProducerScheduler(
                         delay(interval)
                     }
                     logger.debug { "NotificationProducerScheduler: Stopping..." }
-                }
+                }.start()
             } else {
                 logger.debug { "NotificationProducerScheduler: Already started, skipping start" }
             }
