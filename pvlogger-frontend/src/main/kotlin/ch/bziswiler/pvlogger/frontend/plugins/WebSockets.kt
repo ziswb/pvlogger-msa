@@ -16,7 +16,6 @@ import io.ktor.server.websocket.webSocket
 import io.ktor.websocket.Frame
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -27,9 +26,7 @@ import mu.KotlinLogging
 import org.koin.ktor.ext.inject
 import java.time.Duration
 import java.time.Duration.ofSeconds
-import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.coroutines.CoroutineContext
 
 private val logger = KotlinLogging.logger {}
 private val Int.Seconds: Duration get() = ofSeconds(toLong())
@@ -72,7 +69,7 @@ fun Application.configureWebSockets() {
             job.start()
             val result =
                 runCatching {
-                    notificationProducerScheduler.start()
+                    notificationProducerScheduler.start(this)
                     incoming.consumeEach { frame ->
                         when (frame) {
                             is Frame.Close -> logger.debug { "WebSocket: Closing websocket" }.also { job.cancel() }
@@ -103,52 +100,50 @@ class NotificationProducer(val flow: MutableSharedFlow<KpiValuesDto>, val dataAc
 }
 
 class NotificationProducerScheduler(
-    val service: NotificationProducer,
-    val interval: Duration,
-    val initialDelay: Duration?,
-) : CoroutineScope {
-    private val job = Job()
-    private val singleThreadExecutor = Executors.newSingleThreadExecutor()
-    private val startedCounter = AtomicInteger()
-    val logger = KotlinLogging.logger {}
-
-    override val coroutineContext: CoroutineContext
-        get() = job + singleThreadExecutor.asCoroutineDispatcher()
+    private val service: NotificationProducer,
+    private val interval: Duration,
+    private val initialDelay: Duration?,
+) {
+    private val logger = KotlinLogging.logger {}
+    private val subscriberCount = AtomicInteger(0)
+    private var currentJob: Job? = null
+    private val lock = Any()
 
     fun stop() {
-        logger.debug { "NotificationProducerScheduler: Stopping: Counter before decrement: '${startedCounter.get()}'..." }
-        if (startedCounter.decrementAndGet() > 0) {
-            logger.debug { "NotificationProducerScheduler: Counter after decrement is '${startedCounter.get()}', skipping stop" }
-            return
+        synchronized(lock) {
+            val count = subscriberCount.decrementAndGet()
+            logger.debug { "NotificationProducerScheduler: stop() called, subscriber count now: $count" }
+            if (count <= 0) {
+                subscriberCount.set(0)
+                currentJob?.cancel()
+                currentJob = null
+                logger.debug { "NotificationProducerScheduler: Stopped, job cancelled" }
+            }
         }
-        logger.debug { "NotificationProducerScheduler: Stopping: Counter after decrement: '${startedCounter.get()}'..." }
-        job.cancel()
-        singleThreadExecutor.shutdown()
-        logger.debug { "NotificationProducerScheduler: Stopped successfully" }
     }
 
-    fun start() {
-        logger.debug { "NotificationProducerScheduler: Starting (Counter is '${startedCounter.get()}')..." }
-        (startedCounter.getAndIncrement() == 0).let {
-            logger.debug { "NotificationProducerScheduler: Starting: Counter after increment: '${startedCounter.get()}'..." }
-            logger.debug { "NotificationProducerScheduler: Starting: Condition is: '${it}'..." }
-            if (it) {
-                launch {
-                    logger.debug { "Starting NotificationProducerScheduler with interval '$interval' and initial delay '$initialDelay'" }
+    fun start(scope: CoroutineScope) {
+        synchronized(lock) {
+            val count = subscriberCount.incrementAndGet()
+            logger.debug { "NotificationProducerScheduler: start() called, subscriber count now: $count" }
+            if (count == 1) {
+                currentJob = scope.launch {
+                    logger.debug { "NotificationProducerScheduler: Starting with interval '$interval' and initial delay '$initialDelay'" }
                     initialDelay?.let {
-                        logger.debug { "Waiting for initial delay '$initialDelay'" }
-                        delay(initialDelay)
+                        logger.debug { "NotificationProducerScheduler: Waiting for initial delay '$initialDelay'" }
+                        delay(it)
                     }
-                    while (startedCounter.get() > 0) {
+                    while (subscriberCount.get() > 0) {
                         logger.debug { "NotificationProducerScheduler: Producing..." }
                         service.produce()
                         logger.debug { "NotificationProducerScheduler: Produced! Waiting for next interval '$interval'..." }
                         delay(interval)
                     }
-                    logger.debug { "NotificationProducerScheduler: Stopping..." }
-                }.start()
+                    logger.debug { "NotificationProducerScheduler: Loop ended, no more subscribers" }
+                }
+                logger.debug { "NotificationProducerScheduler: Job launched" }
             } else {
-                logger.debug { "NotificationProducerScheduler: Already started, skipping start" }
+                logger.debug { "NotificationProducerScheduler: Already running, skipping start" }
             }
         }
     }
