@@ -22,7 +22,7 @@ func NewTcpHandler(url string, timeout time.Duration) *TcpHandler {
 	return &TcpHandler{
 		address:      url,
 		timeout:      timeout,
-		sleep:        1 * time.Second,
+		sleep:        1100 * time.Millisecond,
 		writeTimeout: 1 * time.Second,
 		readTimeout:  5 * time.Second,
 	}
