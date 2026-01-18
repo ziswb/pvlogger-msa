@@ -186,7 +186,7 @@ func (f FusionSolarAccess) insertDeviceRealKpi(responseId int32, response *model
 			RunState:      int4entry(d.DataItemMap.RunState),
 			Temperature:   float8entry(d.DataItemMap.Temperature),
 			TotalCap:      float8entry(d.DataItemMap.TotalCap),
-			Type:          model.DEVICE_REAL_KPI.String(),
+			Type:          model.DeviceRealKpi.String(),
 		}
 		err := database.New(f.Dao.Database.Conn).InsertFsDeviceRealKpi(f.Dao.Database.Ctx, record)
 		if err != nil {

@@ -18,7 +18,7 @@ func main() {
 	fusionSolarAccess := fusionsolar.NewFusionSolarAccess(*token)
 	defer fusionSolarAccess.Close()
 	switch name {
-	case model.STATION_REAL_KPI.String():
+	case model.StationRealKpi.String():
 		response, err := fusionSolarAccess.FetchStationRealTimeData()
 		if err != nil {
 			log.Fatal(err)
@@ -28,7 +28,7 @@ func main() {
 			log.Fatal(err)
 		}
 		break
-	case model.DEVICE_REAL_KPI.String():
+	case model.DeviceRealKpi.String():
 		response, err := fusionSolarAccess.FetchDeviceRealData()
 		if err != nil {
 			log.Fatal(err)

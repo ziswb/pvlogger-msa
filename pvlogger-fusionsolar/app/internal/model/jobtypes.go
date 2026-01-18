@@ -5,21 +5,21 @@ import "strings"
 type FusionSolarDataType int
 
 const (
-	STATION_REAL_KPI FusionSolarDataType = iota
-	STATION_DAY_KPI
-	STATION_MONTH_KPI
-	STATION_YEAR_KPI
-	DEVICE_REAL_KPI
-	DEVICE_5_MIN_KPI
+	StationRealKpi FusionSolarDataType = iota
+	StationDayKpi
+	StationMonthKpi
+	StationYearKpi
+	DeviceRealKpi
+	Device5MinKpi
 )
 
 var fsDataTypeNames = [...]string{
-	STATION_REAL_KPI:  "STATION_REAL_KPI",
-	STATION_DAY_KPI:   "STATION_DAY_KPI",
-	STATION_MONTH_KPI: "STATION_MONTH_KPI",
-	STATION_YEAR_KPI:  "STATION_YEAR_KPI",
-	DEVICE_REAL_KPI:   "DEVICE_REAL_KPI",
-	DEVICE_5_MIN_KPI:  "DEVICE_5_MIN_KPI",
+	StationRealKpi:  "STATION_REAL_KPI",
+	StationDayKpi:   "STATION_DAY_KPI",
+	StationMonthKpi: "STATION_MONTH_KPI",
+	StationYearKpi:  "STATION_YEAR_KPI",
+	DeviceRealKpi:   "DEVICE_REAL_KPI",
+	Device5MinKpi:   "DEVICE_5_MIN_KPI",
 }
 
 func (fsDataType FusionSolarDataType) String() string {

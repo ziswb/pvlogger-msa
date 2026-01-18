@@ -99,7 +99,7 @@ func (f FusionSolarAccess) insertStationRealKpi(responseId int32, response *mode
 			StationCode:     pgtype.Text{Valid: true, String: data[i].StationCode},
 			TotalIncome:     float64(data[i].DataItemMap.TotalIncome),
 			TotalPower:      float64(data[i].DataItemMap.TotalPower),
-			Type:            model.STATION_REAL_KPI.String(),
+			Type:            model.StationRealKpi.String(),
 		}
 		err := database.New(f.Dao.Database.Conn).InsertFsStationRealKpi(f.Dao.Database.Ctx, record)
 		if err != nil {
