@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 )
@@ -38,7 +39,7 @@ func FsConfig() FusionSolarConfig {
 		Username:    getEnv("USERNAME", "<fusionsolar-user>"),
 		Password:    getEnvChecked("FUSIONSOLAR_PASSWORD"),
 		Host:        getEnv("FS_HOST", "eu5.fusionsolar.huawei.com"),
-		Path:        getEnv("FS_PATH", "/thirdData"),
+		Path:        getEnv("FS_PATH", "thirdData"),
 		Protocol:    getEnv("FS_PROTOCOL", "https"),
 		StationCode: getEnv("FS_STATION_CODE", "NE=<station-code>"),
 		DevIds:      getEnv("FS_DEV_TYPE_ID", "<dev-id>,<dev-id>"),
@@ -56,7 +57,7 @@ func DbConfig() DatabaseConfig {
 }
 
 func FsUrl() string {
-	return FsConfig().Protocol + "://" + FsConfig().Host + FsConfig().Path
+	return fmt.Sprintf("%s://%s/%s", FsConfig().Protocol, FsConfig().Host, FsConfig().Path)
 }
 
 func getEnv(key, fallback string) string {

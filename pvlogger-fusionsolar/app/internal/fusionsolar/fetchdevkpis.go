@@ -16,14 +16,14 @@ import (
 
 const devTypeIdStringInverter = 1
 
-func (f FusionSolarAccess) FetchDeviceRealData() (*model.DeviceRealKpiResponse, error) {
+func (f *FusionSolarAccess) FetchDeviceRealData() (*model.DeviceRealKpiResponse, error) {
 	log.Default().Println("Fetching device real data...")
-	client, err := model.NewClientWithResponses(config.FsUrl(), addTokenClientOption(f.token))
+	client, err := model.NewClientWithResponses(config.FsUrl(), WithBearerToken(f.token))
 	if err != nil {
 		return nil, err
 	}
 	deviceRealKpiJSONRequestBody := model.DeviceRealKpiJSONRequestBody{DevIds: config.FsConfig().DevIds, DevTypeId: devTypeIdStringInverter}
-	response, err := client.DeviceRealKpiWithResponse(context.TODO(), deviceRealKpiJSONRequestBody)
+	response, err := client.DeviceRealKpiWithResponse(context.Background(), deviceRealKpiJSONRequestBody)
 	if err != nil {
 		return nil, err
 	}
@@ -31,7 +31,7 @@ func (f FusionSolarAccess) FetchDeviceRealData() (*model.DeviceRealKpiResponse, 
 	return response, nil
 }
 
-func (f FusionSolarAccess) SaveDeviceRealKpiResponse(response *model.DeviceRealKpiResponse) error {
+func (f *FusionSolarAccess) SaveDeviceRealKpiResponse(response *model.DeviceRealKpiResponse) error {
 	log.Default().Println("Saving Device Real Kpi Response to database...")
 	responseId, err := f.insertDeviceRealKpiResponseParams(response)
 	if err != nil {
@@ -49,7 +49,7 @@ func (f FusionSolarAccess) SaveDeviceRealKpiResponse(response *model.DeviceRealK
 	return nil
 }
 
-func (f FusionSolarAccess) insertDeviceRealKpiResponseParams(response *model.DeviceRealKpiResponse) (int32, error) {
+func (f *FusionSolarAccess) insertDeviceRealKpiResponseParams(response *model.DeviceRealKpiResponse) (int32, error) {
 	log.Default().Println("Saving Device Real Kpi Response Params to database...")
 	raw, err := json.RawMessage.MarshalJSON(response.Body)
 	if err != nil {
@@ -64,7 +64,7 @@ func (f FusionSolarAccess) insertDeviceRealKpiResponseParams(response *model.Dev
 	return i, err
 }
 
-func (f FusionSolarAccess) insertDeviceRealKpiResponseBasicParams(responseId int32, response *model.DeviceRealKpiResponse) error {
+func (f *FusionSolarAccess) insertDeviceRealKpiResponseBasicParams(responseId int32, response *model.DeviceRealKpiResponse) error {
 	log.Default().Println("Saving Device Real Kpi Basic Params  to database...")
 	if response.JSON200.Params == nil {
 		return errors.New("'response.JSON200.Params' is nil")
@@ -76,7 +76,7 @@ func (f FusionSolarAccess) insertDeviceRealKpiResponseBasicParams(responseId int
 	return err
 }
 
-func (f FusionSolarAccess) insertFsResponseParamsDevice(currentTime pgtype.Int8, responseId int32, deviceIds pgtype.Text) error {
+func (f *FusionSolarAccess) insertFsResponseParamsDevice(currentTime pgtype.Int8, responseId int32, deviceIds pgtype.Text) error {
 	log.Default().Println("Saving response params to database...")
 	responseParamsBasic := database.InsertFsResponseParamsDeviceParams{
 		CurrentTime: currentTime,
@@ -88,7 +88,7 @@ func (f FusionSolarAccess) insertFsResponseParamsDevice(currentTime pgtype.Int8,
 	return err
 }
 
-func (f FusionSolarAccess) insertDeviceRealKpi(responseId int32, response *model.DeviceRealKpiResponse) error {
+func (f *FusionSolarAccess) insertDeviceRealKpi(responseId int32, response *model.DeviceRealKpiResponse) error {
 	log.Default().Println("Saving device real kpi to database...")
 	data := *response.JSON200.Data
 	for i := 0; i < len(data); i++ {

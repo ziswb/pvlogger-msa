@@ -13,14 +13,14 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func (f FusionSolarAccess) FetchStationRealTimeData() (*model.StationRealKpiResponse, error) {
+func (f *FusionSolarAccess) FetchStationRealTimeData() (*model.StationRealKpiResponse, error) {
 	log.Default().Println("Fetching station real time data...")
-	client, err := model.NewClientWithResponses(config.FsUrl(), addTokenClientOption(f.token))
+	client, err := model.NewClientWithResponses(config.FsUrl(), WithBearerToken(f.token))
 	if err != nil {
 		return nil, err
 	}
 	stationRealKpiJSONRequestBody := model.StationRealKpiJSONRequestBody{StationCodes: config.FsConfig().StationCode}
-	response, err := client.StationRealKpiWithResponse(context.TODO(), stationRealKpiJSONRequestBody)
+	response, err := client.StationRealKpiWithResponse(context.Background(), stationRealKpiJSONRequestBody)
 	if err != nil {
 		return nil, err
 	}
@@ -28,7 +28,7 @@ func (f FusionSolarAccess) FetchStationRealTimeData() (*model.StationRealKpiResp
 	return response, nil
 }
 
-func (f FusionSolarAccess) SaveStationRealKpiResponse(response *model.StationRealKpiResponse) error {
+func (f *FusionSolarAccess) SaveStationRealKpiResponse(response *model.StationRealKpiResponse) error {
 	log.Default().Println("Saving response to database...")
 	responseId, err := f.insertStationRealKpiResponseParams(response)
 	if err != nil {
@@ -46,7 +46,7 @@ func (f FusionSolarAccess) SaveStationRealKpiResponse(response *model.StationRea
 	return nil
 }
 
-func (f FusionSolarAccess) insertStationRealKpiResponseParams(response *model.StationRealKpiResponse) (int32, error) {
+func (f *FusionSolarAccess) insertStationRealKpiResponseParams(response *model.StationRealKpiResponse) (int32, error) {
 	log.Default().Println("Saving Station Real Kpi response to database...")
 	raw, err := json.RawMessage.MarshalJSON(response.Body)
 	if err != nil {
@@ -62,7 +62,7 @@ func (f FusionSolarAccess) insertStationRealKpiResponseParams(response *model.St
 	return i, err
 }
 
-func (f FusionSolarAccess) insertStationRealKpiResponseBasicParams(responseId int32, response *model.StationRealKpiResponse) error {
+func (f *FusionSolarAccess) insertStationRealKpiResponseBasicParams(responseId int32, response *model.StationRealKpiResponse) error {
 	log.Default().Println("Saving Station Real Kpi response params to database...")
 	if response.JSON200.Params == nil {
 		return errors.New("'response.JSON200.Params' is nil")
@@ -74,7 +74,7 @@ func (f FusionSolarAccess) insertStationRealKpiResponseBasicParams(responseId in
 	return err
 }
 
-func (f FusionSolarAccess) insertFsResponseParamsBasicParams(currentTime pgtype.Int8, responseId int32, stationCodes pgtype.Text) error {
+func (f *FusionSolarAccess) insertFsResponseParamsBasicParams(currentTime pgtype.Int8, responseId int32, stationCodes pgtype.Text) error {
 	log.Default().Println("Saving response params to database...")
 	responseParamsBasic := database.InsertFsResponseParamsBasicParams{
 		CurrentTime:  currentTime,
@@ -86,7 +86,7 @@ func (f FusionSolarAccess) insertFsResponseParamsBasicParams(currentTime pgtype.
 	return err
 }
 
-func (f FusionSolarAccess) insertStationRealKpi(responseId int32, response *model.StationRealKpiResponse) error {
+func (f *FusionSolarAccess) insertStationRealKpi(responseId int32, response *model.StationRealKpiResponse) error {
 	log.Default().Println("Saving station real kpi to database...")
 	data := *response.JSON200.Data
 	for i := 0; i < len(data); i++ {

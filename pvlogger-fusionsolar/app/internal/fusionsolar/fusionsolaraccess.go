@@ -24,6 +24,7 @@ func NewFusionSolarAccess(token auth.Token) *FusionSolarAccess {
 		},
 	}
 }
-func (f FusionSolarAccess) Close() {
+
+func (f *FusionSolarAccess) Close() {
 	f.Dao.Database.CloseDb()
 }

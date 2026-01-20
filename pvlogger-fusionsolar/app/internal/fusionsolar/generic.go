@@ -11,7 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func (f FusionSolarAccess) insertFsResponseParams(failCode int32, message pgtype.Text, raw []byte, success bool, timestamp pgtype.Timestamp) (int32, error) {
+func (f *FusionSolarAccess) insertFsResponseParams(failCode int32, message pgtype.Text, raw []byte, success bool, timestamp pgtype.Timestamp) (int32, error) {
 	log.Default().Println("Saving fs response params to database...")
 	responseParams := database.InsertFsResponseParams{
 		FailCode:  failCode,
@@ -28,7 +28,7 @@ func (f FusionSolarAccess) insertFsResponseParams(failCode int32, message pgtype
 	return insertedFsResponse.ID, nil
 }
 
-func addTokenClientOption(token auth.Token) model.ClientOption {
+func WithBearerToken(token auth.Token) model.ClientOption {
 	return model.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
 		log.Default().Println("Adding token to request...")
 		req.Header.Set("XSRF-TOKEN", token.Token)

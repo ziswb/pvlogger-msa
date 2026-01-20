@@ -21,7 +21,7 @@ func Authenticate() (token *Token, err error) {
 		return nil, err
 	}
 	jsonLoginRequestBody := model.LoginJSONRequestBody{SystemCode: config.FsConfig().Password, UserName: config.FsConfig().Username}
-	response, err := client.Login(context.TODO(), jsonLoginRequestBody)
+	response, err := client.Login(context.Background(), jsonLoginRequestBody)
 	if err != nil {
 		return nil, err
 	}
