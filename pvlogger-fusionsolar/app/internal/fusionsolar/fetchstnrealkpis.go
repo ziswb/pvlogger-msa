@@ -53,8 +53,8 @@ func (f *FusionSolarAccess) insertStationRealKpiResponseParams(response *model.S
 		return 0, err
 	}
 	failCode := int32(response.JSON200.FailCode)
-	message := messageAsPgTextStnKpi(response)
-	success := boolOrFalseStnKpi(response)
+	message := messageAsPgTextOrNil(response.JSON200.Message)
+	success := boolOrFalse(response.JSON200.Success)
 	timestamp := pgtype.Timestamp{Valid: true, Time: time.Now()}
 	log.Default().Printf("failCode: %d, message: %v", failCode, message)
 	i, err := f.insertFsResponseParams(failCode, message, raw, success, timestamp)

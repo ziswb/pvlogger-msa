@@ -56,8 +56,8 @@ func (f *FusionSolarAccess) insertDeviceRealKpiResponseParams(response *model.De
 		return 0, err
 	}
 	failCode := int32(response.JSON200.FailCode)
-	message := messageAsPgTextDevKpi(response)
-	success := boolOrFalseDevKpi(response)
+	message := messageAsPgTextOrNil(response.JSON200.Message)
+	success := boolOrFalse(response.JSON200.Success)
 	timestamp := pgtype.Timestamp{Valid: true, Time: time.Now()}
 	i, err := f.insertFsResponseParams(failCode, message, raw, success, timestamp)
 	log.Default().Println("Device Real Kpi response saved successfully.")
@@ -84,8 +84,11 @@ func (f *FusionSolarAccess) insertFsResponseParamsDevice(currentTime pgtype.Int8
 		DevIds:      deviceIds,
 	}
 	err := database.New(f.Dao.Database.Conn).InsertFsResponseParamsDevice(f.Dao.Database.Ctx, responseParamsBasic)
+	if err != nil {
+		return err
+	}
 	log.Default().Println("Response params saved successfully.")
-	return err
+	return nil
 }
 
 func (f *FusionSolarAccess) insertDeviceRealKpi(responseId int32, response *model.DeviceRealKpiResponse) error {

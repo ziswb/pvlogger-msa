@@ -283,8 +283,7 @@ func (q *Queries) InsertFsDeviceRealKpi(ctx context.Context, arg InsertFsDeviceR
 
 const insertFsResponse = `-- name: InsertFsResponse :one
 INSERT INTO fs_response (fail_code, message, raw, success, timestamp)
-VALUES ($1, $2, $3, $4, $5)
-RETURNING id, timestamp, success, fail_code, message, raw
+VALUES ($1, $2, $3, $4, $5) RETURNING id, timestamp, success, fail_code, message, raw
 `
 
 type InsertFsResponseParams struct {
@@ -375,50 +374,21 @@ func (q *Queries) InsertFsResponseParamsExtended(ctx context.Context, arg Insert
 	return err
 }
 
-const insertFsStationExtendedData = `-- name: InsertFsStationExtendedData :exec
-INSERT INTO fs_station_extended_data (collect_time, installed_capacity, inverter_power, ongrid_power, performance_ratio,
-                                      perpower_ratio, power_profit, radiation_intensity, reduction_total_co2,
-                                      reduction_total_coal, reduction_total_tree, station_code, theory_power, "type",
-                                      use_power)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) ON CONFLICT DO NOTHING
+const insertFsStationExtendedDataMapping = `-- name: InsertFsStationExtendedDataMapping :exec
+INSERT INTO fs_response_to_station_extended_data (response_id, collect_time, "type")
+VALUES ($1, $2, $3)
 `
 
-type InsertFsStationExtendedDataParams struct {
-	CollectTime        int64
-	InstalledCapacity  pgtype.Float8
-	InverterPower      pgtype.Float8
-	OngridPower        pgtype.Float8
-	PerformanceRatio   pgtype.Float8
-	PerpowerRatio      pgtype.Float8
-	PowerProfit        pgtype.Float8
-	RadiationIntensity pgtype.Float8
-	ReductionTotalCo2  pgtype.Float8
-	ReductionTotalCoal pgtype.Float8
-	ReductionTotalTree pgtype.Float8
-	StationCode        string
-	TheoryPower        pgtype.Float8
-	Type               string
-	UsePower           pgtype.Float8
+type InsertFsStationExtendedDataMappingParams struct {
+	ResponseID  int32
+	CollectTime int64
+	Type        string
 }
 
-func (q *Queries) InsertFsStationExtendedData(ctx context.Context, arg InsertFsStationExtendedDataParams) error {
-	_, err := q.db.Exec(ctx, insertFsStationExtendedData,
-		arg.CollectTime,
-		arg.InstalledCapacity,
-		arg.InverterPower,
-		arg.OngridPower,
-		arg.PerformanceRatio,
-		arg.PerpowerRatio,
-		arg.PowerProfit,
-		arg.RadiationIntensity,
-		arg.ReductionTotalCo2,
-		arg.ReductionTotalCoal,
-		arg.ReductionTotalTree,
-		arg.StationCode,
-		arg.TheoryPower,
-		arg.Type,
-		arg.UsePower,
-	)
+// STATION_DAY_KPI, STATION_MONTH_KPI, STATION_YEAR_KPI
+// the data model is broken with this table; it makes no sense and needs refactoring
+func (q *Queries) InsertFsStationExtendedDataMapping(ctx context.Context, arg InsertFsStationExtendedDataMappingParams) error {
+	_, err := q.db.Exec(ctx, insertFsStationExtendedDataMapping, arg.ResponseID, arg.CollectTime, arg.Type)
 	return err
 }
 
@@ -478,61 +448,78 @@ func (q *Queries) UpdateFsResponseToStationExtendedData(ctx context.Context, arg
 	return err
 }
 
-const updateFsStationExtendedData = `-- name: UpdateFsStationExtendedData :exec
-UPDATE fs_station_extended_data
-SET station_code=$1,
+const upsertFsStationExtendedData = `-- name: UpsertFsStationExtendedData :exec
+INSERT INTO fs_station_extended_data (collect_time, installed_capacity, inverter_power, ongrid_power, performance_ratio,
+                                      perpower_ratio, power_profit, radiation_intensity, reduction_total_co2,
+                                      reduction_total_coal, reduction_total_tree, station_code, theory_power, "type",
+                                      use_power)
+VALUES ($1,
+        $2,
+        $3,
+        $4,
+        $5,
+        $6,
+        $7,
+        $8,
+        $9,
+        $10,
+        $11,
+        $12,
+        $13,
+        $14,
+        $15) ON CONFLICT(collect_time, "type")
+DO
+UPDATE SET
     installed_capacity=$2,
-    radiation_intensity=$3,
-    theory_power=$4,
+    inverter_power=$3,
+    ongrid_power=$4,
     performance_ratio=$5,
-    inverter_power=$6,
-    ongrid_power=$7,
-    use_power=$8,
-    power_profit=$9,
-    perpower_ratio=$10,
-    reduction_total_co2=$11,
-    reduction_total_coal=$12,
-    reduction_total_tree=$13
-WHERE (fs_station_extended_data.collect_time = $14)
-  AND (fs_station_extended_data."type" = $15)
+    perpower_ratio=$6,
+    power_profit=$7,
+    radiation_intensity=$8,
+    reduction_total_co2=$9,
+    reduction_total_coal=$10,
+    reduction_total_tree=$11,
+    station_code=$12,
+    theory_power=$13,
+    use_power=$15
 `
 
-type UpdateFsStationExtendedDataParams struct {
-	StationCode        string
+type UpsertFsStationExtendedDataParams struct {
+	CollectTime        int64
 	InstalledCapacity  pgtype.Float8
-	RadiationIntensity pgtype.Float8
-	TheoryPower        pgtype.Float8
-	PerformanceRatio   pgtype.Float8
 	InverterPower      pgtype.Float8
 	OngridPower        pgtype.Float8
-	UsePower           pgtype.Float8
-	PowerProfit        pgtype.Float8
+	PerformanceRatio   pgtype.Float8
 	PerpowerRatio      pgtype.Float8
+	PowerProfit        pgtype.Float8
+	RadiationIntensity pgtype.Float8
 	ReductionTotalCo2  pgtype.Float8
 	ReductionTotalCoal pgtype.Float8
 	ReductionTotalTree pgtype.Float8
-	CollectTime        int64
+	StationCode        string
+	TheoryPower        pgtype.Float8
 	Type               string
+	UsePower           pgtype.Float8
 }
 
-// STATION_DAY_KPI, STATION_MONTH_KPI, STATION_YEAR_KPI
-func (q *Queries) UpdateFsStationExtendedData(ctx context.Context, arg UpdateFsStationExtendedDataParams) error {
-	_, err := q.db.Exec(ctx, updateFsStationExtendedData,
-		arg.StationCode,
+func (q *Queries) UpsertFsStationExtendedData(ctx context.Context, arg UpsertFsStationExtendedDataParams) error {
+	_, err := q.db.Exec(ctx, upsertFsStationExtendedData,
+		arg.CollectTime,
 		arg.InstalledCapacity,
-		arg.RadiationIntensity,
-		arg.TheoryPower,
-		arg.PerformanceRatio,
 		arg.InverterPower,
 		arg.OngridPower,
-		arg.UsePower,
-		arg.PowerProfit,
+		arg.PerformanceRatio,
 		arg.PerpowerRatio,
+		arg.PowerProfit,
+		arg.RadiationIntensity,
 		arg.ReductionTotalCo2,
 		arg.ReductionTotalCoal,
 		arg.ReductionTotalTree,
-		arg.CollectTime,
+		arg.StationCode,
+		arg.TheoryPower,
 		arg.Type,
+		arg.UsePower,
 	)
 	return err
 }

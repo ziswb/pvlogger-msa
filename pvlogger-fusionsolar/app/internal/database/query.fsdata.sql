@@ -49,31 +49,41 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $
 INSERT INTO fs_response_params_extended (collect_time, "current_time", response, station_codes)
 VALUES ($1, $2, $3, $4);
 
--- name: InsertFsStationExtendedData :exec
+-- name: UpsertFsStationExtendedData :exec
 INSERT INTO fs_station_extended_data (collect_time, installed_capacity, inverter_power, ongrid_power, performance_ratio,
                                       perpower_ratio, power_profit, radiation_intensity, reduction_total_co2,
                                       reduction_total_coal, reduction_total_tree, station_code, theory_power, "type",
                                       use_power)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) ON CONFLICT DO NOTHING;
-
--- name: UpdateFsStationExtendedData :exec
--- STATION_DAY_KPI, STATION_MONTH_KPI, STATION_YEAR_KPI
-UPDATE fs_station_extended_data
-SET station_code=$1,
+VALUES ($1,
+        $2,
+        $3,
+        $4,
+        $5,
+        $6,
+        $7,
+        $8,
+        $9,
+        $10,
+        $11,
+        $12,
+        $13,
+        $14,
+        $15) ON CONFLICT(response_id, collect_time, "type")
+DO
+UPDATE SET
     installed_capacity=$2,
-    radiation_intensity=$3,
-    theory_power=$4,
+    inverter_power=$3,
+    ongrid_power=$4,
     performance_ratio=$5,
-    inverter_power=$6,
-    ongrid_power=$7,
-    use_power=$8,
-    power_profit=$9,
-    perpower_ratio=$10,
-    reduction_total_co2=$11,
-    reduction_total_coal=$12,
-    reduction_total_tree=$13
-WHERE (fs_station_extended_data.collect_time = $14)
-  AND (fs_station_extended_data."type" = $15);
+    perpower_ratio=$6,
+    power_profit=$7,
+    radiation_intensity=$8,
+    reduction_total_co2=$9,
+    reduction_total_coal=$10,
+    reduction_total_tree=$11,
+    station_code=$12,
+    theory_power=$13,
+    use_power=$15;
 
 -- name: GetFsStationExtendedDataIds :many
 -- STATION_DAY_KPI, STATION_MONTH_KPI, STATION_YEAR_KPI
@@ -87,3 +97,8 @@ UPDATE fs_response_to_station_extended_data
 SET response_id=$1
 WHERE fs_response_to_station_extended_data.response_id = $2;
 
+-- name: InsertFsStationExtendedDataMapping :exec
+-- STATION_DAY_KPI, STATION_MONTH_KPI, STATION_YEAR_KPI
+-- the data model is broken with this table; it makes no sense and needs refactoring
+INSERT INTO fs_response_to_station_extended_data (response_id, collect_time, "type")
+VALUES ($1, $2, $3);

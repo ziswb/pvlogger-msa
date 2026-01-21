@@ -38,6 +38,36 @@ func main() {
 			log.Fatal(err)
 		}
 		break
+	case model.StationDayKpi.String():
+		response, err := fusionSolarAccess.FetchStationDayKpi()
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = fusionSolarAccess.SaveStationDayKpiResponse(response)
+		if err != nil {
+			log.Fatal(err)
+		}
+		break
+	case model.StationMonthKpi.String():
+		response, err := fusionSolarAccess.FetchMonthData()
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = fusionSolarAccess.SaveStationMonthKpiResponse(response)
+		if err != nil {
+			log.Fatal(err)
+		}
+		break
+	case model.StationYearKpi.String():
+		response, err := fusionSolarAccess.FetchYearData()
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = fusionSolarAccess.SaveStationYearKpiResponse(response)
+		if err != nil {
+			log.Fatal(err)
+		}
+		break
 	default:
 		log.Default().Fatal("unknown job name")
 	}
