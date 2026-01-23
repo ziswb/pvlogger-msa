@@ -1,7 +1,7 @@
 FROM golang:1.25.4-alpine AS golang
 
-WORKDIR /app
-COPY ./pvlogger-modbus-data-collector/app/ .
+ADD . /app
+WORKDIR /app/pvlogger-modbus-data-collector/app
 
 RUN go mod download
 RUN go mod verify

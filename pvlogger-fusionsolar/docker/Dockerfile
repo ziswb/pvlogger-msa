@@ -1,7 +1,7 @@
 FROM golang:1.25.4-alpine AS golang
 
-WORKDIR /app
-COPY ./pvlogger-fusionsolar/app/ .
+ADD . /app
+WORKDIR /app/pvlogger-fusionsolar/app
 
 RUN go mod download
 RUN go mod verify
