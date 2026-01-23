@@ -1,8 +1,9 @@
 package main
 
 import (
-	"log"
 	"time"
+
+	"pvlogger-go-shared/logging"
 )
 
 func formatForDataRecord(pointInTime int64) string {
@@ -16,7 +17,7 @@ func formatFileNameSafe(pointInTime int64) string {
 func format(pointInTime int64, layout string) string {
 	loc, err := time.LoadLocation("Europe/Zurich")
 	if err != nil {
-		log.Fatal(err)
+		logging.Fatal("failed to load timezone", "location", "Europe/Zurich", "error", err)
 	}
 	dateTime := time.Date(1970, 1, 1, 0, 0, 0, 0, loc).Add(time.Duration(pointInTime) * time.Millisecond)
 	return dateTime.Format(layout)

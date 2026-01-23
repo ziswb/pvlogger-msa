@@ -3,8 +3,9 @@ package main
 import (
 	"encoding/json"
 	"io"
-	"log"
 	"net/http"
+
+	"pvlogger-go-shared/logging"
 )
 
 func fetchKpis() *KpiValues {
@@ -16,24 +17,24 @@ func fetchKpis() *KpiValues {
 
 	resp, err := http.Get(url)
 	if err != nil {
-		log.Fatal(err)
+		logging.Fatal("failed to fetch KPIs", "error", err)
 	}
 	defer func(body io.ReadCloser) {
 		err := body.Close()
 		if err != nil {
-			log.Default().Println(err.Error())
+			logging.Error("failed to close response body", "error", err)
 		}
 	}(resp.Body)
-	log.Default().Println("Response status: " + resp.Status)
+	logging.Info("received response", "status", resp.Status)
 	body, readErr := io.ReadAll(resp.Body)
-	log.Default().Println("Received message: " + string(body))
+	logging.Debug("received message", "body", string(body))
 	if readErr != nil {
-		log.Fatal(readErr)
+		logging.Fatal("failed to read response body", "error", readErr)
 	}
 	kpiValues := KpiValues{}
 	err = json.Unmarshal(body, &kpiValues)
 	if err != nil {
-		log.Fatal(err)
+		logging.Fatal("failed to unmarshal KPI values", "error", err)
 	}
 	return &kpiValues
 }
