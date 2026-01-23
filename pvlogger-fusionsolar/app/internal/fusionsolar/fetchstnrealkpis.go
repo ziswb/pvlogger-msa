@@ -2,20 +2,18 @@ package fusionsolar
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"log"
 	"pvlogger/internal/config"
 	"pvlogger/internal/database"
 	"pvlogger/internal/model"
-	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 func (f *FusionSolarAccess) FetchStationRealTimeData() (*model.StationRealKpiResponse, error) {
 	log.Default().Println("Fetching station real time data...")
-	client, err := model.NewClientWithResponses(config.FsUrl(), WithBearerToken(f.token))
+	client, err := f.newClient()
 	if err != nil {
 		return nil, err
 	}
@@ -48,16 +46,7 @@ func (f *FusionSolarAccess) SaveStationRealKpiResponse(response *model.StationRe
 
 func (f *FusionSolarAccess) insertStationRealKpiResponseParams(response *model.StationRealKpiResponse) (int32, error) {
 	log.Default().Println("Saving Station Real Kpi response to database...")
-	raw, err := json.RawMessage.MarshalJSON(response.Body)
-	if err != nil {
-		return 0, err
-	}
-	failCode := int32(response.JSON200.FailCode)
-	message := messageAsPgTextOrNil(response.JSON200.Message)
-	success := boolOrFalse(response.JSON200.Success)
-	timestamp := pgtype.Timestamp{Valid: true, Time: time.Now()}
-	log.Default().Printf("failCode: %d, message: %v", failCode, message)
-	i, err := f.insertFsResponseParams(failCode, message, raw, success, timestamp)
+	i, err := f.insertResponseFromData(stationRealKpiResponseAdapter{response})
 	log.Default().Println("Station Real Kpi response saved successfully.")
 	return i, err
 }

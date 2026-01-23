@@ -2,14 +2,12 @@ package fusionsolar
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"log"
 	"pvlogger/internal/config"
 	"pvlogger/internal/database"
 	"pvlogger/internal/model"
 	"strconv"
-	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -18,7 +16,7 @@ const devTypeIdStringInverter = 1
 
 func (f *FusionSolarAccess) FetchDeviceRealData() (*model.DeviceRealKpiResponse, error) {
 	log.Default().Println("Fetching device real data...")
-	client, err := model.NewClientWithResponses(config.FsUrl(), WithBearerToken(f.token))
+	client, err := f.newClient()
 	if err != nil {
 		return nil, err
 	}
@@ -51,15 +49,7 @@ func (f *FusionSolarAccess) SaveDeviceRealKpiResponse(response *model.DeviceReal
 
 func (f *FusionSolarAccess) insertDeviceRealKpiResponseParams(response *model.DeviceRealKpiResponse) (int32, error) {
 	log.Default().Println("Saving Device Real Kpi Response Params to database...")
-	raw, err := json.RawMessage.MarshalJSON(response.Body)
-	if err != nil {
-		return 0, err
-	}
-	failCode := int32(response.JSON200.FailCode)
-	message := messageAsPgTextOrNil(response.JSON200.Message)
-	success := boolOrFalse(response.JSON200.Success)
-	timestamp := pgtype.Timestamp{Valid: true, Time: time.Now()}
-	i, err := f.insertFsResponseParams(failCode, message, raw, success, timestamp)
+	i, err := f.insertResponseFromData(deviceRealKpiResponseAdapter{response})
 	log.Default().Println("Device Real Kpi response saved successfully.")
 	return i, err
 }
@@ -98,97 +88,97 @@ func (f *FusionSolarAccess) insertDeviceRealKpi(responseId int32, response *mode
 		log.Default().Println("Saving device real kpi record '" + strconv.Itoa(i) + "' ...")
 		d := data[i]
 		record := database.InsertFsDeviceRealKpiParams{
-			AI:            float8entry(d.DataItemMap.AI),
-			AU:            float8entry(d.DataItemMap.AU),
-			AbU:           float8entry(d.DataItemMap.AbU),
-			ActivePower:   float8entry(d.DataItemMap.ActivePower),
-			BI:            float8entry(d.DataItemMap.BI),
-			BU:            float8entry(d.DataItemMap.BU),
-			BcU:           float8entry(d.DataItemMap.BcU),
-			CI:            float8entry(d.DataItemMap.CI),
-			CU:            float8entry(d.DataItemMap.CU),
-			CaU:           float8entry(d.DataItemMap.CaU),
-			CloseTime:     int8entry(d.DataItemMap.CloseTime),
-			DayCap:        float8entry(d.DataItemMap.DayCap),
+			AI:            toPgFloat8(d.DataItemMap.AI),
+			AU:            toPgFloat8(d.DataItemMap.AU),
+			AbU:           toPgFloat8(d.DataItemMap.AbU),
+			ActivePower:   toPgFloat8(d.DataItemMap.ActivePower),
+			BI:            toPgFloat8(d.DataItemMap.BI),
+			BU:            toPgFloat8(d.DataItemMap.BU),
+			BcU:           toPgFloat8(d.DataItemMap.BcU),
+			CI:            toPgFloat8(d.DataItemMap.CI),
+			CU:            toPgFloat8(d.DataItemMap.CU),
+			CaU:           toPgFloat8(d.DataItemMap.CaU),
+			CloseTime:     toPgInt8(d.DataItemMap.CloseTime),
+			DayCap:        toPgFloat8(d.DataItemMap.DayCap),
 			DevId:         pgtype.Int8{Valid: true, Int64: d.DevId},
-			Efficiency:    float8entry(d.DataItemMap.Efficiency),
-			ElecFreq:      float8entry(d.DataItemMap.ElecFreq),
-			InverterState: float8entry(d.DataItemMap.InverterState),
-			Mppt10Cap:     float8entry(d.DataItemMap.Mppt10Cap),
-			Mppt1Cap:      float8entry(d.DataItemMap.Mppt1Cap),
-			Mppt2Cap:      float8entry(d.DataItemMap.Mppt2Cap),
-			Mppt3Cap:      float8entry(d.DataItemMap.Mppt3Cap),
-			Mppt4Cap:      float8entry(d.DataItemMap.Mppt4Cap),
-			Mppt5Cap:      float8entry(d.DataItemMap.Mppt5Cap),
-			Mppt6Cap:      float8entry(d.DataItemMap.Mppt6Cap),
-			Mppt7Cap:      float8entry(d.DataItemMap.Mppt7Cap),
-			Mppt8Cap:      float8entry(d.DataItemMap.Mppt8Cap),
-			Mppt9Cap:      float8entry(d.DataItemMap.Mppt9Cap),
-			MpptPower:     float8entry(d.DataItemMap.MpptPower),
-			MpptTotalCap:  float8entry(d.DataItemMap.MpptTotalCap),
-			OpenTime:      int8entry(d.DataItemMap.OpenTime),
-			PowerFactor:   float8entry(d.DataItemMap.PowerFactor),
-			Pv10I:         float8entry(d.DataItemMap.Pv10I),
-			Pv10U:         float8entry(d.DataItemMap.Pv10U),
-			Pv11I:         float8entry(d.DataItemMap.Pv11I),
-			Pv11U:         float8entry(d.DataItemMap.Pv11U),
-			Pv12I:         float8entry(d.DataItemMap.Pv12I),
-			Pv12U:         float8entry(d.DataItemMap.Pv12U),
-			Pv13I:         float8entry(d.DataItemMap.Pv13I),
-			Pv13U:         float8entry(d.DataItemMap.Pv13U),
-			Pv14I:         float8entry(d.DataItemMap.Pv14I),
-			Pv14U:         float8entry(d.DataItemMap.Pv14U),
-			Pv15I:         float8entry(d.DataItemMap.Pv15I),
-			Pv15U:         float8entry(d.DataItemMap.Pv15U),
-			Pv16I:         float8entry(d.DataItemMap.Pv16I),
-			Pv16U:         float8entry(d.DataItemMap.Pv16U),
-			Pv17I:         float8entry(d.DataItemMap.Pv17I),
-			Pv17U:         float8entry(d.DataItemMap.Pv17U),
-			Pv18I:         float8entry(d.DataItemMap.Pv18I),
-			Pv18U:         float8entry(d.DataItemMap.Pv18U),
-			Pv19I:         float8entry(d.DataItemMap.Pv19I),
-			Pv19U:         float8entry(d.DataItemMap.Pv19U),
-			Pv1I:          float8entry(d.DataItemMap.Pv1I),
-			Pv1U:          float8entry(d.DataItemMap.Pv1U),
-			Pv20I:         float8entry(d.DataItemMap.Pv20I),
-			Pv20U:         float8entry(d.DataItemMap.Pv20U),
-			Pv21I:         float8entry(d.DataItemMap.Pv21I),
-			Pv21U:         float8entry(d.DataItemMap.Pv21U),
-			Pv22I:         float8entry(d.DataItemMap.Pv22I),
-			Pv22U:         float8entry(d.DataItemMap.Pv22U),
-			Pv23I:         float8entry(d.DataItemMap.Pv23I),
-			Pv23U:         float8entry(d.DataItemMap.Pv23U),
-			Pv24I:         float8entry(d.DataItemMap.Pv24I),
-			Pv24U:         float8entry(d.DataItemMap.Pv24U),
-			Pv25I:         float8entry(d.DataItemMap.Pv25I),
-			Pv25U:         float8entry(d.DataItemMap.Pv25U),
-			Pv26I:         float8entry(d.DataItemMap.Pv26I),
-			Pv26U:         float8entry(d.DataItemMap.Pv26U),
-			Pv27I:         float8entry(d.DataItemMap.Pv27I),
-			Pv27U:         float8entry(d.DataItemMap.Pv27U),
-			Pv28I:         float8entry(d.DataItemMap.Pv28I),
-			Pv28U:         float8entry(d.DataItemMap.Pv28U),
-			Pv2I:          float8entry(d.DataItemMap.Pv2I),
-			Pv2U:          float8entry(d.DataItemMap.Pv2U),
-			Pv3I:          float8entry(d.DataItemMap.Pv3I),
-			Pv3U:          float8entry(d.DataItemMap.Pv3U),
-			Pv4I:          float8entry(d.DataItemMap.Pv4I),
-			Pv4U:          float8entry(d.DataItemMap.Pv4U),
-			Pv5I:          float8entry(d.DataItemMap.Pv5I),
-			Pv5U:          float8entry(d.DataItemMap.Pv5U),
-			Pv6I:          float8entry(d.DataItemMap.Pv6I),
-			Pv6U:          float8entry(d.DataItemMap.Pv6U),
-			Pv7I:          float8entry(d.DataItemMap.Pv7I),
-			Pv7U:          float8entry(d.DataItemMap.Pv7U),
-			Pv8I:          float8entry(d.DataItemMap.Pv8I),
-			Pv8U:          float8entry(d.DataItemMap.Pv8U),
-			Pv9I:          float8entry(d.DataItemMap.Pv9I),
-			Pv9U:          float8entry(d.DataItemMap.Pv9U),
-			ReactivePower: float8entry(d.DataItemMap.ReactivePower),
+			Efficiency:    toPgFloat8(d.DataItemMap.Efficiency),
+			ElecFreq:      toPgFloat8(d.DataItemMap.ElecFreq),
+			InverterState: toPgFloat8(d.DataItemMap.InverterState),
+			Mppt10Cap:     toPgFloat8(d.DataItemMap.Mppt10Cap),
+			Mppt1Cap:      toPgFloat8(d.DataItemMap.Mppt1Cap),
+			Mppt2Cap:      toPgFloat8(d.DataItemMap.Mppt2Cap),
+			Mppt3Cap:      toPgFloat8(d.DataItemMap.Mppt3Cap),
+			Mppt4Cap:      toPgFloat8(d.DataItemMap.Mppt4Cap),
+			Mppt5Cap:      toPgFloat8(d.DataItemMap.Mppt5Cap),
+			Mppt6Cap:      toPgFloat8(d.DataItemMap.Mppt6Cap),
+			Mppt7Cap:      toPgFloat8(d.DataItemMap.Mppt7Cap),
+			Mppt8Cap:      toPgFloat8(d.DataItemMap.Mppt8Cap),
+			Mppt9Cap:      toPgFloat8(d.DataItemMap.Mppt9Cap),
+			MpptPower:     toPgFloat8(d.DataItemMap.MpptPower),
+			MpptTotalCap:  toPgFloat8(d.DataItemMap.MpptTotalCap),
+			OpenTime:      toPgInt8(d.DataItemMap.OpenTime),
+			PowerFactor:   toPgFloat8(d.DataItemMap.PowerFactor),
+			Pv10I:         toPgFloat8(d.DataItemMap.Pv10I),
+			Pv10U:         toPgFloat8(d.DataItemMap.Pv10U),
+			Pv11I:         toPgFloat8(d.DataItemMap.Pv11I),
+			Pv11U:         toPgFloat8(d.DataItemMap.Pv11U),
+			Pv12I:         toPgFloat8(d.DataItemMap.Pv12I),
+			Pv12U:         toPgFloat8(d.DataItemMap.Pv12U),
+			Pv13I:         toPgFloat8(d.DataItemMap.Pv13I),
+			Pv13U:         toPgFloat8(d.DataItemMap.Pv13U),
+			Pv14I:         toPgFloat8(d.DataItemMap.Pv14I),
+			Pv14U:         toPgFloat8(d.DataItemMap.Pv14U),
+			Pv15I:         toPgFloat8(d.DataItemMap.Pv15I),
+			Pv15U:         toPgFloat8(d.DataItemMap.Pv15U),
+			Pv16I:         toPgFloat8(d.DataItemMap.Pv16I),
+			Pv16U:         toPgFloat8(d.DataItemMap.Pv16U),
+			Pv17I:         toPgFloat8(d.DataItemMap.Pv17I),
+			Pv17U:         toPgFloat8(d.DataItemMap.Pv17U),
+			Pv18I:         toPgFloat8(d.DataItemMap.Pv18I),
+			Pv18U:         toPgFloat8(d.DataItemMap.Pv18U),
+			Pv19I:         toPgFloat8(d.DataItemMap.Pv19I),
+			Pv19U:         toPgFloat8(d.DataItemMap.Pv19U),
+			Pv1I:          toPgFloat8(d.DataItemMap.Pv1I),
+			Pv1U:          toPgFloat8(d.DataItemMap.Pv1U),
+			Pv20I:         toPgFloat8(d.DataItemMap.Pv20I),
+			Pv20U:         toPgFloat8(d.DataItemMap.Pv20U),
+			Pv21I:         toPgFloat8(d.DataItemMap.Pv21I),
+			Pv21U:         toPgFloat8(d.DataItemMap.Pv21U),
+			Pv22I:         toPgFloat8(d.DataItemMap.Pv22I),
+			Pv22U:         toPgFloat8(d.DataItemMap.Pv22U),
+			Pv23I:         toPgFloat8(d.DataItemMap.Pv23I),
+			Pv23U:         toPgFloat8(d.DataItemMap.Pv23U),
+			Pv24I:         toPgFloat8(d.DataItemMap.Pv24I),
+			Pv24U:         toPgFloat8(d.DataItemMap.Pv24U),
+			Pv25I:         toPgFloat8(d.DataItemMap.Pv25I),
+			Pv25U:         toPgFloat8(d.DataItemMap.Pv25U),
+			Pv26I:         toPgFloat8(d.DataItemMap.Pv26I),
+			Pv26U:         toPgFloat8(d.DataItemMap.Pv26U),
+			Pv27I:         toPgFloat8(d.DataItemMap.Pv27I),
+			Pv27U:         toPgFloat8(d.DataItemMap.Pv27U),
+			Pv28I:         toPgFloat8(d.DataItemMap.Pv28I),
+			Pv28U:         toPgFloat8(d.DataItemMap.Pv28U),
+			Pv2I:          toPgFloat8(d.DataItemMap.Pv2I),
+			Pv2U:          toPgFloat8(d.DataItemMap.Pv2U),
+			Pv3I:          toPgFloat8(d.DataItemMap.Pv3I),
+			Pv3U:          toPgFloat8(d.DataItemMap.Pv3U),
+			Pv4I:          toPgFloat8(d.DataItemMap.Pv4I),
+			Pv4U:          toPgFloat8(d.DataItemMap.Pv4U),
+			Pv5I:          toPgFloat8(d.DataItemMap.Pv5I),
+			Pv5U:          toPgFloat8(d.DataItemMap.Pv5U),
+			Pv6I:          toPgFloat8(d.DataItemMap.Pv6I),
+			Pv6U:          toPgFloat8(d.DataItemMap.Pv6U),
+			Pv7I:          toPgFloat8(d.DataItemMap.Pv7I),
+			Pv7U:          toPgFloat8(d.DataItemMap.Pv7U),
+			Pv8I:          toPgFloat8(d.DataItemMap.Pv8I),
+			Pv8U:          toPgFloat8(d.DataItemMap.Pv8U),
+			Pv9I:          toPgFloat8(d.DataItemMap.Pv9I),
+			Pv9U:          toPgFloat8(d.DataItemMap.Pv9U),
+			ReactivePower: toPgFloat8(d.DataItemMap.ReactivePower),
 			Response:      responseId,
-			RunState:      int4entry(d.DataItemMap.RunState),
-			Temperature:   float8entry(d.DataItemMap.Temperature),
-			TotalCap:      float8entry(d.DataItemMap.TotalCap),
+			RunState:      toPgInt4(d.DataItemMap.RunState),
+			Temperature:   toPgFloat8(d.DataItemMap.Temperature),
+			TotalCap:      toPgFloat8(d.DataItemMap.TotalCap),
 			Type:          model.DeviceRealKpi.String(),
 		}
 		err := database.New(f.Dao.Database.Conn).InsertFsDeviceRealKpi(f.Dao.Database.Ctx, record)
@@ -199,25 +189,4 @@ func (f *FusionSolarAccess) insertDeviceRealKpi(responseId int32, response *mode
 	}
 	log.Default().Println("Device  real kpi saved successfully.")
 	return nil
-}
-
-func int4entry(value *int) pgtype.Int4 {
-	if value != nil {
-		return pgtype.Int4{Valid: true, Int32: int32(*value)}
-	}
-	return pgtype.Int4{Valid: false, Int32: 0}
-}
-
-func int8entry(value *int64) pgtype.Int8 {
-	if value != nil {
-		return pgtype.Int8{Valid: true, Int64: *value}
-	}
-	return pgtype.Int8{Valid: false, Int64: 0}
-}
-
-func float8entry(value *float32) pgtype.Float8 {
-	if value != nil {
-		return pgtype.Float8{Valid: true, Float64: float64(*value)}
-	}
-	return pgtype.Float8{Valid: false, Float64: 0}
 }
