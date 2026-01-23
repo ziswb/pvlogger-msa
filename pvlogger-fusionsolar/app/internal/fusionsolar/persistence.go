@@ -1,11 +1,7 @@
 package fusionsolar
 
 import (
-	"context"
 	"encoding/json"
-	"net/http"
-	"pvlogger/internal/auth"
-	"pvlogger/internal/config"
 	"pvlogger/internal/model"
 	"pvlogger/internal/repository"
 	"time"
@@ -14,61 +10,6 @@ import (
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
-
-// FsResponseData provides a common interface for extracting response metadata
-type FsResponseData interface {
-	GetBody() []byte
-	GetFailCode() int
-	GetMessage() *string
-	GetSuccess() *bool
-}
-
-// Response adapters for generated types
-
-type kpiStationDayResponseAdapter struct {
-	*model.KpiStationDayResponse
-}
-
-func (r kpiStationDayResponseAdapter) GetBody() []byte     { return r.Body }
-func (r kpiStationDayResponseAdapter) GetFailCode() int    { return r.JSON200.FailCode }
-func (r kpiStationDayResponseAdapter) GetMessage() *string { return r.JSON200.Message }
-func (r kpiStationDayResponseAdapter) GetSuccess() *bool   { return r.JSON200.Success }
-
-type kpiStationMonthResponseAdapter struct {
-	*model.KpiStationMonthResponse
-}
-
-func (r kpiStationMonthResponseAdapter) GetBody() []byte     { return r.Body }
-func (r kpiStationMonthResponseAdapter) GetFailCode() int    { return r.JSON200.FailCode }
-func (r kpiStationMonthResponseAdapter) GetMessage() *string { return r.JSON200.Message }
-func (r kpiStationMonthResponseAdapter) GetSuccess() *bool   { return r.JSON200.Success }
-
-type kpiStationYearResponseAdapter struct {
-	*model.KpiStationYearResponse
-}
-
-func (r kpiStationYearResponseAdapter) GetBody() []byte     { return r.Body }
-func (r kpiStationYearResponseAdapter) GetFailCode() int    { return r.JSON200.FailCode }
-func (r kpiStationYearResponseAdapter) GetMessage() *string { return r.JSON200.Message }
-func (r kpiStationYearResponseAdapter) GetSuccess() *bool   { return r.JSON200.Success }
-
-type stationRealKpiResponseAdapter struct {
-	*model.StationRealKpiResponse
-}
-
-func (r stationRealKpiResponseAdapter) GetBody() []byte     { return r.Body }
-func (r stationRealKpiResponseAdapter) GetFailCode() int    { return r.JSON200.FailCode }
-func (r stationRealKpiResponseAdapter) GetMessage() *string { return r.JSON200.Message }
-func (r stationRealKpiResponseAdapter) GetSuccess() *bool   { return r.JSON200.Success }
-
-type deviceRealKpiResponseAdapter struct {
-	*model.DeviceRealKpiResponse
-}
-
-func (r deviceRealKpiResponseAdapter) GetBody() []byte     { return r.Body }
-func (r deviceRealKpiResponseAdapter) GetFailCode() int    { return r.JSON200.FailCode }
-func (r deviceRealKpiResponseAdapter) GetMessage() *string { return r.JSON200.Message }
-func (r deviceRealKpiResponseAdapter) GetSuccess() *bool   { return r.JSON200.Success }
 
 // insertStationExtendedParams inserts common extended params for station KPIs (Day/Month/Year)
 func (f *FusionSolarAccess) insertStationExtendedParams(responseId int32, stationCodes *string, currentTime *int64, collectTime *int64) error {
@@ -96,18 +37,6 @@ func (f *FusionSolarAccess) insertResponseFromData(resp FsResponseData) (int32, 
 		Timestamp: pgtype.Timestamp{Valid: true, Time: time.Now()},
 	}
 	return f.repo.InsertFsResponse(f.db.Ctx, input)
-}
-
-func WithBearerToken(token auth.Token) model.ClientOption {
-	return model.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
-		logging.Debug("adding token to request")
-		req.Header.Set("XSRF-TOKEN", token.Token)
-		return nil
-	})
-}
-
-func (f *FusionSolarAccess) newClient() (*model.ClientWithResponses, error) {
-	return model.NewClientWithResponses(config.FsUrl(), WithBearerToken(f.token))
 }
 
 func (f *FusionSolarAccess) upsertExtendedKpis(responseId int32, typ model.FusionSolarDataType, data []struct {

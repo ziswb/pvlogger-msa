@@ -1,0 +1,23 @@
+package fusionsolar
+
+import (
+	"context"
+	"net/http"
+	"pvlogger/internal/auth"
+	"pvlogger/internal/config"
+	"pvlogger/internal/model"
+
+	"pvlogger-go-shared/logging"
+)
+
+func WithBearerToken(token auth.Token) model.ClientOption {
+	return model.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
+		logging.Debug("adding token to request")
+		req.Header.Set("XSRF-TOKEN", token.Token)
+		return nil
+	})
+}
+
+func (f *FusionSolarAccess) newClient() (*model.ClientWithResponses, error) {
+	return model.NewClientWithResponses(config.FsUrl(), WithBearerToken(f.token))
+}
