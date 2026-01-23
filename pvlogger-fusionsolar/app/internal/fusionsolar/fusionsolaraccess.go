@@ -1,31 +1,34 @@
 package fusionsolar
 
 import (
+	"fmt"
 	"pvlogger/internal/auth"
 	"pvlogger/internal/config"
 	"pvlogger/internal/database"
-
-	"pvlogger-go-shared/logging"
+	"pvlogger/internal/repository"
 )
 
 type FusionSolarAccess struct {
 	token auth.Token
-	Dao   database.Dao
+	db    *database.Database
+	repo  repository.Repository
 }
 
-func NewFusionSolarAccess(token auth.Token) *FusionSolarAccess {
+func NewFusionSolarAccess(token auth.Token) (*FusionSolarAccess, error) {
 	db, err := database.NewDatabase(config.DbConfig().Host, config.DbConfig().Port, config.DbConfig().DbName, config.DbConfig().Username, config.DbConfig().Password)
 	if err != nil {
-		logging.Error("failed to create database connection", "error", err)
+		return nil, fmt.Errorf("failed to create database connection: %w", err)
 	}
 	return &FusionSolarAccess{
 		token: token,
-		Dao: database.Dao{
-			Database: *db,
-		},
-	}
+		db:    db,
+		repo:  repository.NewPostgresRepository(db),
+	}, nil
 }
 
-func (f *FusionSolarAccess) Close() {
-	f.Dao.Database.CloseDb()
+func (f *FusionSolarAccess) Close() error {
+	if f == nil || f.db == nil {
+		return nil
+	}
+	return f.db.Close()
 }

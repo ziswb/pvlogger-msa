@@ -16,8 +16,15 @@ func main() {
 	}
 	name := config.JobConfig().JobName
 	logging.Info("starting job", "name", name)
-	fusionSolarAccess := fusionsolar.NewFusionSolarAccess(*token)
-	defer fusionSolarAccess.Close()
+	fusionSolarAccess, err := fusionsolar.NewFusionSolarAccess(*token)
+	if err != nil {
+		logging.Fatal("failed to create fusionsolar access", "error", err)
+	}
+	defer func() {
+		if err := fusionSolarAccess.Close(); err != nil {
+			logging.Error("failed to close fusionsolar access", "error", err)
+		}
+	}()
 	switch name {
 	case model.StationRealKpi.String():
 		response, err := fusionSolarAccess.FetchStationRealTimeData()

@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"pvlogger-go-shared/logging"
+
 	"github.com/jackc/pgx/v5"
 )
 
@@ -23,4 +25,16 @@ func NewDatabase(host string, port int, dbname string, user string, password str
 		Conn: conn,
 		Ctx:  ctx,
 	}, nil
+}
+
+func (db *Database) Close() error {
+	if db == nil || db.Conn == nil {
+		return nil
+	}
+	err := db.Conn.Close(db.Ctx)
+	if err != nil {
+		logging.Error("failed to close database connection", "error", err)
+		return err
+	}
+	return nil
 }

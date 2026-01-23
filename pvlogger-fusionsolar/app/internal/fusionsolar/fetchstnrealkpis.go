@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"pvlogger/internal/config"
-	"pvlogger/internal/database"
 	"pvlogger/internal/model"
+	"pvlogger/internal/repository"
 
 	"pvlogger-go-shared/logging"
 
@@ -57,22 +57,13 @@ func (f *FusionSolarAccess) insertStationRealKpiResponseBasicParams(responseId i
 	if response.JSON200.Params == nil {
 		return errors.New("'response.JSON200.Params' is nil")
 	}
-	currentTime := pgtype.Int8{Valid: true, Int64: *response.JSON200.Params.CurrentTime}
-	stationCodes := pgtype.Text{Valid: true, String: *response.JSON200.Params.StationCodes}
-	err := f.insertFsResponseParamsBasicParams(currentTime, responseId, stationCodes)
-	logging.Debug("station real KPI response params saved successfully")
-	return err
-}
-
-func (f *FusionSolarAccess) insertFsResponseParamsBasicParams(currentTime pgtype.Int8, responseId int32, stationCodes pgtype.Text) error {
-	logging.Debug("saving response params to database")
-	responseParamsBasic := database.InsertFsResponseParamsBasicParams{
-		CurrentTime:  currentTime,
-		Response:     responseId,
-		StationCodes: stationCodes,
+	input := repository.FsResponseParamsBasicInput{
+		ResponseID:   responseId,
+		StationCodes: pgtype.Text{Valid: true, String: *response.JSON200.Params.StationCodes},
+		CurrentTime:  pgtype.Int8{Valid: true, Int64: *response.JSON200.Params.CurrentTime},
 	}
-	err := database.New(f.Dao.Database.Conn).InsertFsResponseParamsBasic(f.Dao.Database.Ctx, responseParamsBasic)
-	logging.Debug("response params saved successfully")
+	err := f.repo.InsertFsResponseParamsBasic(f.db.Ctx, input)
+	logging.Debug("station real KPI response params saved successfully")
 	return err
 }
 
@@ -80,7 +71,7 @@ func (f *FusionSolarAccess) insertStationRealKpi(responseId int32, response *mod
 	logging.Debug("saving station real KPI to database")
 	data := *response.JSON200.Data
 	for i := 0; i < len(data); i++ {
-		record := database.InsertFsStationRealKpiParams{
+		input := repository.StationRealKpiInput{
 			DayIncome:       float64(data[i].DataItemMap.DayIncome),
 			DayPower:        float64(data[i].DataItemMap.DayPower),
 			MonthPower:      float64(data[i].DataItemMap.MonthPower),
@@ -91,7 +82,7 @@ func (f *FusionSolarAccess) insertStationRealKpi(responseId int32, response *mod
 			TotalPower:      float64(data[i].DataItemMap.TotalPower),
 			Type:            model.StationRealKpi.String(),
 		}
-		err := database.New(f.Dao.Database.Conn).InsertFsStationRealKpi(f.Dao.Database.Ctx, record)
+		err := f.repo.InsertStationRealKpi(f.db.Ctx, input)
 		if err != nil {
 			return err
 		}

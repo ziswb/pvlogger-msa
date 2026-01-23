@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"pvlogger/internal/auth"
 	"pvlogger/internal/config"
-	"pvlogger/internal/database"
 	"pvlogger/internal/model"
+	"pvlogger/internal/repository"
 	"time"
 
 	"pvlogger-go-shared/logging"
@@ -72,10 +72,13 @@ func (r deviceRealKpiResponseAdapter) GetSuccess() *bool   { return r.JSON200.Su
 
 // insertStationExtendedParams inserts common extended params for station KPIs (Day/Month/Year)
 func (f *FusionSolarAccess) insertStationExtendedParams(responseId int32, stationCodes *string, currentTime *int64, collectTime *int64) error {
-	sc := pgtype.Text{Valid: true, String: *stationCodes}
-	ct := pgtype.Int8{Valid: true, Int64: *currentTime}
-	clt := pgtype.Int8{Valid: true, Int64: *collectTime}
-	return f.insertFsResponseParamsExtended(responseId, sc, ct, clt)
+	input := repository.FsResponseParamsExtendedInput{
+		ResponseID:   responseId,
+		StationCodes: pgtype.Text{Valid: true, String: *stationCodes},
+		CurrentTime:  pgtype.Int8{Valid: true, Int64: *currentTime},
+		CollectTime:  pgtype.Int8{Valid: true, Int64: *collectTime},
+	}
+	return f.repo.InsertFsResponseParamsExtended(f.db.Ctx, input)
 }
 
 // insertResponseFromData extracts common response fields and inserts them into the database
@@ -85,29 +88,14 @@ func (f *FusionSolarAccess) insertResponseFromData(resp FsResponseData) (int32, 
 	if err != nil {
 		return 0, err
 	}
-	failCode := int32(resp.GetFailCode())
-	message := toPgText(resp.GetMessage())
-	success := boolOrFalse(resp.GetSuccess())
-	timestamp := pgtype.Timestamp{Valid: true, Time: time.Now()}
-	return f.insertFsResponseParams(failCode, message, raw, success, timestamp)
-}
-
-func (f *FusionSolarAccess) insertFsResponseParams(failCode int32, message pgtype.Text, raw []byte, success bool, timestamp pgtype.Timestamp) (int32, error) {
-	logging.Debug("saving fs response params to database")
-	// saveGenericResponse
-	responseParams := database.InsertFsResponseParams{
-		Timestamp: timestamp,
-		Success:   success,
-		FailCode:  failCode,
-		Message:   message,
+	input := repository.FsResponseInput{
+		FailCode:  int32(resp.GetFailCode()),
+		Message:   repository.ToPgText(resp.GetMessage()),
 		Raw:       raw,
+		Success:   repository.BoolOrFalse(resp.GetSuccess()),
+		Timestamp: pgtype.Timestamp{Valid: true, Time: time.Now()},
 	}
-	insertedFsResponse, err := database.New(f.Dao.Database.Conn).InsertFsResponse(f.Dao.Database.Ctx, responseParams)
-	if err != nil {
-		return 0, err
-	}
-	logging.Debug("fs response params saved successfully")
-	return insertedFsResponse.ID, nil
+	return f.repo.InsertFsResponse(f.db.Ctx, input)
 }
 
 func WithBearerToken(token auth.Token) model.ClientOption {
@@ -142,90 +130,36 @@ func (f *FusionSolarAccess) upsertExtendedKpis(responseId int32, typ model.Fusio
 }) error {
 	logging.Debug("saving extended KPIs to database")
 	for _, d := range data {
-		extendedDataParams := database.UpsertFsStationExtendedDataParams{
+		extendedDataInput := repository.StationExtendedDataInput{
 			CollectTime:        d.CollectTime,
 			Type:               typ.String(),
 			StationCode:        d.StationCode,
-			InstalledCapacity:  toPgFloat8(d.DataItemMap.InstalledCapacity),
-			InverterPower:      toPgFloat8(d.DataItemMap.InverterPower),
-			OngridPower:        toPgFloat8(d.DataItemMap.OngridPower),
-			PerformanceRatio:   toPgFloat8(d.DataItemMap.PerformanceRatio),
-			PerpowerRatio:      toPgFloat8(d.DataItemMap.PerpowerRatio),
-			PowerProfit:        toPgFloat8(d.DataItemMap.PowerProfit),
-			RadiationIntensity: toPgFloat8(d.DataItemMap.RadiationIntensity),
-			ReductionTotalCo2:  toPgFloat8(d.DataItemMap.ReductionTotalCo2),
-			ReductionTotalCoal: toPgFloat8(d.DataItemMap.ReductionTotalCoal),
-			ReductionTotalTree: toPgFloat8(d.DataItemMap.ReductionTotalTree),
-			TheoryPower:        toPgFloat8(d.DataItemMap.TheoryPower),
-			UsePower:           toPgFloat8(d.DataItemMap.UsePower),
+			InstalledCapacity:  repository.ToPgFloat8(d.DataItemMap.InstalledCapacity),
+			InverterPower:      repository.ToPgFloat8(d.DataItemMap.InverterPower),
+			OngridPower:        repository.ToPgFloat8(d.DataItemMap.OngridPower),
+			PerformanceRatio:   repository.ToPgFloat8(d.DataItemMap.PerformanceRatio),
+			PerpowerRatio:      repository.ToPgFloat8(d.DataItemMap.PerpowerRatio),
+			PowerProfit:        repository.ToPgFloat8(d.DataItemMap.PowerProfit),
+			RadiationIntensity: repository.ToPgFloat8(d.DataItemMap.RadiationIntensity),
+			ReductionTotalCo2:  repository.ToPgFloat8(d.DataItemMap.ReductionTotalCo2),
+			ReductionTotalCoal: repository.ToPgFloat8(d.DataItemMap.ReductionTotalCoal),
+			ReductionTotalTree: repository.ToPgFloat8(d.DataItemMap.ReductionTotalTree),
+			TheoryPower:        repository.ToPgFloat8(d.DataItemMap.TheoryPower),
+			UsePower:           repository.ToPgFloat8(d.DataItemMap.UsePower),
 		}
-		err := database.New(f.Dao.Database.Conn).UpsertFsStationExtendedData(f.Dao.Database.Ctx, extendedDataParams)
+		err := f.repo.UpsertStationExtendedData(f.db.Ctx, extendedDataInput)
 		if err != nil {
 			return err
 		}
-		logging.Debug("extended KPIs: saved params successfully")
-		logging.Debug("extended KPIs: saving mapping params")
-		mappingParams := database.InsertFsStationExtendedDataMappingParams{
+		mappingInput := repository.StationExtendedDataMappingInput{
 			ResponseID:  responseId,
 			CollectTime: d.CollectTime,
 			Type:        typ.String(),
 		}
-		err = database.New(f.Dao.Database.Conn).InsertFsStationExtendedDataMapping(f.Dao.Database.Ctx, mappingParams)
+		err = f.repo.InsertStationExtendedDataMapping(f.db.Ctx, mappingInput)
 		if err != nil {
 			return err
 		}
-		logging.Debug("extended KPIs: saved mapping params successfully")
 	}
 	return nil
-}
-
-func (f *FusionSolarAccess) insertFsResponseParamsExtended(responseId int32, stationCodes pgtype.Text, currentTime pgtype.Int8, collectTime pgtype.Int8) error {
-	logging.Debug("saving extended KPI basic params to database")
-	extendedParams := database.InsertFsResponseParamsExtendedParams{
-		Response:     responseId,
-		StationCodes: stationCodes,
-		CurrentTime:  currentTime,
-		CollectTime:  collectTime,
-	}
-	err := database.New(f.Dao.Database.Conn).InsertFsResponseParamsExtended(f.Dao.Database.Ctx, extendedParams)
-	if err != nil {
-		return err
-	}
-	logging.Debug("station extended KPI basic params saved successfully")
-	return nil
-}
-
-func toPgFloat8(value *float32) pgtype.Float8 {
-	if value == nil {
-		return pgtype.Float8{Valid: false}
-	}
-	return pgtype.Float8{Valid: true, Float64: float64(*value)}
-}
-
-func toPgInt4(value *int) pgtype.Int4 {
-	if value == nil {
-		return pgtype.Int4{Valid: false}
-	}
-	return pgtype.Int4{Valid: true, Int32: int32(*value)}
-}
-
-func toPgInt8(value *int64) pgtype.Int8 {
-	if value == nil {
-		return pgtype.Int8{Valid: false}
-	}
-	return pgtype.Int8{Valid: true, Int64: *value}
-}
-
-func toPgText(value *string) pgtype.Text {
-	if value == nil {
-		return pgtype.Text{Valid: false}
-	}
-	return pgtype.Text{Valid: true, String: *value}
-}
-
-func boolOrFalse(value *bool) bool {
-	if value != nil {
-		return *value
-	}
-	return false
 }
