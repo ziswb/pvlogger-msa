@@ -3,14 +3,15 @@ package fusionsolar
 import (
 	"context"
 	"errors"
-	"log"
 	"pvlogger/internal/config"
 	"pvlogger/internal/model"
 	"time"
+
+	"pvlogger-go-shared/logging"
 )
 
 func (f *FusionSolarAccess) FetchYearData() (*model.KpiStationYearResponse, error) {
-	log.Default().Println("Fetching year data...")
+	logging.Debug("Fetching year data...")
 	client, err := f.newClient()
 	if err != nil {
 		return nil, err
@@ -20,12 +21,12 @@ func (f *FusionSolarAccess) FetchYearData() (*model.KpiStationYearResponse, erro
 	if err != nil {
 		return nil, err
 	}
-	log.Default().Println("Station Year KPIs fetched successfully.")
+	logging.Debug("Station Year KPIs fetched successfully.")
 	return response, nil
 }
 
 func (f *FusionSolarAccess) SaveStationYearKpiResponse(response *model.KpiStationYearResponse) error {
-	log.Default().Println("Saving Station Year KPI Response to Database...")
+	logging.Debug("Saving Station Year KPI Response to Database...")
 	responseId, err := f.insertStationYearKpiResponseParams(response) // safeGenericResponse
 	if err != nil {
 		return err
@@ -39,19 +40,19 @@ func (f *FusionSolarAccess) SaveStationYearKpiResponse(response *model.KpiStatio
 }
 
 func (f *FusionSolarAccess) insertStationYearKpiResponseParams(response *model.KpiStationYearResponse) (int32, error) {
-	log.Default().Println("Saving Station Year Kpi Response Params to database...")
+	logging.Debug("Saving Station Year Kpi Response Params to database...")
 	i, err := f.insertResponseFromData(kpiStationYearResponseAdapter{response})
-	log.Default().Println("Station Year Kpi response saved successfully.")
+	logging.Debug("Station Year Kpi response saved successfully.")
 	return i, err
 }
 
 func (f *FusionSolarAccess) insertStationYearKpiResponseBasicParams(responseId int32, response *model.KpiStationYearResponse) error {
-	log.Default().Println("Saving Station Year Kpi Basic Params to database...")
+	logging.Debug("Saving Station Year Kpi Basic Params to database...")
 	if response.JSON200.Params == nil {
 		return errors.New("'response.JSON200.Params' is nil")
 	}
 	p := response.JSON200.Params
 	err := f.insertStationExtendedParams(responseId, p.StationCodes, p.CurrentTime, p.CollectTime)
-	log.Default().Println("Station Year Kpi response saved successfully.")
+	logging.Debug("Station Year Kpi response saved successfully.")
 	return err
 }

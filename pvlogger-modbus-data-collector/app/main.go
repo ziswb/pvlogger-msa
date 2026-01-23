@@ -1,8 +1,8 @@
 package main
 
 import (
+	"pvlogger-go-shared/logging"
 	"pvlogger-modbus-data-collector/internal/config"
-	"pvlogger-modbus-data-collector/internal/logging"
 	"pvlogger-modbus-data-collector/internal/services"
 )
 

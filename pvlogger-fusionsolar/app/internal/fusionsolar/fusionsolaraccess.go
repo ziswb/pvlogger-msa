@@ -1,10 +1,11 @@
 package fusionsolar
 
 import (
-	"log"
 	"pvlogger/internal/auth"
 	"pvlogger/internal/config"
 	"pvlogger/internal/database"
+
+	"pvlogger-go-shared/logging"
 )
 
 type FusionSolarAccess struct {
@@ -15,7 +16,7 @@ type FusionSolarAccess struct {
 func NewFusionSolarAccess(token auth.Token) *FusionSolarAccess {
 	db, err := database.NewDatabase(config.DbConfig().Host, config.DbConfig().Port, config.DbConfig().DbName, config.DbConfig().Username, config.DbConfig().Password)
 	if err != nil {
-		log.Default().Println(err)
+		logging.Error("failed to create database connection", "error", err)
 	}
 	return &FusionSolarAccess{
 		token: token,

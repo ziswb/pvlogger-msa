@@ -2,7 +2,7 @@ package model
 
 import (
 	"encoding/binary"
-	"pvlogger-modbus-data-collector/internal/logging"
+	"pvlogger-go-shared/logging"
 )
 
 type MbapHeader struct {

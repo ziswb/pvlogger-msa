@@ -2,7 +2,7 @@ package config
 
 import (
 	"os"
-	"pvlogger-modbus-data-collector/internal/logging"
+	"pvlogger-go-shared/logging"
 	"strconv"
 	"strings"
 )

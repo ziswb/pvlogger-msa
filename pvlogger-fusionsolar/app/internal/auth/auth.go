@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"log"
 	"net/http"
 	"pvlogger/internal/config"
 	"pvlogger/internal/model"
+
+	"pvlogger-go-shared/logging"
 )
 
 type Token struct {
@@ -15,7 +16,7 @@ type Token struct {
 }
 
 func Authenticate() (token *Token, err error) {
-	log.Println("Authenticating...")
+	logging.Info("authenticating")
 	client, err := model.NewClient(config.FsUrl())
 	if err != nil {
 		return nil, err
@@ -35,7 +36,7 @@ func Authenticate() (token *Token, err error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Default().Println("Login successful")
+	logging.Info("login successful")
 	return &Token{Token: tokenValue}, nil
 }
 

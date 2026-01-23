@@ -1,9 +1,9 @@
 package services
 
 import (
+	"pvlogger-go-shared/logging"
 	"pvlogger-modbus-data-collector/internal/config"
 	"pvlogger-modbus-data-collector/internal/kpis"
-	"pvlogger-modbus-data-collector/internal/logging"
 	"pvlogger-modbus-data-collector/internal/modbus/model"
 	"pvlogger-modbus-data-collector/internal/services/dataaccessor"
 	"pvlogger-modbus-data-collector/internal/services/persistence"

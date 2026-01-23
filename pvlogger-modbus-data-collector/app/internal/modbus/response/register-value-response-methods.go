@@ -3,7 +3,7 @@ package response
 import (
 	"bytes"
 	"encoding/binary"
-	"pvlogger-modbus-data-collector/internal/logging"
+	"pvlogger-go-shared/logging"
 	"pvlogger-modbus-data-collector/internal/modbus/model"
 	"strings"
 	"time"

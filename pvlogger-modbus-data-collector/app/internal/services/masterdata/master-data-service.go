@@ -6,8 +6,8 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"pvlogger-go-shared/logging"
 	"pvlogger-modbus-data-collector/internal/config"
-	"pvlogger-modbus-data-collector/internal/logging"
 	"pvlogger-modbus-data-collector/internal/modbus/model"
 	"strings"
 )

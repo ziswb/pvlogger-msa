@@ -1,7 +1,7 @@
 package kpis
 
 import (
-	"pvlogger-modbus-data-collector/internal/logging"
+	"pvlogger-go-shared/logging"
 	"strings"
 )
 

@@ -3,13 +3,14 @@ package fusionsolar
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"net/http"
 	"pvlogger/internal/auth"
 	"pvlogger/internal/config"
 	"pvlogger/internal/database"
 	"pvlogger/internal/model"
 	"time"
+
+	"pvlogger-go-shared/logging"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -79,7 +80,7 @@ func (f *FusionSolarAccess) insertStationExtendedParams(responseId int32, statio
 
 // insertResponseFromData extracts common response fields and inserts them into the database
 func (f *FusionSolarAccess) insertResponseFromData(resp FsResponseData) (int32, error) {
-	log.Default().Println("Saving response params to database...")
+	logging.Debug("saving response params to database")
 	raw, err := json.RawMessage.MarshalJSON(resp.GetBody())
 	if err != nil {
 		return 0, err
@@ -92,7 +93,7 @@ func (f *FusionSolarAccess) insertResponseFromData(resp FsResponseData) (int32, 
 }
 
 func (f *FusionSolarAccess) insertFsResponseParams(failCode int32, message pgtype.Text, raw []byte, success bool, timestamp pgtype.Timestamp) (int32, error) {
-	log.Default().Println("Saving fs response params to database...")
+	logging.Debug("saving fs response params to database")
 	// saveGenericResponse
 	responseParams := database.InsertFsResponseParams{
 		Timestamp: timestamp,
@@ -105,13 +106,13 @@ func (f *FusionSolarAccess) insertFsResponseParams(failCode int32, message pgtyp
 	if err != nil {
 		return 0, err
 	}
-	log.Default().Println("Fs response params saved successfully.")
+	logging.Debug("fs response params saved successfully")
 	return insertedFsResponse.ID, nil
 }
 
 func WithBearerToken(token auth.Token) model.ClientOption {
 	return model.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
-		log.Default().Println("Adding token to request...")
+		logging.Debug("adding token to request")
 		req.Header.Set("XSRF-TOKEN", token.Token)
 		return nil
 	})
@@ -139,7 +140,7 @@ func (f *FusionSolarAccess) upsertExtendedKpis(responseId int32, typ model.Fusio
 	} `json:"dataItemMap"`
 	StationCode string `json:"stationCode"`
 }) error {
-	log.Default().Println("Saving extended kpis to database...")
+	logging.Debug("saving extended kpis to database")
 	for _, d := range data {
 		extendedDataParams := database.UpsertFsStationExtendedDataParams{
 			CollectTime:        d.CollectTime,
@@ -162,8 +163,8 @@ func (f *FusionSolarAccess) upsertExtendedKpis(responseId int32, typ model.Fusio
 		if err != nil {
 			return err
 		}
-		log.Default().Println("Extended kpis: saved params successfully.")
-		log.Default().Println("Extended kpis: saving mapping params...")
+		logging.Debug("extended kpis: saved params successfully")
+		logging.Debug("extended kpis: saving mapping params")
 		mappingParams := database.InsertFsStationExtendedDataMappingParams{
 			ResponseID:  responseId,
 			CollectTime: d.CollectTime,
@@ -173,13 +174,13 @@ func (f *FusionSolarAccess) upsertExtendedKpis(responseId int32, typ model.Fusio
 		if err != nil {
 			return err
 		}
-		log.Default().Println("Extended kpis: saved mapping params successfully.")
+		logging.Debug("extended kpis: saved mapping params successfully")
 	}
 	return nil
 }
 
 func (f *FusionSolarAccess) insertFsResponseParamsExtended(responseId int32, stationCodes pgtype.Text, currentTime pgtype.Int8, collectTime pgtype.Int8) error {
-	log.Default().Println("Saving Extended Kpi Basic Params  to database...")
+	logging.Debug("saving extended kpi basic params to database")
 	extendedParams := database.InsertFsResponseParamsExtendedParams{
 		Response:     responseId,
 		StationCodes: stationCodes,
@@ -190,7 +191,7 @@ func (f *FusionSolarAccess) insertFsResponseParamsExtended(responseId int32, sta
 	if err != nil {
 		return err
 	}
-	log.Default().Println("Station Extended Kpi Basic Params saved successfully.")
+	logging.Debug("station extended kpi basic params saved successfully")
 	return nil
 }
 
