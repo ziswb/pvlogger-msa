@@ -140,7 +140,7 @@ func (f *FusionSolarAccess) upsertExtendedKpis(responseId int32, typ model.Fusio
 	} `json:"dataItemMap"`
 	StationCode string `json:"stationCode"`
 }) error {
-	logging.Debug("saving extended kpis to database")
+	logging.Debug("saving extended KPIs to database")
 	for _, d := range data {
 		extendedDataParams := database.UpsertFsStationExtendedDataParams{
 			CollectTime:        d.CollectTime,
@@ -163,8 +163,8 @@ func (f *FusionSolarAccess) upsertExtendedKpis(responseId int32, typ model.Fusio
 		if err != nil {
 			return err
 		}
-		logging.Debug("extended kpis: saved params successfully")
-		logging.Debug("extended kpis: saving mapping params")
+		logging.Debug("extended KPIs: saved params successfully")
+		logging.Debug("extended KPIs: saving mapping params")
 		mappingParams := database.InsertFsStationExtendedDataMappingParams{
 			ResponseID:  responseId,
 			CollectTime: d.CollectTime,
@@ -174,13 +174,13 @@ func (f *FusionSolarAccess) upsertExtendedKpis(responseId int32, typ model.Fusio
 		if err != nil {
 			return err
 		}
-		logging.Debug("extended kpis: saved mapping params successfully")
+		logging.Debug("extended KPIs: saved mapping params successfully")
 	}
 	return nil
 }
 
 func (f *FusionSolarAccess) insertFsResponseParamsExtended(responseId int32, stationCodes pgtype.Text, currentTime pgtype.Int8, collectTime pgtype.Int8) error {
-	logging.Debug("saving extended kpi basic params to database")
+	logging.Debug("saving extended KPI basic params to database")
 	extendedParams := database.InsertFsResponseParamsExtendedParams{
 		Response:     responseId,
 		StationCodes: stationCodes,
@@ -191,7 +191,7 @@ func (f *FusionSolarAccess) insertFsResponseParamsExtended(responseId int32, sta
 	if err != nil {
 		return err
 	}
-	logging.Debug("station extended kpi basic params saved successfully")
+	logging.Debug("station extended KPI basic params saved successfully")
 	return nil
 }
 

@@ -11,7 +11,7 @@ import (
 )
 
 func (f *FusionSolarAccess) FetchMonthData() (*model.KpiStationMonthResponse, error) {
-	logging.Debug("Fetching month data...")
+	logging.Debug("fetching month data")
 	client, err := f.newClient()
 	if err != nil {
 		return nil, err
@@ -21,12 +21,12 @@ func (f *FusionSolarAccess) FetchMonthData() (*model.KpiStationMonthResponse, er
 	if err != nil {
 		return nil, err
 	}
-	logging.Debug("Station Month KPIs fetched successfully.")
+	logging.Debug("station month KPIs fetched successfully")
 	return response, nil
 }
 
 func (f *FusionSolarAccess) SaveStationMonthKpiResponse(response *model.KpiStationMonthResponse) error {
-	logging.Debug("Saving Station Month KPI Response to Database...")
+	logging.Debug("saving station month KPI response to database")
 	responseId, err := f.insertStationMonthKpiResponseParams(response)
 	if err != nil {
 		return err
@@ -39,25 +39,25 @@ func (f *FusionSolarAccess) SaveStationMonthKpiResponse(response *model.KpiStati
 }
 
 func (f *FusionSolarAccess) insertStationMonthKpiResponseParams(response *model.KpiStationMonthResponse) (int32, error) {
-	logging.Debug("Saving Station Month Kpi Response Params to database...")
+	logging.Debug("saving station month KPI response params to database")
 	i, err := f.insertResponseFromData(kpiStationMonthResponseAdapter{response})
-	logging.Debug("Station Month Kpi response saved successfully.")
+	logging.Debug("station month KPI response saved successfully")
 	return i, err
 }
 
 func (f *FusionSolarAccess) insertStationMonthKpiResponseBasicParams(responseId int32, response *model.KpiStationMonthResponse) error {
-	logging.Debug("Saving Station Month Kpi Basic Params to database...")
+	logging.Debug("saving station month KPI basic params to database")
 	if response.JSON200.Params == nil {
 		return errors.New("'response.JSON200.Params' is nil")
 	}
 	p := response.JSON200.Params
 	err := f.insertStationExtendedParams(responseId, p.StationCodes, p.CurrentTime, p.CollectTime)
-	logging.Debug("Station Month Kpi response saved successfully.")
+	logging.Debug("station month KPI response saved successfully")
 	return err
 }
 
 func (f *FusionSolarAccess) upsertStationMonthKpi(responseId int32, response *model.KpiStationMonthResponse) error {
-	logging.Debug("Saving Station Month Kpi to database...")
+	logging.Debug("saving station month KPI to database")
 	data := *response.JSON200.Data
 	err := f.upsertExtendedKpis(responseId, model.StationMonthKpi, data)
 	if err != nil {

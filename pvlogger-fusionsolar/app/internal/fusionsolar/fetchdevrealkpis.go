@@ -6,7 +6,6 @@ import (
 	"pvlogger/internal/config"
 	"pvlogger/internal/database"
 	"pvlogger/internal/model"
-	"strconv"
 
 	"pvlogger-go-shared/logging"
 
@@ -16,7 +15,7 @@ import (
 const devTypeIdStringInverter = 1
 
 func (f *FusionSolarAccess) FetchDeviceRealData() (*model.DeviceRealKpiResponse, error) {
-	logging.Debug("Fetching device real data...")
+	logging.Debug("fetching device real data")
 	client, err := f.newClient()
 	if err != nil {
 		return nil, err
@@ -26,12 +25,12 @@ func (f *FusionSolarAccess) FetchDeviceRealData() (*model.DeviceRealKpiResponse,
 	if err != nil {
 		return nil, err
 	}
-	logging.Debug("Device real data fetched successfully.")
+	logging.Debug("device real data fetched successfully")
 	return response, nil
 }
 
 func (f *FusionSolarAccess) SaveDeviceRealKpiResponse(response *model.DeviceRealKpiResponse) error {
-	logging.Debug("Saving Device Real Kpi Response to database...")
+	logging.Debug("saving device real KPI response to database")
 	responseId, err := f.insertDeviceRealKpiResponseParams(response)
 	if err != nil {
 		return err
@@ -44,31 +43,31 @@ func (f *FusionSolarAccess) SaveDeviceRealKpiResponse(response *model.DeviceReal
 	if err != nil {
 		return err
 	}
-	logging.Debug("Device Real Kpi response saved successfully.")
+	logging.Debug("device real KPI response saved successfully")
 	return nil
 }
 
 func (f *FusionSolarAccess) insertDeviceRealKpiResponseParams(response *model.DeviceRealKpiResponse) (int32, error) {
-	logging.Debug("Saving Device Real Kpi Response Params to database...")
+	logging.Debug("saving device real KPI response params to database")
 	i, err := f.insertResponseFromData(deviceRealKpiResponseAdapter{response})
-	logging.Debug("Device Real Kpi response saved successfully.")
+	logging.Debug("device real KPI response saved successfully")
 	return i, err
 }
 
 func (f *FusionSolarAccess) insertDeviceRealKpiResponseBasicParams(responseId int32, response *model.DeviceRealKpiResponse) error {
-	logging.Debug("Saving Device Real Kpi Basic Params  to database...")
+	logging.Debug("saving device real KPI basic params to database")
 	if response.JSON200.Params == nil {
 		return errors.New("'response.JSON200.Params' is nil")
 	}
 	currentTime := pgtype.Int8{Valid: true, Int64: *response.JSON200.Params.CurrentTime}
 	devIds := pgtype.Text{Valid: true, String: *response.JSON200.Params.DevIds}
 	err := f.insertFsResponseParamsDevice(currentTime, responseId, devIds)
-	logging.Debug("Device Real Kpi response saved successfully.")
+	logging.Debug("device real KPI response saved successfully")
 	return err
 }
 
 func (f *FusionSolarAccess) insertFsResponseParamsDevice(currentTime pgtype.Int8, responseId int32, deviceIds pgtype.Text) error {
-	logging.Debug("Saving response params to database...")
+	logging.Debug("saving response params to database")
 	responseParamsBasic := database.InsertFsResponseParamsDeviceParams{
 		CurrentTime: currentTime,
 		Response:    responseId,
@@ -78,15 +77,15 @@ func (f *FusionSolarAccess) insertFsResponseParamsDevice(currentTime pgtype.Int8
 	if err != nil {
 		return err
 	}
-	logging.Debug("Response params saved successfully.")
+	logging.Debug("response params saved successfully")
 	return nil
 }
 
 func (f *FusionSolarAccess) insertDeviceRealKpi(responseId int32, response *model.DeviceRealKpiResponse) error {
-	logging.Debug("Saving device real kpi to database...")
+	logging.Debug("saving device real KPI to database")
 	data := *response.JSON200.Data
 	for i := 0; i < len(data); i++ {
-		logging.Debug("Saving device real kpi record '" + strconv.Itoa(i) + "' ...")
+		logging.Debug("saving device real KPI record", "index", i)
 		d := data[i]
 		record := database.InsertFsDeviceRealKpiParams{
 			AI:            toPgFloat8(d.DataItemMap.AI),
@@ -186,8 +185,8 @@ func (f *FusionSolarAccess) insertDeviceRealKpi(responseId int32, response *mode
 		if err != nil {
 			return err
 		}
-		logging.Debug("... saved device real kpi record '" + strconv.Itoa(i) + "'")
+		logging.Debug("saved device real KPI record", "index", i)
 	}
-	logging.Debug("Device  real kpi saved successfully.")
+	logging.Debug("device real KPI saved successfully")
 	return nil
 }

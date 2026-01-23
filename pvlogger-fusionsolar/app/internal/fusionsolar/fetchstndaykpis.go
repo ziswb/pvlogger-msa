@@ -40,19 +40,19 @@ func (f *FusionSolarAccess) SaveStationDayKpiResponse(response *model.KpiStation
 }
 
 func (f *FusionSolarAccess) insertStationDayKpiResponseParams(response *model.KpiStationDayResponse) (int32, error) {
-	logging.Debug("saving station day kpi response params to database")
+	logging.Debug("saving station day KPI response params to database")
 	i, err := f.insertResponseFromData(kpiStationDayResponseAdapter{response})
-	logging.Debug("station day kpi response saved successfully")
+	logging.Debug("station day KPI response saved successfully")
 	return i, err
 }
 
 func (f *FusionSolarAccess) insertStationDayKpiResponseBasicParams(responseId int32, response *model.KpiStationDayResponse) error {
-	logging.Debug("saving station day kpi basic params to database")
+	logging.Debug("saving station day KPI basic params to database")
 	if response.JSON200.Params == nil {
 		return errors.New("'response.JSON200.Params' is nil")
 	}
 	p := response.JSON200.Params
 	err := f.insertStationExtendedParams(responseId, p.StationCodes, p.CurrentTime, p.CollectTime)
-	logging.Debug("station day kpi response saved successfully")
+	logging.Debug("station day KPI response saved successfully")
 	return err
 }
