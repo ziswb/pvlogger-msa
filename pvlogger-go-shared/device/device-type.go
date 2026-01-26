@@ -2,6 +2,8 @@ package device
 
 type DeviceType string
 
+const DeviceIds = "<dev-id>,<dev-id>"
+
 const (
 	InverterDeviceType DeviceType = "INVERTER"
 	MeterDeviceType    DeviceType = "METER"

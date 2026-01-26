@@ -15,7 +15,7 @@ import (
 const devTypeIdStringInverter = 1
 
 func (f *FusionSolarAccess) FetchDeviceRealData() (*model.DeviceRealKpiResponse, error) {
-	logging.Debug("fetching device real data")
+	logging.Info("fetching device real data")
 	client, err := f.newClient()
 	if err != nil {
 		return nil, err
@@ -25,12 +25,12 @@ func (f *FusionSolarAccess) FetchDeviceRealData() (*model.DeviceRealKpiResponse,
 	if err != nil {
 		return nil, err
 	}
-	logging.Debug("device real data fetched successfully")
+	logging.Info("device real data fetched successfully")
 	return response, nil
 }
 
 func (f *FusionSolarAccess) SaveDeviceRealKpiResponse(response *model.DeviceRealKpiResponse) error {
-	logging.Debug("saving device real KPI response to database")
+	logging.Info("saving device real KPI response to database")
 	responseId, err := f.insertDeviceRealKpiResponseParams(response)
 	if err != nil {
 		return err
@@ -43,19 +43,19 @@ func (f *FusionSolarAccess) SaveDeviceRealKpiResponse(response *model.DeviceReal
 	if err != nil {
 		return err
 	}
-	logging.Debug("device real KPI response saved successfully")
+	logging.Info("device real KPI response saved successfully")
 	return nil
 }
 
 func (f *FusionSolarAccess) insertDeviceRealKpiResponseParams(response *model.DeviceRealKpiResponse) (int32, error) {
-	logging.Debug("saving device real KPI response params to database")
+	logging.Info("saving device real KPI response params to database")
 	i, err := f.insertResponseFromData(deviceRealKpiResponseAdapter{response})
-	logging.Debug("device real KPI response saved successfully")
+	logging.Info("device real KPI response saved successfully")
 	return i, err
 }
 
 func (f *FusionSolarAccess) insertDeviceRealKpiResponseBasicParams(responseId int32, response *model.DeviceRealKpiResponse) error {
-	logging.Debug("saving device real KPI basic params to database")
+	logging.Info("saving device real KPI basic params to database")
 	if response.JSON200.Params == nil {
 		return errors.New("'response.JSON200.Params' is nil")
 	}
@@ -65,15 +65,15 @@ func (f *FusionSolarAccess) insertDeviceRealKpiResponseBasicParams(responseId in
 		CurrentTime: pgtype.Int8{Valid: true, Int64: *response.JSON200.Params.CurrentTime},
 	}
 	err := f.repo.InsertFsResponseParamsDevice(f.db.Ctx, input)
-	logging.Debug("device real KPI response saved successfully")
+	logging.Info("device real KPI response saved successfully")
 	return err
 }
 
 func (f *FusionSolarAccess) insertDeviceRealKpi(responseId int32, response *model.DeviceRealKpiResponse) error {
-	logging.Debug("saving device real KPI to database")
+	logging.Info("saving device real KPI to database")
 	data := *response.JSON200.Data
 	for i := 0; i < len(data); i++ {
-		logging.Debug("saving device real KPI record", "index", i)
+		logging.Info("saving device real KPI record", "index", i)
 		d := data[i]
 		input := repository.DeviceRealKpiInput{
 			AI:            repository.ToPgFloat8(d.DataItemMap.AI),
@@ -173,8 +173,8 @@ func (f *FusionSolarAccess) insertDeviceRealKpi(responseId int32, response *mode
 		if err != nil {
 			return err
 		}
-		logging.Debug("saved device real KPI record", "index", i)
+		logging.Info("saved device real KPI record", "index", i)
 	}
-	logging.Debug("device real KPI saved successfully")
+	logging.Info("device real KPI saved successfully")
 	return nil
 }

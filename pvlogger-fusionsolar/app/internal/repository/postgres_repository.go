@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"pvlogger/internal/database"
+	"time"
 
 	"pvlogger-go-shared/logging"
 )
@@ -21,8 +22,22 @@ func (r *PostgresRepository) queries() *database.Queries {
 	return database.New(r.db.Conn)
 }
 
+func (r *PostgresRepository) SelectFormer5MinDeviceRealKpi(ctx context.Context) (map[time.Time]int, error) {
+	kpi, err := r.queries().SelectFormer5MinDeviceRealKpi(ctx)
+	if err != nil {
+		return nil, err
+	}
+	dts := make(map[time.Time]int)
+	for _, dt := range kpi {
+		t := time.UnixMilli(dt.Int64)
+		d := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.UTC)
+		dts[d] = dts[d] + 1
+	}
+	return dts, nil
+}
+
 func (r *PostgresRepository) InsertFsResponse(ctx context.Context, input FsResponseInput) (int32, error) {
-	logging.Debug("inserting fs response")
+	logging.Info("inserting fs response")
 	params := database.InsertFsResponseParams{
 		FailCode:  input.FailCode,
 		Message:   input.Message,
@@ -34,12 +49,12 @@ func (r *PostgresRepository) InsertFsResponse(ctx context.Context, input FsRespo
 	if err != nil {
 		return 0, err
 	}
-	logging.Debug("fs response inserted successfully", "id", result.ID)
+	logging.Info("fs response inserted successfully", "id", result.ID)
 	return result.ID, nil
 }
 
 func (r *PostgresRepository) InsertFsResponseParamsExtended(ctx context.Context, input FsResponseParamsExtendedInput) error {
-	logging.Debug("inserting fs response params extended")
+	logging.Info("inserting fs response params extended")
 	params := database.InsertFsResponseParamsExtendedParams{
 		Response:     input.ResponseID,
 		StationCodes: input.StationCodes,
@@ -50,12 +65,12 @@ func (r *PostgresRepository) InsertFsResponseParamsExtended(ctx context.Context,
 	if err != nil {
 		return err
 	}
-	logging.Debug("fs response params extended inserted successfully")
+	logging.Info("fs response params extended inserted successfully")
 	return nil
 }
 
 func (r *PostgresRepository) InsertFsResponseParamsBasic(ctx context.Context, input FsResponseParamsBasicInput) error {
-	logging.Debug("inserting fs response params basic")
+	logging.Info("inserting fs response params basic")
 	params := database.InsertFsResponseParamsBasicParams{
 		Response:     input.ResponseID,
 		StationCodes: input.StationCodes,
@@ -65,12 +80,12 @@ func (r *PostgresRepository) InsertFsResponseParamsBasic(ctx context.Context, in
 	if err != nil {
 		return err
 	}
-	logging.Debug("fs response params basic inserted successfully")
+	logging.Info("fs response params basic inserted successfully")
 	return nil
 }
 
 func (r *PostgresRepository) InsertFsResponseParamsDevice(ctx context.Context, input FsResponseParamsDeviceInput) error {
-	logging.Debug("inserting fs response params device")
+	logging.Info("inserting fs response params device")
 	params := database.InsertFsResponseParamsDeviceParams{
 		Response:    input.ResponseID,
 		DevIds:      input.DevIds,
@@ -81,12 +96,12 @@ func (r *PostgresRepository) InsertFsResponseParamsDevice(ctx context.Context, i
 	if err != nil {
 		return err
 	}
-	logging.Debug("fs response params device inserted successfully")
+	logging.Info("fs response params device inserted successfully")
 	return nil
 }
 
 func (r *PostgresRepository) UpsertStationExtendedData(ctx context.Context, input StationExtendedDataInput) error {
-	logging.Debug("upserting station extended data")
+	logging.Info("upserting station extended data")
 	params := database.UpsertFsStationExtendedDataParams{
 		CollectTime:        input.CollectTime,
 		Type:               input.Type,
@@ -108,12 +123,12 @@ func (r *PostgresRepository) UpsertStationExtendedData(ctx context.Context, inpu
 	if err != nil {
 		return err
 	}
-	logging.Debug("station extended data upserted successfully")
+	logging.Info("station extended data upserted successfully")
 	return nil
 }
 
 func (r *PostgresRepository) InsertStationExtendedDataMapping(ctx context.Context, input StationExtendedDataMappingInput) error {
-	logging.Debug("inserting station extended data mapping")
+	logging.Info("inserting station extended data mapping")
 	params := database.InsertFsStationExtendedDataMappingParams{
 		ResponseID:  input.ResponseID,
 		CollectTime: input.CollectTime,
@@ -123,12 +138,12 @@ func (r *PostgresRepository) InsertStationExtendedDataMapping(ctx context.Contex
 	if err != nil {
 		return err
 	}
-	logging.Debug("station extended data mapping inserted successfully")
+	logging.Info("station extended data mapping inserted successfully")
 	return nil
 }
 
 func (r *PostgresRepository) InsertStationRealKpi(ctx context.Context, input StationRealKpiInput) error {
-	logging.Debug("inserting station real KPI")
+	logging.Info("inserting station real KPI")
 	params := database.InsertFsStationRealKpiParams{
 		DayIncome:       input.DayIncome,
 		DayPower:        input.DayPower,
@@ -144,12 +159,12 @@ func (r *PostgresRepository) InsertStationRealKpi(ctx context.Context, input Sta
 	if err != nil {
 		return err
 	}
-	logging.Debug("station real KPI inserted successfully")
+	logging.Info("station real KPI inserted successfully")
 	return nil
 }
 
 func (r *PostgresRepository) InsertDeviceRealKpi(ctx context.Context, input DeviceRealKpiInput) error {
-	logging.Debug("inserting device real KPI")
+	logging.Info("inserting device real KPI")
 	params := database.InsertFsDeviceRealKpiParams{
 		AI:            input.AI,
 		AU:            input.AU,
@@ -248,6 +263,6 @@ func (r *PostgresRepository) InsertDeviceRealKpi(ctx context.Context, input Devi
 	if err != nil {
 		return err
 	}
-	logging.Debug("device real KPI inserted successfully")
+	logging.Info("device real KPI inserted successfully")
 	return nil
 }

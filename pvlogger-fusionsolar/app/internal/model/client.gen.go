@@ -1037,7 +1037,7 @@ type DeviceFiveMinutesKpiResponse struct {
 				CI            *float32 `json:"c_i,omitempty"`
 				CU            *float32 `json:"c_u,omitempty"`
 				CaU           *float32 `json:"ca_u,omitempty"`
-				CloseTime     *int64   `json:"close_time,omitempty"`
+				CloseTime     *float32 `json:"close_time,omitempty"`
 				DayCap        *float32 `json:"day_cap,omitempty"`
 				Efficiency    *float32 `json:"efficiency,omitempty"`
 				ElecFreq      *float32 `json:"elec_freq,omitempty"`
@@ -1054,7 +1054,7 @@ type DeviceFiveMinutesKpiResponse struct {
 				Mppt9Cap      *float32 `json:"mppt_9_cap,omitempty"`
 				MpptPower     *float32 `json:"mppt_power,omitempty"`
 				MpptTotalCap  *float32 `json:"mppt_total_cap,omitempty"`
-				OpenTime      *int64   `json:"open_time,omitempty"`
+				OpenTime      *float32 `json:"open_time,omitempty"`
 				PowerFactor   *float32 `json:"power_factor,omitempty"`
 				Pv10I         *float32 `json:"pv10_i,omitempty"`
 				Pv10U         *float32 `json:"pv10_u,omitempty"`
@@ -1257,7 +1257,7 @@ type DeviceRealKpiResponse struct {
 				CI            *float32 `json:"c_i,omitempty"`
 				CU            *float32 `json:"c_u,omitempty"`
 				CaU           *float32 `json:"ca_u,omitempty"`
-				CloseTime     *int64   `json:"close_time,omitempty"`
+				CloseTime     *float32 `json:"close_time,omitempty"`
 				DayCap        *float32 `json:"day_cap,omitempty"`
 				Efficiency    *float32 `json:"efficiency,omitempty"`
 				ElecFreq      *float32 `json:"elec_freq,omitempty"`
@@ -1274,7 +1274,7 @@ type DeviceRealKpiResponse struct {
 				Mppt9Cap      *float32 `json:"mppt_9_cap,omitempty"`
 				MpptPower     *float32 `json:"mppt_power,omitempty"`
 				MpptTotalCap  *float32 `json:"mppt_total_cap,omitempty"`
-				OpenTime      *int64   `json:"open_time,omitempty"`
+				OpenTime      *float32 `json:"open_time,omitempty"`
 				PowerFactor   *float32 `json:"power_factor,omitempty"`
 				Pv10I         *float32 `json:"pv10_i,omitempty"`
 				Pv10U         *float32 `json:"pv10_u,omitempty"`
@@ -1968,7 +1968,7 @@ func ParseDeviceFiveMinutesKpiResponse(rsp *http.Response) (*DeviceFiveMinutesKp
 					CI            *float32 `json:"c_i,omitempty"`
 					CU            *float32 `json:"c_u,omitempty"`
 					CaU           *float32 `json:"ca_u,omitempty"`
-					CloseTime     *int64   `json:"close_time,omitempty"`
+					CloseTime     *float32 `json:"close_time,omitempty"`
 					DayCap        *float32 `json:"day_cap,omitempty"`
 					Efficiency    *float32 `json:"efficiency,omitempty"`
 					ElecFreq      *float32 `json:"elec_freq,omitempty"`
@@ -1985,7 +1985,7 @@ func ParseDeviceFiveMinutesKpiResponse(rsp *http.Response) (*DeviceFiveMinutesKp
 					Mppt9Cap      *float32 `json:"mppt_9_cap,omitempty"`
 					MpptPower     *float32 `json:"mppt_power,omitempty"`
 					MpptTotalCap  *float32 `json:"mppt_total_cap,omitempty"`
-					OpenTime      *int64   `json:"open_time,omitempty"`
+					OpenTime      *float32 `json:"open_time,omitempty"`
 					PowerFactor   *float32 `json:"power_factor,omitempty"`
 					Pv10I         *float32 `json:"pv10_i,omitempty"`
 					Pv10U         *float32 `json:"pv10_u,omitempty"`
@@ -2200,7 +2200,7 @@ func ParseDeviceRealKpiResponse(rsp *http.Response) (*DeviceRealKpiResponse, err
 					CI            *float32 `json:"c_i,omitempty"`
 					CU            *float32 `json:"c_u,omitempty"`
 					CaU           *float32 `json:"ca_u,omitempty"`
-					CloseTime     *int64   `json:"close_time,omitempty"`
+					CloseTime     *float32 `json:"close_time,omitempty"`
 					DayCap        *float32 `json:"day_cap,omitempty"`
 					Efficiency    *float32 `json:"efficiency,omitempty"`
 					ElecFreq      *float32 `json:"elec_freq,omitempty"`
@@ -2217,7 +2217,7 @@ func ParseDeviceRealKpiResponse(rsp *http.Response) (*DeviceRealKpiResponse, err
 					Mppt9Cap      *float32 `json:"mppt_9_cap,omitempty"`
 					MpptPower     *float32 `json:"mppt_power,omitempty"`
 					MpptTotalCap  *float32 `json:"mppt_total_cap,omitempty"`
-					OpenTime      *int64   `json:"open_time,omitempty"`
+					OpenTime      *float32 `json:"open_time,omitempty"`
 					PowerFactor   *float32 `json:"power_factor,omitempty"`
 					Pv10I         *float32 `json:"pv10_i,omitempty"`
 					Pv10U         *float32 `json:"pv10_u,omitempty"`

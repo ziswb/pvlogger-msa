@@ -24,6 +24,12 @@ INSERT INTO fs_station_real_kpi (day_income,
                                  type)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);
 
+-- name: SelectFormer5MinDeviceRealKpi :many
+SELECT collect_time
+FROM fs_device_real_kpi
+WHERE type = 'DEVICE_5_MIN_KPI'
+  AND collect_time is not null;
+
 -- name: InsertFsResponseParamsDevice :exec
 INSERT INTO fs_response_params_device ("current_time", dev_ids, dev_type_id, response)
 VALUES ($1, $2, $3, $4);
@@ -68,7 +74,7 @@ VALUES ($1,
         $12,
         $13,
         $14,
-        $15) ON CONFLICT(response_id, collect_time, "type")
+        $15) ON CONFLICT(collect_time, "type")
 DO
 UPDATE SET
     installed_capacity=$2,

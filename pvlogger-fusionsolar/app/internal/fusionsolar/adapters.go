@@ -58,3 +58,12 @@ func (r deviceRealKpiResponseAdapter) GetBody() []byte     { return r.Body }
 func (r deviceRealKpiResponseAdapter) GetFailCode() int    { return r.JSON200.FailCode }
 func (r deviceRealKpiResponseAdapter) GetMessage() *string { return r.JSON200.Message }
 func (r deviceRealKpiResponseAdapter) GetSuccess() *bool   { return r.JSON200.Success }
+
+type deviceFiveMinutesKpiResponseAdapter struct {
+	*model.DeviceFiveMinutesKpiResponse
+}
+
+func (r deviceFiveMinutesKpiResponseAdapter) GetBody() []byte     { return r.Body }
+func (r deviceFiveMinutesKpiResponseAdapter) GetFailCode() int    { return r.JSON200.FailCode }
+func (r deviceFiveMinutesKpiResponseAdapter) GetMessage() *string { return r.JSON200.Message }
+func (r deviceFiveMinutesKpiResponseAdapter) GetSuccess() *bool   { return r.JSON200.Success }

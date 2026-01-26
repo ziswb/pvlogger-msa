@@ -21,11 +21,11 @@ func ToPgInt4(value *int) pgtype.Int4 {
 }
 
 // ToPgInt8 converts a *int64 to pgtype.Int8
-func ToPgInt8(value *int64) pgtype.Int8 {
+func ToPgInt8(value *float32) pgtype.Int8 {
 	if value == nil {
 		return pgtype.Int8{Valid: false}
 	}
-	return pgtype.Int8{Valid: true, Int64: *value}
+	return pgtype.Int8{Valid: true, Int64: int64(*value)}
 }
 
 // ToPgText converts a *string to pgtype.Text

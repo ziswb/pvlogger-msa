@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 )
 
 // Repository defines the interface for FusionSolar data persistence operations
@@ -29,4 +30,6 @@ type Repository interface {
 
 	// InsertDeviceRealKpi inserts device real-time KPI data
 	InsertDeviceRealKpi(ctx context.Context, input DeviceRealKpiInput) error
+
+	SelectFormer5MinDeviceRealKpi(ctx context.Context) (map[time.Time]int, error)
 }

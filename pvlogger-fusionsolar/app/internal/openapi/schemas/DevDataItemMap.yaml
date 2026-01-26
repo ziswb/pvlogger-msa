@@ -23,8 +23,7 @@ properties:
   pv22_u:
     type: number
   open_time:
-    type: integer
-    format: int64
+    type: number
   a_i:
     type: number
   pv24_u:
@@ -70,8 +69,7 @@ properties:
   run_state:
     type: integer
   close_time:
-    type: integer
-    format: int64
+    type: number
   pv19_i:
     type: number
   mppt_7_cap:

@@ -432,6 +432,33 @@ func (q *Queries) InsertFsStationRealKpi(ctx context.Context, arg InsertFsStatio
 	return err
 }
 
+const selectFormer5MinDeviceRealKpi = `-- name: SelectFormer5MinDeviceRealKpi :many
+SELECT collect_time
+FROM fs_device_real_kpi
+WHERE type = 'DEVICE_5_MIN_KPI'
+  AND collect_time is not null
+`
+
+func (q *Queries) SelectFormer5MinDeviceRealKpi(ctx context.Context) ([]pgtype.Int8, error) {
+	rows, err := q.db.Query(ctx, selectFormer5MinDeviceRealKpi)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []pgtype.Int8
+	for rows.Next() {
+		var collect_time pgtype.Int8
+		if err := rows.Scan(&collect_time); err != nil {
+			return nil, err
+		}
+		items = append(items, collect_time)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateFsResponseToStationExtendedData = `-- name: UpdateFsResponseToStationExtendedData :exec
 UPDATE fs_response_to_station_extended_data
 SET response_id=$1

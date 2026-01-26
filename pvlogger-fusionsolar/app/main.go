@@ -76,6 +76,16 @@ func main() {
 			logging.Fatal("failed to save station year kpi response", "error", err)
 		}
 		break
+	case model.Device5MinKpi.String():
+		response, err := fusionSolarAccess.FetchDevFiveMinutesData()
+		if err != nil {
+			logging.Fatal("failed to fetch device 5 minutes kpi", "error", err)
+		}
+		err = fusionSolarAccess.SaveDev5MinKPIs(response)
+		if err != nil {
+			logging.Fatal("failed to save device 5 minutes kpi response", "error", err)
+		}
+		break
 	default:
 		logging.Fatal("unknown job name", "name", name)
 	}
