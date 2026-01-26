@@ -12,7 +12,7 @@ import (
 
 func WithBearerToken(token auth.Token) model.ClientOption {
 	return model.WithRequestEditorFn(func(ctx context.Context, req *http.Request) error {
-		logging.Debug("adding token to request")
+		logging.Info("adding token to request")
 		req.Header.Set("XSRF-TOKEN", token.Token)
 		return nil
 	})

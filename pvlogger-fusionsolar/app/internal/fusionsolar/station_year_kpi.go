@@ -11,7 +11,7 @@ import (
 )
 
 func (f *FusionSolarAccess) FetchYearData() (*model.KpiStationYearResponse, error) {
-	logging.Debug("fetching year data")
+	logging.Info("fetching year data")
 	client, err := f.newClient()
 	if err != nil {
 		return nil, err
@@ -21,12 +21,12 @@ func (f *FusionSolarAccess) FetchYearData() (*model.KpiStationYearResponse, erro
 	if err != nil {
 		return nil, err
 	}
-	logging.Debug("station year KPIs fetched successfully")
+	logging.Info("station year KPIs fetched successfully")
 	return response, nil
 }
 
 func (f *FusionSolarAccess) SaveStationYearKpiResponse(response *model.KpiStationYearResponse) error {
-	logging.Debug("saving station year KPI response to database")
+	logging.Info("saving station year KPI response to database")
 	responseId, err := f.insertStationYearKpiResponseParams(response) // safeGenericResponse
 	if err != nil {
 		return err
@@ -40,19 +40,19 @@ func (f *FusionSolarAccess) SaveStationYearKpiResponse(response *model.KpiStatio
 }
 
 func (f *FusionSolarAccess) insertStationYearKpiResponseParams(response *model.KpiStationYearResponse) (int32, error) {
-	logging.Debug("saving station year KPI response params to database")
+	logging.Info("saving station year KPI response params to database")
 	i, err := f.insertResponseFromData(kpiStationYearResponseAdapter{response})
-	logging.Debug("station year KPI response saved successfully")
+	logging.Info("station year KPI response saved successfully")
 	return i, err
 }
 
 func (f *FusionSolarAccess) insertStationYearKpiResponseBasicParams(responseId int32, response *model.KpiStationYearResponse) error {
-	logging.Debug("saving station year KPI basic params to database")
+	logging.Info("saving station year KPI basic params to database")
 	if response.JSON200.Params == nil {
 		return errors.New("'response.JSON200.Params' is nil")
 	}
 	p := response.JSON200.Params
 	err := f.insertStationExtendedParams(responseId, p.StationCodes, p.CurrentTime, p.CollectTime)
-	logging.Debug("station year KPI response saved successfully")
+	logging.Info("station year KPI response saved successfully")
 	return err
 }

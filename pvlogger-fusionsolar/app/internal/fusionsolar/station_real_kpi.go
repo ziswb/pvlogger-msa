@@ -13,7 +13,7 @@ import (
 )
 
 func (f *FusionSolarAccess) FetchStationRealTimeData() (*model.StationRealKpiResponse, error) {
-	logging.Debug("fetching station real time data")
+	logging.Info("fetching station real time data")
 	client, err := f.newClient()
 	if err != nil {
 		return nil, err
@@ -23,12 +23,12 @@ func (f *FusionSolarAccess) FetchStationRealTimeData() (*model.StationRealKpiRes
 	if err != nil {
 		return nil, err
 	}
-	logging.Debug("station real time data fetched successfully")
+	logging.Info("station real time data fetched successfully")
 	return response, nil
 }
 
 func (f *FusionSolarAccess) SaveStationRealKpiResponse(response *model.StationRealKpiResponse) error {
-	logging.Debug("saving response to database")
+	logging.Info("saving response to database")
 	responseId, err := f.insertStationRealKpiResponseParams(response)
 	if err != nil {
 		return err
@@ -41,19 +41,19 @@ func (f *FusionSolarAccess) SaveStationRealKpiResponse(response *model.StationRe
 	if err != nil {
 		return err
 	}
-	logging.Debug("response saved successfully")
+	logging.Info("response saved successfully")
 	return nil
 }
 
 func (f *FusionSolarAccess) insertStationRealKpiResponseParams(response *model.StationRealKpiResponse) (int32, error) {
-	logging.Debug("saving station real KPI response to database")
+	logging.Info("saving station real KPI response to database")
 	i, err := f.insertResponseFromData(stationRealKpiResponseAdapter{response})
-	logging.Debug("station real KPI response saved successfully")
+	logging.Info("station real KPI response saved successfully")
 	return i, err
 }
 
 func (f *FusionSolarAccess) insertStationRealKpiResponseBasicParams(responseId int32, response *model.StationRealKpiResponse) error {
-	logging.Debug("saving station real KPI response params to database")
+	logging.Info("saving station real KPI response params to database")
 	if response.JSON200.Params == nil {
 		return errors.New("'response.JSON200.Params' is nil")
 	}
@@ -63,12 +63,12 @@ func (f *FusionSolarAccess) insertStationRealKpiResponseBasicParams(responseId i
 		CurrentTime:  pgtype.Int8{Valid: true, Int64: *response.JSON200.Params.CurrentTime},
 	}
 	err := f.repo.InsertFsResponseParamsBasic(f.db.Ctx, input)
-	logging.Debug("station real KPI response params saved successfully")
+	logging.Info("station real KPI response params saved successfully")
 	return err
 }
 
 func (f *FusionSolarAccess) insertStationRealKpi(responseId int32, response *model.StationRealKpiResponse) error {
-	logging.Debug("saving station real KPI to database")
+	logging.Info("saving station real KPI to database")
 	data := *response.JSON200.Data
 	for i := 0; i < len(data); i++ {
 		input := repository.StationRealKpiInput{
@@ -87,6 +87,6 @@ func (f *FusionSolarAccess) insertStationRealKpi(responseId int32, response *mod
 			return err
 		}
 	}
-	logging.Debug("station real KPI saved successfully")
+	logging.Info("station real KPI saved successfully")
 	return nil
 }
