@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"pvlogger-go-shared/device"
 	"pvlogger-go-shared/logging"
 	"pvlogger-modbus-data-collector/internal/modbus/model"
 	"pvlogger-modbus-data-collector/internal/modbus/response"
@@ -14,7 +15,7 @@ func (s *ReadRegisterValuesService) ExecuteFetchRegisterValuesJob() {
 	}
 }
 
-func (s *ReadRegisterValuesService) fetchRegisterValues(deviceId model.UByte, deviceTypes []model.DeviceType) {
+func (s *ReadRegisterValuesService) fetchRegisterValues(deviceId model.UByte, deviceTypes []device.DeviceType) {
 	logging.Info("fetching register values", "device_id", deviceId, "device_types", deviceTypes)
 	registerDefinitionsList := s.listsOfConsecutiveRegisters(deviceTypes)
 	for _, registerDefinitions := range *registerDefinitionsList {
@@ -32,7 +33,7 @@ func (s *ReadRegisterValuesService) fetchRegisterValues(deviceId model.UByte, de
 	defer s.Close()
 }
 
-func (s *ReadRegisterValuesService) listsOfConsecutiveRegisters(deviceTypes []model.DeviceType) *[][]model.RegisterDefinition {
+func (s *ReadRegisterValuesService) listsOfConsecutiveRegisters(deviceTypes []device.DeviceType) *[][]model.RegisterDefinition {
 	registerDefinitions := s.fetchRegisterDefinitionsFromMasterData(deviceTypes)
 	var listsOfConsecutiveRegisters [][]model.RegisterDefinition
 	for _, registerDefinition := range *registerDefinitions {
@@ -46,7 +47,7 @@ func (s *ReadRegisterValuesService) listsOfConsecutiveRegisters(deviceTypes []mo
 	return &listsOfConsecutiveRegisters
 }
 
-func (s *ReadRegisterValuesService) fetchRegisterDefinitionsFromMasterData(deviceTypes []model.DeviceType) *[]model.RegisterDefinition {
+func (s *ReadRegisterValuesService) fetchRegisterDefinitionsFromMasterData(deviceTypes []device.DeviceType) *[]model.RegisterDefinition {
 	logging.Info("getting register definitions", "device_types", deviceTypes)
 	definitions := masterdata.NewMasterDataService().FetchRegisterDefinitions(deviceTypes, s.categories)
 	return definitions
