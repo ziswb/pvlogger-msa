@@ -3,16 +3,23 @@ package kpi
 import (
 	"encoding/json"
 	"io"
+	"net"
 	"net/http"
+	"net/url"
 
 	"pvlogger-go-shared/logging"
 	"pvlogger-kpi-exporter/internal/config"
 )
 
 func FetchKpis(cfg *config.Config) *Values {
-	url := cfg.Protocol + "://" + cfg.RestHost + ":" + cfg.RestPort + cfg.RestPath
+	u := &url.URL{
+		Scheme: cfg.RestProtocol,
+		Host:   net.JoinHostPort(cfg.RestHost, cfg.RestPort),
+		Path:   cfg.RestPath,
+	}
+	targetURL := u.String()
 
-	resp, err := http.Get(url)
+	resp, err := http.Get(targetURL)
 	if err != nil {
 		logging.Fatal("failed to fetch KPIs", "error", err)
 	}
