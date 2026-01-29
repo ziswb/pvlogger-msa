@@ -35,7 +35,6 @@ func main() {
 		if err != nil {
 			logging.Fatal("failed to save station real kpi response", "error", err)
 		}
-		break
 	case model.DeviceRealKpi.String():
 		response, err := fusionSolarAccess.FetchDeviceRealData()
 		if err != nil {
@@ -45,7 +44,6 @@ func main() {
 		if err != nil {
 			logging.Fatal("failed to save device real kpi response", "error", err)
 		}
-		break
 	case model.StationDayKpi.String():
 		response, err := fusionSolarAccess.FetchStationDayKpi()
 		if err != nil {
@@ -55,7 +53,6 @@ func main() {
 		if err != nil {
 			logging.Fatal("failed to save station day kpi response", "error", err)
 		}
-		break
 	case model.StationMonthKpi.String():
 		response, err := fusionSolarAccess.FetchMonthData()
 		if err != nil {
@@ -65,7 +62,6 @@ func main() {
 		if err != nil {
 			logging.Fatal("failed to save station month kpi response", "error", err)
 		}
-		break
 	case model.StationYearKpi.String():
 		response, err := fusionSolarAccess.FetchYearData()
 		if err != nil {
@@ -75,7 +71,6 @@ func main() {
 		if err != nil {
 			logging.Fatal("failed to save station year kpi response", "error", err)
 		}
-		break
 	case model.Device5MinKpi.String():
 		response, err := fusionSolarAccess.FetchDevFiveMinutesData()
 		if err != nil {
@@ -85,7 +80,6 @@ func main() {
 		if err != nil {
 			logging.Fatal("failed to save device 5 minutes kpi response", "error", err)
 		}
-		break
 	default:
 		logging.Fatal("unknown job name", "name", name)
 	}
