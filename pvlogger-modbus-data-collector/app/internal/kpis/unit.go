@@ -32,20 +32,6 @@ func (u *Unit) toW(value float64) W {
 	}
 }
 
-func (u *Unit) toKW(value float64) KW {
-	switch u.unitId {
-	case UnitKW:
-		return NewKW(value)
-	case UnitW:
-		return NewW(value).ToKW()
-	default:
-		{
-			logging.Warn("unit cannot be converted to kW", "unit", string(u.unitId))
-			return NewKW(0.0)
-		}
-	}
-}
-
 func (u *Unit) toKWh(value float64) KWh {
 	switch u.unitId {
 	case UnitKWh:

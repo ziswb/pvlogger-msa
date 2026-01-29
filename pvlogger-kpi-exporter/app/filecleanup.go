@@ -15,7 +15,7 @@ func shouldDelete(entry os.DirEntry) bool {
 	if err != nil {
 		logging.Fatal("failed to get file info", "error", err)
 	}
-	return info.Mode().IsRegular() && (time.Now().Sub(info.ModTime()) > FortyEightHours)
+	return info.Mode().IsRegular() && (time.Since(info.ModTime()) > FortyEightHours)
 }
 
 func cleanupFiles(path string) {

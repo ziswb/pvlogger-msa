@@ -163,7 +163,7 @@ func handleMld(register model.RegisterDefinition, payload []byte) *RegisterValue
 		return nil
 	}
 	var mld []model.Short
-	for i, _ := range payload {
+	for i := range payload {
 		if i%2 == 0 {
 			mld = append(mld, model.Short(int16(binary.BigEndian.Uint16(payload[i:i+2]))))
 		}
