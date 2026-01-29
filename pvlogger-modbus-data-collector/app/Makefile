@@ -1,15 +1,21 @@
 BINARY_NAME=data-collector
-BUILD_PATH=../build
+BIN_PATH := ../build
+BUILD_OPTIONS := CGO_ENABLED=0 GOARCH=arm64 GOOS=darwin
 
-.PHONY: build clean lint
+.PHONY: build clean lint prod
 
 build:
-	GOARCH=arm64 GOOS=darwin go build -o ${BUILD_PATH}/${BINARY_NAME}-darwin
-	GOARCH=arm64 GOOS=linux go build -o ${BUILD_PATH}/${BINARY_NAME}
+	$(BUILD_OPTIONS) go build -o ${BIN_PATH}/${BINARY_NAME}-darwin
+	$(BUILD_OPTIONS) go build -o ${BIN_PATH}/${BINARY_NAME}
+
+prod:
+	go mod download
+	go mod verify
+	$(BUILD_OPTIONS) go build -o /${BINARY_NAME}
 
 clean:
 	go clean
-	rm -rf ${BUILD_PATH}
+	rm -rf ${BIN_PATH}
 
 lint:
 	golangci-lint run

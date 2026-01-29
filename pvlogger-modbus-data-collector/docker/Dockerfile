@@ -1,11 +1,9 @@
-FROM golang:1.25.4-alpine AS golang
+FROM golang:1.25.4 AS golang
 
 ADD . /app
 WORKDIR /app/pvlogger-modbus-data-collector/app
 
-RUN go mod download
-RUN go mod verify
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o /data-collector .
+RUN make prod
 
 FROM gcr.io/distroless/static-debian12
 
