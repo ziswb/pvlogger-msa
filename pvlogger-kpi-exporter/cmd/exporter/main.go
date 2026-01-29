@@ -8,11 +8,10 @@ import (
 )
 
 func main() {
-	exportPath := config.GetEnv("KPI_EXPORT_PATH", "/Users/bziswiler/Work/Private/HuaweiFusionSolar/export")
-	filePrefix := config.GetEnv("KPI_FILE_PREFIX", "pv_export_<site>")
+	cfg := config.Load()
 
-	kpis := kpi.FetchKpis()
+	kpis := kpi.FetchKpis(cfg)
 	record := kpi.MapToExportRecord(kpis)
-	file.WriteJSON(&record, exportPath, filePrefix+"-"+datetime.FormatFileNameSafe(kpis.CreatedAt))
-	file.Cleanup(exportPath)
+	file.WriteJSON(&record, cfg.ExportPath, cfg.FilePrefix+"-"+datetime.FormatFileNameSafe(kpis.CreatedAt))
+	file.Cleanup(cfg.ExportPath)
 }

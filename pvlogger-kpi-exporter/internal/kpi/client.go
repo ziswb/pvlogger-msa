@@ -9,12 +9,8 @@ import (
 	"pvlogger-kpi-exporter/internal/config"
 )
 
-func FetchKpis() *Values {
-	host := config.GetEnv("REST_HOST", "localhost")
-	port := config.GetEnv("REST_PORT", "8083")
-	path := config.GetEnv("REST_PATH", "/v1/read-latest-kpi")
-	protocol := config.GetEnv("REST_PROTOCOL", "http")
-	url := protocol + "://" + host + ":" + port + path
+func FetchKpis(cfg *config.Config) *Values {
+	url := cfg.Protocol + "://" + cfg.RestHost + ":" + cfg.RestPort + cfg.RestPath
 
 	resp, err := http.Get(url)
 	if err != nil {
