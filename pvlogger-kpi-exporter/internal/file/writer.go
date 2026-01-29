@@ -1,18 +1,19 @@
-package main
+package file
 
 import (
 	"encoding/json"
 	"os"
+	"path/filepath"
 
 	"pvlogger-go-shared/logging"
 )
 
-func writeKpisToJsonFile(kpiRecord *KpiExportRecord, path string, fileName string) {
-	absolutePath := path + "/" + fileName + ".json"
+func WriteJSON(data any, dir string, fileName string) {
+	absolutePath := filepath.Join(dir, fileName+".json")
 	logging.Info("writing KPIs to file", "path", absolutePath)
-	err := os.MkdirAll(path, 0755)
+	err := os.MkdirAll(dir, 0755)
 	if err != nil {
-		logging.Fatal("failed to create directory", "path", path, "error", err)
+		logging.Fatal("failed to create directory", "path", dir, "error", err)
 		return
 	}
 
@@ -31,7 +32,7 @@ func writeKpisToJsonFile(kpiRecord *KpiExportRecord, path string, fileName strin
 
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "  ")
-	err = encoder.Encode(kpiRecord)
+	err = encoder.Encode(data)
 	if err != nil {
 		logging.Fatal("failed to encode KPIs", "error", err)
 	}

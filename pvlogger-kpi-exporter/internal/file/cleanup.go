@@ -1,4 +1,4 @@
-package main
+package file
 
 import (
 	"os"
@@ -18,7 +18,7 @@ func shouldDelete(entry os.DirEntry) bool {
 	return info.Mode().IsRegular() && (time.Since(info.ModTime()) > FortyEightHours)
 }
 
-func cleanupFiles(path string) {
+func Cleanup(path string) {
 	dir, err := os.ReadDir(path)
 	if err != nil {
 		logging.Fatal("failed to read directory", "path", path, "error", err)

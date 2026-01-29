@@ -1,6 +1,6 @@
-package main
+package kpi
 
-type KpiValues struct {
+type Values struct {
 	CreatedAt              int64   `json:"createdAt"`
 	SolarPower             float64 `json:"solarPower"`
 	GridPower              float64 `json:"gridPower"`

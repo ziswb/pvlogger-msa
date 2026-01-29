@@ -1,4 +1,4 @@
-package main
+package kpi
 
 import (
 	"encoding/json"
@@ -6,13 +6,14 @@ import (
 	"net/http"
 
 	"pvlogger-go-shared/logging"
+	"pvlogger-kpi-exporter/internal/config"
 )
 
-func fetchKpis() *KpiValues {
-	host := getEnv("REST_HOST", "localhost")
-	port := getEnv("REST_PORT", "8083")
-	path := getEnv("REST_PATH", "/v1/read-latest-kpi")
-	protocol := getEnv("REST_PROTOCOL", "http")
+func FetchKpis() *Values {
+	host := config.GetEnv("REST_HOST", "localhost")
+	port := config.GetEnv("REST_PORT", "8083")
+	path := config.GetEnv("REST_PATH", "/v1/read-latest-kpi")
+	protocol := config.GetEnv("REST_PROTOCOL", "http")
 	url := protocol + "://" + host + ":" + port + path
 
 	resp, err := http.Get(url)
@@ -31,7 +32,7 @@ func fetchKpis() *KpiValues {
 	if readErr != nil {
 		logging.Fatal("failed to read response body", "error", readErr)
 	}
-	kpiValues := KpiValues{}
+	kpiValues := Values{}
 	err = json.Unmarshal(body, &kpiValues)
 	if err != nil {
 		logging.Fatal("failed to unmarshal KPI values", "error", err)

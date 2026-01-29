@@ -1,4 +1,4 @@
-package main
+package datetime
 
 import (
 	"time"
@@ -6,11 +6,11 @@ import (
 	"pvlogger-go-shared/logging"
 )
 
-func formatForDataRecord(pointInTime int64) string {
+func FormatForDataRecord(pointInTime int64) string {
 	return format(pointInTime, "2006-01-02 15:04:05")
 }
 
-func formatFileNameSafe(pointInTime int64) string {
+func FormatFileNameSafe(pointInTime int64) string {
 	return format(pointInTime, "2006-01-02_15-04-05.000")
 }
 

@@ -1,7 +1,7 @@
 FROM golang:1.25.4 AS golang
 
-ADD . /app
-WORKDIR /app/pvlogger-kpi-exporter/app
+ADD . /
+WORKDIR /pvlogger-kpi-exporter
 
 RUN make prod
 
