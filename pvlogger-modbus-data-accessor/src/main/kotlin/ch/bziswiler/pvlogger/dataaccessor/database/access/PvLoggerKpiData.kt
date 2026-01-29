@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.shared.messaging
+package ch.bziswiler.pvlogger.dataaccessor.database.access
 
 import ch.bziswiler.pvlogger.shared.unit.W
 import ch.bziswiler.pvlogger.shared.unit.Wh

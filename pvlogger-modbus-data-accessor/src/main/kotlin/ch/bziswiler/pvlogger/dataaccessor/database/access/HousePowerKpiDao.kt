@@ -1,7 +1,6 @@
 package ch.bziswiler.pvlogger.dataaccessor.database.access
 
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.HousePowerKpiTable
-import ch.bziswiler.pvlogger.shared.messaging.PvLoggerKpiData
 import mu.KotlinLogging
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.transactions.transaction
