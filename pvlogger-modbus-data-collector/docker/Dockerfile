@@ -1,7 +1,7 @@
 FROM golang:1.25.4 AS golang
 
-ADD . /app
-WORKDIR /app/pvlogger-modbus-data-collector/app
+ADD . /
+WORKDIR /pvlogger-modbus-data-collector
 
 RUN make prod
 

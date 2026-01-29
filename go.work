@@ -4,5 +4,5 @@ use (
 	./pvlogger-fusionsolar/app
 	./pvlogger-go-shared
 	./pvlogger-kpi-exporter
-	./pvlogger-modbus-data-collector/app
+	./pvlogger-modbus-data-collector
 )
