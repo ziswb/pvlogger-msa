@@ -3,7 +3,6 @@ package fusionsolar
 import (
 	"context"
 	"errors"
-	"pvlogger-fusionsolar/internal/config"
 	"pvlogger-fusionsolar/internal/model"
 	"time"
 
@@ -16,7 +15,7 @@ func (f *FusionSolarAccess) FetchStationDayKpi() (*model.KpiStationDayResponse, 
 	if err != nil {
 		return nil, err
 	}
-	kpiStationDayJSONRequestBody := model.KpiStationDayJSONRequestBody{StationCodes: config.FsConfig().StationCode, CollectTime: time.Now().UnixMilli()}
+	kpiStationDayJSONRequestBody := model.KpiStationDayJSONRequestBody{StationCodes: f.cfg.Fs.StationCode, CollectTime: time.Now().UnixMilli()}
 	response, err := client.KpiStationDayWithResponse(context.Background(), kpiStationDayJSONRequestBody)
 	if err != nil {
 		return nil, err

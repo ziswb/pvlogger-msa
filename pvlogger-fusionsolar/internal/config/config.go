@@ -1,13 +1,19 @@
 package config
 
 import (
-	"fmt"
+	"net/url"
 	"os"
 	"strconv"
 )
 
-type FsJobConfig struct {
-	JobName string
+type Config struct {
+	Job      JobConfig
+	Fs       FusionSolarConfig
+	Database DatabaseConfig
+}
+
+type JobConfig struct {
+	Name string
 }
 
 type FusionSolarConfig struct {
@@ -28,36 +34,37 @@ type DatabaseConfig struct {
 	DbName   string
 }
 
-func JobConfig() FsJobConfig {
-	return FsJobConfig{
-		JobName: getEnv("JOB_NAME", "STATION_REAL_KPI"),
+func Load() *Config {
+	return &Config{
+		Job: JobConfig{
+			Name: getEnv("JOB_NAME", "STATION_REAL_KPI"),
+		},
+		Fs: FusionSolarConfig{
+			Username:    getEnv("USERNAME", "<fusionsolar-user>"),
+			Password:    getEnvChecked("FUSIONSOLAR_PASSWORD"),
+			Host:        getEnv("FS_HOST", "eu5.fusionsolar.huawei.com"),
+			Path:        getEnv("FS_PATH", "thirdData"),
+			Protocol:    getEnv("FS_PROTOCOL", "https"),
+			StationCode: getEnv("FS_STATION_CODE", "NE=<station-code>"),
+			DevIds:      getEnv("FS_DEV_TYPE_ID", "<dev-id>,<dev-id>"),
+		},
+		Database: DatabaseConfig{
+			Username: getEnv("POSTGRESQL_USERNAME", "postgres"),
+			Password: getEnvChecked("POSTGRES_PASSWORD"),
+			Host:     getEnv("POSTGRESQL_HOST", "<central-host>"),
+			Port:     getIntEnv("POSTGRESQL_PORT", "5433"),
+			DbName:   getEnv("DB_NAME", "fsdata"),
+		},
 	}
 }
 
-func FsConfig() FusionSolarConfig {
-	return FusionSolarConfig{
-		Username:    getEnv("USERNAME", "<fusionsolar-user>"),
-		Password:    getEnvChecked("FUSIONSOLAR_PASSWORD"),
-		Host:        getEnv("FS_HOST", "eu5.fusionsolar.huawei.com"),
-		Path:        getEnv("FS_PATH", "thirdData"),
-		Protocol:    getEnv("FS_PROTOCOL", "https"),
-		StationCode: getEnv("FS_STATION_CODE", "NE=<station-code>"),
-		DevIds:      getEnv("FS_DEV_TYPE_ID", "<dev-id>,<dev-id>"),
+func (c *Config) FsUrl() string {
+	u := &url.URL{
+		Scheme: c.Fs.Protocol,
+		Host:   c.Fs.Host,
+		Path:   c.Fs.Path,
 	}
-}
-
-func DbConfig() DatabaseConfig {
-	return DatabaseConfig{
-		Username: getEnv("POSTGRESQL_USERNAME", "postgres"),
-		Password: getEnvChecked("POSTGRES_PASSWORD"),
-		Host:     getEnv("POSTGRESQL_HOST", "<central-host>"),
-		Port:     getIntEnv("POSTGRESQL_PORT", "5433"),
-		DbName:   getEnv("DB_NAME", "fsdata"),
-	}
-}
-
-func FsUrl() string {
-	return fmt.Sprintf("%s://%s/%s", FsConfig().Protocol, FsConfig().Host, FsConfig().Path)
+	return u.String()
 }
 
 func getEnv(key, fallback string) string {

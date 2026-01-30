@@ -3,7 +3,6 @@ package fusionsolar
 import (
 	"context"
 	"errors"
-	"pvlogger-fusionsolar/internal/config"
 	"pvlogger-fusionsolar/internal/model"
 	"pvlogger-fusionsolar/internal/repository"
 
@@ -20,7 +19,7 @@ func (f *FusionSolarAccess) FetchDeviceRealData() (*model.DeviceRealKpiResponse,
 	if err != nil {
 		return nil, err
 	}
-	deviceRealKpiJSONRequestBody := model.DeviceRealKpiJSONRequestBody{DevIds: config.FsConfig().DevIds, DevTypeId: devTypeIdStringInverter}
+	deviceRealKpiJSONRequestBody := model.DeviceRealKpiJSONRequestBody{DevIds: f.cfg.Fs.DevIds, DevTypeId: devTypeIdStringInverter}
 	response, err := client.DeviceRealKpiWithResponse(context.Background(), deviceRealKpiJSONRequestBody)
 	if err != nil {
 		return nil, err

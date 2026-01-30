@@ -15,13 +15,13 @@ type Token struct {
 	Token string
 }
 
-func Authenticate() (token *Token, err error) {
+func Authenticate(cfg *config.Config) (token *Token, err error) {
 	logging.Info("authenticating")
-	client, err := model.NewClient(config.FsUrl())
+	client, err := model.NewClient(cfg.FsUrl())
 	if err != nil {
 		return nil, err
 	}
-	jsonLoginRequestBody := model.LoginJSONRequestBody{SystemCode: config.FsConfig().Password, UserName: config.FsConfig().Username}
+	jsonLoginRequestBody := model.LoginJSONRequestBody{SystemCode: cfg.Fs.Password, UserName: cfg.Fs.Username}
 	response, err := client.Login(context.Background(), jsonLoginRequestBody)
 	if err != nil {
 		return nil, err

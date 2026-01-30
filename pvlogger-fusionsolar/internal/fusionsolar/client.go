@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 	"pvlogger-fusionsolar/internal/auth"
-	"pvlogger-fusionsolar/internal/config"
 	"pvlogger-fusionsolar/internal/model"
 
 	"pvlogger-go-shared/logging"
@@ -19,5 +18,5 @@ func WithBearerToken(token auth.Token) model.ClientOption {
 }
 
 func (f *FusionSolarAccess) newClient() (*model.ClientWithResponses, error) {
-	return model.NewClientWithResponses(config.FsUrl(), WithBearerToken(f.token))
+	return model.NewClientWithResponses(f.cfg.FsUrl(), WithBearerToken(f.token))
 }
