@@ -1,10 +1,10 @@
 package main
 
 import (
-	"pvlogger/internal/auth"
-	"pvlogger/internal/config"
-	"pvlogger/internal/fusionsolar"
-	"pvlogger/internal/model"
+	"pvlogger-fusionsolar/internal/auth"
+	"pvlogger-fusionsolar/internal/config"
+	"pvlogger-fusionsolar/internal/fusionsolar"
+	"pvlogger-fusionsolar/internal/model"
 
 	"pvlogger-go-shared/logging"
 )

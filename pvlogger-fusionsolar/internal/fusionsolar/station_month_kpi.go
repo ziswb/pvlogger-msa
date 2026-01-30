@@ -3,8 +3,8 @@ package fusionsolar
 import (
 	"context"
 	"errors"
-	"pvlogger/internal/config"
-	"pvlogger/internal/model"
+	"pvlogger-fusionsolar/internal/config"
+	"pvlogger-fusionsolar/internal/model"
 	"time"
 
 	"pvlogger-go-shared/logging"

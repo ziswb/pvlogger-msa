@@ -1,7 +1,7 @@
 go 1.25.4
 
 use (
-	./pvlogger-fusionsolar/app
+	./pvlogger-fusionsolar
 	./pvlogger-go-shared
 	./pvlogger-kpi-exporter
 	./pvlogger-modbus-data-collector

@@ -3,54 +3,43 @@ package fusionsolar
 import (
 	"context"
 	"errors"
-	"pvlogger-go-shared/device"
+	"pvlogger-fusionsolar/internal/config"
+	"pvlogger-fusionsolar/internal/model"
+	"pvlogger-fusionsolar/internal/repository"
+
 	"pvlogger-go-shared/logging"
-	"pvlogger/internal/model"
-	"pvlogger/internal/repository"
-	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func (f *FusionSolarAccess) FetchDevFiveMinutesData() (*model.DeviceFiveMinutesKpiResponse, error) {
-	logging.Info("fetching device 5 minutes KPI data")
+const devTypeIdStringInverter = 1
+
+func (f *FusionSolarAccess) FetchDeviceRealData() (*model.DeviceRealKpiResponse, error) {
+	logging.Info("fetching device real data")
 	client, err := f.newClient()
 	if err != nil {
 		return nil, err
 	}
-	formerKPIs, err := f.repo.SelectFormer5MinDeviceRealKpi(f.db.Ctx)
+	deviceRealKpiJSONRequestBody := model.DeviceRealKpiJSONRequestBody{DevIds: config.FsConfig().DevIds, DevTypeId: devTypeIdStringInverter}
+	response, err := client.DeviceRealKpiWithResponse(context.Background(), deviceRealKpiJSONRequestBody)
 	if err != nil {
 		return nil, err
 	}
-	nextCollectionDate := determineNextCollectionDate(formerKPIs)
-	if nextCollectionDate == nil {
-		logging.Info("no device 5 minutes KPIs to fetch")
-		return nil, nil
-	}
-	fiveMinutesKpiJSONRequestBody := model.DeviceFiveMinutesKpiJSONRequestBody{
-		CollectTime: nextCollectionDate.UnixMilli(),
-		DevTypeId:   device.InverterDeviceType.Int(),
-		DevIds:      device.DeviceIds,
-	}
-	response, err := client.DeviceFiveMinutesKpiWithResponse(context.Background(), fiveMinutesKpiJSONRequestBody)
-	if err != nil {
-		return nil, err
-	}
-	logging.Info("device five minutes KPIs fetched successfully")
+	logging.Info("device real data fetched successfully")
 	return response, nil
 }
 
-func (f *FusionSolarAccess) SaveDev5MinKPIs(response *model.DeviceFiveMinutesKpiResponse) error {
-	logging.Info("saving device five minutes KPI response to database")
-	responseId, err := f.insertDeviceFiveMinutesKpiResponseParams(response)
+func (f *FusionSolarAccess) SaveDeviceRealKpiResponse(response *model.DeviceRealKpiResponse) error {
+	logging.Info("saving device real KPI response to database")
+	responseId, err := f.insertDeviceRealKpiResponseParams(response)
 	if err != nil {
 		return err
 	}
-	err = f.insertDeviceFiveMinutesKpiResponseBasicParams(responseId, response)
+	err = f.insertDeviceRealKpiResponseBasicParams(responseId, response)
 	if err != nil {
 		return err
 	}
-	err = f.insertDeviceFiveMinutesKpi(responseId, response)
+	err = f.insertDeviceRealKpi(responseId, response)
 	if err != nil {
 		return err
 	}
@@ -58,16 +47,15 @@ func (f *FusionSolarAccess) SaveDev5MinKPIs(response *model.DeviceFiveMinutesKpi
 	return nil
 }
 
-func (f *FusionSolarAccess) insertDeviceFiveMinutesKpiResponseParams(response *model.DeviceFiveMinutesKpiResponse) (int32, error) {
-	logging.Info("saving device five minutes KPI response params to database")
-	i, err := f.insertResponseFromData(deviceFiveMinutesKpiResponseAdapter{response})
-	logging.Info("device five minutes KPI response saved successfully")
+func (f *FusionSolarAccess) insertDeviceRealKpiResponseParams(response *model.DeviceRealKpiResponse) (int32, error) {
+	logging.Info("saving device real KPI response params to database")
+	i, err := f.insertResponseFromData(deviceRealKpiResponseAdapter{response})
+	logging.Info("device real KPI response saved successfully")
 	return i, err
 }
 
-// TODO: generalize this function by introducing an interface for the response; afterwards search and remove redundant code
-func (f *FusionSolarAccess) insertDeviceFiveMinutesKpiResponseBasicParams(responseId int32, response *model.DeviceFiveMinutesKpiResponse) error {
-	logging.Info("saving device five minutes KPI basic params to database")
+func (f *FusionSolarAccess) insertDeviceRealKpiResponseBasicParams(responseId int32, response *model.DeviceRealKpiResponse) error {
+	logging.Info("saving device real KPI basic params to database")
 	if response.JSON200.Params == nil {
 		return errors.New("'response.JSON200.Params' is nil")
 	}
@@ -77,26 +65,15 @@ func (f *FusionSolarAccess) insertDeviceFiveMinutesKpiResponseBasicParams(respon
 		CurrentTime: pgtype.Int8{Valid: true, Int64: *response.JSON200.Params.CurrentTime},
 	}
 	err := f.repo.InsertFsResponseParamsDevice(f.db.Ctx, input)
-	logging.Info("device five minutes KPI response saved successfully")
+	logging.Info("device real KPI response saved successfully")
 	return err
 }
 
-func determineNextCollectionDate(records map[time.Time]int) *time.Time {
-	walker := time.Date(2022, 10, 25, 0, 0, 0, 0, time.UTC)
-	for walker.Before(time.Now()) {
-		if records[walker] < 200 {
-			return &walker
-		}
-		walker = walker.Add(time.Hour * 24)
-	}
-	return nil
-}
-
-func (f *FusionSolarAccess) insertDeviceFiveMinutesKpi(responseId int32, response *model.DeviceFiveMinutesKpiResponse) error {
-	logging.Info("saving device five minutes KPI to database")
+func (f *FusionSolarAccess) insertDeviceRealKpi(responseId int32, response *model.DeviceRealKpiResponse) error {
+	logging.Info("saving device real KPI to database")
 	data := *response.JSON200.Data
 	for i := 0; i < len(data); i++ {
-		logging.Info("saving device five minutes KPI record", "index", i)
+		logging.Info("saving device real KPI record", "index", i)
 		d := data[i]
 		input := repository.DeviceRealKpiInput{
 			AI:            repository.ToPgFloat8(d.DataItemMap.AI),
@@ -196,8 +173,8 @@ func (f *FusionSolarAccess) insertDeviceFiveMinutesKpi(responseId int32, respons
 		if err != nil {
 			return err
 		}
-		logging.Info("saved device five minutes KPI record", "index", i)
+		logging.Info("saved device real KPI record", "index", i)
 	}
-	logging.Info("device five minutes KPI saved successfully")
+	logging.Info("device real KPI saved successfully")
 	return nil
 }

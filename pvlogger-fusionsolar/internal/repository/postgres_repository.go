@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	"pvlogger/internal/database"
+	"pvlogger-fusionsolar/internal/database"
 	"time"
 
 	"pvlogger-go-shared/logging"

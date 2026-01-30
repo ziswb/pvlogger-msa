@@ -2,8 +2,8 @@ package fusionsolar
 
 import (
 	"encoding/json"
-	"pvlogger/internal/model"
-	"pvlogger/internal/repository"
+	"pvlogger-fusionsolar/internal/model"
+	"pvlogger-fusionsolar/internal/repository"
 	"time"
 
 	"pvlogger-go-shared/logging"

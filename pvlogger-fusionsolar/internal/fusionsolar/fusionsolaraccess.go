@@ -2,10 +2,10 @@ package fusionsolar
 
 import (
 	"fmt"
-	"pvlogger/internal/auth"
-	"pvlogger/internal/config"
-	"pvlogger/internal/database"
-	"pvlogger/internal/repository"
+	"pvlogger-fusionsolar/internal/auth"
+	"pvlogger-fusionsolar/internal/config"
+	"pvlogger-fusionsolar/internal/database"
+	"pvlogger-fusionsolar/internal/repository"
 )
 
 type FusionSolarAccess struct {

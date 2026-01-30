@@ -1,7 +1,7 @@
 FROM golang:1.25.4 AS golang
 
-ADD . /app
-WORKDIR /app/pvlogger-fusionsolar/app
+ADD . /
+WORKDIR /pvlogger-fusionsolar
 
 RUN make prod
 

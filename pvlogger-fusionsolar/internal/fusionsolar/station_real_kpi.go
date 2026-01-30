@@ -3,9 +3,9 @@ package fusionsolar
 import (
 	"context"
 	"errors"
-	"pvlogger/internal/config"
-	"pvlogger/internal/model"
-	"pvlogger/internal/repository"
+	"pvlogger-fusionsolar/internal/config"
+	"pvlogger-fusionsolar/internal/model"
+	"pvlogger-fusionsolar/internal/repository"
 
 	"pvlogger-go-shared/logging"
 

@@ -1,10 +1,14 @@
-module pvlogger
+module pvlogger-fusionsolar
 
 go 1.25.4
 
 tool github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen
 
 replace github.com/dprotaso/go-yit => github.com/dprotaso/go-yit v0.0.0-20220510233725-9ba8df137936
+
+require pvlogger-go-shared v0.0.0
+
+replace pvlogger-go-shared => ../pvlogger-go-shared
 
 require github.com/jackc/pgx/v5 v5.8.0
 

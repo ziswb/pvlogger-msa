@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"pvlogger/internal/config"
-	"pvlogger/internal/model"
+	"pvlogger-fusionsolar/internal/config"
+	"pvlogger-fusionsolar/internal/model"
 
 	"pvlogger-go-shared/logging"
 )

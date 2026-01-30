@@ -1,7 +1,7 @@
 package fusionsolar
 
 import (
-	"pvlogger/internal/model"
+	"pvlogger-fusionsolar/internal/model"
 )
 
 // FsResponseData provides a common interface for extracting response metadata

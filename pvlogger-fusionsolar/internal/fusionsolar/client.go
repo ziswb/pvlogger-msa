@@ -3,9 +3,9 @@ package fusionsolar
 import (
 	"context"
 	"net/http"
-	"pvlogger/internal/auth"
-	"pvlogger/internal/config"
-	"pvlogger/internal/model"
+	"pvlogger-fusionsolar/internal/auth"
+	"pvlogger-fusionsolar/internal/config"
+	"pvlogger-fusionsolar/internal/model"
 
 	"pvlogger-go-shared/logging"
 )
