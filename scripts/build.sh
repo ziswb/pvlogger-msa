@@ -108,6 +108,7 @@ fi
 echo "Building pv logger component '${PV_LOGGER_COMPONENT}' version '${version}' and pushing to '${registry}/${REGISTRY_PATH}'"
 
 $DOCKER_CMD build \
+--network host \
 -t "${registry}/${REGISTRY_PATH}/${PV_LOGGER_COMPONENT}:latest" \
 -t "${registry}/${REGISTRY_PATH}/${PV_LOGGER_COMPONENT}:${version}" \
 -f "${SCRIPT_DIR}/../${PV_LOGGER_COMPONENT}/docker/Dockerfile" \
