@@ -25,7 +25,7 @@ func main() {
 
 	ctx := context.Background()
 
-	logging.Info("authenticating with FusionSolar API")
+	logging.Info("will authenticate with FusionSolar API")
 	token, err := auth.Authenticate(cfg)
 	if err != nil {
 		logging.Fatal("authentication failed", "error", err)
