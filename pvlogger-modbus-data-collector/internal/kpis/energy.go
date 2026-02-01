@@ -32,28 +32,28 @@ func NewKWh(kwh float64) KWh {
 	return KWh{kwh}
 }
 
-func (o W) ToW() W {
-	return W{o.W}
+func (k W) ToW() W {
+	return W{k.W}
 }
 
-func (o W) ToKW() KW {
-	return KW{o.W / 1000.0}
+func (k W) ToKW() KW {
+	return KW{k.W / 1000.0}
 }
 
-func (o KW) ToW() W {
-	return W{o.Kw * 1000.0}
+func (k KW) ToW() W {
+	return W{k.Kw * 1000.0}
 }
 
-func (o KW) ToKW() KW {
-	return KW{o.Kw}
+func (k KW) ToKW() KW {
+	return KW{k.Kw}
 }
 
-func (o Wh) ToWh() Wh {
-	return Wh{o.Wh}
+func (k Wh) ToWh() Wh {
+	return Wh{k.Wh}
 }
 
-func (o Wh) ToKWh() KWh {
-	return KWh{o.Wh / 1000.0}
+func (k Wh) ToKWh() KWh {
+	return KWh{k.Wh / 1000.0}
 }
 
 func (k KWh) ToWh() Wh {

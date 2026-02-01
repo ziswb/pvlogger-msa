@@ -10,7 +10,7 @@ const (
 	ASTERISK
 )
 
-var gainName = map[string]Gain{
+var gainByName = map[string]Gain{
 	"ONE":      ONE,
 	"TEN":      TEN,
 	"HUNDRED":  HUNDRED,
@@ -18,7 +18,7 @@ var gainName = map[string]Gain{
 	"ASTERISK": ASTERISK,
 }
 
-var gainValue = map[Gain]string{
+var gainToValue = map[Gain]string{
 	ONE:      "1",
 	TEN:      "10",
 	HUNDRED:  "100",
@@ -27,11 +27,11 @@ var gainValue = map[Gain]string{
 }
 
 func (g Gain) String() string {
-	return gainValue[g]
+	return gainToValue[g]
 }
 
 func NewGainFromString(text string) Gain {
-	gain := gainName[text]
+	gain := gainByName[text]
 	if gain != 0 {
 		return gain
 	}
