@@ -10,6 +10,14 @@ type Config struct {
 	Job      JobConfig
 	Fs       FusionSolarConfig
 	Database DatabaseConfig
+	K8s      K8sConfig
+}
+
+type K8sConfig struct {
+	Namespace       string
+	TokenSecretName string
+	TokenKey        string
+	UseTokenSecret  bool
 }
 
 type JobConfig struct {
@@ -35,13 +43,14 @@ type DatabaseConfig struct {
 }
 
 func Load() *Config {
+	useTokenSecret := getEnv("USE_TOKEN_SECRET", "true") == "true"
 	return &Config{
 		Job: JobConfig{
 			Name: getEnv("JOB_NAME", "STATION_REAL_KPI"),
 		},
 		Fs: FusionSolarConfig{
 			Username:    getEnv("USERNAME", "<fusionsolar-user>"),
-			Password:    getEnvChecked("FUSIONSOLAR_PASSWORD"),
+			Password:    getEnvOptional("FUSIONSOLAR_PASSWORD", useTokenSecret),
 			Host:        getEnv("FS_HOST", "eu5.fusionsolar.huawei.com"),
 			Path:        getEnv("FS_PATH", "thirdData"),
 			Protocol:    getEnv("FS_PROTOCOL", "https"),
@@ -54,6 +63,12 @@ func Load() *Config {
 			Host:     getEnv("POSTGRESQL_HOST", "<central-host>"),
 			Port:     getIntEnv("POSTGRESQL_PORT", "5433"),
 			DbName:   getEnv("DB_NAME", "fsdata"),
+		},
+		K8s: K8sConfig{
+			Namespace:       getEnv("K8S_NAMESPACE", "pvlogger"),
+			TokenSecretName: getEnv("K8S_TOKEN_SECRET_NAME", "fusionsolar-token-secret"),
+			TokenKey:        getEnv("K8S_TOKEN_KEY", "FUSIONSOLAR_TOKEN"),
+			UseTokenSecret:  useTokenSecret,
 		},
 	}
 }
@@ -86,6 +101,14 @@ func getIntEnv(key, fallback string) int {
 func getEnvChecked(key string) string {
 	value := os.Getenv(key)
 	if len(value) == 0 {
+		panic("Missing environment variable: " + key)
+	}
+	return value
+}
+
+func getEnvOptional(key string, optional bool) string {
+	value := os.Getenv(key)
+	if len(value) == 0 && !optional {
 		panic("Missing environment variable: " + key)
 	}
 	return value
