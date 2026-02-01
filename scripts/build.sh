@@ -107,11 +107,16 @@ fi
 
 echo "Building pv logger component '${PV_LOGGER_COMPONENT}' version '${version}' and pushing to '${registry}/${REGISTRY_PATH}'"
 
+# Lock file for serializing docker push operations across parallel builds
+PUSH_LOCK_FILE="${SCRIPT_DIR}/../build/.docker-push.lock"
+
 $DOCKER_CMD build \
 --network host \
 -t "${registry}/${REGISTRY_PATH}/${PV_LOGGER_COMPONENT}:latest" \
 -t "${registry}/${REGISTRY_PATH}/${PV_LOGGER_COMPONENT}:${version}" \
 -f "${SCRIPT_DIR}/../${PV_LOGGER_COMPONENT}/docker/Dockerfile" \
 "${SCRIPT_DIR}/../"
-$DOCKER_CMD image push "${registry}/${REGISTRY_PATH}/${PV_LOGGER_COMPONENT}:latest"
-$DOCKER_CMD image push "${registry}/${REGISTRY_PATH}/${PV_LOGGER_COMPONENT}:${version}"
+
+# Use flock to serialize pushes across parallel build processes (timeout 10 min)
+flock --timeout 600 "$PUSH_LOCK_FILE" $DOCKER_CMD image push "${registry}/${REGISTRY_PATH}/${PV_LOGGER_COMPONENT}:latest"
+flock --timeout 600 "$PUSH_LOCK_FILE" $DOCKER_CMD image push "${registry}/${REGISTRY_PATH}/${PV_LOGGER_COMPONENT}:${version}"

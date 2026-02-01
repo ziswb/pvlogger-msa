@@ -23,7 +23,7 @@ help()
 {
    echo "This script builds a docker image for pvlogger."
    echo
-   echo "Syntax: build.sh [-v|l|h] <pvlogger-component>"
+   echo "Syntax: build-all.sh [-v VERSION] [-l] [-h]"
    echo "options:"
    echo "h     Print this Help."
    echo "v     Version to tag the docker image with."
@@ -31,7 +31,9 @@ help()
    echo
 }
 
-declare -a pids
+declare -a pids=()           # Indexed array: list of background process PIDs
+declare -A pid_to_module     # Associative array: maps PID → module name for error reporting
+declare -a failed_modules=() # Indexed array: collects module names that failed
 
 waitPids() {
     local timeout=2700  # 45 minutes timeout
@@ -45,7 +47,16 @@ waitPids() {
         local i
         for i in $range; do
             if ! kill -0 "${pids[$i]}" 2> /dev/null; then
-                echo "Done -- ${pids[$i]}"
+                local pid="${pids[$i]}"
+                local module="${pid_to_module[$pid]}"
+                # Use wait to get exit code
+                if wait "$pid"; then
+                    echo "Done (success) -- $module ($pid)"
+                else
+                    local exit_code=$?
+                    echo "Done (FAILED with exit code $exit_code) -- $module ($pid)" >&2
+                    failed_modules+=("$module")
+                fi
                 unset 'pids[$i]'
             fi
         done
@@ -64,6 +75,7 @@ waitPids() {
             if kill -0 "$pid" 2>/dev/null; then
                 echo "Terminating process $pid" >&2
                 kill -TERM "$pid" 2>/dev/null || true
+                failed_modules+=("${pid_to_module[$pid]}")
             fi
         done
         
@@ -82,14 +94,25 @@ waitPids() {
         exit 124
     fi
     
+    # Report failures
+    if [ ${#failed_modules[@]} -ne 0 ]; then
+        echo "" >&2
+        echo "FAILED BUILDS:" >&2
+        for module in "${failed_modules[@]}"; do
+            echo "  - $module (see build/${module}-build.log)" >&2
+        done
+        return 1
+    fi
+    
     echo "All builds completed successfully!"
 }
 
 addPid() {
-    local desc=$1
+    local module=$1
     local pid=$2
-    echo "$desc -- $pid"
+    echo "Building $module -- $pid"
     pids=("${pids[@]}" "$pid")
+    pid_to_module[$pid]="$module"
 }
 
 OPTSTRING=":v:lh"
@@ -119,6 +142,7 @@ echo "passed_args: ${passed_args[*]}"
 PV_LOGGER_MODULES=(
   "pvlogger-frontend"
   "pvlogger-fusionsolar"
+  "pvlogger-fusionsolar-auth"
   "pvlogger-kpi-exporter"
   "pvlogger-masterdata-server"
   "pvlogger-modbus-data-accessor"
@@ -127,20 +151,30 @@ PV_LOGGER_MODULES=(
   "pvlogger-sunrise-sunset"
 )
 
+echo "cleaning build logs"
+if [ -d "${SCRIPT_DIR}"/../build ]; then
+ rm -rf "${SCRIPT_DIR}"/../build/pvlogger-*-build.log
+else
+  mkdir "${SCRIPT_DIR}"/../build
+fi
+
 echo "###############################################################"
 echo "                       START BUILDING"
 echo "###############################################################"
 
 for module in "${PV_LOGGER_MODULES[@]}"; do
   echo "executing ${SCRIPT_DIR}/build.sh ${passed_args[*]} -c ${module}"
-  "${SCRIPT_DIR}/build.sh" "${passed_args[@]}" -c "${module}" >/dev/null 2>&1 &
-  addPid "Building ${module}" $!
+  "${SCRIPT_DIR}/build.sh" "${passed_args[@]}" -c "${module}" >"${SCRIPT_DIR}/../build/${module}-build.log" 2>&1 &
+  addPid "${module}" $!
 done
 
-waitPids
+if ! waitPids; then
+    echo "###############################################################" >&2
+    echo "                     BUILDING FAILED" >&2
+    echo "###############################################################" >&2
+    exit 1
+fi
 
 echo "###############################################################"
 echo "                        BUILDING DONE"
 echo "###############################################################"
-
-#  "${SCRIPT_DIR}/build.sh" -v "$(date +%s)" -l -c $module
