@@ -36,7 +36,7 @@ func NewReadRegisterValuesService(categories []model.Category) *ReadRegisterValu
 		lastTransactionId:  atomic.Int32{},
 		categories:         categories,
 		deviceIdToTypesMap: newDeviceIdToTypesMap(),
-		tcpHandler:         modbus.NewTcpHandler(fmt.Sprintf("%s:%d", config.ModbusConfig().Host, config.ModbusConfig().Port), config.ModbusConfig().Timeout),
+		tcpHandler:         modbus.NewTcpHandler(fmt.Sprintf("%s:%d", config.ModbusConfig().Host, config.ModbusConfig().Port), config.ModbusConfig().Timeout, config.ModbusConfig().ConnectionSleep),
 		persistenceService: persistence.NewPersistingService(config.DataAccessorCfg()),
 	}
 }
@@ -45,7 +45,7 @@ func NewReadDeviceIdentifiersService() *ReadRegisterValuesService {
 	return &ReadRegisterValuesService{
 		jobId:              model.NewJobId(uuid.New().String()),
 		lastTransactionId:  atomic.Int32{},
-		tcpHandler:         modbus.NewTcpHandler(fmt.Sprintf("%s:%d", config.ModbusConfig().Host, config.ModbusConfig().Port), config.ModbusConfig().Timeout),
+		tcpHandler:         modbus.NewTcpHandler(fmt.Sprintf("%s:%d", config.ModbusConfig().Host, config.ModbusConfig().Port), config.ModbusConfig().Timeout, config.ModbusConfig().ConnectionSleep),
 		persistenceService: persistence.NewPersistingService(config.DataAccessorCfg()),
 		ReadDevIdCode:      model.UByte(0x01),
 		ObjectId:           model.UByte(0x00),
@@ -56,7 +56,7 @@ func NewReadDeviceListService() *ReadRegisterValuesService {
 	return &ReadRegisterValuesService{
 		jobId:              model.NewJobId(uuid.New().String()),
 		lastTransactionId:  atomic.Int32{},
-		tcpHandler:         modbus.NewTcpHandler(fmt.Sprintf("%s:%d", config.ModbusConfig().Host, config.ModbusConfig().Port), config.ModbusConfig().Timeout),
+		tcpHandler:         modbus.NewTcpHandler(fmt.Sprintf("%s:%d", config.ModbusConfig().Host, config.ModbusConfig().Port), config.ModbusConfig().Timeout, config.ModbusConfig().ConnectionSleep),
 		persistenceService: persistence.NewPersistingService(config.DataAccessorCfg()),
 		ReadDevIdCode:      model.UByte(0x03),
 		ObjectId:           model.UByte(0x87),

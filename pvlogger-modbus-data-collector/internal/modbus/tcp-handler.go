@@ -18,11 +18,11 @@ type TcpHandler struct {
 	readTimeout  time.Duration
 }
 
-func NewTcpHandler(url string, timeout time.Duration) *TcpHandler {
+func NewTcpHandler(url string, timeout time.Duration, connectionSleep time.Duration) *TcpHandler {
 	return &TcpHandler{
 		address:      url,
 		timeout:      timeout,
-		sleep:        1100 * time.Millisecond,
+		sleep:        connectionSleep,
 		writeTimeout: 1 * time.Second,
 		readTimeout:  5 * time.Second,
 	}
