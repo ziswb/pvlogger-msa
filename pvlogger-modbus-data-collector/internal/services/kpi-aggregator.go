@@ -6,6 +6,7 @@ import (
 	"pvlogger-modbus-data-collector/internal/kpis"
 	"pvlogger-modbus-data-collector/internal/modbus/model"
 	"pvlogger-modbus-data-collector/internal/services/dataaccessor"
+	"pvlogger-modbus-data-collector/internal/services/metrics"
 	"pvlogger-modbus-data-collector/internal/services/persistence"
 	"time"
 )
@@ -29,6 +30,16 @@ func AggregateKpisFor(jobId *model.JobId) {
 		SelfConsumed:  todayKpis.SelfConsumed().ToWh(),
 	}
 	persistence.NewPersistingService(config.DataAccessorCfg()).StoreKpiValues(&kpiValues)
+	pushKpiMetrics(&kpiValues)
+}
+
+func pushKpiMetrics(kpiValues *kpis.PvLoggerKpiData) {
+	cfg := config.PushGatewayCfg()
+	if !cfg.Enabled {
+		logging.Debug("push gateway is disabled")
+		return
+	}
+	metrics.NewMetricsPushService(cfg).PushKpiMetrics(kpiValues)
 }
 
 func collectLiveKpis(jobId *model.JobId) *kpis.KpiLiveData {
