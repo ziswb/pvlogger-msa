@@ -1,3 +1,4 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 
 plugins {
@@ -82,8 +83,7 @@ tasks.test {
 
 // Necessary due to a bug in flyway 10.x. See: https://github.com/flyway/flyway/issues/3811
 // Symptom was: no migrations were found when application was run from (shadow) jar
-tasks {
-    shadowJar {
-        mergeServiceFiles()
-    }
+tasks.withType<ShadowJar>() {
+    mergeServiceFiles()
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
