@@ -16,7 +16,7 @@ import io.ktor.http.URLProtocol
 import io.ktor.http.path
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.LocalDate.now
 import java.time.LocalTime.of
 import java.time.ZoneId.systemDefault

@@ -4,38 +4,32 @@ import ch.bziswiler.pvlogger.frontend.configuration.AppConfig
 import ch.bziswiler.pvlogger.frontend.rest.DataAccessorRestProxy
 import ch.bziswiler.pvlogger.frontend.rest.FrontendPaths.FRONTEND_READ_LIVE_DATA_VALUES_PATH
 import ch.bziswiler.pvlogger.shared.rest.KpiValuesDto
-import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
-import io.ktor.server.application.Application
-import io.ktor.server.application.install
-import io.ktor.server.routing.routing
-import io.ktor.server.websocket.WebSockets
-import io.ktor.server.websocket.pingPeriod
-import io.ktor.server.websocket.sendSerialized
-import io.ktor.server.websocket.timeout
-import io.ktor.server.websocket.webSocket
-import io.ktor.websocket.Frame
+import io.github.oshai.kotlinlogging.KotlinLogging
+import io.ktor.serialization.kotlinx.*
+import io.ktor.server.application.*
+import io.ktor.server.routing.*
+import io.ktor.server.websocket.*
+import io.ktor.websocket.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.time.delay
 import kotlinx.serialization.json.Json
-import mu.KotlinLogging
 import org.koin.ktor.ext.inject
-import java.time.Duration
-import java.time.Duration.ofSeconds
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 private val logger = KotlinLogging.logger {}
-private val Int.Seconds: Duration get() = ofSeconds(toLong())
 
 fun Application.configureWebSockets() {
     // https://lankydan.dev/ktor-websockets
     install(WebSockets) {
-        pingPeriod = 15.Seconds
-        timeout = 15.Seconds
+        pingPeriod = 15.seconds
+        timeout = 15.seconds
         maxFrameSize = Long.MAX_VALUE
         masking = false
         contentConverter = KotlinxWebsocketSerializationConverter(
@@ -53,7 +47,7 @@ fun Application.configureWebSockets() {
     val config by inject<AppConfig>()
     val dataAccessorRestProxy = DataAccessorRestProxy(config.dataAccessorConfig)
     val notificationProducer = NotificationProducer(flow, dataAccessorRestProxy)
-    val delay = 60.Seconds
+    val delay = 60.seconds
     val notificationProducerScheduler = NotificationProducerScheduler(notificationProducer, delay, delay)
 
     routing {
@@ -82,7 +76,7 @@ fun Application.configureWebSockets() {
                     job.cancel()
                 }
             result
-                .onFailure { logger.error(t = it) { "WebSocket: Received exception" } }
+                .onFailure { logger.error(it) { "WebSocket: Received exception" } }
                 .onSuccess { logger.info { "WebSocket: Stopped successfully" } }
         }
     }

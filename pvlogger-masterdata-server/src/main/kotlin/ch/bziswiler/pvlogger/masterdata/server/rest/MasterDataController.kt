@@ -4,27 +4,24 @@ import ch.bziswiler.pvlogger.masterdata.server.configuration.AppConfig
 import ch.bziswiler.pvlogger.masterdata.server.database.access.MasterDataDao
 import ch.bziswiler.pvlogger.masterdata.server.database.schema.MasterDataTable.category
 import ch.bziswiler.pvlogger.masterdata.server.database.schema.MasterDataTable.deviceType
-import ch.bziswiler.pvlogger.masterdata.server.service.MasterDataImporter
-import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category
-import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType
-import ch.bziswiler.pvlogger.masterdata.server.rest.MasterDataRequestParameters
 import ch.bziswiler.pvlogger.masterdata.server.rest.MasterDataRequestParameters.ADDRESS
 import ch.bziswiler.pvlogger.masterdata.server.rest.MasterDataRequestParameters.CATEGORIES
 import ch.bziswiler.pvlogger.masterdata.server.rest.MasterDataRequestParameters.DEVICE_TYPES
+import ch.bziswiler.pvlogger.masterdata.server.service.MasterDataImporter
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType
 import ch.bziswiler.pvlogger.shared.rest.MasterDataPaths.IMPORT_MASTER_DATA_PATH
 import ch.bziswiler.pvlogger.shared.rest.MasterDataPaths.MASTER_DATA_FOR_ADDRESS_PATH
 import ch.bziswiler.pvlogger.shared.rest.MasterDataPaths.MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.ApplicationCall
-import io.ktor.server.application.call
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Routing
+import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.get
 import io.ktor.server.routing.put
-import io.ktor.util.pipeline.PipelineContext
-import mu.KotlinLogging
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
-import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.inList
 import org.koin.java.KoinJavaComponent.inject
 
 private const val PARAM_VALUE_DELIMITER = ";"
@@ -86,6 +83,6 @@ fun Routing.importMasterData() {
     }
 }
 
-private fun PipelineContext<Unit, ApplicationCall>.getParameterValues(category: MasterDataRequestParameters) = call.request.queryParameters[category.value]?.split(PARAM_VALUE_DELIMITER)
+private fun RoutingContext.getParameterValues(category: MasterDataRequestParameters) = call.request.queryParameters[category.value]?.split(PARAM_VALUE_DELIMITER)
 
 private fun whereCondition(categories: List<Category>, deviceTypes: List<DeviceType>) = category.inList(categories).and(deviceType.inList(deviceTypes))

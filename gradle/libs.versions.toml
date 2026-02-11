@@ -1,24 +1,18 @@
 [versions]
-commonsCsvVersion = "1.10.0"
-exposedVersion = "0.46.0"
-flyway = "11.1.0"
-hikaricpVersion = "5.1.0"
-h2Version = "2.2.224"
-koinVersion = "3.5.3"
-kotlinVersion = "2.1.21"
-kotlinxVersion = "1.6.3"
-coroutinesVersion = "1.9.0"
-kotlinxDateTimeVersion = "0.6.1"
-ktorVersion = "2.3.8"
-logbackVersion = "1.5.21"
-loggingVersion = "3.0.5"
-postgresVersion = "42.7.4"
-prometheusVersion = "1.12.2"
-quartzVersion = "2.3.2"
-cacheVersion = "0.13.0"
-openapiVersion = "7.0.1"
-retrofitVersion = "3.0.0"
-okioVersion = "3.9.0"
+commonsCsvVersion = "1.14.1"
+exposedVersion = "1.0.0"
+flyway = "11.20.3"
+hikaricpVersion = "7.0.2"
+h2Version = "2.4.240"
+koinVersion = "4.1.1"
+kotlinVersion = "2.2.20"
+kotlinxVersion = "1.9.0"
+ktorVersion = "3.4.0"
+logbackVersion = "1.5.29"
+loggingVersion = "7.0.3"
+postgresVersion = "42.7.9"
+prometheusVersion = "1.16.0"
+cacheVersion = "0.14.0"
 
 [libraries]
 commons-csv = { module = "org.apache.commons:commons-csv", version.ref = "commonsCsvVersion" }
@@ -38,19 +32,16 @@ koin-ktor = { module = "io.insert-koin:koin-ktor", version.ref = "koinVersion" }
 koin-logger-slf4j = { module = "io.insert-koin:koin-logger-slf4j", version.ref = "koinVersion" }
 
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxVersion" }
-kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDateTimeVersion" }
-kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutinesVersion" }
 
-kotlin-logging = { module = "io.github.microutils:kotlin-logging", version.ref = "loggingVersion" }
+kotlin-logging = { module = "io.github.oshai:kotlin-logging-jvm", version.ref = "loggingVersion" }
 
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktorVersion" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktorVersion" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktorVersion" }
-ktor-server-double-receive = { module = "io.ktor:ktor-server-double-receive", version.ref = "ktorVersion" }
 ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktorVersion" }
 
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktorVersion" }
-ktor-server-caching-headers = { module = "io.ktor:ktor-server-caching-headers", version.ref =  "ktorVersion" }
+ktor-server-caching-headers = { module = "io.ktor:ktor-server-caching-headers", version.ref = "ktorVersion" }
 ktor-server-call-id = { module = "io.ktor:ktor-server-call-id", version.ref = "ktorVersion" }
 ktor-server-call-logging = { module = "io.ktor:ktor-server-call-logging", version.ref = "ktorVersion" }
 ktor-server-compression = { module = "io.ktor:ktor-server-compression", version.ref = "ktorVersion" }
@@ -67,13 +58,9 @@ ktor-server-webjars = { module = "io.ktor:ktor-server-webjars", version.ref = "k
 ktor-server-websockets = { module = "io.ktor:ktor-server-websockets", version.ref = "ktorVersion" }
 ktor-network = { module = "io.ktor:ktor-network", version.ref = "ktorVersion" }
 
-retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofitVersion" }
-okio = { module = "com.squareup.okio:okio", version.ref = "okioVersion" }
-
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logbackVersion" }
 micrometer-registry-prometheus = { module = "io.micrometer:micrometer-registry-prometheus", version.ref = "prometheusVersion" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresVersion" }
-quartz = { module = "org.quartz-scheduler:quartz", version.ref = "quartzVersion" }
 
 koin-test = { module = "io.insert-koin:koin-test", version.ref = "koinVersion" }
 koin-test-junit5 = { module = "io.insert-koin:koin-test-junit5", version.ref = "koinVersion" }
@@ -81,11 +68,8 @@ koin-test-junit5 = { module = "io.insert-koin:koin-test-junit5", version.ref = "
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlinVersion" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlinVersion" }
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktorVersion" }
-ktor-server-tests = { module = "io.ktor:ktor-server-tests", version.ref = "ktorVersion" }
 
 [plugins]
 jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlinVersion" }
 ktor = { id = "io.ktor.plugin", version.ref = "ktorVersion" }
-#idea = { id = "idea" }
 serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinVersion" }
-openapi = { id = "org.openapi.generator", version.ref =  "openapiVersion" }

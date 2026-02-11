@@ -2,8 +2,8 @@ package ch.bziswiler.pvlogger.sunrise.database.access
 
 import ch.bziswiler.pvlogger.sunrise.database.schema.SolarTable
 import ch.bziswiler.pvlogger.sunrise.database.schema.SunriseSunsetData
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 class SunriseSunsetDao {
 

@@ -12,7 +12,7 @@ import io.ktor.server.application.ApplicationStopped
 import io.ktor.server.application.ApplicationStopping
 import io.ktor.server.application.install
 import io.ktor.server.netty.EngineMain
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
 

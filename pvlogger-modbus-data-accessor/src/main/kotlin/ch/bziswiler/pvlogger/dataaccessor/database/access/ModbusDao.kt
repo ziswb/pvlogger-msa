@@ -19,10 +19,10 @@ import ch.bziswiler.pvlogger.shared.modbus.ModbusRegisterValue
 import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusRegisterValueResponse
 import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ModbusResponse
 import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ReadDeviceIdentifiersResponse
-import mu.KotlinLogging
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.sql.insertAndGetId
-import org.jetbrains.exposed.sql.transactions.transaction
+import io.github.oshai.kotlinlogging.KotlinLogging
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.jdbc.insertAndGetId
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 object ModbusDao {
 

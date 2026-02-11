@@ -1,8 +1,8 @@
 package ch.bziswiler.pvlogger.dataaccessor.database.schema
 
 import ch.bziswiler.pvlogger.shared.modbus.ModbusRegisterShortArrayValue
-import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.jdbc.insert
 
 object CharacteristicCurveValuesTable : IntIdTable("modbus_characteristic_curve_data"), ValueStore<ModbusRegisterShortArrayValue> {
     private val response_id = integer("response_id").references(ResponseTable.id)

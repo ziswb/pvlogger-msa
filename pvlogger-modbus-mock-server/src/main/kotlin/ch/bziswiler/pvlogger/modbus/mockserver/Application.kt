@@ -15,9 +15,10 @@ import io.ktor.server.application.ApplicationStopPreparing
 import io.ktor.server.application.ApplicationStopped
 import io.ktor.server.application.ApplicationStopping
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 fun main(args: Array<String>) {
     io.ktor.server.netty.EngineMain.main(args)
@@ -27,7 +28,7 @@ fun Application.module(testing: Boolean = false) {
     launch { startSocketServer(testing) }
 }
 
-fun Application.startSocketServer(testing: Boolean) {
+suspend fun Application.startSocketServer(testing: Boolean) {
     val logger = KotlinLogging.logger {}
     environment.monitor.subscribe(ApplicationStopping) {
         logger.info("Shutting down application...")
@@ -41,10 +42,10 @@ fun Application.startSocketServer(testing: Boolean) {
     val port = environment.config.propertyOrNull("ktor.socket-server.tcp-port")?.getString()?.toInt() ?: 8502
     val ip = environment.config.propertyOrNull("ktor.socket-server.ip")?.getString() ?: "0.0.0.0"
     logger.info { "socket server: starting at  $ip:$port" }
-    runBlocking {
+    coroutineScope {
         val selectorManager = SelectorManager(Dispatchers.IO)
         val serverSocket = aSocket(selectorManager).tcp().bind(ip, port)
-        while (true) {
+        while (isActive) {
             logger.info { "socket server: waiting for connections" }
             val socket = serverSocket.accept()
             logger.info { "socket server: accepting ${socket.remoteAddress}" }

@@ -5,7 +5,7 @@ import ch.bziswiler.pvlogger.shared.masterdata.modbus.Type
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.FunctionCode
 import ch.bziswiler.pvlogger.shared.modbus.tcp.frame.MbapHeader
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 object MockDataBuilder {
     fun buildHeader(

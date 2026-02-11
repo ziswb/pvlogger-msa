@@ -12,8 +12,6 @@ import io.ktor.network.sockets.openWriteChannel
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.testApplication
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
-import java.lang.Thread.sleep
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -32,25 +30,24 @@ class ApplicationTest {
         }
         application {
             module(testing = true)
-            sleep(1000) // TODO: this is definitely not the way to do it. Also the 'application'-block should be closed before the testing code starts
-            runBlocking {
-                val selectorManager = SelectorManager(Dispatchers.IO)
-                val socket = aSocket(selectorManager).tcp().connect(hostname, 9090)
-                val reader = MockDataReader(socket.openReadChannel())
-                val writer = MockDataWriter(socket.openWriteChannel(autoFlush = true))
-                val mockData = buildData()
-                writer.writeData(buildHeader(dataLength = 6u), buildFunctionCode(), mockData)
-                reader.readData(mockData)
-                socket.close()
-                assertEquals(0u, reader.protocolIdentifier)
-                assertEquals(0u, reader.protocolType)
-                assertEquals(81u, reader.dataLength)
-                assertEquals(1u, reader.logicDeviceId)
-                assertEquals(mockData.size, reader.values.size)
-                assertEquals(1u, reader.values[0] as UShort)
-                assertEquals(2333, reader.values[1] as Int)
-            }
         }
+        startApplication()
+        Thread.sleep(1000)
+        val selectorManager = SelectorManager(Dispatchers.IO)
+        val socket = aSocket(selectorManager).tcp().connect(hostname, 9090)
+        val reader = MockDataReader(socket.openReadChannel())
+        val writer = MockDataWriter(socket.openWriteChannel(autoFlush = true))
+        val mockData = buildData()
+        writer.writeData(buildHeader(dataLength = 6u), buildFunctionCode(), mockData)
+        reader.readData(mockData)
+        socket.close()
+        assertEquals(0u, reader.protocolIdentifier)
+        assertEquals(0u, reader.protocolType)
+        assertEquals(81u, reader.dataLength)
+        assertEquals(1u, reader.logicDeviceId)
+        assertEquals(mockData.size, reader.values.size)
+        assertEquals(1u, reader.values[0] as UShort)
+        assertEquals(2333, reader.values[1] as Int)
     }
 }
 

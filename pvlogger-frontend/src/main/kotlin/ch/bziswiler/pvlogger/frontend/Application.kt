@@ -12,9 +12,9 @@ import ch.bziswiler.pvlogger.frontend.plugins.configureWebSockets
 import io.ktor.server.application.Application
 import io.ktor.server.netty.EngineMain
 import io.micrometer.core.instrument.Metrics.addRegistry
-import io.micrometer.prometheus.PrometheusConfig
-import io.micrometer.prometheus.PrometheusMeterRegistry
-import mu.KotlinLogging
+import io.micrometer.prometheusmetrics.PrometheusConfig
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.koin.core.context.startKoin
 import org.koin.logger.slf4jLogger
 

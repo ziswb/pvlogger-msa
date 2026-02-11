@@ -13,8 +13,8 @@ import io.ktor.server.application.ApplicationStopped
 import io.ktor.server.application.ApplicationStopping
 import io.ktor.server.application.install
 import io.ktor.server.netty.EngineMain
-import io.ktor.server.plugins.callloging.CallLogging
-import mu.KotlinLogging
+import io.ktor.server.plugins.calllogging.CallLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.koin.ktor.ext.inject
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger

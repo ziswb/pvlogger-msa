@@ -8,7 +8,7 @@ import ch.bziswiler.pvlogger.shared.rest.PvHttpClient.client
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode.Companion.OK
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 class DataAccessorRestProxy(private val config: DataAccessorConfig) {
 

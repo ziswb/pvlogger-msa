@@ -2,8 +2,8 @@ package ch.bziswiler.pvlogger.dataaccessor.database.schema
 
 import ch.bziswiler.pvlogger.shared.modbus.ModbusObject
 import ch.bziswiler.pvlogger.shared.modbus.ModbusRegisterStringValue
-import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.jdbc.insert
 
 object StringValuesTable : IntIdTable("modbus_register_string_values"), ValueStore<ModbusRegisterStringValue>,
     ObjectStore {

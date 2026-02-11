@@ -7,8 +7,8 @@ import ch.bziswiler.pvlogger.masterdata.server.database.access.MasterDataDao
 import ch.bziswiler.pvlogger.masterdata.server.database.schema.MasterDataTable
 import ch.bziswiler.pvlogger.masterdata.server.service.MasterDataImporter
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.Test
 import org.koin.test.inject
 import kotlin.test.assertEquals

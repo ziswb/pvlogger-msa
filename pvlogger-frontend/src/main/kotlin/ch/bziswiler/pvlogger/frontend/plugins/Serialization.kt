@@ -9,7 +9,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonTransformingSerializer
 import kotlinx.serialization.modules.SerializersModule
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 fun Application.configureSerialization() {
     install(ContentNegotiation) { json(myJson) }

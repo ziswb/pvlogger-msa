@@ -2,6 +2,9 @@ package ch.bziswiler.pvlogger.modbus.mockserver.utils
 
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Type
 import io.ktor.utils.io.ByteReadChannel
+import io.ktor.utils.io.readByte
+import io.ktor.utils.io.readInt
+import io.ktor.utils.io.readShort
 
 class MockDataReader(private val channel: ByteReadChannel) {
 

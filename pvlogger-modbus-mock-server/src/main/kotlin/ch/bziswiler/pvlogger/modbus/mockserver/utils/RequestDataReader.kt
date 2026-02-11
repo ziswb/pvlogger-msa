@@ -2,7 +2,9 @@ package ch.bziswiler.pvlogger.modbus.mockserver.utils
 
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.RegisterAddress
 import io.ktor.utils.io.ByteReadChannel
-import mu.KotlinLogging
+import io.ktor.utils.io.readByte
+import io.ktor.utils.io.readShort
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 class RequestDataReader(private val channel: ByteReadChannel) {
 
@@ -24,7 +26,9 @@ class RequestDataReader(private val channel: ByteReadChannel) {
         val numberOfBytes = channel.readUShort()
         logger.trace { "number of bytes: $numberOfBytes" }
         var overflow = 0u
-        while (channel.availableForRead > 0) {
+        val bytesReadAfterDataLength = 6 // logicDeviceId(1) + functionCode(1) + registerAddress(2) + numberOfBytes(2)
+        val overflowBytes = dataLength.toInt() - bytesReadAfterDataLength
+        repeat(overflowBytes) {
             overflow += channel.readUByte()
         }
         logger.trace {

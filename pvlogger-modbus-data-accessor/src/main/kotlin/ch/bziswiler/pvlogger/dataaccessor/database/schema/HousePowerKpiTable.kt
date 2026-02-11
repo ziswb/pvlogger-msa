@@ -1,8 +1,8 @@
 package ch.bziswiler.pvlogger.dataaccessor.database.schema
 
-import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.javatime.CurrentDateTime
-import org.jetbrains.exposed.sql.javatime.datetime
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.javatime.CurrentDateTime
+import org.jetbrains.exposed.v1.javatime.datetime
 
 object HousePowerKpiTable : IntIdTable("house_power_kpi_values") {
     val dateCreated = datetime("date_created").defaultExpression(CurrentDateTime)

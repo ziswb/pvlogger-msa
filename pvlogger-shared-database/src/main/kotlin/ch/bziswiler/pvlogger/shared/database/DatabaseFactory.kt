@@ -3,11 +3,11 @@ package ch.bziswiler.pvlogger.shared.database
 import ch.bziswiler.pvlogger.shared.configuration.DatabaseConfig
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.flywaydb.core.Flyway.configure
-import org.jetbrains.exposed.sql.Database.Companion.connect
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.Database.Companion.connect
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.lang.Thread.sleep
 import java.util.concurrent.atomic.AtomicInteger
 

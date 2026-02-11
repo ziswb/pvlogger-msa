@@ -1,6 +1,6 @@
 package ch.bziswiler.pvlogger.sunrise.database.schema
 
-import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 
 object SolarTable : IntIdTable("solar_table") {
     val status = text("status")

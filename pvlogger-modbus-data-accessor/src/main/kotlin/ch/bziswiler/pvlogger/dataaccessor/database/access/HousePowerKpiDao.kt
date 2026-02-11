@@ -1,9 +1,9 @@
 package ch.bziswiler.pvlogger.dataaccessor.database.access
 
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.HousePowerKpiTable
-import mu.KotlinLogging
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.transactions.transaction
+import io.github.oshai.kotlinlogging.KotlinLogging
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.time.Instant.ofEpochMilli
 import java.time.LocalDateTime.ofInstant
 import java.time.ZoneOffset.UTC
