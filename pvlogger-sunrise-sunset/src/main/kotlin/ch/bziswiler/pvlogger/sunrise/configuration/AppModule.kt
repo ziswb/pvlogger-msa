@@ -2,7 +2,7 @@ package ch.bziswiler.pvlogger.sunrise.configuration
 
 import ch.bziswiler.pvlogger.sunrise.database.access.SunriseSunsetDao
 import ch.bziswiler.pvlogger.sunrise.service.SunriseSunsetService
-import ch.bziswiler.pvlogger.shared.databbase.DatabaseFactory
+import ch.bziswiler.pvlogger.shared.database.DatabaseFactory
 import org.koin.dsl.module
 
 val appModule = module {

@@ -8,5 +8,7 @@ include(
     "pvlogger-modbus-data-accessor",
     "pvlogger-modbus-mock-server",
     "pvlogger-sunrise-sunset",
-    "pvlogger-shared",
+    "pvlogger-shared-database",
+    "pvlogger-shared-model",
+    "pvlogger-shared-rest",
 )

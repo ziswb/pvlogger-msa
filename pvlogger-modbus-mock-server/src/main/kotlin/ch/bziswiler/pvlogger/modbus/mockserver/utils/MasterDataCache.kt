@@ -2,8 +2,8 @@ package ch.bziswiler.pvlogger.modbus.mockserver.utils
 
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.RegisterAddress
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
-import ch.bziswiler.pvlogger.shared.rest.MasterDataPaths.MASTER_DATA_FOR_ADDRESS_PATH
-import ch.bziswiler.pvlogger.shared.rest.PvHttpClient.client
+import ch.bziswiler.pvlogger.modbus.mockserver.utils.MasterDataPaths.MASTER_DATA_FOR_ADDRESS_PATH
+import ch.bziswiler.pvlogger.modbus.mockserver.utils.PvHttpClient.client
 import io.github.reactivecircus.cache4k.Cache
 import io.ktor.client.call.body
 import io.ktor.client.request.get

@@ -1,6 +1,6 @@
 package ch.bziswiler.pvlogger.dataaccessor.configuration
 
-import ch.bziswiler.pvlogger.shared.databbase.DatabaseFactory
+import ch.bziswiler.pvlogger.shared.database.DatabaseFactory
 import io.ktor.server.application.Application
 import org.koin.ktor.ext.inject
 

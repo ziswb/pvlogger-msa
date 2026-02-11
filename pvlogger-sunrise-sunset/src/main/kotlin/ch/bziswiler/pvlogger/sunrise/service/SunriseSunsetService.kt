@@ -3,7 +3,7 @@ package ch.bziswiler.pvlogger.sunrise.service
 import ch.bziswiler.pvlogger.sunrise.configuration.SunriseSunsetServiceConfig
 import ch.bziswiler.pvlogger.sunrise.database.access.SunriseSunsetDao
 import ch.bziswiler.pvlogger.sunrise.database.schema.SunriseSunsetData
-import ch.bziswiler.pvlogger.shared.rest.SunriseSunsetPair
+import ch.bziswiler.pvlogger.sunrise.rest.SunriseSunsetPair
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO

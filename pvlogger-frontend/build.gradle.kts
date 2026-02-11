@@ -57,7 +57,7 @@ dependencies {
     implementation(libs.ktor.server.webjars)
 
     // Shared pvlogger-resources
-    implementation(project(":pvlogger-shared"))
+    implementation(project(":pvlogger-shared-rest"))
 
     // Logging
     implementation(libs.logback.classic)

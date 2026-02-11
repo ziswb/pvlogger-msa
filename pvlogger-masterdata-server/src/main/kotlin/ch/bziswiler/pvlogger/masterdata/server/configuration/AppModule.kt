@@ -1,7 +1,7 @@
 package ch.bziswiler.pvlogger.masterdata.server.configuration
 
 import ch.bziswiler.pvlogger.masterdata.server.database.access.MasterDataDao
-import ch.bziswiler.pvlogger.shared.databbase.DatabaseFactory
+import ch.bziswiler.pvlogger.shared.database.DatabaseFactory
 import org.koin.dsl.module
 
 val appModule = module {

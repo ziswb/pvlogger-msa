@@ -48,7 +48,9 @@ dependencies {
     implementation(libs.kotlin.logging)
 
     // Shared pvlogger-resources
-    implementation(project(":pvlogger-shared"))
+    implementation(project(":pvlogger-shared-database"))
+    implementation(project(":pvlogger-shared-model"))
+    implementation(project(":pvlogger-shared-rest"))
 
     // Koin
     implementation(libs.koin.ktor)

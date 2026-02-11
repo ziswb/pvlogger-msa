@@ -2,7 +2,7 @@ package ch.bziswiler.pvlogger.frontend.plugins
 
 import ch.bziswiler.pvlogger.frontend.configuration.AppConfig
 import ch.bziswiler.pvlogger.frontend.rest.DataAccessorRestProxy
-import ch.bziswiler.pvlogger.shared.rest.FrontendPaths.FRONTEND_READ_LIVE_DATA_VALUES_PATH
+import ch.bziswiler.pvlogger.frontend.rest.FrontendPaths.FRONTEND_READ_LIVE_DATA_VALUES_PATH
 import ch.bziswiler.pvlogger.shared.rest.KpiValuesDto
 import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
 import io.ktor.server.application.Application

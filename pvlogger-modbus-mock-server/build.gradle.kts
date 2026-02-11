@@ -50,7 +50,7 @@ dependencies {
     implementation(libs.logback.classic)
     implementation(libs.kotlin.logging)
 
-    implementation(project(":pvlogger-shared"))
+    implementation(project(":pvlogger-shared-model"))
 
     // Cache -> https://github.com/ReactiveCircus/cache4k
     implementation(libs.reactivecircus.cache)
