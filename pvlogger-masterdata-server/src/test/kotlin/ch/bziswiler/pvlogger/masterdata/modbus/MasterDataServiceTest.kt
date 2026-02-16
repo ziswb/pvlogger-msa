@@ -4,13 +4,13 @@ import ch.bziswiler.pvlogger.masterdata.modbus.testutils.BaseApplicationTest
 import ch.bziswiler.pvlogger.masterdata.modbus.testutils.TestRecordBuilder
 import ch.bziswiler.pvlogger.masterdata.server.configuration.AppConfig
 import ch.bziswiler.pvlogger.masterdata.server.database.access.MasterDataDao
+import ch.bziswiler.pvlogger.masterdata.server.rest.MasterDataPaths.MASTER_DATA_FOR_ADDRESS_PATH
+import ch.bziswiler.pvlogger.masterdata.server.rest.MasterDataPaths.MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES
 import ch.bziswiler.pvlogger.masterdata.server.service.MasterDataImporter
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category.ALARM
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category.DEVLST
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType.INVERTER
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
-import ch.bziswiler.pvlogger.shared.rest.MasterDataPaths.MASTER_DATA_FOR_ADDRESS_PATH
-import ch.bziswiler.pvlogger.shared.rest.MasterDataPaths.MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode

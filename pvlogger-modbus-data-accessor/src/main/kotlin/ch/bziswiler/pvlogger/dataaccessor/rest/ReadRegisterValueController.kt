@@ -1,17 +1,17 @@
 package ch.bziswiler.pvlogger.dataaccessor.rest
 
+import ch.bziswiler.pvlogger.dataaccessor.rest.DataAccessorParameterNames.DEVICE_ID
+import ch.bziswiler.pvlogger.dataaccessor.rest.DataAccessorParameterNames.JOB_ID
+import ch.bziswiler.pvlogger.dataaccessor.rest.DataAccessorParameterNames.REGISTER_ADDRESS
+import ch.bziswiler.pvlogger.dataaccessor.rest.DataAccessorParameterNames.TYPE
 import ch.bziswiler.pvlogger.dataaccessor.rest.ParameterRetriever.retrieveDeviceIdParameter
 import ch.bziswiler.pvlogger.dataaccessor.rest.ParameterRetriever.retrieveJobIdParameter
 import ch.bziswiler.pvlogger.dataaccessor.rest.ParameterRetriever.retrieveRegisterAddressParameter
 import ch.bziswiler.pvlogger.dataaccessor.rest.ParameterRetriever.retrieveTypeParameter
-import ch.bziswiler.pvlogger.dataaccessor.rest.RegisterReader.readLatestRegisterValue
 import ch.bziswiler.pvlogger.dataaccessor.rest.RegisterReader.readKwSoFarToday
-import ch.bziswiler.pvlogger.shared.rest.DataAccessorParameterNames.DEVICE_ID
-import ch.bziswiler.pvlogger.shared.rest.DataAccessorParameterNames.JOB_ID
-import ch.bziswiler.pvlogger.shared.rest.DataAccessorParameterNames.REGISTER_ADDRESS
-import ch.bziswiler.pvlogger.shared.rest.DataAccessorParameterNames.TYPE
-import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_LATEST_REGISTER_VALUE_PATH
+import ch.bziswiler.pvlogger.dataaccessor.rest.RegisterReader.readLatestRegisterValue
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_KW_TODAY_SO_FAR_PATH
+import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_LATEST_REGISTER_VALUE_PATH
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.http.HttpStatusCode.Companion.NotFound
 import io.ktor.http.HttpStatusCode.Companion.OK

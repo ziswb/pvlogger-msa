@@ -1,14 +1,14 @@
 package ch.bziswiler.pvlogger.frontend.rest
 
 import ch.bziswiler.pvlogger.frontend.configuration.DataAccessorConfig
+import ch.bziswiler.pvlogger.frontend.rest.PvHttpClient.client
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_API_V1_PATH
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_LATEST_KPI_PATH
 import ch.bziswiler.pvlogger.shared.rest.KpiValuesDto
-import ch.bziswiler.pvlogger.shared.rest.PvHttpClient.client
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode.Companion.OK
-import io.github.oshai.kotlinlogging.KotlinLogging
 
 class DataAccessorRestProxy(private val config: DataAccessorConfig) {
 

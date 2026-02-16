@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.shared.rest
+package ch.bziswiler.pvlogger.dataaccessor.rest
 
 object DataAccessorParameterNames {
     const val TYPE = "type"

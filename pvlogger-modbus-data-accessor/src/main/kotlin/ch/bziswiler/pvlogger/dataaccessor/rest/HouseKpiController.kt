@@ -10,11 +10,12 @@ import ch.bziswiler.pvlogger.dataaccessor.database.schema.HousePowerKpiTable.gri
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.HousePowerKpiTable.ownConsumption
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.HousePowerKpiTable.solarPower
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.HousePowerKpiTable.solarToGridPower
-import ch.bziswiler.pvlogger.shared.rest.DataAccessorParameterNames.DATE
+import ch.bziswiler.pvlogger.dataaccessor.rest.DataAccessorParameterNames.DATE
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_API_V1_PATH
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_DATA_TODAY_VALUES_PATH
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_LATEST_KPI_PATH
 import ch.bziswiler.pvlogger.shared.rest.KpiValuesDto
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.http.HttpStatusCode.Companion.NotFound
 import io.ktor.http.HttpStatusCode.Companion.OK
@@ -22,7 +23,6 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
-import io.github.oshai.kotlinlogging.KotlinLogging
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder.ASC
 import org.jetbrains.exposed.v1.core.SortOrder.DESC

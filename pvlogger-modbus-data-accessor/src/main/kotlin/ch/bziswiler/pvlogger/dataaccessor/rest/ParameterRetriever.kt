@@ -1,14 +1,14 @@
 package ch.bziswiler.pvlogger.dataaccessor.rest
 
+import ch.bziswiler.pvlogger.dataaccessor.rest.DataAccessorParameterNames.DEVICE_ID
+import ch.bziswiler.pvlogger.dataaccessor.rest.DataAccessorParameterNames.JOB_ID
+import ch.bziswiler.pvlogger.dataaccessor.rest.DataAccessorParameterNames.REGISTER_ADDRESS
+import ch.bziswiler.pvlogger.dataaccessor.rest.DataAccessorParameterNames.TYPE
 import ch.bziswiler.pvlogger.shared.job.meta.JobId
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.RegisterAddress
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Type
-import ch.bziswiler.pvlogger.shared.rest.DataAccessorParameterNames.DEVICE_ID
-import ch.bziswiler.pvlogger.shared.rest.DataAccessorParameterNames.JOB_ID
-import ch.bziswiler.pvlogger.shared.rest.DataAccessorParameterNames.REGISTER_ADDRESS
-import ch.bziswiler.pvlogger.shared.rest.DataAccessorParameterNames.TYPE
-import io.ktor.server.routing.RoutingContext
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.ktor.server.routing.RoutingContext
 
 object ParameterRetriever {
 
