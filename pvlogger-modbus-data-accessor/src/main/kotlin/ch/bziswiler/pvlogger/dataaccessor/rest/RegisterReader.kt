@@ -71,7 +71,7 @@ object RegisterReader {
                         AND mrd.date_created >= CURRENT_DATE - 1
                           AND mrd.date_created < CURRENT_DATE + 1
                       GROUP BY mrd.date_created::date) tbl
-                WHERE kwh IS NOT NULL
+                WHERE max IS NOT NULL
                 ORDER BY dt DESC
                 LIMIT 1;
                 """.trimIndent()
