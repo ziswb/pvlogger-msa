@@ -20,40 +20,109 @@ import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 object RegisterReader {
-
     private const val ONE = 1
 
     private val logger = KotlinLogging.logger {}
     private val responseTimeDescending = ResponseTable.response_time to DESC
 
-    fun readLatestRegisterValue(type: Type, deviceId: Int, registerAddress: RegisterAddress, jobId: JobId): Any? = when (type) {
-        Type.U16, Type.BITFIELD_16 -> readLatestRegisterValue(UShortValueTable, UShortValueTable.register_value, UShortValueTable.register_address, registerAddress, deviceId, jobId)?.toUShort()
-        Type.U32, Type.BITFIELD_32 -> readLatestRegisterValue(UIntegerValueTable, UIntegerValueTable.register_value, UIntegerValueTable.register_address, registerAddress, deviceId, jobId)?.toUInt()
-        Type.I16 -> readLatestRegisterValue(ShortValueTable, ShortValueTable.register_value, ShortValueTable.register_address, registerAddress, deviceId, jobId)
-        Type.I32 -> readLatestRegisterValue(IntegerValueTable, IntegerValueTable.register_value, IntegerValueTable.register_address, registerAddress, deviceId, jobId)
-        Type.STR -> readLatestRegisterValue(StringValuesTable, StringValuesTable.register_value, StringValuesTable.register_address, registerAddress, deviceId, jobId)
-        Type.MLD -> throw NotImplementedError()
-    }
+    fun readLatestRegisterValue(
+        type: Type,
+        deviceId: Int,
+        registerAddress: RegisterAddress,
+        jobId: JobId,
+    ): Any? =
+        when (type) {
+            Type.U16, Type.BITFIELD_16 -> {
+                readLatestRegisterValue(
+                    UShortValueTable,
+                    UShortValueTable.register_value,
+                    UShortValueTable.register_address,
+                    registerAddress,
+                    deviceId,
+                    jobId,
+                )?.toUShort()
+            }
 
-    private fun <T> readLatestRegisterValue(valueTable: IdTable<Int>, valueColumn: Column<T?>, registerAddressColumn: Column<Int>, registerAddress: RegisterAddress, deviceId: Int, jobId: JobId): T? = transaction {
-        (valueTable innerJoin ResponseTable)
-            .select(valueColumn)
-            .where(
-                registerAddressColumn.eq(registerAddress.value)
-                .and(ResponseTable.logic_device_id.eq(deviceId.toUByte()))
-                .and(ResponseTable.job_id.eq(jobId.id))
-            )
-            .orderBy(responseTimeDescending)
-            .limit(ONE)
-            .firstOrNull()
-            ?.let { row -> row[valueColumn] } ?: null
-            .also { logger.info { "No register value found for device ID '$deviceId' and register address '$registerAddress'." } }
-    }
+            Type.U32, Type.BITFIELD_32 -> {
+                readLatestRegisterValue(
+                    UIntegerValueTable,
+                    UIntegerValueTable.register_value,
+                    UIntegerValueTable.register_address,
+                    registerAddress,
+                    deviceId,
+                    jobId,
+                )?.toUInt()
+            }
 
-    fun readKwSoFarToday(type: Type, registerAddress: RegisterAddress): Int? = when (type) {
-        Type.I32 -> readKwSoFarToday(registerAddress)
-        else -> throw NotImplementedError()
-    }
+            Type.I16 -> {
+                readLatestRegisterValue(
+                    ShortValueTable,
+                    ShortValueTable.register_value,
+                    ShortValueTable.register_address,
+                    registerAddress,
+                    deviceId,
+                    jobId,
+                )
+            }
+
+            Type.I32 -> {
+                readLatestRegisterValue(
+                    IntegerValueTable,
+                    IntegerValueTable.register_value,
+                    IntegerValueTable.register_address,
+                    registerAddress,
+                    deviceId,
+                    jobId,
+                )
+            }
+
+            Type.STR -> {
+                readLatestRegisterValue(
+                    StringValuesTable,
+                    StringValuesTable.register_value,
+                    StringValuesTable.register_address,
+                    registerAddress,
+                    deviceId,
+                    jobId,
+                )
+            }
+
+            Type.MLD -> {
+                throw NotImplementedError()
+            }
+        }
+
+    private fun <T> readLatestRegisterValue(
+        valueTable: IdTable<Int>,
+        valueColumn: Column<T?>,
+        registerAddressColumn: Column<Int>,
+        registerAddress: RegisterAddress,
+        deviceId: Int,
+        jobId: JobId,
+    ): T? =
+        transaction {
+            (valueTable innerJoin ResponseTable)
+                .select(valueColumn)
+                .where(
+                    registerAddressColumn
+                        .eq(registerAddress.value)
+                        .and(ResponseTable.logic_device_id.eq(deviceId.toUByte()))
+                        .and(ResponseTable.job_id.eq(jobId.id)),
+                ).orderBy(responseTimeDescending)
+                .limit(ONE)
+                .firstOrNull()
+                ?.let { row -> row[valueColumn] } ?: null
+                .also { logger.info { "No register value found for device ID '$deviceId' and register address '$registerAddress'." } }
+        }
+
+    fun readKwSoFarToday(
+        type: Type,
+        registerAddress: RegisterAddress,
+    ): Int? =
+        when (type) {
+            Type.I32 -> readKwSoFarToday(registerAddress)
+            else -> throw NotImplementedError()
+        }
 
     private fun readKwSoFarToday(registerAddress: RegisterAddress): Int? {
         val kWhColumn = 2
@@ -74,7 +143,7 @@ object RegisterReader {
                 WHERE max IS NOT NULL
                 ORDER BY dt DESC
                 LIMIT 1;
-                """.trimIndent()
+                """.trimIndent(),
             ) { resultSet ->
                 if (resultSet.next()) {
                     resultSet.getInt(kWhColumn)
