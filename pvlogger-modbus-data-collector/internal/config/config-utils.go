@@ -23,14 +23,6 @@ func getIntEnv(key, fallback string) int {
 	return value
 }
 
-func getBoolEnv(key, fallback string) bool {
-	value, err := strconv.ParseBool(getEnv(key, fallback))
-	if err != nil {
-		logging.Fatal("error getting value for bool environment variable", "key", key, "error", err)
-	}
-	return value
-}
-
 func getUByteArrayEnv(key, fallback string) []uint8 {
 	value := os.Getenv(key)
 	var parts []string

@@ -1,5 +1,6 @@
 package ch.bziswiler.pvlogger.dataaccessor.configuration
 
+import ch.bziswiler.pvlogger.dataaccessor.rest.rawKpiRegisterValues
 import ch.bziswiler.pvlogger.dataaccessor.rest.readHouseKpiValues
 import ch.bziswiler.pvlogger.dataaccessor.rest.readKwSoFarToday
 import ch.bziswiler.pvlogger.dataaccessor.rest.readLatestEnergyRegisterValues
@@ -14,4 +15,5 @@ fun Application.configureRouting() {
     routing { readHouseKpiValues() }
     routing { storeModbusValues() }
     routing { storeKpiValues() }
+    routing { rawKpiRegisterValues() }
 }

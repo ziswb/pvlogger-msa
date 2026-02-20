@@ -9,4 +9,6 @@ object DataAccessorPaths {
     const val DATA_ACCESSOR_STORE_MODBUS_VALUES = "store-modbus-values"
     const val DATA_ACCESSOR_STORE_DEVICE_ID_VALUES = "store-device-id-values"
     const val DATA_ACCESSOR_STORE_KPI_VALUES = "store-kpi-values"
+    const val DATA_ACCESSOR_STORE_RAW_KPI_REGISTER_VALUES = "store-raw-kpi-register-values"
+    const val DATA_ACCESSOR_READ_METER_ENERGY_TODAY = "meter-energy-today"
 }

@@ -9,7 +9,6 @@ import (
 	"net/url"
 	"pvlogger-go-shared/logging"
 	"pvlogger-modbus-data-collector/internal/config"
-	"pvlogger-modbus-data-collector/internal/kpis"
 	"pvlogger-modbus-data-collector/internal/modbus/response"
 )
 
@@ -17,12 +16,6 @@ func (s *PersistingService) StoreValues(valueResponse *response.RegisterValueRes
 	logging.Info("storing modbus values")
 	storeModbusValuesPath := config.DataAccessorCfg().StoreModbusValuesPath
 	s.storeValues(valueResponse, storeModbusValuesPath)
-}
-
-func (s *PersistingService) StoreKpiValues(kpiValues *kpis.PvLoggerKpiData) {
-	logging.Info("storing kpi values")
-	storeKpiValuesPath := config.DataAccessorCfg().StoreKpiValuesPath
-	s.storeValues(kpiValues, storeKpiValuesPath)
 }
 
 func (s *PersistingService) StoreDeviceIdentifierValues(resp *response.ReadDeviceIdentifiersResponse) {

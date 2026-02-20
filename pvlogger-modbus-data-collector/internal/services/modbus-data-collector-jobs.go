@@ -11,13 +11,6 @@ func FetchModbusStaticRegisterValues() {
 	jobs.NewReadRegisterValuesService([]model.Category{model.StaticCategory, model.ConfigCategory}).ExecuteFetchRegisterValuesJob()
 }
 
-func FetchModbusDynamicRegisterValues() *model.JobId {
-	logging.Info("fetching modbus dynamic register values")
-	service := jobs.NewReadRegisterValuesService([]model.Category{model.DynamicCategory, model.AlarmCategory})
-	service.ExecuteFetchRegisterValuesJob()
-	return service.JobId()
-}
-
 func FetchDeviceIdentifiers() {
 	logging.Info("fetching modbus device identifiers")
 	jobs.NewReadDeviceIdentifiersService().ExecuteFetchDeviceIdentifiersJob()

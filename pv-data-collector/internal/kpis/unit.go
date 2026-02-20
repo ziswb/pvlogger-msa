@@ -14,10 +14,6 @@ const (
 	UnitKWh UnitId = "kWh"
 )
 
-func (u UnitId) String() string {
-	return string(u)
-}
-
 func (u *Unit) toW(value float64) W {
 	switch u.unitId {
 	case UnitKW:
