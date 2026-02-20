@@ -1,6 +1,7 @@
 package logging
 
 import (
+	"context"
 	"log/slog"
 	"os"
 	"strings"
@@ -30,6 +31,10 @@ func parseLogLevel(levelStr string) slog.Level {
 	default:
 		return slog.LevelInfo
 	}
+}
+
+func DebugEnabled() bool {
+	return Logger().Enabled(context.Background(), slog.LevelDebug)
 }
 
 func Logger() *slog.Logger {
