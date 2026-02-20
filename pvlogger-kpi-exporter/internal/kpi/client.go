@@ -31,7 +31,9 @@ func FetchKpis(cfg *config.Config) *Values {
 	}(resp.Body)
 	logging.Info("received response", "status", resp.Status)
 	body, readErr := io.ReadAll(resp.Body)
-	logging.Debug("received message", "body", string(body))
+	if logging.DebugEnabled() {
+		logging.Debug("received message", "body", string(body))
+	}
 	if readErr != nil {
 		logging.Fatal("failed to read response body", "error", readErr)
 	}
