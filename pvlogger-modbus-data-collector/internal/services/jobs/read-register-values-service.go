@@ -28,6 +28,12 @@ func (s *ReadRegisterValuesService) fetchRegisterValues(deviceId model.UByte, de
 			logging.Fatal("error requesting register values", "error", err)
 		}
 		valueResponse := response.NewRegisterValueResponseFromBytes(req.RegisterDefinitions, req.JobId, req.RequestId, req.RequestTime, *mbapHeader, pduBytes)
+		if logging.DebugEnabled() {
+			logging.Debug("register values received", "count", len(valueResponse.Values), "device_id", deviceId, "device_types", deviceTypes)
+			for _, v := range valueResponse.Values {
+				logging.Debug("register value", "register_address", v.Definition.RegisterAddress, "value", v.Value)
+			}
+		}
 		s.persistenceService.StoreValues(valueResponse)
 	}
 	defer s.Close()

@@ -96,7 +96,9 @@ func (s *DataAccessorService) retrieveValue(registerDefinition *model.RegisterDe
 	if err != nil {
 		logging.Fatal("error creating url for retrieving value", "error", err)
 	}
-	logging.Debug("retrieving value", "url", getUrl.String())
+	if logging.DebugEnabled() {
+		logging.Debug("retrieving value", "url", getUrl.String())
+	}
 	response, err := s.httpClient.Get(getUrl.String())
 	defer s.close(response)
 	if err != nil {
@@ -105,16 +107,22 @@ func (s *DataAccessorService) retrieveValue(registerDefinition *model.RegisterDe
 	if response.StatusCode != http.StatusOK {
 		logging.Fatal("error retrieving value", "status", response.Status)
 	}
-	logging.Debug("response received", "status", response.Status)
+	if logging.DebugEnabled() {
+		logging.Debug("response received", "status", response.Status)
+	}
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		logging.Fatal("error reading response body", "error", err)
 	}
-	logging.Debug("received message", "body", string(body))
+	if logging.DebugEnabled() {
+		logging.Debug("received message", "body", string(body))
+	}
 	value := toFloat64OrDefault(string(body), 0.0)
 	gain := toFloat64OrDefault(kpis.NewGainFromString(registerDefinition.Gain).String(), 1.0)
 	result := value / gain
-	logging.Debug("value calculated", "value", value, "gain", gain, "result", result)
+	if logging.DebugEnabled() {
+		logging.Debug("value calculated", "value", value, "gain", gain, "result", result)
+	}
 	return result
 }
 

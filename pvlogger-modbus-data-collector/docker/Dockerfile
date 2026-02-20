@@ -9,7 +9,7 @@ FROM gcr.io/distroless/static-debian12
 
 LABEL author="Bruno Ziswiler"
 LABEL description="PV Logger Modbus Data Collector written in Go"
-LABEL version="3.0.0"
+LABEL version="3.0.4"
 
 COPY --from=golang /data-collector .
 

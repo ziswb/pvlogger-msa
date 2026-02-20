@@ -6,9 +6,16 @@ import (
 )
 
 func (r *ReadHoldingRegistersValueRequest) EncodeToBytes() []byte {
+	logging.Info("encoding read holding register value request")
 	if len(r.RegisterDefinitions) == 0 {
 		logging.Warn("no register definitions found")
 		return []byte{}
+	}
+	if logging.DebugEnabled() {
+		logging.Debug("register definitions", "logic_device_id", r.LogicDeviceId)
+		for _, regDef := range r.RegisterDefinitions {
+			logging.Debug("register definition", "register_address", regDef.RegisterAddress.Value, "name", regDef.Name)
+		}
 	}
 	registerAddress := model.UShort(r.RegisterDefinitions[0].RegisterAddress.Value)
 	numberOfBytes := model.UShort(0)

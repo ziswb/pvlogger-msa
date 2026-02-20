@@ -28,6 +28,7 @@ func NewRegisterValueResponseFromBytes(regDefs []model.RegisterDefinition, jobId
 // readRegisterValues decodes multiple register values from payload bytes.
 // Each value's concrete Go type is determined by its RegisterDefinition.Type.
 func readRegisterValues(registerDefinitions []model.RegisterDefinition, payload []byte) []*RegisterValue {
+	logging.Info("reading register values")
 	var values []*RegisterValue
 	offset := 0
 	for _, registerDefinition := range registerDefinitions {
@@ -39,6 +40,12 @@ func readRegisterValues(registerDefinitions []model.RegisterDefinition, payload 
 		registerValueBytes := payload[offset : offset+byteCount]
 		if v := readRegisterValue(registerDefinition, registerValueBytes); v != nil {
 			values = append(values, v)
+			if logging.DebugEnabled() {
+				logging.Debug("register value", "register_address", registerDefinition.RegisterAddress, "value", v.Value)
+			}
+		}
+		if logging.DebugEnabled() {
+			logging.Debug("register value", "register_address", registerDefinition.RegisterAddress, "value", "<nil>")
 		}
 		offset += byteCount
 	}
@@ -107,9 +114,13 @@ func handleI32(register model.RegisterDefinition, payload []byte) *RegisterValue
 }
 
 func handleStr(register model.RegisterDefinition, payload []byte) *RegisterValue {
-	logging.Debug("handling STR", "raw_payload", payload)
+	if logging.DebugEnabled() {
+		logging.Debug("handling STR", "raw_payload", payload)
+	}
 	decodedString := decodeHuaweiModbusString(payload)
-	logging.Debug("handling STR", "decoded_payload", decodedString)
+	if logging.DebugEnabled() {
+		logging.Debug("handling STR", "decoded_payload", decodedString)
+	}
 	return NewRegisterValue(register, decodedString)
 }
 

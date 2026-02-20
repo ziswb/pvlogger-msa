@@ -1,9 +1,9 @@
 package model
 
 type AduFrame struct {
-	Header       MbapHeader
-	FunctionCode FunctionCode
-	Data         ModbusRequestData
+	Header       MbapHeader        `json:"header"`
+	FunctionCode FunctionCode      `json:"functionCode"`
+	Data         ModbusRequestData `json:"data"`
 }
 
 func NewAduFrame(header MbapHeader, functionCode FunctionCode, data ModbusRequestData) AduFrame {
