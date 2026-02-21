@@ -57,9 +57,14 @@ var MeterImportedEnergy = model.RegisterDefinition{
 	Quantity:        model.Quantity{Value: 2},
 }
 
-// InverterRegisters returns the register definitions to read per inverter device.
-func InverterRegisters() []model.RegisterDefinition {
-	return []model.RegisterDefinition{InverterActivePower, InverterDailyYield}
+// InverterActivePowerRegisters returns the active power register definition
+func InverterActivePowerRegisters() []model.RegisterDefinition {
+	return []model.RegisterDefinition{InverterActivePower}
+}
+
+// InverterDailyYieldRegisters returns the daily yield power register definition
+func InverterDailyYieldRegisters() []model.RegisterDefinition {
+	return []model.RegisterDefinition{InverterDailyYield}
 }
 
 // MeterActivePowerRegisters returns the meter active power register (read separately as I32).

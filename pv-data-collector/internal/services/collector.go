@@ -96,9 +96,14 @@ func readModbusRegisters(jobId string) *collectedRawValues {
 	// Read inverter registers for each inverter device
 	for _, deviceId := range devCfg.InverterDeviceIds {
 		logging.Info("reading inverter registers", "device_id", deviceId)
-		values := readRegisters(handler, jobId, &requestCounter, deviceId, registers.InverterRegisters())
-		result.InverterActivePower += applyGain(values, registers.InverterActivePower)
-		result.InverterDailyYield += applyGain(values, registers.InverterDailyYield)
+
+		// Inverter active power (U32) - read separately
+		activePower := readRegisters(handler, jobId, &requestCounter, deviceId, registers.InverterActivePowerRegisters())
+		result.InverterActivePower += applyGain(activePower, registers.InverterActivePower)
+
+		// Inverter daily yield (U32) - read separately
+		dailyYield := readRegisters(handler, jobId, &requestCounter, deviceId, registers.InverterDailyYieldRegisters())
+		result.InverterDailyYield += applyGain(dailyYield, registers.InverterDailyYield)
 	}
 
 	// Read meter registers for each meter device
