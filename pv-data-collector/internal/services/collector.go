@@ -9,6 +9,7 @@ import (
 	"pv-data-collector/internal/modbus/request"
 	"pv-data-collector/internal/modbus/response"
 	"pv-data-collector/internal/registers"
+	"pv-data-collector/internal/services/metrics"
 	"pvlogger-go-shared/logging"
 	"strconv"
 	"time"
@@ -64,6 +65,7 @@ func CollectAndComputeKpis() {
 	}
 
 	persistence.StoreKpiValues(&kpiValues)
+	pushKpiMetrics(&kpiValues)
 	logging.Info("KPIs computed and stored", "job_id", jobId)
 }
 
@@ -186,6 +188,15 @@ func computeLiveKpis(raw *collectedRawValues) *kpis.KpiLiveData {
 		InverterActivePower: inverterPower,
 		MeterActivePower:    meterPower,
 	}
+}
+
+func pushKpiMetrics(kpiValues *kpis.PvLoggerKpiData) {
+	cfg := config.PushGatewayCfg()
+	if !cfg.Enabled {
+		logging.Debug("push gateway is disabled")
+		return
+	}
+	metrics.NewMetricsPushService(cfg).PushKpiMetrics(kpiValues)
 }
 
 func computeTodayKpis(raw *collectedRawValues, meterEnergy *MeterEnergyTodayResponse) *kpis.KpiTodayData {
