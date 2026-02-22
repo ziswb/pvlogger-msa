@@ -5,8 +5,8 @@ import (
 	"errors"
 	"pvlogger-fusionsolar/internal/model"
 	"pvlogger-fusionsolar/internal/repository"
-	"pvlogger-go-shared/device"
 	"pvlogger-go-shared/logging"
+	sharedmodel "pvlogger-shared-modbus/model"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
@@ -29,8 +29,8 @@ func (f *FusionSolarAccess) FetchDevFiveMinutesData() (*model.DeviceFiveMinutesK
 	}
 	fiveMinutesKpiJSONRequestBody := model.DeviceFiveMinutesKpiJSONRequestBody{
 		CollectTime: nextCollectionDate.UnixMilli(),
-		DevTypeId:   device.InverterDeviceType.Int(),
-		DevIds:      device.DeviceIds,
+		DevTypeId:   sharedmodel.InverterDeviceType.Int(),
+		DevIds:      sharedmodel.DeviceIds,
 	}
 	response, err := client.DeviceFiveMinutesKpiWithResponse(context.Background(), fiveMinutesKpiJSONRequestBody)
 	if err != nil {

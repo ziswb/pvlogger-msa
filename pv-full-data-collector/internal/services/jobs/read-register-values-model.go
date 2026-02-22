@@ -9,7 +9,6 @@ import (
 	"pvlogger-shared-modbus/model"
 	"pvlogger-shared-modbus/request"
 	"pv-full-data-collector/internal/services/persistence"
-	"pvlogger-go-shared/device"
 	"pvlogger-go-shared/logging"
 	"sync/atomic"
 	"time"
@@ -17,7 +16,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type DeviceIdToTypesMap map[model.UByte][]device.DeviceType
+type DeviceIdToTypesMap map[model.UByte][]model.DeviceType
 
 type ReadRegisterValuesService struct {
 	jobId              model.JobId
@@ -78,16 +77,16 @@ func (s *ReadRegisterValuesService) NextRequestId() model.UShort {
 }
 
 func newDeviceIdToTypesMap() DeviceIdToTypesMap {
-	var deviceIdToTypesMap = make(map[model.UByte][]device.DeviceType)
-	appendIdToTypeEntries(deviceIdToTypesMap, config.DevIdConfig().MeterDeviceIds, device.MeterDeviceType)
-	appendIdToTypeEntries(deviceIdToTypesMap, config.DevIdConfig().InverterDeviceIds, device.InverterDeviceType)
+	var deviceIdToTypesMap = make(map[model.UByte][]model.DeviceType)
+	appendIdToTypeEntries(deviceIdToTypesMap, config.DevIdConfig().MeterDeviceIds, model.MeterDeviceType)
+	appendIdToTypeEntries(deviceIdToTypesMap, config.DevIdConfig().InverterDeviceIds, model.InverterDeviceType)
 	return deviceIdToTypesMap
 }
 
-func appendIdToTypeEntries(deviceIdToTypesMap map[model.UByte][]device.DeviceType, devIds []model.UByte, deviceType device.DeviceType) {
+func appendIdToTypeEntries(deviceIdToTypesMap map[model.UByte][]model.DeviceType, devIds []model.UByte, deviceType model.DeviceType) {
 	for _, id := range devIds {
 		if len(deviceIdToTypesMap[id]) == 0 {
-			deviceIdToTypesMap[id] = []device.DeviceType{deviceType}
+			deviceIdToTypesMap[id] = []model.DeviceType{deviceType}
 		} else {
 			deviceIdToTypesMap[id] = append(deviceIdToTypesMap[id], deviceType)
 		}

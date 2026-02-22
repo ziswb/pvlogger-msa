@@ -8,7 +8,11 @@ replace github.com/dprotaso/go-yit => github.com/dprotaso/go-yit v0.0.0-20220510
 
 require pvlogger-go-shared v0.0.0
 
+require pvlogger-shared-modbus v0.0.0
+
 replace pvlogger-go-shared => ../pvlogger-go-shared
+
+replace pvlogger-shared-modbus => ../pvlogger-shared-modbus
 
 require github.com/jackc/pgx/v5 v5.8.0
 

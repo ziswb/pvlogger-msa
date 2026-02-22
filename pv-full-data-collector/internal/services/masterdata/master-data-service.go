@@ -8,13 +8,12 @@ import (
 	"net/url"
 	"pv-full-data-collector/internal/config"
 	"pvlogger-shared-modbus/model"
-	"pvlogger-go-shared/device"
 	"pvlogger-go-shared/logging"
 	"strings"
 )
 
 func (s *MasterDataService) FetchRegisterDefinitions(
-	deviceTypes []device.DeviceType,
+	deviceTypes []model.DeviceType,
 	categories []model.Category,
 ) *[]model.RegisterDefinition {
 	logging.Info("fetching master data")
@@ -123,7 +122,7 @@ func arrayOfCategoriesToArrayOfStrings(categories []model.Category) []string {
 	return texts
 }
 
-func arrayOfDeviceTypesToArrayOfStrings(deviceTypes []device.DeviceType) []string {
+func arrayOfDeviceTypesToArrayOfStrings(deviceTypes []model.DeviceType) []string {
 	var texts []string
 	for _, text := range deviceTypes {
 		texts = append(texts, text.String())
