@@ -140,8 +140,8 @@ done
 echo "passed_args: ${passed_args[*]}"
 
 PV_LOGGER_MODULES=(
-  "pv-data-collector"
-  "pv-dynamic-data-collector"
+  "pv-quick-data-collector"
+  "pv-full-data-collector"
   "pvlogger-frontend"
   "pvlogger-fusionsolar"
   "pvlogger-fusionsolar-auth"
