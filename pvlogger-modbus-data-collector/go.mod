@@ -6,4 +6,8 @@ require github.com/google/uuid v1.6.0
 
 require pvlogger-go-shared v0.0.0
 
+require pvlogger-shared-modbus v0.0.0
+
 replace pvlogger-go-shared => ../pvlogger-go-shared
+
+replace pvlogger-shared-modbus => ../pvlogger-shared-modbus

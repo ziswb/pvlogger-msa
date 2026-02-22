@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"pvlogger-go-shared/logging"
-	"pvlogger-modbus-data-collector/internal/modbus/model"
+	"pvlogger-shared-modbus/model"
 	"strings"
 	"time"
 )

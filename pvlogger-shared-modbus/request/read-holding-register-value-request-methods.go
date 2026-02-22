@@ -1,8 +1,8 @@
 package request
 
 import (
-	"pv-dynamic-data-collector/internal/modbus/model"
 	"pvlogger-go-shared/logging"
+	"pvlogger-shared-modbus/model"
 )
 
 func (r *ReadHoldingRegistersValueRequest) EncodeToBytes() []byte {

@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"pv-data-collector/internal/config"
 	"pv-data-collector/internal/kpis"
-	"pv-data-collector/internal/modbus"
-	"pv-data-collector/internal/modbus/model"
-	"pv-data-collector/internal/modbus/request"
-	"pv-data-collector/internal/modbus/response"
 	"pv-data-collector/internal/registers"
 	"pv-data-collector/internal/services/metrics"
+	modbus "pvlogger-shared-modbus"
+	"pvlogger-shared-modbus/model"
+	"pvlogger-shared-modbus/request"
+	"pvlogger-shared-modbus/response"
+
 	"pvlogger-go-shared/logging"
 	"strconv"
 	"time"
@@ -126,7 +127,7 @@ func readModbusRegisters(jobId string) *collectedRawValues {
 }
 
 func readRegisters(handler *modbus.TcpHandler, jobId string, requestCounter *model.UShort, deviceId uint8, regDefs []model.RegisterDefinition) []*response.RegisterValue {
-	req := &request.ReadHoldingRegistersRequest{
+	req := &request.ReadHoldingRegistersValueRequest{
 		JobId:               model.NewJobId(jobId),
 		RequestTime:         time.Now(),
 		RequestId:           model.NewRequestId(*requestCounter),

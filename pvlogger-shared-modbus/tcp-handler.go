@@ -4,8 +4,8 @@ import (
 	"encoding/binary"
 	"io"
 	"net"
-	"pv-data-collector/internal/modbus/model"
 	"pvlogger-go-shared/logging"
+	"pvlogger-shared-modbus/model"
 	"time"
 )
 
@@ -85,6 +85,9 @@ func (h *TcpHandler) ExecuteRequest(bytes []byte) (*model.MbapHeader, []byte, er
 		}
 		mbapHeader := model.NewMbapHeaderFromBytes(headerBytes)
 		dataLength := int(binary.BigEndian.Uint16(headerBytes[4:6]))
+		// The Length field is defined as the number of bytes following the first 6 bytes of the header
+		// i.e., it includes the Logic Device ID (1 byte) + Function Code (1 byte) + Data
+		// Since we have read 7 bytes (including the Logic Device ID), we need to subtract 1 byte from the data length
 		remaining := dataLength - 1
 		pduBytes := make([]byte, remaining)
 		if _, err := io.ReadFull(h.conn, pduBytes); err != nil {

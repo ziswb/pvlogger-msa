@@ -9,7 +9,7 @@ import (
 	"net/url"
 	"pv-dynamic-data-collector/internal/config"
 	"pv-dynamic-data-collector/internal/kpis"
-	"pv-dynamic-data-collector/internal/modbus/response"
+	"pvlogger-shared-modbus/response"
 	"pvlogger-go-shared/logging"
 )
 

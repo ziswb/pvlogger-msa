@@ -1,6 +1,6 @@
 package config
 
-import "pv-dynamic-data-collector/internal/modbus/model"
+import "pvlogger-shared-modbus/model"
 
 type DeviceIdConfig struct {
 	MeterDeviceIds    []model.UByte

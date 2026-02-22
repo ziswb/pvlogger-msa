@@ -3,7 +3,7 @@ package services
 import (
 	"pv-dynamic-data-collector/internal/config"
 	"pv-dynamic-data-collector/internal/kpis"
-	"pv-dynamic-data-collector/internal/modbus/model"
+	"pvlogger-shared-modbus/model"
 	"pv-dynamic-data-collector/internal/services/dataaccessor"
 	"pv-dynamic-data-collector/internal/services/metrics"
 	"pv-dynamic-data-collector/internal/services/persistence"

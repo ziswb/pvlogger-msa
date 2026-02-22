@@ -8,4 +8,5 @@ use (
 	./pvlogger-go-shared
 	./pvlogger-kpi-exporter
 	./pvlogger-modbus-data-collector
+	./pvlogger-shared-modbus
 )

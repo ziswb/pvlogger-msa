@@ -1,8 +1,8 @@
 package jobs
 
 import (
-	"pv-dynamic-data-collector/internal/modbus/model"
-	"pv-dynamic-data-collector/internal/modbus/response"
+	"pvlogger-shared-modbus/model"
+	"pvlogger-shared-modbus/response"
 	"pv-dynamic-data-collector/internal/services/masterdata"
 	"pvlogger-go-shared/device"
 	"pvlogger-go-shared/logging"

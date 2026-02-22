@@ -1,6 +1,6 @@
 package registers
 
-import "pv-data-collector/internal/modbus/model"
+import "pvlogger-shared-modbus/model"
 
 // InverterActivePower - Register 32080 (U32, 2 registers, kW, gain 1000)
 // Active power currently being produced by the inverter.

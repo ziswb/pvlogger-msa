@@ -1,7 +1,7 @@
 package response
 
 import (
-	"pvlogger-modbus-data-collector/internal/modbus/model"
+	"pvlogger-shared-modbus/model"
 	"strconv"
 	"time"
 )

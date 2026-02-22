@@ -6,6 +6,8 @@ require github.com/google/uuid v1.6.0
 
 require pvlogger-go-shared v0.0.0
 
+require pvlogger-shared-modbus v0.0.0
+
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -21,3 +23,5 @@ require (
 )
 
 replace pvlogger-go-shared => ../pvlogger-go-shared
+
+replace pvlogger-shared-modbus => ../pvlogger-shared-modbus

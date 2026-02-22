@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"pv-dynamic-data-collector/internal/config"
-	"pv-dynamic-data-collector/internal/modbus/model"
+	"pvlogger-shared-modbus/model"
 	"pvlogger-go-shared/device"
 	"pvlogger-go-shared/logging"
 	"strings"

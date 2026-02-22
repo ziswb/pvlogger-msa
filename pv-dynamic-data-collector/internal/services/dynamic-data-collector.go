@@ -1,7 +1,7 @@
 package services
 
 import (
-	"pv-dynamic-data-collector/internal/modbus/model"
+	"pvlogger-shared-modbus/model"
 	"pv-dynamic-data-collector/internal/services/jobs"
 	"pvlogger-go-shared/logging"
 )

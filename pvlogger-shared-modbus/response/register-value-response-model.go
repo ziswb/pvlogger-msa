@@ -1,7 +1,7 @@
 package response
 
 import (
-	"pv-dynamic-data-collector/internal/modbus/model"
+	"pvlogger-shared-modbus/model"
 	"time"
 )
 
