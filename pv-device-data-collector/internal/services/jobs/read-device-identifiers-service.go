@@ -2,7 +2,7 @@ package jobs
 
 import (
 	"pv-logger/logging"
-	"pvlogger-modbus-data-collector/internal/config"
+	"pv-device-data-collector/internal/config"
 	"pvlogger-shared-modbus/model"
 	"pvlogger-shared-modbus/request"
 	"pvlogger-shared-modbus/response"

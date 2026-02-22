@@ -27,7 +27,7 @@ PVLogger is a solar panel monitoring and data collection system built as a polyg
 Go modules are managed via `go.work` at the root. Individual Go services can be built directly:
 
 ```bash
-cd pvlogger-modbus-data-collector && make build
+cd pv-device-data-collector && make build
 cd pvlogger-fusionsolar && make build
 ```
 
@@ -53,7 +53,7 @@ Database runs via Docker Compose in `pvlogger-database/`.
 - `pvlogger-shared` — Shared Kotlin library (REST path constants, serialization models, database utilities)
 
 **Go Services (CronJob-based):**
-- `pvlogger-modbus-data-collector` — Scheduled Modbus polling, stores via Data Accessor REST API
+- `pv-device-data-collector` — Scheduled Modbus polling, stores via Data Accessor REST API
 - `pvlogger-fusionsolar` — FusionSolar API data integration
 - `pvlogger-fusionsolar-auth` — FusionSolar authentication handling
 - `pvlogger-kpi-exporter` — KPI data export
@@ -62,7 +62,7 @@ Database runs via Docker Compose in `pvlogger-database/`.
 ### Communication Flow
 
 ```
-Modbus Devices → modbus-data-collector (Go CronJob) → modbus-data-accessor (REST POST)
+Modbus Devices → pv-device-data-collector (Go CronJob) → modbus-data-accessor (REST POST)
 FusionSolar API → fusionsolar (Go CronJob) → modbus-data-accessor (REST POST)
 Frontend → modbus-data-accessor (REST GET for live data, KPIs)
 Frontend → masterdata-server (REST GET for device metadata)

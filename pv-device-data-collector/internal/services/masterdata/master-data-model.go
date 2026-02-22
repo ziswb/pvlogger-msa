@@ -3,7 +3,7 @@ package masterdata
 import (
 	"fmt"
 	"net/http"
-	"pvlogger-modbus-data-collector/internal/config"
+	"pv-device-data-collector/internal/config"
 	"pvlogger-shared-modbus/model"
 	"time"
 )

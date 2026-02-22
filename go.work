@@ -1,12 +1,12 @@
 go 1.25.4
 
 use (
+	./pv-device-data-collector
 	./pv-fast-data-collector
 	./pv-full-data-collector
+	./pv-logger
 	./pvlogger-fusionsolar
 	./pvlogger-fusionsolar-auth
-	./pv-logger
 	./pvlogger-kpi-exporter
-	./pvlogger-modbus-data-collector
 	./pvlogger-shared-modbus
 )

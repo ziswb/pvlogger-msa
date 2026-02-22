@@ -3,7 +3,7 @@ package persistence
 import (
 	"fmt"
 	"net/http"
-	"pvlogger-modbus-data-collector/internal/config"
+	"pv-device-data-collector/internal/config"
 	"time"
 )
 

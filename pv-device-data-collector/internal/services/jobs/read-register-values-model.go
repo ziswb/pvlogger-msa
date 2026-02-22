@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"net"
 	"pv-logger/logging"
-	"pvlogger-modbus-data-collector/internal/config"
+	"pv-device-data-collector/internal/config"
 	modbus "pvlogger-shared-modbus"
 	"pvlogger-shared-modbus/model"
 	"pvlogger-shared-modbus/request"
-	"pvlogger-modbus-data-collector/internal/services/persistence"
+	"pv-device-data-collector/internal/services/persistence"
 	"sync/atomic"
 	"time"
 

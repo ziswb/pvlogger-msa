@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"pv-logger/logging"
-	"pvlogger-modbus-data-collector/internal/config"
+	"pv-device-data-collector/internal/config"
 	"pvlogger-shared-modbus/response"
 )
 

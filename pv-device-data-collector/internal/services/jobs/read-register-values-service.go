@@ -4,7 +4,7 @@ import (
 	"pv-logger/logging"
 	"pvlogger-shared-modbus/model"
 	"pvlogger-shared-modbus/response"
-	"pvlogger-modbus-data-collector/internal/services/masterdata"
+	"pv-device-data-collector/internal/services/masterdata"
 )
 
 func (s *ReadRegisterValuesService) ExecuteFetchRegisterValuesJob() {

@@ -3,7 +3,7 @@ package services
 import (
 	"pv-logger/logging"
 	"pvlogger-shared-modbus/model"
-	"pvlogger-modbus-data-collector/internal/services/jobs"
+	"pv-device-data-collector/internal/services/jobs"
 )
 
 func FetchModbusStaticRegisterValues() {

@@ -1,4 +1,4 @@
-module pvlogger-modbus-data-collector
+module pv-device-data-collector
 
 go 1.25.4
 
