@@ -1,4 +1,4 @@
-module pv-quick-data-collector
+module pv-fast-data-collector
 
 go 1.25.4
 

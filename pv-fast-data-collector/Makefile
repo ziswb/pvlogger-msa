@@ -1,4 +1,4 @@
-BINARY_NAME=quick-data-collector
+BINARY_NAME=fast-data-collector
 BIN_PATH := ./build
 CMD_PATH := ./cmd/collector
 LINUX_BUILD_OPTIONS := CGO_ENABLED=0 GOARCH=arm64 GOOS=linux

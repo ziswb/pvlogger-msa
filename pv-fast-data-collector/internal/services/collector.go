@@ -2,10 +2,10 @@ package services
 
 import (
 	"fmt"
-	"pv-quick-data-collector/internal/config"
-	"pv-quick-data-collector/internal/kpis"
-	"pv-quick-data-collector/internal/registers"
-	"pv-quick-data-collector/internal/services/metrics"
+	"pv-fast-data-collector/internal/config"
+	"pv-fast-data-collector/internal/kpis"
+	"pv-fast-data-collector/internal/registers"
+	"pv-fast-data-collector/internal/services/metrics"
 	modbus "pvlogger-shared-modbus"
 	"pvlogger-shared-modbus/model"
 	"pvlogger-shared-modbus/request"

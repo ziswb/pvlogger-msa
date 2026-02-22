@@ -1,7 +1,7 @@
 go 1.25.4
 
 use (
-	./pv-quick-data-collector
+	./pv-fast-data-collector
 	./pv-full-data-collector
 	./pvlogger-fusionsolar
 	./pvlogger-fusionsolar-auth

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/push"
-	"pv-quick-data-collector/internal/config"
+	"pv-fast-data-collector/internal/config"
 )
 
 type MetricsPushService struct {

@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"pv-quick-data-collector/internal/config"
-	"pv-quick-data-collector/internal/kpis"
+	"pv-fast-data-collector/internal/config"
+	"pv-fast-data-collector/internal/kpis"
 	"pv-logger/logging"
 	"time"
 )
