@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"pvlogger-go-shared/logging"
+	"pv-logger/logging"
 )
 
 const FortyEightHours = 48 * time.Hour

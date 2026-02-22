@@ -7,7 +7,7 @@ import (
 	"pv-full-data-collector/internal/services/dataaccessor"
 	"pv-full-data-collector/internal/services/metrics"
 	"pv-full-data-collector/internal/services/persistence"
-	"pvlogger-go-shared/logging"
+	"pv-logger/logging"
 	"time"
 )
 

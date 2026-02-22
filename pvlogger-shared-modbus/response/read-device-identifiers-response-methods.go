@@ -1,7 +1,7 @@
 package response
 
 import (
-	"pvlogger-go-shared/logging"
+	"pv-logger/logging"
 	"pvlogger-shared-modbus/model"
 	"time"
 )

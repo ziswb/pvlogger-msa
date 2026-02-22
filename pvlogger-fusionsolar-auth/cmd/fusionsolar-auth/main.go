@@ -7,7 +7,7 @@ import (
 	"pvlogger-fusionsolar-auth/internal/config"
 	"pvlogger-fusionsolar-auth/internal/k8s"
 
-	"pvlogger-go-shared/logging"
+	"pv-logger/logging"
 )
 
 func main() {

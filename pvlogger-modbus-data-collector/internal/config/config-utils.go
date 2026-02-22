@@ -2,7 +2,7 @@ package config
 
 import (
 	"os"
-	"pvlogger-go-shared/logging"
+	"pv-logger/logging"
 	"strconv"
 	"strings"
 )

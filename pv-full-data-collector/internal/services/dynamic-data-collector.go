@@ -3,7 +3,7 @@ package services
 import (
 	"pvlogger-shared-modbus/model"
 	"pv-full-data-collector/internal/services/jobs"
-	"pvlogger-go-shared/logging"
+	"pv-logger/logging"
 )
 
 func FetchDynamicDataAndAggregateKpis() {

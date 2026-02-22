@@ -1,7 +1,7 @@
 package kpis
 
 import (
-	"pvlogger-go-shared/logging"
+	"pv-logger/logging"
 	"strings"
 )
 

@@ -9,7 +9,7 @@ import (
 	"pvlogger-shared-modbus/model"
 	"pvlogger-shared-modbus/request"
 	"pv-full-data-collector/internal/services/persistence"
-	"pvlogger-go-shared/logging"
+	"pv-logger/logging"
 	"sync/atomic"
 	"time"
 

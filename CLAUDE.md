@@ -57,7 +57,7 @@ Database runs via Docker Compose in `pvlogger-database/`.
 - `pvlogger-fusionsolar` — FusionSolar API data integration
 - `pvlogger-fusionsolar-auth` — FusionSolar authentication handling
 - `pvlogger-kpi-exporter` — KPI data export
-- `pvlogger-go-shared` — Shared Go library (device definitions, logging)
+- `pv-logger` — Shared Go library (logging)
 
 ### Communication Flow
 
@@ -94,7 +94,7 @@ Configuration uses HOCON files: `application-prod.conf`, `application-dev.conf`,
 
 ### Go Service Structure
 
-Go services use a job dispatch pattern (switch on job name), read K8s secrets for credentials, and import shared code from `pvlogger-go-shared` via workspace replace directives.
+Go services use a job dispatch pattern (switch on job name), read K8s secrets for credentials, and import shared code from `pv-logger` via workspace replace directives.
 
 ### Key Technology Choices
 

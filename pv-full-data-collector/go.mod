@@ -4,7 +4,7 @@ go 1.25.4
 
 require github.com/google/uuid v1.6.0
 
-require pvlogger-go-shared v0.0.0
+require pv-logger v0.0.0
 
 require pvlogger-shared-modbus v0.0.0
 
@@ -22,6 +22,6 @@ require (
 	google.golang.org/protobuf v1.36.8 // indirect
 )
 
-replace pvlogger-go-shared => ../pvlogger-go-shared
+replace pv-logger => ../pv-logger
 
 replace pvlogger-shared-modbus => ../pvlogger-shared-modbus

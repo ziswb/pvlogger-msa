@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"pvlogger-go-shared/logging"
+	"pv-logger/logging"
 )
 
 func WriteJSON(data any, dir string, fileName string) {

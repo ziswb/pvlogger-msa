@@ -5,7 +5,7 @@ import (
 	"pvlogger-fusionsolar/internal/database"
 	"time"
 
-	"pvlogger-go-shared/logging"
+	"pv-logger/logging"
 )
 
 // PostgresRepository implements Repository using PostgreSQL via sqlc-generated queries

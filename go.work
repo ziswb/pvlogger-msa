@@ -5,7 +5,7 @@ use (
 	./pv-full-data-collector
 	./pvlogger-fusionsolar
 	./pvlogger-fusionsolar-auth
-	./pvlogger-go-shared
+	./pv-logger
 	./pvlogger-kpi-exporter
 	./pvlogger-modbus-data-collector
 	./pvlogger-shared-modbus

@@ -2,7 +2,7 @@ package main
 
 import (
 	"pv-quick-data-collector/internal/services"
-	"pvlogger-go-shared/logging"
+	"pv-logger/logging"
 )
 
 func main() {

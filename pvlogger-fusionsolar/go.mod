@@ -6,11 +6,11 @@ tool github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen
 
 replace github.com/dprotaso/go-yit => github.com/dprotaso/go-yit v0.0.0-20220510233725-9ba8df137936
 
-require pvlogger-go-shared v0.0.0
+require pv-logger v0.0.0
 
 require pvlogger-shared-modbus v0.0.0
 
-replace pvlogger-go-shared => ../pvlogger-go-shared
+replace pv-logger => ../pv-logger
 
 replace pvlogger-shared-modbus => ../pvlogger-shared-modbus
 

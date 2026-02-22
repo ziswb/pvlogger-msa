@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"pvlogger-go-shared/logging"
+	"pv-logger/logging"
 
 	"github.com/jackc/pgx/v5"
 )

@@ -2,7 +2,7 @@ package model
 
 import (
 	"encoding/binary"
-	"pvlogger-go-shared/logging"
+	"pv-logger/logging"
 )
 
 type MbapHeader struct {

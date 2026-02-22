@@ -6,7 +6,7 @@ import (
 	"pvlogger-fusionsolar/internal/model"
 	"time"
 
-	"pvlogger-go-shared/logging"
+	"pv-logger/logging"
 )
 
 func (f *FusionSolarAccess) FetchYearData() (*model.KpiStationYearResponse, error) {

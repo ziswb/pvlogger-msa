@@ -11,7 +11,7 @@ import (
 	"pvlogger-shared-modbus/request"
 	"pvlogger-shared-modbus/response"
 
-	"pvlogger-go-shared/logging"
+	"pv-logger/logging"
 	"strconv"
 	"time"
 

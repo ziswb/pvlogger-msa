@@ -6,7 +6,7 @@ import (
 	"pvlogger-fusionsolar/internal/repository"
 	"time"
 
-	"pvlogger-go-shared/logging"
+	"pv-logger/logging"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )

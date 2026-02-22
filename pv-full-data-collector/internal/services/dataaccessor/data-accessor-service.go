@@ -8,7 +8,7 @@ import (
 	"pv-full-data-collector/internal/config"
 	"pv-full-data-collector/internal/kpis"
 	"pvlogger-shared-modbus/model"
-	"pvlogger-go-shared/logging"
+	"pv-logger/logging"
 	"strconv"
 	"strings"
 )

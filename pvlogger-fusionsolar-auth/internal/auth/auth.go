@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"pvlogger-fusionsolar-auth/internal/config"
 
-	"pvlogger-go-shared/logging"
+	"pv-logger/logging"
 )
 
 type LoginRequest struct {

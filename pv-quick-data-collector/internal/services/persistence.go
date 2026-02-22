@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"pv-quick-data-collector/internal/config"
 	"pv-quick-data-collector/internal/kpis"
-	"pvlogger-go-shared/logging"
+	"pv-logger/logging"
 	"time"
 )
 

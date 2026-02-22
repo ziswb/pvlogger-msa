@@ -3,7 +3,7 @@ package datetime
 import (
 	"time"
 
-	"pvlogger-go-shared/logging"
+	"pv-logger/logging"
 )
 
 func FormatForDataRecord(pointInTime int64) string {

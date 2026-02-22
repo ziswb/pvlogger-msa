@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"pvlogger-go-shared/logging"
+	"pv-logger/logging"
 	"pvlogger-kpi-exporter/internal/config"
 )
 

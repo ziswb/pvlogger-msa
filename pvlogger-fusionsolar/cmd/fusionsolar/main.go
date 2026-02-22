@@ -9,7 +9,7 @@ import (
 	"pvlogger-fusionsolar/internal/jobs"
 	"pvlogger-fusionsolar/internal/k8s"
 
-	"pvlogger-go-shared/logging"
+	"pv-logger/logging"
 )
 
 func main() {

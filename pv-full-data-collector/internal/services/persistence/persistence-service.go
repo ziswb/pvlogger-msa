@@ -10,7 +10,7 @@ import (
 	"pv-full-data-collector/internal/config"
 	"pv-full-data-collector/internal/kpis"
 	"pvlogger-shared-modbus/response"
-	"pvlogger-go-shared/logging"
+	"pv-logger/logging"
 )
 
 func (s *PersistingService) StoreValues(valueResponse *response.RegisterValueResponse) {

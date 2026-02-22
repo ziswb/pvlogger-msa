@@ -5,7 +5,7 @@ import (
 	"errors"
 	"pvlogger-fusionsolar/internal/model"
 	"pvlogger-fusionsolar/internal/repository"
-	"pvlogger-go-shared/logging"
+	"pv-logger/logging"
 	sharedmodel "pvlogger-shared-modbus/model"
 	"time"
 

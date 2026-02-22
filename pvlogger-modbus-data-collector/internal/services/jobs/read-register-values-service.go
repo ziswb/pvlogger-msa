@@ -1,7 +1,7 @@
 package jobs
 
 import (
-	"pvlogger-go-shared/logging"
+	"pv-logger/logging"
 	"pvlogger-shared-modbus/model"
 	"pvlogger-shared-modbus/response"
 	"pvlogger-modbus-data-collector/internal/services/masterdata"

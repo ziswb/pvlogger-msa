@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"pv-full-data-collector/internal/config"
 	"pvlogger-shared-modbus/model"
-	"pvlogger-go-shared/logging"
+	"pv-logger/logging"
 	"strings"
 )
 

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"pvlogger-go-shared/logging"
+	"pv-logger/logging"
 	"pvlogger-modbus-data-collector/internal/config"
 	modbus "pvlogger-shared-modbus"
 	"pvlogger-shared-modbus/model"

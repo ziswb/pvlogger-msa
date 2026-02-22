@@ -4,7 +4,7 @@ import (
 	"pvlogger-fusionsolar/internal/fusionsolar"
 	"pvlogger-fusionsolar/internal/model"
 
-	"pvlogger-go-shared/logging"
+	"pv-logger/logging"
 )
 
 func Run(name string, access *fusionsolar.FusionSolarAccess) {

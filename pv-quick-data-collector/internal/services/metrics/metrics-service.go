@@ -2,7 +2,7 @@ package metrics
 
 import (
 	"pv-quick-data-collector/internal/kpis"
-	"pvlogger-go-shared/logging"
+	"pv-logger/logging"
 )
 
 func (s *MetricsPushService) PushKpiMetrics(kpiValues *kpis.PvLoggerKpiData) {

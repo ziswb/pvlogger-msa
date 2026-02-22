@@ -8,7 +8,7 @@ import (
 	"pvlogger-fusionsolar/internal/config"
 	"pvlogger-fusionsolar/internal/model"
 
-	"pvlogger-go-shared/logging"
+	"pv-logger/logging"
 )
 
 type Token struct {

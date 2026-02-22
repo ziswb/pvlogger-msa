@@ -6,7 +6,7 @@ import (
 	"pvlogger-fusionsolar/internal/auth"
 	"pvlogger-fusionsolar/internal/model"
 
-	"pvlogger-go-shared/logging"
+	"pv-logger/logging"
 )
 
 func WithBearerToken(token auth.Token) model.ClientOption {
