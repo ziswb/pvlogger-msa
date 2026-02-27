@@ -18,7 +18,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 REQUIRE_COMMAND="${SCRIPT_DIR}/require-command.sh"
 
 DOCKER_CMD=$(${REQUIRE_COMMAND} docker)
-NODE_IMAGE="node:23.4-alpine3.21"
+NODE_IMAGE="node:25.7.0-alpine3.23"
 
 $DOCKER_CMD run \
 --interactive \

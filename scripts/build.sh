@@ -20,7 +20,7 @@ REQUIRE_COMMAND="${SCRIPT_DIR}/require-command.sh"
 DOCKER_CMD=$(${REQUIRE_COMMAND} docker)
 GREP_CMD=$(${REQUIRE_COMMAND} grep)
 SED_CMD=$(${REQUIRE_COMMAND} sed)
-DOCKER_REGISTRY="registry.local:5000"
+DOCKER_REGISTRY="<registry-host>:5000"
 LOCAL_REGISTRY="localhost:15000"
 REGISTRY_PATH="bziswiler"
 
