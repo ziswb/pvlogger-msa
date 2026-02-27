@@ -4,3 +4,5 @@ gradle_home/
 
 # Ignore Gradle build output directory
 build/
+
+/.claude/settings.local.json
