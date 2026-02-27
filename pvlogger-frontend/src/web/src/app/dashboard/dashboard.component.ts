@@ -2,11 +2,22 @@ import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Component } from '@angular/core';
 import { map } from 'rxjs/operators';
 import { KpiValues } from '../model/kpi-values.model';
+import { ConsumedImportedChart } from './charts/consumed-imported-chart/consumed-imported-chart';
+import { ImportExportChartComponent } from './charts/import-export-chart/import-export-chart.component';
+import { ProducedConsumedChartComponent } from './charts/produced-consumed-chart/produced-consumed-chart.component';
+import { ImportOwnuseChartComponent } from './charts/import-ownuse-chart/import-ownuse-chart.component';
+import { KpiChartComponent } from './charts/kpi-chart/kpi-chart.component';
+import { CardComponent } from './card/card.component';
+import { MiniCardComponent } from './mini-card/mini-card.component';
+import { AsyncPipe } from '@angular/common';
+import { MatGridList, MatGridTile } from '@angular/material/grid-list';
+import { DatepickerComponent } from '../datepicker/datepicker.component';
 
 @Component({
-  selector: 'app-dashboard',
-  templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.sass']
+    selector: 'app-dashboard',
+    templateUrl: './dashboard.component.html',
+    styleUrls: ['./dashboard.component.sass'],
+    imports: [DatepickerComponent, MatGridList, MatGridTile, MiniCardComponent, CardComponent, KpiChartComponent, ImportOwnuseChartComponent, ProducedConsumedChartComponent, ImportExportChartComponent, ConsumedImportedChart, AsyncPipe]
 })
 export class DashboardComponent {
   miniCardData: MiniCardModel[] = [

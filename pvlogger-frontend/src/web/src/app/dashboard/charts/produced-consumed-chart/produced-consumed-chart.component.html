@@ -1,8 +1,8 @@
 <!--taken from https://github.com/haroon786/RxJs-WebSocket-Angular-HighCharts-->
 <!--https://www.highcharts.com/blog/tutorials/live-data-with-rxjs-websocket-highcharts-and-angular/-->
-<highcharts-chart
-  *ngIf="chartOptions"
-  [Highcharts]="Highcharts"
-  [options]="chartOptions"
-  style="width: available; height: available; display: block;">
-</highcharts-chart>
+@if (chartOptions) {
+  <highcharts-chart
+    [options]="chartOptions"
+    style="width: available; height: available; display: block;">
+  </highcharts-chart>
+}

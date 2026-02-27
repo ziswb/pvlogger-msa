@@ -1,16 +1,17 @@
 import { Component, OnInit } from '@angular/core';
-import * as Highcharts from 'highcharts';
 import { AppBus } from '../../../service/app-bus.service';
 import { DateUtil } from '../../../service/date.util';
 import { KpiDataSourceService } from '../../../service/kpi-data-source.service';
+import { HighchartsChartComponent } from 'highcharts-angular';
+
 
 @Component({
-  selector: 'app-import-export-chart',
-  templateUrl: './import-export-chart.component.html',
-  styleUrls: ['./import-export-chart.component.sass']
+    selector: 'app-import-export-chart',
+    templateUrl: './import-export-chart.component.html',
+    styleUrls: ['./import-export-chart.component.sass'],
+    imports: [HighchartsChartComponent]
 })
 export class ImportExportChartComponent implements OnInit {
-  Highcharts: typeof Highcharts = Highcharts;
   chartOptions: any;
 
   constructor(private kpiDataSource: KpiDataSourceService, private appBus: AppBus) {}

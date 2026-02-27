@@ -1,12 +1,29 @@
-import { enableProdMode } from '@angular/core';
-import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+import { enableProdMode, importProvidersFrom } from '@angular/core';
+import { bootstrapApplication } from '@angular/platform-browser';
+import { provideRouter } from '@angular/router';
+import { provideAnimations } from '@angular/platform-browser/animations';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { MAT_DATE_LOCALE, MatNativeDateModule } from '@angular/material/core';
+import { provideHighcharts } from 'highcharts-angular';
 
-import { AppModule } from './app/app.module';
 import { environment } from './environments/environment';
+import { AppComponent } from './app/app.component';
+import { DashboardComponent } from './app/dashboard/dashboard.component';
 
 if (environment.production) {
   enableProdMode();
 }
 
-platformBrowserDynamic().bootstrapModule(AppModule)
+bootstrapApplication(AppComponent, {
+    providers: [
+        provideRouter([
+            { path: '', component: DashboardComponent },
+        ]),
+        importProvidersFrom(MatNativeDateModule),
+        { provide: MAT_DATE_LOCALE, useValue: 'de-CH' },
+        provideHttpClient(withInterceptorsFromDi()),
+        provideAnimations(),
+        ...provideHighcharts(),
+    ]
+})
   .catch(err => console.error(err));

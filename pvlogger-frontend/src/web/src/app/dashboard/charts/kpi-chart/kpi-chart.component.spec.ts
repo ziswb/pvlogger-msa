@@ -8,8 +8,8 @@ describe('KpichartComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ KpiChartComponent ]
-    })
+    imports: [KpiChartComponent]
+})
     .compileComponents();
 
     fixture = TestBed.createComponent(KpiChartComponent);

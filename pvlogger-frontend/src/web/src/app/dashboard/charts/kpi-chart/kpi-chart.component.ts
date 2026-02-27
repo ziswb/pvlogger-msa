@@ -3,15 +3,17 @@ import * as Highcharts from 'highcharts';
 import { AppBus } from '../../../service/app-bus.service';
 import { DateUtil } from '../../../service/date.util';
 import { KpiDataSourceService } from '../../../service/kpi-data-source.service';
+import { HighchartsChartComponent } from 'highcharts-angular';
+
 
 @Component({
-  selector: 'app-kpichart',
-  templateUrl: './kpi-chart.component.html',
-  styleUrls: ['./kpi-chart.component.sass']
+    selector: 'app-kpichart',
+    templateUrl: './kpi-chart.component.html',
+    styleUrls: ['./kpi-chart.component.sass'],
+    imports: [HighchartsChartComponent]
 })
 export class KpiChartComponent implements OnInit {
   title = 'PV Logger';
-  Highcharts: typeof Highcharts = Highcharts;
   chartOptions: any;
 
   constructor(private kpiDataSource: KpiDataSourceService, private appBus: AppBus) {}

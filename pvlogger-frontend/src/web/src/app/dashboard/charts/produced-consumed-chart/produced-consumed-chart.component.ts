@@ -1,16 +1,17 @@
 import { Component, OnInit } from '@angular/core';
-import * as Highcharts from 'highcharts';
 import { AppBus } from '../../../service/app-bus.service';
 import { DateUtil } from '../../../service/date.util';
 import { KpiDataSourceService } from '../../../service/kpi-data-source.service';
+import { HighchartsChartComponent } from 'highcharts-angular';
+
 
 @Component({
-  selector: 'app-produced-consumed-chart',
-  templateUrl: './produced-consumed-chart.component.html',
-  styleUrls: ['./produced-consumed-chart.component.sass']
+    selector: 'app-produced-consumed-chart',
+    templateUrl: './produced-consumed-chart.component.html',
+    styleUrls: ['./produced-consumed-chart.component.sass'],
+    imports: [HighchartsChartComponent]
 })
 export class ProducedConsumedChartComponent implements OnInit {
-  Highcharts: typeof Highcharts = Highcharts;
   chartOptions: any;
 
   constructor(private kpiDataSource: KpiDataSourceService, private appBus: AppBus) {}

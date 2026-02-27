@@ -2,12 +2,13 @@
 <div class="grid-container">
   <mat-grid-list cols="{{ ( cardLayout | async )?.columns }}" rowHeight="200px">
     <!-- KPI Values-->
-    <mat-grid-tile
-      *ngFor="let mc of miniCardData"
-      [colspan]="( cardLayout | async )?.miniCard?.cols"
-      [rowspan]="( cardLayout | async )?.miniCard?.rows">
-      <app-mini-card [title]="mc.title" [colorClass]="mc.colorClass" [kwFn]="mc.kwFn" [kWhFn]="mc.kWhFn"></app-mini-card>
-    </mat-grid-tile>
+    @for (mc of miniCardData; track mc) {
+      <mat-grid-tile
+        [colspan]="( cardLayout | async )?.miniCard?.cols"
+        [rowspan]="( cardLayout | async )?.miniCard?.rows">
+        <app-mini-card [title]="mc.title" [colorClass]="mc.colorClass" [kwFn]="mc.kwFn" [kWhFn]="mc.kWhFn"></app-mini-card>
+      </mat-grid-tile>
+    }
     <!-- KPI chart -->
     <mat-grid-tile
       [colspan]="( cardLayout | async )?.table?.cols"

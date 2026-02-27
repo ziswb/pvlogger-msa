@@ -8,8 +8,8 @@ describe('ImportOwnuseChartComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ ImportOwnuseChartComponent ]
-    })
+    imports: [ImportOwnuseChartComponent]
+})
     .compileComponents();
 
     fixture = TestBed.createComponent(ImportOwnuseChartComponent);
