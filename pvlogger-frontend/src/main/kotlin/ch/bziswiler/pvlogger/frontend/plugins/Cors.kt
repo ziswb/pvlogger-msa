@@ -21,19 +21,9 @@ fun Application.configureCors() {
         allowMethod(HttpMethod.Patch)
         allowHeader(HttpHeaders.Authorization)
         allowHeader(HttpHeaders.Upgrade)
-        allowHeader(HttpHeaders.ContentType)
-        allowHeader(HttpHeaders.Origin)
-        allowHeader(HttpHeaders.AccessControlAllowOrigin)
-        allowHeader(HttpHeaders.AccessControlRequestMethod)
-        allowHeader(HttpHeaders.AccessControlRequestHeaders)
-        allowHeader("Access-Control-Request-Private-Network")
         allowHeader(HttpHeaders.CacheControl)
         allowNonSimpleContentTypes = true
         allowCredentials = true
         allowSameOrigin = true
-        allowXHttpMethodOverride()
-        anyHost()
-        allowHeaders { true }
-        allowOrigins { true }
     }
 }
