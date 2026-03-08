@@ -21,25 +21,28 @@ object RawKpiRegisterValuesDao {
         }
     }
 
+    private enum class EnergyColumn(val dbColumn: String) {
+        EXPORTED("meter_exported_energy"),
+        IMPORTED("meter_imported_energy"),
+    }
+
     fun meterEnergyToday(): MeterEnergyToday = transaction {
         logger.info { "computing meter energy today" }
-        val exported = computeEnergyDelta("meter_exported_energy")
-        val imported = computeEnergyDelta("meter_imported_energy")
+        val exported = computeEnergyDelta(EnergyColumn.EXPORTED)
+        val imported = computeEnergyDelta(EnergyColumn.IMPORTED)
         MeterEnergyToday(
             exportedEnergyToday = exported ?: 0.0,
             importedEnergyToday = imported ?: 0.0,
         )
     }
 
-    private fun computeEnergyDelta(columnName: String): Double? {
+    private fun computeEnergyDelta(column: EnergyColumn): Double? {
         val kWhColumn = 2
-        return transaction {
-            exec(
-                """
+        val query = """
                 SELECT dt,
                        max - lag(max) OVER (ORDER BY dt) AS kwh
                 FROM (SELECT r.date_created::date AS dt,
-                             max(r.$columnName)   AS max
+                             max(r.${column.dbColumn})   AS max
                       FROM raw_kpi_register_values r
                       WHERE r.date_created >= CURRENT_DATE - 1
                         AND r.date_created < CURRENT_DATE + 1
@@ -47,8 +50,9 @@ object RawKpiRegisterValuesDao {
                 WHERE max IS NOT NULL
                 ORDER BY dt DESC
                 LIMIT 1;
-                """.trimIndent(),
-            ) { resultSet ->
+                """.trimIndent()
+        return transaction {
+            exec(query) { resultSet ->
                 if (resultSet.next()) {
                     resultSet.getDouble(kWhColumn)
                 } else {

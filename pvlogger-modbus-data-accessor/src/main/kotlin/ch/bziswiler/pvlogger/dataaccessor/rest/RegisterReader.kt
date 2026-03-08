@@ -128,27 +128,30 @@ object RegisterReader {
         val kWhColumn = 2
         return transaction {
             addLogger(StdOutSqlLogger)
-            exec(
-                """
+            val query = """
                 SELECT dt,
                        max - lag(max) OVER (ORDER BY dt) AS kwh
                 FROM (SELECT mrd.date_created::date      AS dt,
                              max(mriv.register_value) AS max
                       FROM modbus_register_integer_values mriv
                                JOIN modbus_response_data mrd ON mriv.response_id = mrd.id
-                      WHERE mriv.register_address = ${registerAddress.value}
+                      WHERE mriv.register_address = ?
                         AND mrd.date_created >= CURRENT_DATE - 1
                           AND mrd.date_created < CURRENT_DATE + 1
                       GROUP BY mrd.date_created::date) tbl
                 WHERE max IS NOT NULL
                 ORDER BY dt DESC
                 LIMIT 1;
-                """.trimIndent(),
-            ) { resultSet ->
-                if (resultSet.next()) {
-                    resultSet.getInt(kWhColumn)
-                } else {
-                    null
+                """.trimIndent()
+            val conn = this.connection.connection as java.sql.Connection
+            conn.prepareStatement(query).use { stmt ->
+                stmt.setInt(1, registerAddress.value)
+                stmt.executeQuery().use { resultSet ->
+                    if (resultSet.next()) {
+                        resultSet.getInt(kWhColumn)
+                    } else {
+                        null
+                    }
                 }
             }
         }
