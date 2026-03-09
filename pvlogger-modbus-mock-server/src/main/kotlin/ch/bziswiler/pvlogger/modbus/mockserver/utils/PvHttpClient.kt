@@ -11,7 +11,7 @@ import kotlinx.serialization.json.Json
 
 object PvHttpClient {
     var client: HttpClient = HttpClient(CIO) {
-        install(Logging) { level = LogLevel.ALL }
+        install(Logging) { level = LogLevel.INFO }
         install(ContentNegotiation) {
             json(Json {
                 prettyPrint = true

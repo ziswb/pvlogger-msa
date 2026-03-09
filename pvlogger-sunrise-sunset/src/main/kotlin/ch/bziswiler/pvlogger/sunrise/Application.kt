@@ -31,7 +31,7 @@ fun Application.module(testing: Boolean = false) {
             modules(appModule)
         }
     }
-    install(CallLogging) { level = Level.TRACE }
+    install(CallLogging) { level = Level.INFO }
     setupConfig()
     configureDatabase()
     configureSerialization()
