@@ -10,7 +10,7 @@ FROM eclipse-temurin:21-jre-ubi9-minimal
 
 LABEL author="Bruno Ziswiler"
 LABEL description="Sunrise/Sunset Service for PV Logger"
-LABEL version="3.1.0"
+LABEL version="3.1.1"
 
 RUN mkdir -p "/opt/pvlogger/"
 COPY --from=build "/workspace/pvlogger-sunrise-sunset/build/libs/pvlogger-sunrise-sunset-all.jar" "/opt/pvlogger/sunrise-sunset.jar"
