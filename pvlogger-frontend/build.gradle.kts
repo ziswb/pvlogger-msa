@@ -48,6 +48,7 @@ dependencies {
     implementation(libs.ktor.server.compression)
     implementation(libs.ktor.server.cors)
     implementation(libs.ktor.server.default.headers)
+    implementation(libs.ktor.server.forwarded.header)
     implementation(libs.ktor.server.host.common)
     implementation(libs.ktor.server.metrics)
     implementation(libs.ktor.server.metrics.micrometer)
