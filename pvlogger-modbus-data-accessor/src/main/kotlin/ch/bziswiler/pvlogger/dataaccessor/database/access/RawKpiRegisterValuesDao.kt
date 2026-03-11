@@ -41,12 +41,12 @@ object RawKpiRegisterValuesDao {
         val query = """
                 SELECT dt,
                        max - lag(max) OVER (ORDER BY dt) AS kwh
-                FROM (SELECT r.date_created::date AS dt,
+                FROM (SELECT CAST(r.date_created AS DATE) AS dt,
                              max(r.${column.dbColumn})   AS max
                       FROM raw_kpi_register_values r
                       WHERE r.date_created >= CURRENT_DATE - 1
                         AND r.date_created < CURRENT_DATE + 1
-                      GROUP BY r.date_created::date) tbl
+                      GROUP BY CAST(r.date_created AS DATE)) tbl
                 WHERE max IS NOT NULL
                 ORDER BY dt DESC
                 LIMIT 1;
