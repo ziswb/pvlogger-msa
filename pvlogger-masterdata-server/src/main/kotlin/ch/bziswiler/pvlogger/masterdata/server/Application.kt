@@ -5,6 +5,7 @@ import ch.bziswiler.pvlogger.masterdata.server.configuration.configureDatabases
 import ch.bziswiler.pvlogger.masterdata.server.configuration.configureMonitoring
 import ch.bziswiler.pvlogger.masterdata.server.configuration.configureRouting
 import ch.bziswiler.pvlogger.masterdata.server.configuration.configureSerialization
+import ch.bziswiler.pvlogger.masterdata.server.configuration.configureStatusPages
 import ch.bziswiler.pvlogger.masterdata.server.configuration.setupConfig
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStopPreparing
@@ -29,6 +30,7 @@ fun Application.module(testing: Boolean = false) {
         }
     }
     setupConfig()
+    configureStatusPages()
     configureMonitoring()
     configureSerialization()
     configureDatabases()

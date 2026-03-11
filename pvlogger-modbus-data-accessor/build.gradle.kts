@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "ch.bziswiler"
-version = "0.0.1"
+version = "0.1.0"
 
 idea {
     module {
@@ -43,6 +43,7 @@ dependencies {
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.metrics.micrometer)
     implementation(libs.ktor.server.netty)
+    implementation(libs.ktor.server.status.pages)
 
     // Logging
     implementation(libs.logback.classic)
