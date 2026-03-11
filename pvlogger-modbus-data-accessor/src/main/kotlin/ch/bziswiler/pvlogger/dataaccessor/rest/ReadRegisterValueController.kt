@@ -51,12 +51,7 @@ fun Routing.readKwSoFarToday() {
         } else if (registerAddress == null) {
             call.respond(BadRequest, "address is required")
         } else {
-            readKwSoFarToday(type, registerAddress).let {
-                when (it) {
-                    null -> call.respond(NotFound)
-                    else -> call.respond(OK, it)
-                }
-            }
+            call.respond(OK, readKwSoFarToday(type, registerAddress))
         }
     }
 }
