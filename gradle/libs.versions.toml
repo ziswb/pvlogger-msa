@@ -7,6 +7,7 @@ h2Version = "2.4.240"
 koinVersion = "4.1.1"
 kotlinVersion = "2.2.20"
 kotlinxVersion = "1.9.0"
+kotlinxCoroutinesVersion = "1.10.2"
 ktorVersion = "3.4.0"
 logbackVersion = "1.5.29"
 loggingVersion = "7.0.3"
@@ -69,6 +70,7 @@ koin-test-junit5 = { module = "io.insert-koin:koin-test-junit5", version.ref = "
 
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlinVersion" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlinVersion" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesVersion" }
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktorVersion" }
 
 [plugins]
