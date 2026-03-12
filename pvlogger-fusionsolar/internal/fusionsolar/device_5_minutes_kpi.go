@@ -30,7 +30,7 @@ func (f *FusionSolarAccess) FetchDevFiveMinutesData() (*model.DeviceFiveMinutesK
 	fiveMinutesKpiJSONRequestBody := model.DeviceFiveMinutesKpiJSONRequestBody{
 		CollectTime: nextCollectionDate.UnixMilli(),
 		DevTypeId:   sharedmodel.InverterDeviceType.Int(),
-		DevIds:      sharedmodel.DeviceIds,
+		DevIds:      f.cfg.Fs.DevIds,
 	}
 	response, err := client.DeviceFiveMinutesKpiWithResponse(context.Background(), fiveMinutesKpiJSONRequestBody)
 	if err != nil {

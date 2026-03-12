@@ -15,6 +15,14 @@ func getEnv(key, fallback string) string {
 	return value
 }
 
+func getEnvChecked(key string) string {
+	value := os.Getenv(key)
+	if len(value) == 0 {
+		logging.Fatal("missing required environment variable", "key", key)
+	}
+	return value
+}
+
 func getIntEnv(key, fallback string) int {
 	value, err := strconv.Atoi(getEnv(key, fallback))
 	if err != nil {

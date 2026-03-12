@@ -27,7 +27,7 @@ type K8sConfig struct {
 func Load() *Config {
 	return &Config{
 		FusionSolar: FusionSolarConfig{
-			Username: getEnv("USERNAME", "<fusionsolar-user>"),
+			Username: getEnvChecked("USERNAME"),
 			Password: getEnvChecked("FUSIONSOLAR_PASSWORD"),
 			Host:     getEnv("FS_HOST", "eu5.fusionsolar.huawei.com"),
 			Path:     getEnv("FS_PATH", "thirdData"),
