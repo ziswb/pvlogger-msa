@@ -9,7 +9,7 @@ FROM gcr.io/distroless/static-debian12
 
 LABEL author="Bruno Ziswiler"
 LABEL description="PV Logger FusionSolar Auth Service"
-LABEL version="3.2.0"
+LABEL version="3.3.0"
 
 COPY --from=golang /fusionsolar-auth .
 

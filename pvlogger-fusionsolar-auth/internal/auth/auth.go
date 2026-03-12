@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"pvlogger-fusionsolar-auth/internal/config"
+	"time"
 
 	"pv-logger/logging"
 )
@@ -45,7 +46,7 @@ func Authenticate(cfg *config.Config) (string, error) {
 	req.Body = io.NopCloser(jsonReader(bodyBytes))
 	req.ContentLength = int64(len(bodyBytes))
 
-	client := &http.Client{}
+	client := &http.Client{Timeout: 30 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("login request failed: %w", err)
