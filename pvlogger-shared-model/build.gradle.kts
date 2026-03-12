@@ -20,6 +20,16 @@ repositories {
 
 dependencies {
     implementation(libs.kotlinx.serialization.json)
+
+    // Testing
+    testImplementation(libs.kotlin.test)
+}
+
+tasks.test {
+    useJUnitPlatform()
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
 }
 
 java {
