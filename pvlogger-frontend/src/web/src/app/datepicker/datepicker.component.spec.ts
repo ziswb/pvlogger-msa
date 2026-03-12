@@ -1,4 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideNativeDateAdapter } from '@angular/material/core';
 
 import { DatepickerComponent } from './datepicker.component';
 
@@ -8,7 +11,8 @@ describe('DatepickerComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-    imports: [DatepickerComponent]
+    imports: [DatepickerComponent],
+    providers: [provideHttpClient(), provideHttpClientTesting(), provideNativeDateAdapter()]
 })
     .compileComponents();
 

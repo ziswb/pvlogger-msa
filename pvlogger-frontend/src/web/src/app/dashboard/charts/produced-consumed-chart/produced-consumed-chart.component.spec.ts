@@ -1,4 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideHighcharts } from 'highcharts-angular';
 
 import { ProducedConsumedChartComponent } from './produced-consumed-chart.component';
 
@@ -8,7 +11,8 @@ describe('ProducedConsumedChartComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-    imports: [ProducedConsumedChartComponent]
+    imports: [ProducedConsumedChartComponent],
+    providers: [provideHttpClient(), provideHttpClientTesting(), ...provideHighcharts()]
 })
     .compileComponents();
 

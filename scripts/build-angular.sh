@@ -22,10 +22,10 @@ NODE_IMAGE="node:25.7.0-alpine3.23"
 
 $DOCKER_CMD run \
 --interactive \
---tty \
 --rm \
 --name "pvlogger-frontend-angular-build" \
 --volume "${SCRIPT_DIR}/../pvlogger-frontend/src/":/usr/src/app \
 --workdir /usr/src/app/web \
+--env CHROME_BIN=/usr/bin/chromium-browser \
 "$NODE_IMAGE" \
-sh -c "npm install && npm run build -- --configuration=production"
+sh -c "apk add --no-cache chromium && npm install && npx ng test --watch=false --browsers=ChromeHeadlessNoSandbox && npx ng build --configuration=production"

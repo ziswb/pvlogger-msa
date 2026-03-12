@@ -1,4 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideHighcharts } from 'highcharts-angular';
 
 import { KpiChartComponent } from './kpi-chart.component';
 
@@ -8,7 +11,8 @@ describe('KpichartComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-    imports: [KpiChartComponent]
+    imports: [KpiChartComponent],
+    providers: [provideHttpClient(), provideHttpClientTesting(), ...provideHighcharts()]
 })
     .compileComponents();
 
