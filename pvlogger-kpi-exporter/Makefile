@@ -4,13 +4,16 @@ CMD_PATH := ./cmd/exporter
 LINUX_BUILD_OPTIONS := CGO_ENABLED=0 GOARCH=arm64 GOOS=linux
 MACOS_BUILD_OPTIONS := CGO_ENABLED=0 GOARCH=arm64 GOOS=darwin
 
-.PHONY: build clean lint prod
+.PHONY: build clean lint prod test
 
-build:
+test:
+	@go test ./...
+
+build: test
 	@$(MACOS_BUILD_OPTIONS) go build -o ${BIN_PATH}/${BINARY_NAME}-darwin $(CMD_PATH)
 	@$(LINUX_BUILD_OPTIONS) go build -o ${BIN_PATH}/${BINARY_NAME} $(CMD_PATH)
 
-prod:
+prod: test
 	@go mod download
 	@go mod verify
 	@$(LINUX_BUILD_OPTIONS) go build -o /${BINARY_NAME} $(CMD_PATH)
