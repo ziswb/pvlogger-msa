@@ -1,14 +1,31 @@
-export class KpiValues {
-  createdAt: number = 0;
-  solarPower: number = 0;
-  gridPower: number = 0;
-  solarToHousePower: number = 0;
-  gridToHousePower: number = 0;
-  solarToGridPower: number = 0;
-  dailyEnergyYield: number = 0;
-  ownConsumption: number = 0;
-  dailyEnergySelfCovered: number = 0;
-  dailyEnergyExported: number = 0;
-  dailyEnergyImported: number = 0;
-  dailyEnergyConsumed: number = 0;
+export interface KpiValues {
+  createdAt: number;
+  solarPower: number;
+  gridPower: number;
+  solarToHousePower: number;
+  gridToHousePower: number;
+  solarToGridPower: number;
+  dailyEnergyYield: number;
+  ownConsumption: number;
+  dailyEnergySelfCovered: number;
+  dailyEnergyExported: number;
+  dailyEnergyImported: number;
+  dailyEnergyConsumed: number;
+}
+
+export function emptyKpiValues(): KpiValues {
+  return {
+    createdAt: 0,
+    solarPower: 0,
+    gridPower: 0,
+    solarToHousePower: 0,
+    gridToHousePower: 0,
+    solarToGridPower: 0,
+    dailyEnergyYield: 0,
+    ownConsumption: 0,
+    dailyEnergySelfCovered: 0,
+    dailyEnergyExported: 0,
+    dailyEnergyImported: 0,
+    dailyEnergyConsumed: 0,
+  };
 }

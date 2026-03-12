@@ -1,5 +1,5 @@
 import { AppBus } from './app-bus.service';
-import { KpiValues } from '../model/kpi-values.model';
+import { KpiValues, emptyKpiValues } from '../model/kpi-values.model';
 
 describe('AppBus', () => {
   let appBus: AppBus;
@@ -10,7 +10,7 @@ describe('AppBus', () => {
 
   describe('kpiValues', () => {
     it('should emit published KPI values', (done) => {
-      const kpi = new KpiValues();
+      const kpi = emptyKpiValues();
       kpi.solarPower = 5000;
       kpi.gridPower = -200;
 
@@ -24,7 +24,7 @@ describe('AppBus', () => {
     });
 
     it('should replay the last value to late subscribers', (done) => {
-      const kpi = new KpiValues();
+      const kpi = emptyKpiValues();
       kpi.solarPower = 3000;
 
       // Publish before subscribing
@@ -44,11 +44,11 @@ describe('AppBus', () => {
         received.push(value.solarPower);
       });
 
-      const kpi1 = new KpiValues();
+      const kpi1 = emptyKpiValues();
       kpi1.solarPower = 100;
-      const kpi2 = new KpiValues();
+      const kpi2 = emptyKpiValues();
       kpi2.solarPower = 200;
-      const kpi3 = new KpiValues();
+      const kpi3 = emptyKpiValues();
       kpi3.solarPower = 300;
 
       appBus.publishKpiValues(kpi1);
@@ -59,9 +59,9 @@ describe('AppBus', () => {
     });
 
     it('should replay only the last value (buffer size 1)', (done) => {
-      const kpi1 = new KpiValues();
+      const kpi1 = emptyKpiValues();
       kpi1.solarPower = 100;
-      const kpi2 = new KpiValues();
+      const kpi2 = emptyKpiValues();
       kpi2.solarPower = 200;
 
       appBus.publishKpiValues(kpi1);

@@ -1,6 +1,6 @@
 import { KpiFetchServiceService } from './kpi-fetch-service.service';
 import { AppBus } from './app-bus.service';
-import { KpiValues } from '../model/kpi-values.model';
+import { KpiValues, emptyKpiValues } from '../model/kpi-values.model';
 
 describe('KpiFetchServiceService', () => {
   let service: KpiFetchServiceService;
@@ -52,9 +52,7 @@ describe('KpiFetchServiceService', () => {
     });
 
     it('should negate dailyEnergyExported', () => {
-      const kpi = new KpiValues();
-      kpi.createdAt = 1000;
-      kpi.dailyEnergyExported = 7.5;
+      const kpi: KpiValues = { ...emptyKpiValues(), createdAt: 1000, dailyEnergyExported: 7.5 };
 
       (service as any).pushData(kpi);
 
@@ -144,14 +142,15 @@ function createKpi(
   dailyEnergySelfCovered = 0,
   dailyEnergyConsumed = 0
 ): KpiValues {
-  const kpi = new KpiValues();
-  kpi.createdAt = createdAt;
-  kpi.solarPower = solarPower;
-  kpi.gridPower = gridPower;
-  kpi.ownConsumption = ownConsumption;
-  kpi.dailyEnergyExported = dailyEnergyExported;
-  kpi.dailyEnergyImported = dailyEnergyImported;
-  kpi.dailyEnergySelfCovered = dailyEnergySelfCovered;
-  kpi.dailyEnergyConsumed = dailyEnergyConsumed;
-  return kpi;
+  return {
+    ...emptyKpiValues(),
+    createdAt,
+    solarPower,
+    gridPower,
+    ownConsumption,
+    dailyEnergyExported,
+    dailyEnergyImported,
+    dailyEnergySelfCovered,
+    dailyEnergyConsumed,
+  };
 }

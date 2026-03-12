@@ -19,8 +19,6 @@ export class DatepickerComponent {
   maxDate: Date;
   startDate: Date;
   selectedDate: FormControl;
-  sunrise = "8:09"
-  sunset = "17:11"
   @ViewChild(MatDatepicker, {static: false}) calendar: MatDatepicker<Date> | undefined;
 
   constructor(private appBus: AppBus) {
@@ -48,11 +46,7 @@ export class DatepickerComponent {
     if (newDate.getTime() >= this.minDate.getTime()) {
       this.selectedDate.setValue(newDate);
       this.startDate = newDate;
-      if (this.calendar != undefined) {
-        this.calendar.select(newDate);
-      } else {
-        console.log("calender is undefined");
-      }
+      this.calendar?.select(newDate);
     }
   }
 
@@ -61,11 +55,7 @@ export class DatepickerComponent {
     if (newDate.getTime() <= this.maxDate.getTime()) {
       this.selectedDate.setValue(newDate);
       this.startDate = newDate;
-      if (this.calendar != undefined) {
-        this.calendar.select(newDate);
-      } else {
-        console.log("calender is undefined");
-      }
+      this.calendar?.select(newDate);
     }
   }
 }

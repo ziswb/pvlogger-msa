@@ -21,15 +21,14 @@ import { DatepickerComponent } from '../datepicker/datepicker.component';
 })
 export class DashboardComponent {
   miniCardData: MiniCardModel[] = [
-    new MiniCardModel('Energieverbrauch', 'pv-usage', (value) => Number(value.ownConsumption), (value) => Number(value.dailyEnergyConsumed)),
-    new MiniCardModel('Energieimport', 'pv-import', (value) => Number(value.gridToHousePower), (value) => Number(value.dailyEnergyImported)),
-    new MiniCardModel('PV Produktion', 'pv-prod', (value) => Number(value.solarPower), (value) => Number(value.dailyEnergyYield)),
-    new MiniCardModel('Energieexport', 'pv-export', (value) => Number(value.solarToGridPower), (value) => Number(value.dailyEnergyExported)),
+    new MiniCardModel('Energieverbrauch', 'pv-usage', (value) => value.ownConsumption, (value) => value.dailyEnergyConsumed),
+    new MiniCardModel('Energieimport', 'pv-import', (value) => value.gridToHousePower, (value) => value.dailyEnergyImported),
+    new MiniCardModel('PV Produktion', 'pv-prod', (value) => value.solarPower, (value) => value.dailyEnergyYield),
+    new MiniCardModel('Energieexport', 'pv-export', (value) => value.solarToGridPower, (value) => value.dailyEnergyExported),
   ];
   /** Based on the screen size, switch from standard to one column per row */
   cardLayout = this.breakpointObserver.observe([Breakpoints.Handset, Breakpoints.Tablet]).pipe(
     map(({matches}) => {
-      console.log("handset or tablet mode detected");
       if (matches) {
         if (this.breakpointObserver.isMatched(Breakpoints.Handset)) {
           return this.handsetLayout();
@@ -38,13 +37,11 @@ export class DashboardComponent {
           return this.tabletLayout();
         }
       }
-      console.log("neither tablet nor handset mode matched - switching to default layout");
       return this.defaultLayout();
     })
   );
 
   private handsetLayout() {
-    console.log("switching to handset layout");
     return {
       columns: 1,
       miniCard: {cols: 1, rows: 1},
@@ -54,7 +51,6 @@ export class DashboardComponent {
   }
 
   private tabletLayout() {
-    console.log("switching to tablet layout");
     return {
       columns: 2,
       miniCard: {cols: 1, rows: 1},
@@ -77,15 +73,10 @@ export class DashboardComponent {
 }
 
 class MiniCardModel {
-  constructor(title: String, colorClass: String, fetchKwData: (value: KpiValues) => Number, fetchKwhData: (value: KpiValues) => Number) {
-    this.title = title;
-    this.colorClass = colorClass;
-    this.kwFn = fetchKwData;
-    this.kWhFn = fetchKwhData;
-  }
-
-  title: String = 'Title';
-  colorClass: String = '';
-  kwFn: (value: KpiValues) => Number = (value) => 0.0;
-  kWhFn: (value: KpiValues) => Number = (value) => 0.0;
+  constructor(
+    public title: string,
+    public colorClass: string,
+    public kwFn: (value: KpiValues) => number,
+    public kWhFn: (value: KpiValues) => number,
+  ) {}
 }

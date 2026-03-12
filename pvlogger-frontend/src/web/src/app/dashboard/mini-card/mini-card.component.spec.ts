@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { MiniCardComponent } from './mini-card.component';
 
@@ -8,8 +10,9 @@ describe('MiniCardComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-    imports: [MiniCardComponent]
-})
+      imports: [MiniCardComponent],
+      providers: [provideHttpClient(), provideHttpClientTesting()]
+    })
     .compileComponents();
 
     fixture = TestBed.createComponent(MiniCardComponent);
@@ -18,6 +21,16 @@ describe('MiniCardComponent', () => {
   });
 
   it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+
+  it('should have default title', () => {
+    expect(component.title).toBe('PV Produktion');
+  });
+
+  it('should clean up subscription on destroy', () => {
+    component.ngOnInit();
+    component.ngOnDestroy();
     expect(component).toBeTruthy();
   });
 });

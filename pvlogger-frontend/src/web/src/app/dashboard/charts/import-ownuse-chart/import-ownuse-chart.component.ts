@@ -1,7 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import * as Highcharts from 'highcharts';
+import { Subscription } from 'rxjs';
 import { AppBus } from '../../../service/app-bus.service';
-import { DateUtil } from '../../../service/date.util';
 import { KpiDataSourceService } from '../../../service/kpi-data-source.service';
+import { DateUtil } from '../../../service/date.util';
+import { createTimeXAxis } from '../chart-defaults';
 import { HighchartsChartComponent } from 'highcharts-angular';
 
 
@@ -11,57 +14,57 @@ import { HighchartsChartComponent } from 'highcharts-angular';
     styleUrls: ['./import-ownuse-chart.component.sass'],
     imports: [HighchartsChartComponent]
 })
-export class ImportOwnuseChartComponent implements OnInit {
-  chartOptions: any;
+export class ImportOwnuseChartComponent implements OnInit, OnDestroy {
+  chartOptions: Highcharts.Options = {};
+  private kpiSubscription: Subscription | undefined;
 
   constructor(private kpiDataSource: KpiDataSourceService, private appBus: AppBus) {}
 
   ngOnInit() {
-    this.appBus.kpiValues.subscribe((value) => {
+    this.kpiSubscription = this.appBus.kpiValues.subscribe((value) => {
       this.getChart(value.createdAt);
     });
+  }
+
+  ngOnDestroy(): void {
+    this.kpiSubscription?.unsubscribe();
   }
 
   // https://www.highcharts.com/demo/area-stacked
   getChart(date: number) {
     this.chartOptions = {
       series: [{
+        type: 'area',
         name: 'Imported Power',
         data: this.kpiDataSource.getDailyImportedData(),
         color: '#ff2600',
       }, {
+        type: 'area',
         name: 'Self Consumed Power',
         data: this.kpiDataSource.getDailyOwnusedData(),
         color: '#f7a35c',
       }],
       chart: {
         type: 'area',
-        zoomType: 'x',
+        zooming: { type: 'x' },
       },
       title: {text: undefined},
       tooltip: {
         pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.percentage:.1f}%</b> ({point.y:,.1f}kWh)<br/>',
         split: true
       },
-      xAxis: {
-        title: {text: 'Date'},
-        type: 'datetime',
-        showFirstLabel: true,
-        showLastLabel: true,
-        dateTimeLabelFormats: {day: '%e %b %y'},
-        min: new DateUtil(date).minDate(),
-        max: new DateUtil(date).maxDate()
-      },
+      xAxis: createTimeXAxis(date),
       plotOptions: {
         area: {stacking: 'percent'},
-        marker: {enabled: false},
-        series: {pointStart: new DateUtil(date).minDate()}
+        series: {
+          marker: {enabled: false},
+          pointStart: new DateUtil(date).minDate()
+        }
       },
       yAxis: {
         title: {text: undefined},
         labels: {format: '{value}%'}
       },
-      accessibility: {enabled: false}
     };
   }
 }

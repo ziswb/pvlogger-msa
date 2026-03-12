@@ -1,48 +1,48 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { AppBus } from './app-bus.service';
 import { KpiFetchServiceService } from './kpi-fetch-service.service';
 
 @Injectable({
   providedIn: 'root'
 })
-export class KpiDataSourceService {
+export class KpiDataSourceService implements OnDestroy {
+  private dateSubscription: Subscription;
 
-  public getDailyOwnusedData(): Number[][] {
+  public getDailyOwnusedData(): number[][] {
     return this.kpiFetchService.dailyownuseddata.slice();
   }
 
-  public getDailyConsumedData(): Number[][] {
+  public getDailyConsumedData(): number[][] {
     return this.kpiFetchService.dailyconsumeddata.slice();
   }
 
-  public getDailyProducedData(): Number[][] {
+  public getDailyProducedData(): number[][] {
     return this.kpiFetchService.dailyproduceddata.slice();
   }
 
-  public getDailyExportedData(): Number[][] {
+  public getDailyExportedData(): number[][] {
     return this.kpiFetchService.dailyexporteddata.slice();
   }
 
-  public getDailyImportedData(): Number[][] {
+  public getDailyImportedData(): number[][] {
     return this.kpiFetchService.dailyimporteddata.slice();
   }
 
-  public getSolarPowerData(): Number[][] {
+  public getSolarPowerData(): number[][] {
     return this.kpiFetchService.solarpowerdata.slice();
   }
 
-  public getGridPowerData(): Number[][] {
+  public getGridPowerData(): number[][] {
     return this.kpiFetchService.gridpowerdata.slice();
   }
 
-  public getUsedPowerData(): Number[][] {
+  public getUsedPowerData(): number[][] {
     return this.kpiFetchService.usedpowerdata.slice();
   }
 
   constructor(private kpiFetchService: KpiFetchServiceService, private appBus: AppBus) {
-    console.log("KPI data source is alive");
-    this.appBus.dateChanged.subscribe((date) => {
-      console.log(`Date changed: ${date}`);
+    this.dateSubscription = this.appBus.dateChanged.subscribe((date) => {
       this.kpiFetchService.detachFromLiveData();
       this.kpiFetchService.clearData();
       this.kpiFetchService.fetchDataFor(date);
@@ -54,8 +54,12 @@ export class KpiDataSourceService {
     this.kpiFetchService.attachToLiveData();
   }
 
+  ngOnDestroy(): void {
+    this.dateSubscription.unsubscribe();
+  }
+
   private isToday(date: Date): boolean {
-    let today = new Date();
+    const today = new Date();
     if (date.getDate() !== today.getDate()) {
       return false;
     }

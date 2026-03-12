@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import * as Highcharts from 'highcharts';
+import { Subscription } from 'rxjs';
 import { AppBus } from '../../../service/app-bus.service';
-import { DateUtil } from '../../../service/date.util';
 import { KpiDataSourceService } from '../../../service/kpi-data-source.service';
+import { createTimeXAxis, createKwhTooltip } from '../chart-defaults';
 import { HighchartsChartComponent } from 'highcharts-angular';
 
 
@@ -11,52 +13,47 @@ import { HighchartsChartComponent } from 'highcharts-angular';
     styleUrls: ['./import-export-chart.component.sass'],
     imports: [HighchartsChartComponent]
 })
-export class ImportExportChartComponent implements OnInit {
-  chartOptions: any;
+export class ImportExportChartComponent implements OnInit, OnDestroy {
+  chartOptions: Highcharts.Options = {};
+  private kpiSubscription: Subscription | undefined;
 
   constructor(private kpiDataSource: KpiDataSourceService, private appBus: AppBus) {}
 
   ngOnInit() {
-    this.appBus.kpiValues.subscribe((value) => {
+    this.kpiSubscription = this.appBus.kpiValues.subscribe((value) => {
       this.getChart(value.createdAt);
     });
+  }
+
+  ngOnDestroy(): void {
+    this.kpiSubscription?.unsubscribe();
   }
 
   // https://www.highcharts.com/demo/area-stacked
   getChart(date: number) {
     this.chartOptions = {
       series: [{
+        type: 'area',
         name: 'Imported Power',
         data: this.kpiDataSource.getDailyImportedData(),
         color: '#ff2600',
       }, {
+        type: 'area',
         name: 'Exported Power',
         data: this.kpiDataSource.getDailyExportedData(),
         color: '#00f942',
       }],
       chart: {
         type: 'area',
-        zoomType: 'x',
+        zooming: { type: 'x' },
       },
       title: {text: undefined},
-      tooltip: {
-        split: true,
-        pointFormat: '<span style="color:{series.color}">{series.name}</span>: {point.y:,.1f}kWh<br/>'
-      },
-      xAxis: {
-        title: {text: 'Date'},
-        type: 'datetime',
-        showFirstLabel: true,
-        showLastLabel: true,
-        dateTimeLabelFormats: {day: '%e %b %y'},
-        min: new DateUtil(date).minDate(),
-        max: new DateUtil(date).maxDate()
-      },
+      tooltip: createKwhTooltip(),
+      xAxis: createTimeXAxis(date),
       yAxis: {
         title: {text: undefined},
         labels: {format: '{value} kWh'}
       },
-      accessibility: {enabled: false}
     };
   }
 }
