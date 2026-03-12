@@ -71,6 +71,9 @@ dependencies {
 
     // DB migrations
     implementation(libs.flywaydb)
+
+    // Testing
+    testImplementation(libs.kotlin.test)
 }
 
 tasks.test {

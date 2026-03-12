@@ -61,7 +61,7 @@ class SunriseSunsetService(private val config: SunriseSunsetServiceConfig, priva
         SunriseSunsetPair(of(now(), of(5, 0), systemDefault()), of(now(), of(22, 0), systemDefault()))
     }.getOrThrow()
 
-    private fun toUtcDateTime(dateTime: String): ZonedDateTime = zonedDateTimeZhr(zonedDateTimeUtc(dateTime))
+    private fun toUtcDateTime(dateTime: String): ZonedDateTime = toSystemTimezone(dateTime)
 
     private suspend fun sunriseSunsetData(date: String) = httpClient.get { url(date) }.body<SunriseSunsetData>()
 
@@ -78,9 +78,18 @@ class SunriseSunsetService(private val config: SunriseSunsetServiceConfig, priva
         }
     }
 
-    private fun zonedDateTimeZhr(sunriseUtc: ZonedDateTime) = sunriseUtc.withZoneSameInstant(systemDefault())
-
-    private fun zonedDateTimeUtc(sunrise: String): ZonedDateTime = parse(sunrise).withZoneSameInstant(UTC)
-
     private fun today() = now().format(ISO_DATE)
+
+    companion object {
+        internal fun toSystemTimezone(dateTime: String): ZonedDateTime =
+            toSystemTimezone(parse(dateTime).withZoneSameInstant(UTC))
+
+        internal fun toSystemTimezone(utcDateTime: ZonedDateTime): ZonedDateTime =
+            utcDateTime.withZoneSameInstant(systemDefault())
+
+        internal fun toUtc(dateTime: String): ZonedDateTime =
+            parse(dateTime).withZoneSameInstant(UTC)
+
+        internal fun today(): String = now().format(ISO_DATE)
+    }
 }
