@@ -6,7 +6,8 @@ import (
 	"net/http"
 	"net/url"
 	"pv-full-data-collector/internal/config"
-	"pv-full-data-collector/internal/kpis"
+	sharedconfig "pvlogger-shared-modbus/config"
+	"pvlogger-shared-modbus/kpis"
 	"pvlogger-shared-modbus/model"
 	"pv-logger/logging"
 	"strconv"
@@ -19,7 +20,7 @@ func (s *DataAccessorService) InverterActivePower(jobId *model.JobId) *kpis.Inve
 		logging.Fatal("error retrieving master data for inverter active power", "error", err)
 	}
 	return kpis.NewInverterActivePower(
-		s.retrieveLatestRegisterValuesAggregated(md, config.DevIdConfig().InverterDeviceIds, jobId),
+		s.retrieveLatestRegisterValuesAggregated(md, sharedconfig.DevIdConfig().InverterDeviceIds, jobId),
 		kpis.ParseUnitFromString(md.Unit),
 	)
 }
@@ -30,7 +31,7 @@ func (s *DataAccessorService) MeterActivePower(jobId *model.JobId) *kpis.MeterAc
 		logging.Fatal("error retrieving master data for smart meter active power", "error", err)
 	}
 	return kpis.NewMeterActivePower(
-		s.retrieveLatestRegisterValuesAggregated(md, config.DevIdConfig().MeterDeviceIds, jobId),
+		s.retrieveLatestRegisterValuesAggregated(md, sharedconfig.DevIdConfig().MeterDeviceIds, jobId),
 		kpis.ParseUnitFromString(md.Unit),
 	)
 }
@@ -41,7 +42,7 @@ func (s *DataAccessorService) InverterEnergyToday(jobId *model.JobId) *kpis.Inve
 		logging.Fatal("error retrieving master data for inverter energy yield", "error", err)
 	}
 	return kpis.NewInverterEnergyToday(
-		s.retrieveLatestRegisterValuesAggregated(md, config.DevIdConfig().InverterDeviceIds, jobId),
+		s.retrieveLatestRegisterValuesAggregated(md, sharedconfig.DevIdConfig().InverterDeviceIds, jobId),
 		kpis.ParseUnitFromString(md.Unit),
 	)
 }
@@ -56,9 +57,9 @@ func (s *DataAccessorService) MeterEnergyToday() *kpis.MeterEnergyToday {
 		logging.Fatal("error retrieving master data for meter exported energy", "error", err)
 	}
 	return kpis.NewMeterEnergyToday(
-		s.computeImportedEnergyToday(config.DevIdConfig().MeterDeviceIds),
+		s.computeImportedEnergyToday(sharedconfig.DevIdConfig().MeterDeviceIds),
 		kpis.ParseUnitFromString(mdImported.Unit),
-		s.computeExportedEnergyToday(config.DevIdConfig().MeterDeviceIds),
+		s.computeExportedEnergyToday(sharedconfig.DevIdConfig().MeterDeviceIds),
 		kpis.ParseUnitFromString(mdExported.Unit),
 	)
 }

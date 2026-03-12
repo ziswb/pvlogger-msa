@@ -18,11 +18,11 @@ func (k *KpiLiveData) Importing() W {
 }
 
 func (k *KpiLiveData) Consuming() W {
-	return k.Producing().minus(k.Exporting()).plus(k.Importing())
+	return k.Producing().Minus(k.Exporting()).Plus(k.Importing())
 }
 
 func (k *KpiLiveData) SelfConsuming() W {
-	return k.Producing().minus(k.Exporting())
+	return k.Producing().Minus(k.Exporting())
 }
 
 type KpiTodayData struct {
@@ -43,9 +43,9 @@ func (k *KpiTodayData) Imported() KWh {
 }
 
 func (k *KpiTodayData) Consumed() KWh {
-	return k.Produced().minus(k.Exported()).plus(k.Imported())
+	return k.Produced().Minus(k.Exported()).Plus(k.Imported())
 }
 
 func (k *KpiTodayData) SelfConsumed() KWh {
-	return k.Produced().minus(k.Exported())
+	return k.Produced().Minus(k.Exported())
 }

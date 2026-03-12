@@ -2,11 +2,12 @@ package services
 
 import (
 	"pv-full-data-collector/internal/config"
-	"pv-full-data-collector/internal/kpis"
+	sharedconfig "pvlogger-shared-modbus/config"
+	"pvlogger-shared-modbus/kpis"
 	"pvlogger-shared-modbus/model"
 	"pv-full-data-collector/internal/services/dataaccessor"
 	"pv-full-data-collector/internal/services/metrics"
-	"pv-full-data-collector/internal/services/persistence"
+	"pvlogger-shared-modbus/persistence"
 	"pv-logger/logging"
 	"time"
 )
@@ -29,12 +30,13 @@ func AggregateKpisFor(jobId *model.JobId) {
 		Consumed:      todayKpis.Consumed().ToWh(),
 		SelfConsumed:  todayKpis.SelfConsumed().ToWh(),
 	}
-	persistence.NewPersistingService(config.DataAccessorCfg()).StoreKpiValues(&kpiValues)
+	daCfg := config.DataAccessorCfg()
+	persistence.NewPersistingService(daCfg.Host, daCfg.Port, daCfg.Protocol, daCfg.BasePath).StoreValues(&kpiValues, daCfg.StoreKpiValuesPath)
 	pushKpiMetrics(&kpiValues)
 }
 
 func pushKpiMetrics(kpiValues *kpis.PvLoggerKpiData) {
-	cfg := config.PushGatewayCfg()
+	cfg := sharedconfig.PushGatewayCfg()
 	if !cfg.Enabled {
 		logging.Debug("push gateway is disabled")
 		return

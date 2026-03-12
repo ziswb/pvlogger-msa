@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/push"
-	"pv-full-data-collector/internal/config"
+	sharedconfig "pvlogger-shared-modbus/config"
 )
 
 type MetricsPushService struct {
@@ -21,7 +21,7 @@ type MetricsPushService struct {
 	selfConsumedTodayWh prometheus.Gauge
 }
 
-func NewMetricsPushService(cfg *config.PushGatewayConfig) *MetricsPushService {
+func NewMetricsPushService(cfg *sharedconfig.PushGatewayConfig) *MetricsPushService {
 	registry := prometheus.NewRegistry()
 
 	producingWatts := prometheus.NewGauge(prometheus.GaugeOpts{

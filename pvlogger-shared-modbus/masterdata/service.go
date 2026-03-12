@@ -7,10 +7,45 @@ import (
 	"net/http"
 	"net/url"
 	"pv-logger/logging"
-	"pv-device-data-collector/internal/config"
+	"pvlogger-shared-modbus/config"
 	"pvlogger-shared-modbus/model"
 	"strings"
+	"time"
 )
+
+const (
+	paramDevTypes       = "deviceTypes"
+	paramCategories     = "categories"
+	paramValueSeparator = ";"
+)
+
+var (
+	SmartMeterActivePowerRegisterAddress = model.RegisterAddress{Value: 37113} // -> W
+	InverterActivePowerRegisterAddress   = model.RegisterAddress{Value: 32080} // -> kW
+)
+
+var (
+	SmartMeterExportedEnergyRegisterAddress = model.RegisterAddress{Value: 37119} // -> kWh
+	SmartMeterImportedEnergyRegisterAddress = model.RegisterAddress{Value: 37121} // -> kWh
+	InverterDailyEnergyYieldRegisterAddress = model.RegisterAddress{Value: 32114} // -> kWh
+)
+
+type MasterDataService struct {
+	baseURL        string
+	masterDataPath string
+	httpClient     *http.Client
+}
+
+func NewMasterDataService() *MasterDataService {
+	cfg := config.MdConfig()
+	return &MasterDataService{
+		baseURL:        fmt.Sprintf("%s://%s:%d", cfg.Protocol, cfg.Host, cfg.Port),
+		masterDataPath: cfg.MasterDataPath,
+		httpClient: &http.Client{
+			Timeout: 30 * time.Second,
+		},
+	}
+}
 
 func (s *MasterDataService) FetchRegisterDefinitions(
 	deviceTypes []model.DeviceType,
@@ -20,7 +55,7 @@ func (s *MasterDataService) FetchRegisterDefinitions(
 	devTypesParam := strings.Join(arrayOfDeviceTypesToArrayOfStrings(deviceTypes), paramValueSeparator)
 	categoriesParam := strings.Join(arrayOfCategoriesToArrayOfStrings(categories), paramValueSeparator)
 
-	reqURL, err := url.Parse(fmt.Sprintf("%s/%s", s.baseURL, config.MdConfig().MasterDataPath))
+	reqURL, err := url.Parse(fmt.Sprintf("%s/%s", s.baseURL, s.masterDataPath))
 	if err != nil {
 		logging.Fatal("failed to parse URL", "error", err)
 	}
@@ -56,29 +91,27 @@ func (s *MasterDataService) FetchRegisterDefinitions(
 }
 
 func (s *MasterDataService) MasterDataForSmartMeterActivePower() (*model.RegisterDefinition, error) {
-	return s.fetchMasterDataFor(smartMeterActivePowerRegisterAddress.Value)
+	return s.fetchMasterDataFor(SmartMeterActivePowerRegisterAddress.Value)
 }
 
 func (s *MasterDataService) MasterDataForInverterActivePower() (*model.RegisterDefinition, error) {
-	return s.fetchMasterDataFor(inverterActivePowerRegisterAddress.Value)
+	return s.fetchMasterDataFor(InverterActivePowerRegisterAddress.Value)
 }
 
 func (s *MasterDataService) MasterDataForInverterEnergyYield() (*model.RegisterDefinition, error) {
-	return s.fetchMasterDataFor(inverterDailyEnergyYieldRegisterAddress.Value)
+	return s.fetchMasterDataFor(InverterDailyEnergyYieldRegisterAddress.Value)
 }
 
 func (s *MasterDataService) MasterDataForMeterExportedEnergy() (*model.RegisterDefinition, error) {
-	return s.fetchMasterDataFor(smartMeterExportedEnergyRegisterAddress.Value)
+	return s.fetchMasterDataFor(SmartMeterExportedEnergyRegisterAddress.Value)
 }
 
 func (s *MasterDataService) MasterDataForMeterImportedEnergy() (*model.RegisterDefinition, error) {
-	return s.fetchMasterDataFor(smartMeterImportedEnergyRegisterAddress.Value)
+	return s.fetchMasterDataFor(SmartMeterImportedEnergyRegisterAddress.Value)
 }
 
 func (s *MasterDataService) fetchMasterDataFor(registerAddress int) (*model.RegisterDefinition, error) {
-	baseURL := s.baseURL
-	masterDataPath := config.MdConfig().MasterDataPath
-	reqURL, err := url.Parse(fmt.Sprintf("%s/%s/%d", baseURL, masterDataPath, registerAddress))
+	reqURL, err := url.Parse(fmt.Sprintf("%s/%s/%d", s.baseURL, s.masterDataPath, registerAddress))
 	if err != nil {
 		logging.Fatal("failed to parse URL", "error", err)
 	}

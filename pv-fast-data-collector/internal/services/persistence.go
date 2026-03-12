@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"pv-fast-data-collector/internal/config"
-	"pv-fast-data-collector/internal/kpis"
+	"pvlogger-shared-modbus/kpis"
 	"pv-logger/logging"
 	"time"
 )

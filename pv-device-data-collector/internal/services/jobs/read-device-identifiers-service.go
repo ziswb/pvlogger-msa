@@ -1,8 +1,9 @@
 package jobs
 
 import (
-	"pv-logger/logging"
 	"pv-device-data-collector/internal/config"
+	"pv-logger/logging"
+	sharedconfig "pvlogger-shared-modbus/config"
 	"pvlogger-shared-modbus/model"
 	"pvlogger-shared-modbus/request"
 	"pvlogger-shared-modbus/response"
@@ -11,9 +12,9 @@ import (
 
 func (s *ReadRegisterValuesService) ExecuteFetchDeviceIdentifiersJob() {
 	logging.Info("executing fetch device identifiers job", "job_id", s.jobId.Id)
-	for _, deviceId := range config.DevIdConfig().InverterDeviceIds {
+	for _, deviceId := range sharedconfig.DevIdConfig().InverterDeviceIds {
 		resp := s.readDeviceIdentifiers(deviceId)
-		s.persistenceService.StoreDeviceIdentifierValues(resp)
+		s.persistenceService.StoreValues(resp, config.DataAccessorCfg().StoreDeviceIdValuesPath)
 	}
 }
 

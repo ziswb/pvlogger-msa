@@ -4,12 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"pv-logger/logging"
 	"pv-device-data-collector/internal/config"
+	"pv-logger/logging"
 	modbus "pvlogger-shared-modbus"
+	sharedconfig "pvlogger-shared-modbus/config"
 	"pvlogger-shared-modbus/model"
+	"pvlogger-shared-modbus/persistence"
 	"pvlogger-shared-modbus/request"
-	"pv-device-data-collector/internal/services/persistence"
 	"sync/atomic"
 	"time"
 
@@ -30,33 +31,39 @@ type ReadRegisterValuesService struct {
 }
 
 func NewReadRegisterValuesService(categories []model.Category) *ReadRegisterValuesService {
+	daCfg := config.DataAccessorCfg()
+	mbCfg := sharedconfig.ModbusConfig()
 	return &ReadRegisterValuesService{
 		jobId:              model.NewJobId(uuid.New().String()),
 		lastTransactionId:  atomic.Int32{},
 		categories:         categories,
 		deviceIdToTypesMap: newDeviceIdToTypesMap(),
-		tcpHandler:         modbus.NewTcpHandler(fmt.Sprintf("%s:%d", config.ModbusConfig().Host, config.ModbusConfig().Port), config.ModbusConfig().Timeout, config.ModbusConfig().ConnectionSleep),
-		persistenceService: persistence.NewPersistingService(config.DataAccessorCfg()),
+		tcpHandler:         modbus.NewTcpHandler(fmt.Sprintf("%s:%d", mbCfg.Host, mbCfg.Port), mbCfg.Timeout, mbCfg.ConnectionSleep),
+		persistenceService: persistence.NewPersistingService(daCfg.Host, daCfg.Port, daCfg.Protocol, daCfg.BasePath),
 	}
 }
 
 func NewReadDeviceIdentifiersService() *ReadRegisterValuesService {
+	daCfg := config.DataAccessorCfg()
+	mbCfg := sharedconfig.ModbusConfig()
 	return &ReadRegisterValuesService{
 		jobId:              model.NewJobId(uuid.New().String()),
 		lastTransactionId:  atomic.Int32{},
-		tcpHandler:         modbus.NewTcpHandler(fmt.Sprintf("%s:%d", config.ModbusConfig().Host, config.ModbusConfig().Port), config.ModbusConfig().Timeout, config.ModbusConfig().ConnectionSleep),
-		persistenceService: persistence.NewPersistingService(config.DataAccessorCfg()),
+		tcpHandler:         modbus.NewTcpHandler(fmt.Sprintf("%s:%d", mbCfg.Host, mbCfg.Port), mbCfg.Timeout, mbCfg.ConnectionSleep),
+		persistenceService: persistence.NewPersistingService(daCfg.Host, daCfg.Port, daCfg.Protocol, daCfg.BasePath),
 		ReadDevIdCode:      model.UByte(0x01),
 		ObjectId:           model.UByte(0x00),
 	}
 }
 
 func NewReadDeviceListService() *ReadRegisterValuesService {
+	daCfg := config.DataAccessorCfg()
+	mbCfg := sharedconfig.ModbusConfig()
 	return &ReadRegisterValuesService{
 		jobId:              model.NewJobId(uuid.New().String()),
 		lastTransactionId:  atomic.Int32{},
-		tcpHandler:         modbus.NewTcpHandler(fmt.Sprintf("%s:%d", config.ModbusConfig().Host, config.ModbusConfig().Port), config.ModbusConfig().Timeout, config.ModbusConfig().ConnectionSleep),
-		persistenceService: persistence.NewPersistingService(config.DataAccessorCfg()),
+		tcpHandler:         modbus.NewTcpHandler(fmt.Sprintf("%s:%d", mbCfg.Host, mbCfg.Port), mbCfg.Timeout, mbCfg.ConnectionSleep),
+		persistenceService: persistence.NewPersistingService(daCfg.Host, daCfg.Port, daCfg.Protocol, daCfg.BasePath),
 		ReadDevIdCode:      model.UByte(0x03),
 		ObjectId:           model.UByte(0x87),
 	}
@@ -102,8 +109,8 @@ func (s *ReadRegisterValuesService) NextRequestId() model.UShort {
 
 func newDeviceIdToTypesMap() DeviceIdToTypesMap {
 	var deviceIdToTypesMap = make(map[model.UByte][]model.DeviceType)
-	appendIdToTypeEntries(deviceIdToTypesMap, config.DevIdConfig().MeterDeviceIds, model.MeterDeviceType)
-	appendIdToTypeEntries(deviceIdToTypesMap, config.DevIdConfig().InverterDeviceIds, model.InverterDeviceType)
+	appendIdToTypeEntries(deviceIdToTypesMap, sharedconfig.DevIdConfig().MeterDeviceIds, model.MeterDeviceType)
+	appendIdToTypeEntries(deviceIdToTypesMap, sharedconfig.DevIdConfig().InverterDeviceIds, model.InverterDeviceType)
 	return deviceIdToTypesMap
 }
 

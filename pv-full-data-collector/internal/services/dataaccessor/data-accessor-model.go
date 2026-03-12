@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"pv-full-data-collector/internal/config"
-	"pv-full-data-collector/internal/services/masterdata"
+	"pvlogger-shared-modbus/masterdata"
 	"time"
 )
 

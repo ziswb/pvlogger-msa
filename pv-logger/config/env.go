@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func getEnv(key, fallback string) string {
+func GetEnv(key, fallback string) string {
 	value := os.Getenv(key)
 	if len(value) == 0 {
 		return fallback
@@ -15,7 +15,7 @@ func getEnv(key, fallback string) string {
 	return value
 }
 
-func getEnvChecked(key string) string {
+func GetEnvChecked(key string) string {
 	value := os.Getenv(key)
 	if len(value) == 0 {
 		logging.Fatal("missing required environment variable", "key", key)
@@ -23,23 +23,23 @@ func getEnvChecked(key string) string {
 	return value
 }
 
-func getIntEnv(key, fallback string) int {
-	value, err := strconv.Atoi(getEnv(key, fallback))
+func GetIntEnv(key, fallback string) int {
+	value, err := strconv.Atoi(GetEnv(key, fallback))
 	if err != nil {
 		logging.Fatal("error getting value for int environment variable", "key", key, "error", err)
 	}
 	return value
 }
 
-func getBoolEnv(key, fallback string) bool {
-	value, err := strconv.ParseBool(getEnv(key, fallback))
+func GetBoolEnv(key, fallback string) bool {
+	value, err := strconv.ParseBool(GetEnv(key, fallback))
 	if err != nil {
 		logging.Fatal("error getting value for bool environment variable", "key", key, "error", err)
 	}
 	return value
 }
 
-func getUByteArrayEnv(key, fallback string) []uint8 {
+func GetUByteArrayEnv(key, fallback string) []uint8 {
 	value := os.Getenv(key)
 	var parts []string
 	if len(value) == 0 {

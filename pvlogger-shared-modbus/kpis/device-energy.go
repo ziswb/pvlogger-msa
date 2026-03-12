@@ -38,11 +38,11 @@ type InverterEnergyToday struct {
 }
 
 func (i *InverterEnergyToday) Produced() KWh {
-	return i.sourceUnit.toKWh(i.producedValue)
+	return i.sourceUnit.ToKWh(i.producedValue)
 }
 
 func (i *InverterActivePower) Producing() W {
-	return i.sourceUnit.toW(i.producingValue)
+	return i.sourceUnit.ToW(i.producingValue)
 }
 
 type MeterActivePower struct {
@@ -52,16 +52,16 @@ type MeterActivePower struct {
 
 func (m *MeterActivePower) Exporting() W {
 	if m.power > 0 {
-		return m.sourceUnit.toW(m.power)
+		return m.sourceUnit.ToW(m.power)
 	}
-	return m.sourceUnit.toW(0.0)
+	return m.sourceUnit.ToW(0.0)
 }
 
 func (m *MeterActivePower) Importing() W {
 	if m.power < 0 {
-		return m.sourceUnit.toW(abs(m.power))
+		return m.sourceUnit.ToW(abs(m.power))
 	}
-	return m.sourceUnit.toW(0.0)
+	return m.sourceUnit.ToW(0.0)
 }
 
 type MeterEnergyToday struct {
@@ -72,11 +72,11 @@ type MeterEnergyToday struct {
 }
 
 func (m *MeterEnergyToday) Imported() KWh {
-	return m.importUnit.toKWh(m.importedValue)
+	return m.importUnit.ToKWh(m.importedValue)
 }
 
 func (m *MeterEnergyToday) Exported() KWh {
-	return m.exportUnit.toKWh(m.exportedValue)
+	return m.exportUnit.ToKWh(m.exportedValue)
 }
 
 func abs(v float64) float64 {

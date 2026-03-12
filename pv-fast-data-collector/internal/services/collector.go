@@ -2,11 +2,11 @@ package services
 
 import (
 	"fmt"
-	"pv-fast-data-collector/internal/config"
-	"pv-fast-data-collector/internal/kpis"
 	"pv-fast-data-collector/internal/registers"
 	"pv-fast-data-collector/internal/services/metrics"
 	modbus "pvlogger-shared-modbus"
+	sharedconfig "pvlogger-shared-modbus/config"
+	"pvlogger-shared-modbus/kpis"
 	"pvlogger-shared-modbus/model"
 	"pvlogger-shared-modbus/request"
 	"pvlogger-shared-modbus/response"
@@ -79,8 +79,8 @@ type collectedRawValues struct {
 }
 
 func readModbusRegisters(jobId string) *collectedRawValues {
-	cfg := config.ModbusConfig()
-	devCfg := config.DevIdConfig()
+	cfg := sharedconfig.ModbusConfig()
+	devCfg := sharedconfig.DevIdConfig()
 	address := fmt.Sprintf("%s:%s", cfg.Host, strconv.Itoa(cfg.Port))
 
 	handler := modbus.NewTcpHandler(address, cfg.Timeout, cfg.ConnectionSleep)
@@ -192,7 +192,7 @@ func computeLiveKpis(raw *collectedRawValues) *kpis.KpiLiveData {
 }
 
 func pushKpiMetrics(kpiValues *kpis.PvLoggerKpiData) {
-	cfg := config.PushGatewayCfg()
+	cfg := sharedconfig.PushGatewayCfg()
 	if !cfg.Enabled {
 		logging.Debug("push gateway is disabled")
 		return

@@ -1,9 +1,10 @@
 package jobs
 
 import (
+	"pv-full-data-collector/internal/config"
+	"pvlogger-shared-modbus/masterdata"
 	"pvlogger-shared-modbus/model"
 	"pvlogger-shared-modbus/response"
-	"pv-full-data-collector/internal/services/masterdata"
 	"pv-logger/logging"
 )
 
@@ -33,7 +34,7 @@ func (s *ReadRegisterValuesService) fetchRegisterValues(deviceId model.UByte, de
 				logging.Debug("register value", "register_address", v.Definition.RegisterAddress, "value", v.Value)
 			}
 		}
-		s.persistenceService.StoreValues(valueResponse)
+		s.persistenceService.StoreValues(valueResponse, config.DataAccessorCfg().StoreModbusValuesPath)
 	}
 	defer s.Close()
 }

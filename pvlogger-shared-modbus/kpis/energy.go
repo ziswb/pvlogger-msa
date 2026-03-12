@@ -64,18 +64,18 @@ func (k KWh) ToKWh() KWh {
 	return KWh{k.Kwh}
 }
 
-func (k W) minus(o W) W {
+func (k W) Minus(o W) W {
 	return W{k.W - o.W}
 }
 
-func (k W) plus(o W) W {
+func (k W) Plus(o W) W {
 	return W{k.W + o.W}
 }
 
-func (k KWh) plus(o KWh) KWh {
+func (k KWh) Plus(o KWh) KWh {
 	return KWh{k.Kwh + o.Kwh}
 }
 
-func (k KWh) minus(o KWh) KWh {
+func (k KWh) Minus(o KWh) KWh {
 	return KWh{k.Kwh - o.Kwh}
 }

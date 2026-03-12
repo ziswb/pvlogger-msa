@@ -1,7 +1,7 @@
 package metrics
 
 import (
-	"pv-fast-data-collector/internal/kpis"
+	"pvlogger-shared-modbus/kpis"
 	"pv-logger/logging"
 )
 

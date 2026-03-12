@@ -18,7 +18,7 @@ func (u UnitId) String() string {
 	return string(u)
 }
 
-func (u *Unit) toW(value float64) W {
+func (u *Unit) ToW(value float64) W {
 	switch u.unitId {
 	case UnitKW:
 		return NewKW(value).ToW()
@@ -32,7 +32,7 @@ func (u *Unit) toW(value float64) W {
 	}
 }
 
-func (u *Unit) toKWh(value float64) KWh {
+func (u *Unit) ToKWh(value float64) KWh {
 	switch u.unitId {
 	case UnitKWh:
 		return NewKWh(value)
