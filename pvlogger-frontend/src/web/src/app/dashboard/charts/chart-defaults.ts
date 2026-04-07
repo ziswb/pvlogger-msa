@@ -1,12 +1,6 @@
 import * as Highcharts from 'highcharts';
 import { DateUtil } from '../../service/date.util';
 
-Highcharts.setOptions({
-  time: {
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-  },
-});
-
 export function createTimeXAxis(date: number): Highcharts.XAxisOptions {
   return {
     title: { text: 'Date' },

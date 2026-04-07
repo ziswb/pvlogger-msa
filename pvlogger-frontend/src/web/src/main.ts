@@ -23,7 +23,13 @@ bootstrapApplication(AppComponent, {
         { provide: MAT_DATE_LOCALE, useValue: 'de-CH' },
         provideHttpClient(withInterceptorsFromDi()),
         provideAnimations(),
-        ...provideHighcharts(),
+        ...provideHighcharts({
+            options: {
+                time: {
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                },
+            },
+        }),
     ]
 })
   .catch(err => console.error(err));
