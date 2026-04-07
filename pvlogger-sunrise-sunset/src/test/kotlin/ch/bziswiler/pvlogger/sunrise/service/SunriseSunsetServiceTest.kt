@@ -38,7 +38,7 @@ class SunriseSunsetServiceTest {
     fun `toSystemTimezone from string converts to system timezone`() {
         val result = SunriseSunsetService.toSystemTimezone("2025-02-12T06:32:32+00:00")
 
-        assertEquals(ZoneId.systemDefault(), result.zone)
+        assertEquals(ZoneId.of("Europe/Zurich"), result.zone)
         // The instant should be the same, just in a different zone
         val utc = ZonedDateTime.parse("2025-02-12T06:32:32+00:00").withZoneSameInstant(ZoneOffset.UTC)
         assertEquals(utc.toInstant(), result.toInstant())
@@ -49,7 +49,7 @@ class SunriseSunsetServiceTest {
         val utcTime = ZonedDateTime.of(2025, 6, 15, 12, 0, 0, 0, ZoneOffset.UTC)
         val result = SunriseSunsetService.toSystemTimezone(utcTime)
 
-        assertEquals(ZoneId.systemDefault(), result.zone)
+        assertEquals(ZoneId.of("Europe/Zurich"), result.zone)
         assertEquals(utcTime.toInstant(), result.toInstant())
     }
 

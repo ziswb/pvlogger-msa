@@ -19,7 +19,7 @@ import kotlinx.serialization.json.Json
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.LocalDate.now
 import java.time.LocalTime.of
-import java.time.ZoneId.systemDefault
+import java.time.ZoneId
 import java.time.ZoneOffset.UTC
 import java.time.ZonedDateTime
 import java.time.ZonedDateTime.of
@@ -30,6 +30,7 @@ class SunriseSunsetService(private val config: SunriseSunsetServiceConfig, priva
 
     private val logger = KotlinLogging.logger {}
     private val notFormatted = "0"
+    private val localZone = ZoneId.of("Europe/Zurich")
 
     private val httpClient = HttpClient(CIO) {
         install(Logging) {
@@ -58,7 +59,7 @@ class SunriseSunsetService(private val config: SunriseSunsetServiceConfig, priva
         logger.error(error) { "solar-api failed" }
     }.recover { error: Throwable ->
         logger.error(error) { "recovering from solar-api failure - returning default values of today 5 AM to 10 PM" }
-        SunriseSunsetPair(of(now(), of(5, 0), systemDefault()), of(now(), of(22, 0), systemDefault()))
+        SunriseSunsetPair(of(now(), of(5, 0), localZone), of(now(), of(22, 0), localZone))
     }.getOrThrow()
 
     private fun toUtcDateTime(dateTime: String): ZonedDateTime = toSystemTimezone(dateTime)
@@ -81,11 +82,13 @@ class SunriseSunsetService(private val config: SunriseSunsetServiceConfig, priva
     private fun today() = now().format(ISO_DATE)
 
     companion object {
+        private val LOCAL_ZONE = ZoneId.of("Europe/Zurich")
+
         internal fun toSystemTimezone(dateTime: String): ZonedDateTime =
             toSystemTimezone(parse(dateTime).withZoneSameInstant(UTC))
 
         internal fun toSystemTimezone(utcDateTime: ZonedDateTime): ZonedDateTime =
-            utcDateTime.withZoneSameInstant(systemDefault())
+            utcDateTime.withZoneSameInstant(LOCAL_ZONE)
 
         internal fun toUtc(dateTime: String): ZonedDateTime =
             parse(dateTime).withZoneSameInstant(UTC)
