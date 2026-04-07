@@ -1,5 +1,6 @@
 package ch.bziswiler.pvlogger.sunrise
 
+import ch.bziswiler.pvlogger.shared.configuration.TimeZones
 import ch.bziswiler.pvlogger.sunrise.configuration.appModule
 import ch.bziswiler.pvlogger.sunrise.configuration.configureDatabase
 import ch.bziswiler.pvlogger.sunrise.configuration.configureMonitoring
@@ -22,7 +23,10 @@ import org.slf4j.event.Level
 
 private val logger = KotlinLogging.logger {}
 
-fun main(args: Array<String>) = EngineMain.main(args)
+fun main(args: Array<String>) {
+    TimeZones.requireConfigured()
+    EngineMain.main(args)
+}
 
 fun Application.module(testing: Boolean = false) {
     if (!testing) {

@@ -1,5 +1,6 @@
 package ch.bziswiler.pvlogger.dataaccessor
 
+import ch.bziswiler.pvlogger.shared.configuration.TimeZones
 import ch.bziswiler.pvlogger.dataaccessor.configuration.appModule
 import ch.bziswiler.pvlogger.dataaccessor.configuration.configureDatabases
 import ch.bziswiler.pvlogger.dataaccessor.configuration.configureMonitoring
@@ -16,7 +17,10 @@ import org.koin.logger.slf4jLogger
 
 private val logger = KotlinLogging.logger {}
 
-fun main(args: Array<String>) = EngineMain.main(args)
+fun main(args: Array<String>) {
+    TimeZones.requireConfigured()
+    EngineMain.main(args)
+}
 
 @Suppress("unused")
 fun Application.module(testing: Boolean = false) {
