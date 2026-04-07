@@ -52,7 +52,7 @@ func CollectAndComputeKpis() {
 
 	kpiValues := kpis.PvLoggerKpiData{
 		JobId:         jobId,
-		DateCreated:   time.Now().Add(1 * time.Hour).UnixMilli(),
+		DateCreated:   time.Now().UnixMilli(),
 		Producing:     liveKpis.Producing(),
 		Exporting:     liveKpis.Exporting(),
 		Importing:     liveKpis.Importing(),
