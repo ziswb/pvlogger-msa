@@ -16,10 +16,10 @@ import io.ktor.http.URLProtocol
 import io.ktor.http.path
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import ch.bziswiler.pvlogger.shared.configuration.TimeZones.LOCAL_ZONE
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.LocalDate.now
 import java.time.LocalTime.of
-import java.time.ZoneId
 import java.time.ZoneOffset.UTC
 import java.time.ZonedDateTime
 import java.time.ZonedDateTime.of
@@ -30,7 +30,7 @@ class SunriseSunsetService(private val config: SunriseSunsetServiceConfig, priva
 
     private val logger = KotlinLogging.logger {}
     private val notFormatted = "0"
-    private val localZone = ZoneId.of("Europe/Zurich")
+    private val localZone = LOCAL_ZONE
 
     private val httpClient = HttpClient(CIO) {
         install(Logging) {
@@ -82,8 +82,6 @@ class SunriseSunsetService(private val config: SunriseSunsetServiceConfig, priva
     private fun today() = now().format(ISO_DATE)
 
     companion object {
-        private val LOCAL_ZONE = ZoneId.of("Europe/Zurich")
-
         internal fun toSystemTimezone(dateTime: String): ZonedDateTime =
             toSystemTimezone(parse(dateTime).withZoneSameInstant(UTC))
 
