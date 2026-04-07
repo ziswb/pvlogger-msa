@@ -35,7 +35,7 @@ import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.time.LocalDate
 import java.time.LocalDate.now
-import java.time.ZoneOffset.UTC
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter.ofPattern
 
 private const val TWO_DECIMALS = "#.##"
@@ -64,6 +64,7 @@ object HouseKpiController {
 
     private val logger = KotlinLogging.logger {}
     private val rounder = DecimalFormat(TWO_DECIMALS)
+    private val zurich = ZoneId.of("Europe/Zurich")
 
     init {
         rounder.roundingMode = RoundingMode.HALF_UP
@@ -71,7 +72,7 @@ object HouseKpiController {
 
     fun todaysKpis() = transaction {
         logger.info { "getting today's KPIs" }.let {
-            val todayStart = now(UTC).atStartOfDay().toInstant(UTC)
+            val todayStart = now(zurich).atStartOfDay(zurich).toInstant()
             HousePowerKpiTable
                 .selectAll()
                 .where { dateCreated.greaterEq(todayStart) }
@@ -94,8 +95,8 @@ object HouseKpiController {
 
     fun kpisOf(date: LocalDate) = transaction {
         logger.info { "getting KPIs of date '$date'" }.let {
-            val dayStart = date.atStartOfDay().toInstant(UTC)
-            val dayEnd = date.plusDays(1).atStartOfDay().toInstant(UTC)
+            val dayStart = date.atStartOfDay(zurich).toInstant()
+            val dayEnd = date.plusDays(1).atStartOfDay(zurich).toInstant()
             HousePowerKpiTable
                 .selectAll()
                 .where {

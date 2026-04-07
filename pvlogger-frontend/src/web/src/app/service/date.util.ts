@@ -7,10 +7,10 @@ export class DateUtil {
   }
 
   minDate() {
-    return Date.UTC(this._newDate.getUTCFullYear(), this._newDate.getUTCMonth(), this._newDate.getUTCDate(), 0, 0, 0);
+    return new Date(this._newDate.getFullYear(), this._newDate.getMonth(), this._newDate.getDate(), 0, 0, 0).getTime();
   }
 
   maxDate() {
-    return Date.UTC(this._newDate.getUTCFullYear(), this._newDate.getUTCMonth(), this._newDate.getUTCDate(), 23, 59, 59);
+    return new Date(this._newDate.getFullYear(), this._newDate.getMonth(), this._newDate.getDate(), 23, 59, 59).getTime();
   }
 }
