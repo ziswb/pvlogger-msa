@@ -3,7 +3,7 @@ import { DateUtil } from '../../service/date.util';
 
 Highcharts.setOptions({
   time: {
-    getTimezoneOffset: (timestamp: number) => new Date(timestamp).getTimezoneOffset(),
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   },
 });
 
