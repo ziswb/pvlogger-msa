@@ -6,7 +6,10 @@
 SELECT 1;
 
 -- --------------------------------------------------------------------------
--- Original migration (executed manually on 2026-04-07):
+-- Original migration (executed manually on 2026-04-07)
+-- Remark 2026-07-04: only the house_power_kpi_values table was updated since
+-- it is not clear how timestamps were stored before (e.g., by the old
+-- monolithic Kotlin code)
 -- --------------------------------------------------------------------------
 --
 -- Corrective migration: the Go data collectors previously added a hardcoded +1 hour
