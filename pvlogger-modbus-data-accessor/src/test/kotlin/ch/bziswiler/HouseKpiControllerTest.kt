@@ -16,7 +16,8 @@ import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import java.time.LocalDateTime
+import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneOffset
 
 class HouseKpiControllerTest : TestBase() {
@@ -37,8 +38,8 @@ class HouseKpiControllerTest : TestBase() {
     fun `today KPIs filters by date`() = withApp {
         startApplication()
         cleanAllTables()
-        val now = LocalDateTime.now(ZoneOffset.UTC)
-        seedKpiRow(dateCreated = now.minusDays(1), solarPower = 1.0)
+        val now = Instant.now()
+        seedKpiRow(dateCreated = now.minusSeconds(86400), solarPower = 1.0)
         seedKpiRow(dateCreated = now, solarPower = 2.0)
         val kpis = json.decodeFromString<List<KpiValuesDto>>(
             client.get("/$DATA_ACCESSOR_API_V1_PATH/$DATA_ACCESSOR_READ_DATA_TODAY_VALUES_PATH").bodyAsText()
@@ -51,9 +52,9 @@ class HouseKpiControllerTest : TestBase() {
     fun `KPIs for specific date`() = withApp {
         startApplication()
         cleanAllTables()
-        seedKpiRow(dateCreated = LocalDateTime.of(2025, 6, 15, 10, 0), solarPower = 3.5)
-        seedKpiRow(dateCreated = LocalDateTime.of(2025, 6, 15, 12, 0), solarPower = 4.5)
-        seedKpiRow(dateCreated = LocalDateTime.of(2025, 6, 16, 10, 0), solarPower = 9.0)
+        seedKpiRow(dateCreated = LocalDate.of(2025, 6, 15).atTime(10, 0).toInstant(ZoneOffset.UTC), solarPower = 3.5)
+        seedKpiRow(dateCreated = LocalDate.of(2025, 6, 15).atTime(12, 0).toInstant(ZoneOffset.UTC), solarPower = 4.5)
+        seedKpiRow(dateCreated = LocalDate.of(2025, 6, 16).atTime(10, 0).toInstant(ZoneOffset.UTC), solarPower = 9.0)
         val kpis = json.decodeFromString<List<KpiValuesDto>>(
             client.get("/$DATA_ACCESSOR_API_V1_PATH/$DATA_ACCESSOR_READ_DATA_TODAY_VALUES_PATH/2025-6-15").bodyAsText()
         )
@@ -75,8 +76,8 @@ class HouseKpiControllerTest : TestBase() {
     fun `latest KPI returns newest`() = withApp {
         startApplication()
         cleanAllTables()
-        val now = LocalDateTime.now(ZoneOffset.UTC)
-        seedKpiRow(dateCreated = now.minusHours(1), solarPower = 1.0)
+        val now = Instant.now()
+        seedKpiRow(dateCreated = now.minusSeconds(3600), solarPower = 1.0)
         seedKpiRow(dateCreated = now, solarPower = 5.0)
         val kpi = json.decodeFromString<KpiValuesDto>(
             client.get("/$DATA_ACCESSOR_API_V1_PATH/$DATA_ACCESSOR_READ_LATEST_KPI_PATH").bodyAsText()
@@ -97,7 +98,7 @@ class HouseKpiControllerTest : TestBase() {
         startApplication()
         cleanAllTables()
         seedKpiRow(
-            dateCreated = LocalDateTime.now(ZoneOffset.UTC),
+            dateCreated = Instant.now(),
             gridToHousePower = 3.456,
             solarToGridPower = 1.234,
         )

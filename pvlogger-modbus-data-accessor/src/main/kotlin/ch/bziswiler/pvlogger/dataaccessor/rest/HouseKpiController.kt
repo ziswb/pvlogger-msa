@@ -35,7 +35,6 @@ import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.time.LocalDate
 import java.time.LocalDate.now
-import java.time.ZoneId
 import java.time.ZoneOffset.UTC
 import java.time.format.DateTimeFormatter.ofPattern
 
@@ -72,10 +71,10 @@ object HouseKpiController {
 
     fun todaysKpis() = transaction {
         logger.info { "getting today's KPIs" }.let {
-            val todayUtc = now(ZoneId.of("UTC"))
+            val todayStart = now(UTC).atStartOfDay().toInstant(UTC)
             HousePowerKpiTable
                 .selectAll()
-                .where { dateCreated.greaterEq(todayUtc.atStartOfDay()) }
+                .where { dateCreated.greaterEq(todayStart) }
                 .orderBy(dateCreated, DESC)
                 .map { toKpiValuesDto(it) }
                 .toList()
@@ -95,12 +94,14 @@ object HouseKpiController {
 
     fun kpisOf(date: LocalDate) = transaction {
         logger.info { "getting KPIs of date '$date'" }.let {
+            val dayStart = date.atStartOfDay().toInstant(UTC)
+            val dayEnd = date.plusDays(1).atStartOfDay().toInstant(UTC)
             HousePowerKpiTable
                 .selectAll()
                 .where {
                     dateCreated
-                        .greaterEq(date.atStartOfDay())
-                        .and(dateCreated.less(date.plusDays(1).atStartOfDay()))
+                        .greaterEq(dayStart)
+                        .and(dateCreated.less(dayEnd))
                 }
                 .orderBy(dateCreated, ASC)
                 .map { toKpiValuesDto(it) }
@@ -109,7 +110,7 @@ object HouseKpiController {
     }
 
     private fun toKpiValuesDto(it: ResultRow) = KpiValuesDto(
-        createdAt = it[dateCreated].toInstant(UTC).toEpochMilli(),
+        createdAt = it[dateCreated].toEpochMilli(),
         solarPower = rounder.format(it[solarPower]).toDouble(),
         gridPower = rounder.format(it[gridToHousePower].minus(it[solarToGridPower])).toDouble(),
         solarToHousePower = rounder.format(it[HousePowerKpiTable.solarToHousePower]).toDouble(),

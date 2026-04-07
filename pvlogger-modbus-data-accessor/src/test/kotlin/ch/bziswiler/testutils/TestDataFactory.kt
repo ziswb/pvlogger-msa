@@ -7,7 +7,7 @@ import ch.bziswiler.pvlogger.dataaccessor.database.schema.ResponseTable
 import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import java.time.LocalDateTime
+import java.time.Instant
 
 object TestDataFactory {
 
@@ -24,7 +24,7 @@ object TestDataFactory {
         id: Int,
         jobId: String,
         logicDeviceId: UByte = 1u,
-        responseTime: LocalDateTime = LocalDateTime.now(),
+        responseTime: Instant = Instant.now(),
     ) {
         transaction {
             ResponseTable.insert {
@@ -53,7 +53,7 @@ object TestDataFactory {
     }
 
     fun seedKpiRow(
-        dateCreated: LocalDateTime,
+        dateCreated: Instant,
         solarPower: Double = 0.0,
         solarToHousePower: Double = 0.0,
         gridToHousePower: Double = 0.0,
@@ -83,7 +83,7 @@ object TestDataFactory {
     }
 
     fun seedRawKpiRow(
-        dateCreated: LocalDateTime,
+        dateCreated: Instant,
         meterExportedEnergy: Double = 0.0,
         meterImportedEnergy: Double = 0.0,
         inverterActivePower: Double = 0.0,

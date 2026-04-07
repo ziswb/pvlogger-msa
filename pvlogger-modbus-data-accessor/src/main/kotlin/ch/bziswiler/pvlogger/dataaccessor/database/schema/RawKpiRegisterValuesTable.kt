@@ -1,11 +1,11 @@
 package ch.bziswiler.pvlogger.dataaccessor.database.schema
 
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.javatime.CurrentDateTime
-import org.jetbrains.exposed.v1.javatime.datetime
+import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
+import org.jetbrains.exposed.v1.javatime.timestamp
 
 object RawKpiRegisterValuesTable : IntIdTable("raw_kpi_register_values") {
-    val dateCreated = datetime("date_created").defaultExpression(CurrentDateTime)
+    val dateCreated = timestamp("date_created").defaultExpression(CurrentTimestamp)
     val jobId = text("job_id").default("NO-JOB-ID-GIVEN")
     val inverterActivePower = double("inverter_active_power").default(0.0)
     val meterActivePower = double("meter_active_power").default(0.0)

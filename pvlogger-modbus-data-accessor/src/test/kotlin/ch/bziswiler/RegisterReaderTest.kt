@@ -12,17 +12,18 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import java.time.LocalDateTime.now
+import java.time.Instant
 
 class RegisterReaderTest : TestBase() {
 
     private fun setUpDatabase() {
+        val now = Instant.now()
         transaction {
             ResponseTable.insert {
                 it[ResponseTable.id] = 1
-                it[timestamp] = now().minusDays(1)
-                it[response_time] = now().minusDays(1)
-                it[request_time] = now().minusDays(1)
+                it[timestamp] = now.minusSeconds(86400)
+                it[response_time] = now.minusSeconds(86400)
+                it[request_time] = now.minusSeconds(86400)
                 it[job_id] = "1"
                 it[request_id] = 1u
                 it[logic_device_id] = 1u
@@ -34,9 +35,9 @@ class RegisterReaderTest : TestBase() {
         transaction {
             ResponseTable.insert {
                 it[ResponseTable.id] = 2
-                it[timestamp] = now()
-                it[response_time] = now()
-                it[request_time] = now()
+                it[timestamp] = now
+                it[response_time] = now
+                it[request_time] = now
                 it[job_id] = "2"
                 it[request_id] = 2u
                 it[logic_device_id] = 1u

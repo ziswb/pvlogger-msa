@@ -23,6 +23,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import java.time.ZoneOffset
 
 object ModbusDao {
 
@@ -105,8 +106,8 @@ object ModbusDao {
         logger.trace { "Storing header '${data}" }
         return ResponseTable.insertAndGetId {
             it[job_id] = data.jobId.id
-            it[request_time] = data.responseTime
-            it[response_time] = data.responseTime
+            it[request_time] = data.requestTime.toInstant(ZoneOffset.UTC)
+            it[response_time] = data.responseTime.toInstant(ZoneOffset.UTC)
             it[request_id] = data.header.protocolIdentifier
             it[protocol_type] = data.header.protocolType
             it[data_length] = data.header.dataLength

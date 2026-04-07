@@ -19,6 +19,7 @@ import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.ZoneOffset
 
 class RawKpiControllerTest : TestBase() {
 
@@ -61,17 +62,17 @@ class RawKpiControllerTest : TestBase() {
         val today = LocalDate.now()
         val yesterday = today.minusDays(1)
         seedRawKpiRow(
-            dateCreated = yesterday.atTime(23, 0),
+            dateCreated = yesterday.atTime(23, 0).toInstant(ZoneOffset.UTC),
             meterExportedEnergy = 100.0,
             meterImportedEnergy = 50.0,
         )
         seedRawKpiRow(
-            dateCreated = today.atTime(8, 0),
+            dateCreated = today.atTime(8, 0).toInstant(ZoneOffset.UTC),
             meterExportedEnergy = 120.0,
             meterImportedEnergy = 70.0,
         )
         seedRawKpiRow(
-            dateCreated = today.atTime(12, 0),
+            dateCreated = today.atTime(12, 0).toInstant(ZoneOffset.UTC),
             meterExportedEnergy = 150.0,
             meterImportedEnergy = 90.0,
         )

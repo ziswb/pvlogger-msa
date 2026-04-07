@@ -13,7 +13,7 @@ import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.http.appendPathSegments
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import java.time.LocalDateTime
+import java.time.Instant
 
 class ReadRegisterValueControllerTest : TestBase() {
 
@@ -21,7 +21,7 @@ class ReadRegisterValueControllerTest : TestBase() {
     fun `read latest I32 value with valid params`() = withApp {
         startApplication()
         cleanAllTables()
-        seedResponseRow(id = 10, jobId = "job-A", logicDeviceId = 5u, responseTime = LocalDateTime.now())
+        seedResponseRow(id = 10, jobId = "job-A", logicDeviceId = 5u, responseTime = Instant.now())
         seedIntegerValue(responseId = 10, registerAddress = 37113, value = 42)
 
         val response = client.get("/$DATA_ACCESSOR_READ_LATEST_REGISTER_VALUE_PATH") {
@@ -35,7 +35,7 @@ class ReadRegisterValueControllerTest : TestBase() {
     fun `read latest returns 404 for wrong jobId`() = withApp {
         startApplication()
         cleanAllTables()
-        seedResponseRow(id = 11, jobId = "job-A", logicDeviceId = 5u, responseTime = LocalDateTime.now())
+        seedResponseRow(id = 11, jobId = "job-A", logicDeviceId = 5u, responseTime = Instant.now())
         seedIntegerValue(responseId = 11, registerAddress = 37113, value = 42)
 
         val response = client.get("/$DATA_ACCESSOR_READ_LATEST_REGISTER_VALUE_PATH") {
@@ -58,8 +58,8 @@ class ReadRegisterValueControllerTest : TestBase() {
     fun `kWh today computes day-over-day difference`() = withApp {
         startApplication()
         cleanAllTables()
-        val yesterday = LocalDateTime.now().minusDays(1)
-        val today = LocalDateTime.now()
+        val yesterday = Instant.now().minusSeconds(86400)
+        val today = Instant.now()
 
         seedResponseRow(id = 20, jobId = "energy", responseTime = yesterday)
         seedIntegerValue(responseId = 20, registerAddress = 32080, value = 100)

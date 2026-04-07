@@ -4,9 +4,7 @@ import ch.bziswiler.pvlogger.dataaccessor.database.schema.HousePowerKpiTable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import java.time.Instant.ofEpochMilli
-import java.time.LocalDateTime.ofInstant
-import java.time.ZoneOffset.UTC
+import java.time.Instant
 
 object HousePowerKpiDao {
 
@@ -16,7 +14,7 @@ object HousePowerKpiDao {
         logger.trace { "Storing KPIs '$kpis'" }
         HousePowerKpiTable.insert {
             it[jobId] = kpis.jobId
-            it[dateCreated] = ofInstant(ofEpochMilli(kpis.dateCreated), UTC)
+            it[dateCreated] = Instant.ofEpochMilli(kpis.dateCreated)
             it[solarPower] = kpis.producing.toKW().kw
             it[solarToHousePower] = kpis.selfConsuming.toKW().kw
             it[gridToHousePower] = kpis.importing.toKW().kw
