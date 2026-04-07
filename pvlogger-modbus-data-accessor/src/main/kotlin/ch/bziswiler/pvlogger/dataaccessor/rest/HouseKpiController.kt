@@ -35,6 +35,7 @@ import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.time.LocalDate
 import java.time.LocalDate.now
+import java.time.ZoneId
 import java.time.ZoneOffset.UTC
 import java.time.format.DateTimeFormatter.ofPattern
 
@@ -71,9 +72,10 @@ object HouseKpiController {
 
     fun todaysKpis() = transaction {
         logger.info { "getting today's KPIs" }.let {
+            val todayUtc = now(ZoneId.of("UTC"))
             HousePowerKpiTable
                 .selectAll()
-                .where { dateCreated.greaterEq(now().atStartOfDay()) }
+                .where { dateCreated.greaterEq(todayUtc.atStartOfDay()) }
                 .orderBy(dateCreated, DESC)
                 .map { toKpiValuesDto(it) }
                 .toList()

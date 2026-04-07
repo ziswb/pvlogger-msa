@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 class HouseKpiControllerTest : TestBase() {
 
@@ -36,7 +37,7 @@ class HouseKpiControllerTest : TestBase() {
     fun `today KPIs filters by date`() = withApp {
         startApplication()
         cleanAllTables()
-        val now = LocalDateTime.now()
+        val now = LocalDateTime.now(ZoneOffset.UTC)
         seedKpiRow(dateCreated = now.minusDays(1), solarPower = 1.0)
         seedKpiRow(dateCreated = now, solarPower = 2.0)
         val kpis = json.decodeFromString<List<KpiValuesDto>>(
@@ -74,7 +75,7 @@ class HouseKpiControllerTest : TestBase() {
     fun `latest KPI returns newest`() = withApp {
         startApplication()
         cleanAllTables()
-        val now = LocalDateTime.now()
+        val now = LocalDateTime.now(ZoneOffset.UTC)
         seedKpiRow(dateCreated = now.minusHours(1), solarPower = 1.0)
         seedKpiRow(dateCreated = now, solarPower = 5.0)
         val kpi = json.decodeFromString<KpiValuesDto>(
@@ -96,7 +97,7 @@ class HouseKpiControllerTest : TestBase() {
         startApplication()
         cleanAllTables()
         seedKpiRow(
-            dateCreated = LocalDateTime.now(),
+            dateCreated = LocalDateTime.now(ZoneOffset.UTC),
             gridToHousePower = 3.456,
             solarToGridPower = 1.234,
         )
