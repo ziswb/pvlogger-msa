@@ -5,96 +5,60 @@
 -- The original SQL is preserved below for documentation.
 SELECT 1;
 
--- --------------------------------------------------------------------------
--- Original migration (executed manually on 2026-04-07)
--- Remark 2026-07-04: only the house_power_kpi_values table was updated since
--- it is not clear how timestamps were stored before (e.g., by the old
--- monolithic Kotlin code)
--- --------------------------------------------------------------------------
---
--- Corrective migration: the Go data collectors previously added a hardcoded +1 hour
--- to time.Now() before storing epoch millis. V6 migrated these values to TIMESTAMPTZ
--- treating them as UTC, but they were actually UTC+1. Subtract 1 hour to fix.
---
--- Only rows created BEFORE the fixed image (0.8.0) was deployed are affected.
--- Helm revision 74 deployed at 2026-04-07 08:40:00 UTC; first correct data
--- arrived shortly after. We use 08:40 UTC as the cutoff.
---
--- Updates are batched (10 000 rows at a time) to limit WAL pressure and lock duration.
--- Indexes on updated columns are dropped beforehand and recreated after.
---
--- -- Drop indexes on columns we are about to bulk-update.
--- DROP INDEX IF EXISTS house_power_kpi_values_date_created_idx;
--- DROP INDEX IF EXISTS modbus_response_data_date_created_idx;
--- DROP INDEX IF EXISTS modbus_response_data_request_time_idx;
--- DROP INDEX IF EXISTS modbus_response_data_response_time_idx;
--- DROP INDEX IF EXISTS raw_kpi_register_values_date_created_idx;
---
--- -- Batch-update house_power_kpi_values
--- DO $$
--- DECLARE
---     batch_size CONSTANT INT := 10000;
---     rows_updated INT;
--- BEGIN
---     LOOP
---         UPDATE house_power_kpi_values
---         SET date_created = date_created - INTERVAL '1 hour'
---         WHERE id IN (
---             SELECT id FROM house_power_kpi_values
---             WHERE date_created < TIMESTAMPTZ '2026-04-07T08:40:00Z'
---             LIMIT batch_size
---         );
---         GET DIAGNOSTICS rows_updated = ROW_COUNT;
---         EXIT WHEN rows_updated = 0;
---         RAISE NOTICE 'house_power_kpi_values: updated % rows', rows_updated;
---     END LOOP;
--- END $$;
---
--- -- Batch-update modbus_response_data
--- DO $$
--- DECLARE
---     batch_size CONSTANT INT := 10000;
---     rows_updated INT;
--- BEGIN
---     LOOP
---         UPDATE modbus_response_data
---         SET date_created = date_created - INTERVAL '1 hour',
---             request_time = request_time - INTERVAL '1 hour',
---             response_time = response_time - INTERVAL '1 hour'
---         WHERE id IN (
---             SELECT id FROM modbus_response_data
---             WHERE date_created < TIMESTAMPTZ '2026-04-07T08:40:00Z'
---             LIMIT batch_size
---         );
---         GET DIAGNOSTICS rows_updated = ROW_COUNT;
---         EXIT WHEN rows_updated = 0;
---         RAISE NOTICE 'modbus_response_data: updated % rows', rows_updated;
---     END LOOP;
--- END $$;
---
--- -- Batch-update raw_kpi_register_values
--- DO $$
--- DECLARE
---     batch_size CONSTANT INT := 10000;
---     rows_updated INT;
--- BEGIN
---     LOOP
---         UPDATE raw_kpi_register_values
---         SET date_created = date_created - INTERVAL '1 hour'
---         WHERE id IN (
---             SELECT id FROM raw_kpi_register_values
---             WHERE date_created < TIMESTAMPTZ '2026-04-07T08:40:00Z'
---             LIMIT batch_size
---         );
---         GET DIAGNOSTICS rows_updated = ROW_COUNT;
---         EXIT WHEN rows_updated = 0;
---         RAISE NOTICE 'raw_kpi_register_values: updated % rows', rows_updated;
---     END LOOP;
--- END $$;
---
--- -- Recreate all dropped indexes.
--- CREATE INDEX house_power_kpi_values_date_created_idx ON house_power_kpi_values (date_created);
--- CREATE INDEX modbus_response_data_date_created_idx ON modbus_response_data (date_created);
--- CREATE INDEX modbus_response_data_request_time_idx ON modbus_response_data (request_time);
--- CREATE INDEX modbus_response_data_response_time_idx ON modbus_response_data (response_time);
--- CREATE INDEX raw_kpi_register_values_date_created_idx ON raw_kpi_register_values (date_created);
+-- Manually shifted by 1 hour, table `house_power_kpi_values`:
+-- date_created > TIMESTAMPTZ '2026-04-07T08:40:00Z' and date_created < TIMESTAMPTZ '2026-04-07T09:40:00Z'
+-- job_id
+-- eebf52dc-5e1a-4745-85ca-2e265005f1f9
+-- 56d89882-5c80-4115-93d4-530a8d5c3c79
+-- e51836fb-caf0-4979-a500-90414923079e
+-- 2f2d8012-7067-4494-b5ec-85a7a13f01e6
+-- 2ee999a9-3bae-438f-966d-32f7cb22651a
+-- 2ce0b888-d118-41c8-a14a-8c31bbde5bbf
+-- 60647114-f0b6-4376-aad6-c73fe5d9e3ed
+-- 7914b353-c7e7-484f-9621-b602bf3bb92b
+-- 95b3a1a0-9e14-401d-9773-51e3e88a3f6f
+-- c782fb99-c96d-4057-af1e-d3d32abe6340
+-- fdca375f-ad12-4896-8040-c5e637f0b273
+-- 2803108f-5b9e-4e11-8c59-435db166ba9b
+-- df59ad40-a54f-4558-a097-fb808c939724
+-- 1a38af4a-89f3-4c4e-80d6-97fc0c0a1c7c
+-- 017ae325-b9d7-4885-9282-58afe08cadf4
+-- 13039884-ee8f-41d3-ab85-1fd9b89d3b1d
+-- 5aab950a-a335-4c1c-b775-6f4df7ab9949
+-- 7f3c7c15-352a-419b-87d0-458007a51d40
+-- 522dd954-1063-4d13-b27e-eb3aac6b30dd
+-- 6b8313b1-3e20-4a05-bb3b-08c0cfeb5e70
+-- 27a11dec-a7bf-4b7a-8e8d-a4b3f9275351
+-- ea86c4fc-247e-4144-be68-150566c4fd60
+-- 104faddf-0f0a-4907-9832-5489e2ca46f5
+-- b311c69c-d925-45a1-ac56-d679c4f84b14
+-- f31ed285-cb63-4cf8-9c24-043b46718e48
+-- ac40cdf2-e137-4704-bee7-7ecd95641cad
+-- 32217f26-cb10-4367-a359-490470f88b2d
+-- 61204999-92de-43e5-9688-765161feee4e
+-- e535d064-e97e-4d6e-b180-62d9552f3f5a
+-- 4e2f368f-b0d8-40eb-95fc-c006ac903630
+-- bafd6e97-b772-4963-9492-ee029d9346b7
+-- cea851d2-aa63-4fc9-8210-d56416e3ff18
+-- 514b7e81-a9c9-4169-b739-d334e73b83df
+-- 94c14e1e-5e28-4714-95e1-c1badcc7b350
+-- a9e95fa9-e2eb-4fc8-b6ba-8a18ae07265a
+-- 60b33435-3620-49de-b6c0-0f5b012d4e73
+-- 906f30d8-2a5e-4635-84d5-418826b572b1
+-- a34d3ead-126f-440d-b275-d6d551030d8d
+-- f50d1e3f-1bee-4046-9773-c537aa577813
+-- bb1624ce-0c40-4942-a26a-b1a638ba37b5
+-- 1c8494cd-3c13-4343-83d6-b67decf6fdef
+-- 87506e6e-c798-445e-929e-76f13d95079c
+-- 8113d67e-b18e-4c69-aacd-31f11a175d4e
+-- 6e38322b-9bc6-4e83-99a8-04e4cc517ceb
+-- 1978d97a-b794-4999-ba4b-6166b938e944
+-- 8e0bdf55-da2f-4284-a80a-3bc717a4ec2b
+-- af12ba58-8e73-4496-913f-f89eaf98403d
+-- a6d23a2e-8286-4905-a5e4-1b6aa2f7af89
+-- 91b7048d-0210-4b7e-84fc-78fcaa243030
+-- c0ad0bf1-8979-44ea-83e9-f3f5bcb415b1
+-- cdf956c5-517e-4c0a-a1ce-6e1f0f5545d8
+-- 33edb8e0-594c-44e6-8169-4a65d64bc5a3
+-- 514d796b-9044-4d96-b531-d29327112896
+-- 5ad4ed5a-e3b3-40d8-b02f-03433e81fa3f
