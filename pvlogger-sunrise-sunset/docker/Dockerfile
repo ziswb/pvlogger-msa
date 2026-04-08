@@ -17,8 +17,6 @@ COPY --from=build "/workspace/pvlogger-sunrise-sunset/build/libs/pvlogger-sunris
 RUN useradd -u 1000 bziswiler
 USER bziswiler
 
-ENV TZ="Europe/Zurich"
-
 ENTRYPOINT [ \
     "java", \
     "-jar", \

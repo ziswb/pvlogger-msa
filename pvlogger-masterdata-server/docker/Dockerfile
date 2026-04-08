@@ -18,8 +18,6 @@ COPY "pvlogger-masterdata-server/docker/Sun2000*.csv" "/opt/pvlogger/masterdata/
 RUN useradd -u 1000 bziswiler
 USER bziswiler
 
-ENV TZ="Europe/Zurich"
-
 ENTRYPOINT [ \
     "java", \
     "-jar", \

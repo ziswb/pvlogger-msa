@@ -17,8 +17,6 @@ COPY --from=build "/workspace/pvlogger-modbus-mock-server/build/libs/pvlogger-mo
 RUN useradd -u 1000 bziswiler
 USER bziswiler
 
-ENV TZ="Europe/Zurich"
-
 ENTRYPOINT [ \
     "java", \
     "-jar", \

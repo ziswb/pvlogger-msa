@@ -1,9 +1,17 @@
 package datetime
 
 import (
+	"os"
 	"strings"
 	"testing"
 )
+
+func TestMain(m *testing.M) {
+	os.Setenv("TZ", "Europe/Zurich")
+	// Re-initialize localZone since init() may have run before TZ was set
+	initTimezone()
+	os.Exit(m.Run())
+}
 
 func TestFormatForDataRecord_KnownTimestamp(t *testing.T) {
 	// Unix timestamp 0 in Europe/Zurich (CET = UTC+1) is 1970-01-01 01:00:00
