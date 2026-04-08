@@ -8,8 +8,6 @@ import (
 
 func TestMain(m *testing.M) {
 	os.Setenv("TZ", "Europe/Zurich")
-	// Re-initialize localZone since init() may have run before TZ was set
-	initTimezone()
 	os.Exit(m.Run())
 }
 

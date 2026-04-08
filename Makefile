@@ -2,7 +2,7 @@ SUB_DIRS := pv-fast-data-collector pv-full-data-collector pvlogger-fusionsolar p
 
 .PHONY: build clean lint $(SUB_DIRS)
 
-build clean lint: $(SUB_DIRS)
+build clean lint test: $(SUB_DIRS)
 
 $(SUB_DIRS):
 	$(MAKE) -C $@ $(MAKECMDGOALS)

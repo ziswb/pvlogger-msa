@@ -2,8 +2,14 @@ package kpi
 
 import (
 	"math"
+	"os"
 	"testing"
 )
+
+func TestMain(m *testing.M) {
+	os.Setenv("TZ", "Europe/Zurich")
+	os.Exit(m.Run())
+}
 
 func TestMapToExportRecord_PowerConversion(t *testing.T) {
 	kpis := &Values{
