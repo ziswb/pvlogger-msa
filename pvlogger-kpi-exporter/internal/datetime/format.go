@@ -19,6 +19,6 @@ func format(pointInTime int64, layout string) string {
 	if err != nil {
 		logging.Fatal("failed to load timezone", "location", "Europe/Zurich", "error", err)
 	}
-	dateTime := time.Date(1970, 1, 1, 0, 0, 0, 0, loc).Add(time.Duration(pointInTime) * time.Millisecond)
+	dateTime := time.UnixMilli(pointInTime).In(loc)
 	return dateTime.Format(layout)
 }

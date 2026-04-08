@@ -6,13 +6,11 @@ import (
 )
 
 func TestFormatForDataRecord_KnownTimestamp(t *testing.T) {
-	// Use a known timestamp and verify the output format
-	// The function uses Europe/Zurich timezone starting from local epoch
+	// Unix timestamp 0 in Europe/Zurich (CET = UTC+1) is 1970-01-01 01:00:00
 	result := FormatForDataRecord(0)
 
-	// Should be formatted as "YYYY-MM-DD HH:MM:SS"
-	if result != "1970-01-01 00:00:00" {
-		t.Errorf("expected '1970-01-01 00:00:00', got '%s'", result)
+	if result != "1970-01-01 01:00:00" {
+		t.Errorf("expected '1970-01-01 01:00:00', got '%s'", result)
 	}
 }
 
@@ -30,10 +28,11 @@ func TestFormatForDataRecord_Format(t *testing.T) {
 }
 
 func TestFormatFileNameSafe_KnownTimestamp(t *testing.T) {
+	// Unix timestamp 0 in Europe/Zurich (CET = UTC+1) is 1970-01-01 01:00:00
 	result := FormatFileNameSafe(0)
 
-	if result != "1970-01-01_00-00-00.000" {
-		t.Errorf("expected '1970-01-01_00-00-00.000', got '%s'", result)
+	if result != "1970-01-01_01-00-00.000" {
+		t.Errorf("expected '1970-01-01_01-00-00.000', got '%s'", result)
 	}
 }
 
@@ -72,6 +71,15 @@ func TestFormatFileNameSafe_MillisecondPrecision(t *testing.T) {
 	}
 	if !strings.HasSuffix(result2, ".123") {
 		t.Errorf("expected .123 suffix, got '%s'", result2)
+	}
+}
+
+func TestFormatForDataRecord_KnownTimestampWithValue(t *testing.T) {
+	// 1709208000000 ms = 2024-02-29 12:00:00 UTC = 2024-02-29 13:00:00 CET
+	result := FormatForDataRecord(1709208000000)
+
+	if result != "2024-02-29 13:00:00" {
+		t.Errorf("expected '2024-02-29 13:00:00', got '%s'", result)
 	}
 }
 
