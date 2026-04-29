@@ -61,7 +61,7 @@ func Load() *Config {
 			Username: getEnv("POSTGRESQL_USERNAME", "postgres"),
 			Password: getEnvChecked("POSTGRES_PASSWORD"),
 			Host:     getEnvChecked("POSTGRESQL_HOST"),
-			Port:     getIntEnv("POSTGRESQL_PORT", "5433"),
+			Port:     getIntEnv("POSTGRESQL_PORT", "5434"),
 			DbName:   getEnv("DB_NAME", "fsdata"),
 		},
 		K8s: K8sConfig{

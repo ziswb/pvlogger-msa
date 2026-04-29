@@ -10,7 +10,7 @@ spec:
   type: ClusterIP
   ports:
     - name: postgres
-      port: 5433
+      port: 5434
       targetPort: tcp-postgres
       protocol: TCP
   selector:
