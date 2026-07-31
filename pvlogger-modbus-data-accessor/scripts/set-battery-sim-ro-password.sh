@@ -7,13 +7,17 @@ set -euo pipefail
 # Requires: psql, 1Password CLI (op), superuser access to the pvdata database.
 #
 # Usage:
-#   POSTGRESQL_HOST=<db-host> [POSTGRESQL_PORT=5432] [OP_ITEM=<op-uri>] ./set-battery-sim-ro-password.sh
+#   POSTGRESQL_HOST=<db-host> [POSTGRESQL_PORT=5432] [OP_ITEM=<op-uri>] [PVLOGGER_OP_ACCOUNT=<account-url>] ./set-battery-sim-ro-password.sh
 
 HOST="${POSTGRESQL_HOST:?set POSTGRESQL_HOST to the PostgreSQL server}"
 PORT="${POSTGRESQL_PORT:-5432}"
 OP_ITEM="${OP_ITEM:-op://Private/PVLogger battery_sim_ro/password}"
+# The item lives in the personal account. Deliberately NOT named OP_ACCOUNT:
+# the shell exports OP_ACCOUNT=<work-op-account> (work default), which would
+# silently win over any fallback here.
+PVLOGGER_OP_ACCOUNT="${PVLOGGER_OP_ACCOUNT:-my.1password.com}"
 
-PASSWORD="$(op read "$OP_ITEM")"
+PASSWORD="$(op read --account "$PVLOGGER_OP_ACCOUNT" "$OP_ITEM")"
 
 # :'pw' lets psql quote the password safely, whatever characters it contains
 echo "ALTER ROLE battery_sim_ro LOGIN PASSWORD :'pw';" |
