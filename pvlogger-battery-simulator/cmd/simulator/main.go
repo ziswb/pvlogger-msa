@@ -28,6 +28,7 @@ func main() {
 	importPrice := flag.Float64("import-price", 0.2576, "grid import price per kWh (flat tariff)")
 	feedInPrice := flag.Float64("feedin-price", 0.06, "feed-in remuneration per kWh")
 	csvPath := flag.String("csv", "", "optional path for a per-month CSV export")
+	summaryCSVPath := flag.String("summary-csv", "", "optional path for a whole-period summary CSV (one row per battery)")
 	dbHost := flag.String("db-host", "<central-host>", "PostgreSQL host")
 	dbPort := flag.Int("db-port", 5434, "PostgreSQL port")
 	dbName := flag.String("db-name", "pvdata", "database name")
@@ -91,6 +92,12 @@ func main() {
 			logging.Fatal("failed to write CSV", "error", err)
 		}
 		logging.Info("monthly CSV written", "path", *csvPath)
+	}
+	if *summaryCSVPath != "" {
+		if err := report.WriteSummaryCSV(*summaryCSVPath, engines, report.Tariff{ImportPrice: *importPrice, FeedInPrice: *feedInPrice}); err != nil {
+			logging.Fatal("failed to write summary CSV", "error", err)
+		}
+		logging.Info("summary CSV written", "path", *summaryCSVPath)
 	}
 }
 

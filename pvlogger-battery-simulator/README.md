@@ -97,6 +97,7 @@ Or build a binary with `make build` (output in `./build/`).
 | `-import-price` | `0.2576` | Grid import price per kWh (flat tariff) |
 | `-feedin-price` | `0.06` | Feed-in remuneration per kWh |
 | `-csv` | *(off)* | Write a per-month, per-battery CSV to this path |
+| `-summary-csv` | *(off)* | Write a whole-period summary CSV (one row per battery) to this path |
 | `-db-host` | `<central-host>` | PostgreSQL host |
 | `-db-port` | `5434` | PostgreSQL port |
 | `-db-name` | `pvdata` | Database name |
@@ -140,8 +141,14 @@ LUNA2000-15           3233        7592         43.9       63.4     190      90.2
 Also check the **coverage line** — if a large share of hours is excluded, pick a
 different period (see gap handling above).
 
-The CSV (`-csv`) contains the same figures per month and battery, plus the excluded
-hours per month, and imports directly into any spreadsheet or plotting tool.
+Two CSV exports are available, both with explicit `*_no_battery_kwh` and
+`*_with_battery_kwh` import/export columns:
+
+- `-csv` — per month and battery: energy figures, self-consumption and autarky with
+  the battery, and the excluded hours per month. For plotting seasonal behaviour.
+- `-summary-csv` — one row per battery over the whole period: everything the console
+  table shows plus the baseline figures, coverage hours, and the tariff prices used.
+  For collecting and comparing runs (e.g. different years) in a spreadsheet.
 
 ## Development
 
