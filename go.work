@@ -5,6 +5,7 @@ use (
 	./pv-fast-data-collector
 	./pv-full-data-collector
 	./pv-logger
+	./pvlogger-battery-simulator
 	./pvlogger-fusionsolar
 	./pvlogger-fusionsolar-auth
 	./pvlogger-kpi-exporter
