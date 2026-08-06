@@ -2,6 +2,12 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+**Read first:** [CONTEXT.md](CONTEXT.md) (purpose, domain vocabulary, component map, data flow),
+[docs/adr/](docs/adr/) (decisions — check before introducing a new pattern),
+[docs/CONSOLIDATION-BACKLOG.md](docs/CONSOLIDATION-BACKLOG.md) (known divergences — don't imitate them),
+[docs/OPEN-QUESTIONS.md](docs/OPEN-QUESTIONS.md) (undocumented knowledge).
+Deployment lives in the sibling `infrastructure` repo (see `infrastructure/docs/LANDSCAPE.md`).
+
 ## Project Overview
 
 PVLogger is a solar panel monitoring and data collection system built as a polyglot microservices architecture. It integrates with Modbus devices and FusionSolar APIs, stores data in PostgreSQL, and serves a dashboard frontend.
@@ -38,6 +44,10 @@ tilt up     # Start full local K8s dev environment (requires Docker Desktop K8s)
 tilt down   # Tear down
 ```
 
+⚠️ The Tiltfile references a `pvlogger-infrastructure/` directory that no longer
+exists and has no `docker_build` steps — verify it still works before relying on it
+(tracked in docs/CONSOLIDATION-BACKLOG.md).
+
 Database runs via Docker Compose in `pvlogger-database/`.
 
 ## Architecture
@@ -45,34 +55,40 @@ Database runs via Docker Compose in `pvlogger-database/`.
 ### Service Map
 
 **JVM Services (Kotlin/Ktor):**
-- `pvlogger-frontend` — Angular 15 SPA served by Ktor (port 8080). Dashboard with ag-grid tables and Highcharts visualizations.
-- `pvlogger-masterdata-server` — Device metadata CRUD service (port 8081)
+- `pvlogger-frontend` — Angular 19 SPA (Angular Material + Highcharts) served by Ktor (port 8085); also serves the `/livedata` WebSocket
+- `pvlogger-masterdata-server` — Modbus register master data CRUD/import service (port 8081)
 - `pvlogger-modbus-data-accessor` — Central data store/query service for register values and KPIs (port 8083)
-- `pvlogger-modbus-mock-server` — Mock Modbus device for local testing
-- `pvlogger-sunrise-sunset` — Sunrise/sunset time calculation
-- `pvlogger-shared` — Shared Kotlin library (REST path constants, serialization models, database utilities)
+- `pvlogger-modbus-mock-server` — Mock Modbus TCP device for local testing (raw TCP port 8502)
+- `pvlogger-sunrise-sunset` — Sunrise/sunset time calculation (port 8089)
+- `pvlogger-shared-model`, `pvlogger-shared-rest`, `pvlogger-shared-database` — Shared Kotlin libraries (Modbus domain model; REST path constants + KPI DTO; Hikari/Flyway bootstrap)
 
 **Go Services (CronJob-based):**
-- `pv-device-data-collector` — Scheduled Modbus polling, stores via Data Accessor REST API
-- `pvlogger-fusionsolar` — FusionSolar API data integration
-- `pvlogger-fusionsolar-auth` — FusionSolar authentication handling
-- `pvlogger-kpi-exporter` — KPI data export
-- `pv-logger` — Shared Go library (logging)
+- `pv-fast-data-collector` — Per-minute Modbus polling of 5 KPI registers, computes and stores KPIs (the active collector)
+- `pv-full-data-collector` — Full dynamic-register collection (mutually exclusive with fast; currently suspended, see CONTEXT.md)
+- `pv-device-data-collector` — Nightly static/config register + device identifier collection
+- `pvlogger-fusionsolar` — FusionSolar API data integration (writes its own `fsdata` DB directly)
+- `pvlogger-fusionsolar-auth` — Refreshes the FusionSolar token into a K8s secret
+- `pvlogger-kpi-exporter` — Exports latest KPIs as JSON files (OneDrive-synced volume)
+- `pv-logger`, `pvlogger-shared-modbus` — Shared Go libraries (logging/env config; Modbus TCP client, KPI math, REST clients)
+
+**Tools (not deployed):** `pvlogger-battery-simulator` (local CLI, see its README), `pvlogger-database` (local compose DB + migration history).
 
 ### Communication Flow
 
+See CONTEXT.md for the full diagram. Short version:
+
 ```
-Modbus Devices → pv-device-data-collector (Go CronJob) → modbus-data-accessor (REST POST)
-FusionSolar API → fusionsolar (Go CronJob) → modbus-data-accessor (REST POST)
-Frontend → modbus-data-accessor (REST GET for live data, KPIs)
-Frontend → masterdata-server (REST GET for device metadata)
+Modbus device → fast/full/device collectors (Go CronJobs) → modbus-data-accessor (REST POST)
+FusionSolar API → fusionsolar (Go CronJob) → fsdata DB (direct SQL, not via data accessor)
+Angular SPA → /v1/daydata via ingress → modbus-data-accessor (history)
+Angular SPA → /livedata WebSocket → frontend Ktor → modbus-data-accessor (latest KPI, 60s poll)
 ```
 
-Kubernetes DNS handles inter-service discovery. Traefik ingress routes `/v1*` to Data Accessor and `/pv*`, `/livedata*` to Frontend.
+Kubernetes DNS handles inter-service discovery. Traefik ingress routes `/v1` to Data Accessor and `/`, `/livedata` to Frontend.
 
 ### Data Storage
 
-PostgreSQL 17.2 with Flyway migrations (in each service's `src/main/resources/db/migration/`). Exposed ORM for Kotlin services, pgx driver for Go services.
+PostgreSQL (18 in production, on the homelab central server) with Flyway migrations (in each service's `src/main/resources/db/migration/`; exception: `fsdata` has no migrations). Exposed ORM for Kotlin services, pgx/sqlc for Go services.
 
 ## Code Conventions
 
@@ -98,7 +114,7 @@ Go services use a job dispatch pattern (switch on job name), read K8s secrets fo
 
 ### Key Technology Choices
 
-- **Ktor 2.x** for HTTP (not Spring) — async, lightweight
+- **Ktor 3.x** for HTTP (not Spring) — async, lightweight
 - **Koin** for DI (not Dagger/Hilt)
 - **Exposed** for database access (not JPA/Hibernate)
 - **Kotlinx Serialization** (not Jackson/Gson)
@@ -112,4 +128,4 @@ Centralized in `gradle/libs.versions.toml`. Key versions are managed there — a
 
 ### Testing
 
-JVM tests use Ktor test host, Koin test, and JUnit 5. Test utilities live in `testutils` packages. Tests use H2 in-memory database via `application-test.conf`.
+JVM tests use Ktor test host, Koin test, and JUnit 5. Test utilities live in `testutils` packages. Note: `application-test.conf` points at a real local PostgreSQL; the H2 in-memory database is used by the **dev** profiles (`application-dev.conf`), not the tests.
