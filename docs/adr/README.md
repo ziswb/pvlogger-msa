@@ -12,6 +12,7 @@ old one. Half a page max; the point is the *why*. Template: see
 - [0003 — Image versioning and deployment flow](0003-image-versioning-and-deployment.md)
 - [0004 — Three Modbus collectors: fast by default, full as manual alternative, device nightly](0004-three-modbus-collectors-manual-toggle.md)
 - [0005 — Retire sunrise-sunset: FusionSolar collection runs around the clock](0005-retire-sunrise-sunset.md)
+- [0006 — Defer the battery purchase; keep the simulator for re-evaluation](0006-defer-battery-purchase-keep-simulator.md)
 
 ## Candidate ADRs (implicit decisions worth writing down)
 

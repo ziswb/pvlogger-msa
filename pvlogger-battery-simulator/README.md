@@ -7,6 +7,12 @@ simulated battery, minute by minute, instead of relying on rules of thumb.
 Background and motivation: see `Batteriespeicher_Projekt_Zusammenfassung.md` in the
 repository root.
 
+**Status (2026-08-07):** first evaluation concluded — a battery is not economical at
+current prices; the purchase is deferred. This tool stays for re-evaluation when
+parameters change (energy price, feed-in remuneration, battery cost) — see
+`docs/adr/0006-defer-battery-purchase-keep-simulator.md`. Note that it models a flat
+tariff only; dynamic-tariff scenarios need an engine extension first.
+
 ## How it works
 
 ### Input data

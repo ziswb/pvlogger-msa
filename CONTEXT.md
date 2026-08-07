@@ -25,7 +25,9 @@ description, in German). It:
 - computes household energy **KPIs**,
 - serves a **dashboard** (live via WebSocket + per-day history),
 - exports KPI snapshots as JSON files (OneDrive-synced),
-- and feeds a **battery simulator** used to evaluate a LUNA2000 battery purchase.
+- and feeds a **battery simulator** used to evaluate a LUNA2000 battery purchase
+  (2026 verdict: not economical yet — purchase deferred, simulator kept for
+  re-evaluation when prices change; ADR-0006).
 
 It runs as microservices on the homelab K3S cluster; deployment is owned by the
 `infrastructure` repo (Helm chart under `ansible/roles/pvlogger_helm_deploy/`).
@@ -100,6 +102,8 @@ bootstrap). Go: `pv-logger` (logging, env config), `pvlogger-shared-modbus`
 
 `pvlogger-battery-simulator` — local CLI replaying historical KPI data against
 simulated LUNA2000 batteries (deliberately no Docker/K8s; see its README).
+Purchase deferred as uneconomical (2026); the CLI stays as the standing
+re-evaluation tool (ADR-0006).
 `pvlogger-database/` — local Docker Compose Postgres + historical migration
 runbooks; not a service.
 
