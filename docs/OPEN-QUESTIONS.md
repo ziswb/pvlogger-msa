@@ -51,3 +51,12 @@ inline, then promote stable answers to CONTEXT.md or an ADR and delete the quest
     Answered 2026-08-07: correct — they are the operator's home coordinates.
     But hard-coding them is not intentional design: moving them to
     configuration is now CONSOLIDATION-BACKLOG item 27.
+
+## Added after the initial review
+
+11. **Is `pvlogger-sunrise-sunset` deployed at all, and who calls it?**
+    (Noticed 2026-08-07 while answering Q10.) The Helm chart in the
+    infrastructure repo has no template for it, and nothing else in this repo
+    references it — only the chart's `db-backup.yaml` backs up a
+    `sunrisesunset` database. Orphaned module, or deployed/consumed some way
+    not visible here? Affects CONSOLIDATION-BACKLOG item 27.

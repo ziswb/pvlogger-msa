@@ -102,4 +102,6 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     operator's home, confirmed 2026-08-07, ex open question 10), but personal
     location data baked into repo and image instead of following the `${ENV_VAR}`
     interpolation pattern the other services use. Externalize to env vars supplied
-    at deploy time (Helm chart in the infrastructure repo).
+    at deploy time. Note: the pvlogger Helm chart currently has **no template for
+    sunrise-sunset at all** (see open question 11) — clarify how/whether the
+    service is deployed before deciding where the config lives.
