@@ -79,7 +79,7 @@ It runs as microservices on the homelab K3S cluster; deployment is owned by the
 | `pv-device-data-collector` | Nightly: reads STATIC/CONFIG registers, device identifiers and device list. |
 | `pvlogger-fusionsolar` | Six scheduled jobs pulling FusionSolar OpenAPI KPIs (station/device, real-time/day/month/year) — writes **directly** to the `fsdata` DB (not via the data accessor). |
 | `pvlogger-fusionsolar-auth` | Refreshes the FusionSolar API token into a K8s secret every 20 min; the collector jobs read it. |
-| `pvlogger-kpi-exporter` | Every 5 min: reads the latest KPI and writes a German-keyed (`pv_*`) JSON file to an NFS/OneDrive-synced volume. ⚠️ GAP: who/what consumes these files? |
+| `pvlogger-kpi-exporter` | Every 5 min: reads the latest KPI and writes a German-keyed (`pv_*`) JSON file to an NFS/OneDrive-synced volume. Consumed by the operator's receiver: he runs a small platform comparing the energy/PV data of three family households (operator, another household, his own). This is an **external consumer** — treat the file naming, keys, and 5-min cadence as a de-facto contract. |
 
 ### Shared libraries
 
@@ -109,7 +109,7 @@ flowchart LR
     MD --> MDDB[(pvmasterdata)]
     DA -->|read-latest-kpi| FE[frontend Ktor] -->|WebSocket /livedata| SPA[Angular SPA]
     DA -->|/v1/daydata via ingress| SPA
-    DA -->|read-latest-kpi| EXP[kpi-exporter] --> ONE[OneDrive files]
+    DA -->|read-latest-kpi| EXP[kpi-exporter] --> ONE[OneDrive files\nfamily PV-comparison platform]
 ```
 
 \* full collector currently suspended (chart bug).

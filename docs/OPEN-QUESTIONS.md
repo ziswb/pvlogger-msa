@@ -25,8 +25,11 @@ inline, then promote stable answers to CONTEXT.md or an ADR and delete the quest
 4. **`fsdata` schema ownership**: fusionsolar writes it via sqlc but ships no
    migrations — the DDL lives only in the running DB and old dumps. Intentional
    (schema managed manually) or a gap to fix with Flyway/tern?
-5. **Who consumes the kpi-exporter output** (`pv_*` JSON on OneDrive, every
-   5 min)? Nothing in either repo references a consumer.
+5. ~~**Who consumes the kpi-exporter output** (`pv_*` JSON on OneDrive, every
+   5 min)?~~ Answered 2026-08-07: the operator's receiver — he runs a small
+   platform comparing the energy/PV data of three family households (operator,
+   another household, his own). Promoted to CONTEXT.md component table; format and
+   cadence are a de-facto external contract.
 6. **Mock server in production?** The Helm chart ships a template + pinned tag
    for it. Dev-only or actually deployed?
 7. **`Category.DEVLST` and `Type.MLD`** exist in the model; `MLD` throws
