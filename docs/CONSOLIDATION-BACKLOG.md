@@ -8,11 +8,19 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
 
 ## 🔴 Likely defects (verify, then fix)
 
-1. **masterdata-server prod config DB-name mismatch**:
-   `pvlogger-masterdata-server/src/main/resources/application-prod.conf` has
-   `dbName = "fsdata"` while the JDBC URL ends in `/pvmasterdata`.
-   `DatabaseFactory.assertDatabaseExists()` uses `dbName`, so it checks/creates
-   the wrong database (works today only because `fsdata` happens to exist).
+1. **masterdata-server prod config DB-name mismatch**: verified and partially
+   fixed 2026-08-07. `dbName` is used *only* by the first-boot self-provisioning
+   in `DatabaseFactory` (exists-check + create); all real access and Flyway use
+   `dbServerCanonicalUrl`. The wrong `dbName = "fsdata"` in
+   `application-prod.conf` was dormant because `fsdata` exists on the shared
+   server — but on a fresh server it would create a spurious `fsdata` and then
+   crash-loop against the missing `pvmasterdata`. The one-line config fix is
+   applied (`dbName = "pvmasterdata"`). **Remaining**: eliminate the bug class —
+   the DB name is stated twice (in `dbName` and inside the canonical URL);
+   derive one from the other in `pvlogger-shared-database` so a mismatch is
+   impossible, and clean the same copy-paste in the data-accessor's H2
+   `TestBase.kt` (`dbName = "pvmasterdata"` although that service owns
+   `pvdata`).
 2. **`sumUp` adds the same value N times**:
    `pv-full-data-collector/internal/services/dataaccessor/data-accessor-service.go`
    loops over `deviceIds` but calls `retrieveEnergyTodaySoFar(md)` without a
