@@ -11,6 +11,9 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.koin.test.KoinTest
 import org.koin.test.junit5.KoinTestExtension
+import org.testcontainers.containers.PostgreSQLContainer
+import java.sql.DriverManager
+import java.sql.SQLException
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class TestBase : KoinTest {
@@ -21,6 +24,7 @@ abstract class TestBase : KoinTest {
 
     fun <R> withApp(applicationTestBuilder: suspend ApplicationTestBuilder.() -> R) =
         testApplication {
+            truncateAllTables()
             application {
                 module(testing = true)
                 org.koin.dsl.module {
@@ -32,12 +36,11 @@ abstract class TestBase : KoinTest {
                 config =
                     MapApplicationConfig(
                         "ktor.server.isProd" to "false",
-                        "database.driverClass" to "org.h2.Driver",
-                        "database.dbServerUrl" to "jdbc:h2:mem:mem;DATABASE_TO_UPPER=false;MODE=PostgreSQL",
-                        "database.dbName" to "pvdata",
-                        "database.dbServerCanonicalUrl" to "jdbc:h2:mem:mem;DATABASE_TO_UPPER=false;MODE=PostgreSQL",
-                        "database.user" to "sa",
-                        "database.password" to "",
+                        "database.driverClass" to "org.postgresql.Driver",
+                        "database.dbServerUrl" to postgres.serverUrl(),
+                        "database.dbName" to TEST_DB,
+                        "database.user" to postgres.username,
+                        "database.password" to postgres.password,
                         "database.maxPoolSize" to "1",
                         "masterdata.import.meterMasterDataPath" to "",
                         "masterdata.import.inverterMasterDataPath" to "",
@@ -50,4 +53,43 @@ abstract class TestBase : KoinTest {
             }
             applicationTestBuilder.invoke(this)
         }
+
+    companion object {
+        private const val TEST_DB = "pvdata"
+
+        // One PostgreSQL per test JVM (matching the version run in production).
+        // DatabaseFactory self-provisions the pvdata database on first connect and
+        // Flyway migrates it exactly once — V8 creates a cluster-wide role and must
+        // not run twice, so tests share the database instead of getting one each.
+        private val postgres: PostgreSQLContainer<*> = PostgreSQLContainer("postgres:18").apply { start() }
+
+        private val tables =
+            listOf(
+                "house_power_kpi_values",
+                "modbus_response_data",
+                "modbus_characteristic_curve_data",
+                "modbus_register_integer_values",
+                "modbus_register_short_values",
+                "modbus_register_string_values",
+                "modbus_register_uinteger_values",
+                "modbus_register_ushort_values",
+                "raw_kpi_register_values",
+            )
+
+        private fun PostgreSQLContainer<*>.serverUrl() =
+            "jdbc:postgresql://$host:${getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT)}/"
+
+        // Restores the fresh-database semantics the previous per-test in-memory H2
+        // instance provided. On the very first test the database does not exist yet
+        // (DatabaseFactory creates it during application start) — nothing to clean.
+        private fun truncateAllTables() {
+            try {
+                DriverManager.getConnection("${postgres.serverUrl()}$TEST_DB", postgres.username, postgres.password).use {
+                    it.createStatement().execute("TRUNCATE TABLE ${tables.joinToString(", ")} RESTART IDENTITY CASCADE")
+                }
+            } catch (ignored: SQLException) {
+                // database not created yet — first test in this JVM
+            }
+        }
+    }
 }

@@ -19,7 +19,7 @@ import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.time.ZoneOffset
+import java.time.ZoneId
 
 class RawKpiControllerTest : TestBase() {
 
@@ -59,20 +59,24 @@ class RawKpiControllerTest : TestBase() {
     fun `meter energy today computes delta`() = withApp {
         startApplication()
         cleanAllTables()
+        // The daily-delta SQL buckets by CAST(date_created AS DATE), which
+        // PostgreSQL evaluates in the session timezone (= the JVM's zone via
+        // pgJDBC) — so the seeds must be built in that same zone, not UTC.
+        val zone = ZoneId.systemDefault()
         val today = LocalDate.now()
         val yesterday = today.minusDays(1)
         seedRawKpiRow(
-            dateCreated = yesterday.atTime(23, 0).toInstant(ZoneOffset.UTC),
+            dateCreated = yesterday.atTime(12, 0).atZone(zone).toInstant(),
             meterExportedEnergy = 100.0,
             meterImportedEnergy = 50.0,
         )
         seedRawKpiRow(
-            dateCreated = today.atTime(8, 0).toInstant(ZoneOffset.UTC),
+            dateCreated = today.atTime(8, 0).atZone(zone).toInstant(),
             meterExportedEnergy = 120.0,
             meterImportedEnergy = 70.0,
         )
         seedRawKpiRow(
-            dateCreated = today.atTime(12, 0).toInstant(ZoneOffset.UTC),
+            dateCreated = today.atTime(12, 0).atZone(zone).toInstant(),
             meterExportedEnergy = 150.0,
             meterImportedEnergy = 90.0,
         )

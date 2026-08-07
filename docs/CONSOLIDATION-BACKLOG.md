@@ -131,10 +131,11 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     for a while and out of date. Update it so the Tilt environment (item 23)
     works again for larger changes, and consider building e2e tests around it —
     none exist today. It stays local-only, never production (open question 6).
-31. 🔴 **All 22 data-accessor tests fail on H2** (pre-existing; discovered
-    2026-08-07 while verifying item 1): `V6__UseTimestampWithTimezone.sql`
-    starts with `SET timezone = 'UTC'`, which H2 cannot parse even in
-    `MODE=PostgreSQL` — every test dies in Flyway migrate before reaching any
-    assertion. Fix options: make the statement Postgres-only, or move the
-    H2-based tests to real PostgreSQL (e.g. Testcontainers), which would also
-    honor the "tests use real PostgreSQL" claim in CLAUDE.md.
+31. ~~🔴 **All 22 data-accessor tests fail on H2**~~ **Resolved 2026-08-07**
+    (ADR-0009): the tests now run against real PostgreSQL 18 via
+    Testcontainers — V6 was PostgreSQL-only syntax and unfixable on H2 without
+    a checksum-breaking edit. The move also exposed and fixed a test asserting
+    UTC day-bucketing that production (TIMESTAMPTZ, `TZ=Europe/Zurich`) never
+    had. `pvdata` migrations no longer need H2 compatibility; masterdata's
+    still do (its tests remain on H2). Tests now require a running Docker
+    daemon.

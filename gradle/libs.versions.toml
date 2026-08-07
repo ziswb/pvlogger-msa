@@ -13,6 +13,7 @@ logbackVersion = "1.5.29"
 loggingVersion = "7.0.3"
 postgresVersion = "42.7.9"
 prometheusVersion = "1.16.0"
+testcontainersVersion = "1.21.3"
 cacheVersion = "0.14.0"
 
 [libraries]
@@ -72,6 +73,7 @@ kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotl
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlinVersion" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesVersion" }
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktorVersion" }
+testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainersVersion" }
 
 [plugins]
 jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlinVersion" }
