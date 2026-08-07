@@ -24,14 +24,16 @@ private fun Application.readServerConfig(appConfig: AppConfig) = with(environmen
 }
 
 private fun Application.readDbConfig(appConfig: AppConfig) = with(environment.config.config("database")) {
-    appConfig.databaseConfig = DatabaseConfig(
+    val base = DatabaseConfig(
         driverClass = property("driverClass").getString(),
         driverDelegateClass = "",
         dbServerUrl = property("dbServerUrl").getString(),
         dbName = property("dbName").getString(),
-        dbServerCanonicalUrl = property("dbServerCanonicalUrl").getString(),
         user = property("user").getString(),
         password = property("password").getString(),
-        maxPoolSize = property("maxPoolSize").getString().toInt()
+        maxPoolSize = property("maxPoolSize").getString().toInt(),
+        dbUrlParams = propertyOrNull("dbUrlParams")?.getString() ?: "",
     )
+    val canonicalOverride = propertyOrNull("dbServerCanonicalUrl")?.getString()
+    appConfig.databaseConfig = if (canonicalOverride != null) base.copy(dbServerCanonicalUrl = canonicalOverride) else base
 }

@@ -14,6 +14,7 @@ old one. Half a page max; the point is the *why*. Template: see
 - [0005 — Retire sunrise-sunset: FusionSolar collection runs around the clock](0005-retire-sunrise-sunset.md)
 - [0006 — Defer the battery purchase; keep the simulator for re-evaluation](0006-defer-battery-purchase-keep-simulator.md)
 - [0007 — Microservices were chosen for learning; the bar for new services is pragmatic now](0007-microservices-for-learning-pragmatism-now.md)
+- [0008 — Database name is stated once; the canonical JDBC URL is derived](0008-derive-canonical-db-url.md)
 
 ## Candidate ADRs (implicit decisions worth writing down)
 

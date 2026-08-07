@@ -34,7 +34,7 @@ abstract class TestBase : KoinTest {
                         "ktor.server.isProd" to "false",
                         "database.driverClass" to "org.h2.Driver",
                         "database.dbServerUrl" to "jdbc:h2:mem:mem;DATABASE_TO_UPPER=false;MODE=PostgreSQL",
-                        "database.dbName" to "pvmasterdata",
+                        "database.dbName" to "pvdata",
                         "database.dbServerCanonicalUrl" to "jdbc:h2:mem:mem;DATABASE_TO_UPPER=false;MODE=PostgreSQL",
                         "database.user" to "sa",
                         "database.password" to "",

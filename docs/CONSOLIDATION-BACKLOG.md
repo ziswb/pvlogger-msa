@@ -8,19 +8,18 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
 
 ## 🔴 Likely defects (verify, then fix)
 
-1. **masterdata-server prod config DB-name mismatch**: verified and partially
-   fixed 2026-08-07. `dbName` is used *only* by the first-boot self-provisioning
-   in `DatabaseFactory` (exists-check + create); all real access and Flyway use
-   `dbServerCanonicalUrl`. The wrong `dbName = "fsdata"` in
-   `application-prod.conf` was dormant because `fsdata` exists on the shared
-   server — but on a fresh server it would create a spurious `fsdata` and then
-   crash-loop against the missing `pvmasterdata`. The one-line config fix is
-   applied (`dbName = "pvmasterdata"`). **Remaining**: eliminate the bug class —
-   the DB name is stated twice (in `dbName` and inside the canonical URL);
-   derive one from the other in `pvlogger-shared-database` so a mismatch is
-   impossible, and clean the same copy-paste in the data-accessor's H2
-   `TestBase.kt` (`dbName = "pvmasterdata"` although that service owns
-   `pvdata`).
+1. ~~**masterdata-server prod config DB-name mismatch**~~ **Resolved
+   2026-08-07** in two steps. (a) `dbName` corrected to `pvmasterdata` in
+   `application-prod.conf` — the wrong value was dormant (only first-boot
+   self-provisioning reads it, and `fsdata` happened to exist) but broke
+   fresh-server bootstrap. (b) The mismatch class eliminated: `DatabaseConfig`
+   derives `dbServerCanonicalUrl` from `dbServerUrl + dbName + dbUrlParams`
+   (**ADR-0008**); the PostgreSQL profiles of masterdata-server and
+   data-accessor state the name once, only the H2 configs still override the
+   canonical URL explicitly. The data-accessor `TestBase` dbName copy-paste
+   (`pvmasterdata` → `pvdata`) fixed too; deprecated sunrise-sunset deliberately
+   untouched (item 28). Reaches prod with the next image rebuild of both
+   services.
 2. **`sumUp` adds the same value N times**:
    `pv-full-data-collector/internal/services/dataaccessor/data-accessor-service.go`
    loops over `deviceIds` but calls `retrieveEnergyTodaySoFar(md)` without a
@@ -132,3 +131,10 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     for a while and out of date. Update it so the Tilt environment (item 23)
     works again for larger changes, and consider building e2e tests around it —
     none exist today. It stays local-only, never production (open question 6).
+31. 🔴 **All 22 data-accessor tests fail on H2** (pre-existing; discovered
+    2026-08-07 while verifying item 1): `V6__UseTimestampWithTimezone.sql`
+    starts with `SET timezone = 'UTC'`, which H2 cannot parse even in
+    `MODE=PostgreSQL` — every test dies in Flyway migrate before reaching any
+    assertion. Fix options: make the statement Postgres-only, or move the
+    H2-based tests to real PostgreSQL (e.g. Testcontainers), which would also
+    honor the "tests use real PostgreSQL" claim in CLAUDE.md.
