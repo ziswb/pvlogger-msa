@@ -39,9 +39,16 @@ inline, then promote stable answers to CONTEXT.md or an ADR and delete the quest
 
 ## Architecture details
 
-4. **`fsdata` schema ownership**: fusionsolar writes it via sqlc but ships no
+4. ~~**`fsdata` schema ownership**: fusionsolar writes it via sqlc but ships no
    migrations — the DDL lives only in the running DB and old dumps. Intentional
-   (schema managed manually) or a gap to fix with Flyway/tern?
+   (schema managed manually) or a gap to fix with Flyway/tern?~~
+   Answered 2026-08-07: a knowingly accepted gap, not a decision for manual
+   schema management. fusionsolar was once a long-running Kotlin/Ktor app
+   (jobs pushed by the homegrown quartz-based `pvlogger-heartbeat` service)
+   that owned the `fsdata` migrations; the Go rewrite — done because JVM
+   startup was too slow for K8s jobs — dropped them. Must be solved: plan and
+   recommended approach are backlog item 29; the rewrite history also
+   resolves the rationale GAP in ADR-0002.
 5. ~~**Who consumes the kpi-exporter output** (`pv_*` JSON on OneDrive, every
    5 min)?~~ Answered 2026-08-07: the operator's receiver — he runs a small
    platform comparing the energy/PV data of three family households (operator,

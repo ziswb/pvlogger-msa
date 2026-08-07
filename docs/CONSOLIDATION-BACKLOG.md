@@ -107,3 +107,14 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     from the chart's db-backup job — the chart/database side is infrastructure
     backlog item 32. Until deleted, the module still ships the operator's home
     coordinates in its HOCON profiles (ex item 27).
+29. **Introduce `fsdata` schema migrations** — a known gap since the Kotlin→Go
+    rewrite of fusionsolar (rationale in ADR-0002, ex open question 4), not a
+    decision: the DDL exists only in the running DB and old dumps. Two steps:
+    (1) **baseline now** — `pg_dump --schema-only` the live `fsdata` and commit
+    it as migration 0001; (2) **wire a runner** — recommended: a `migrate` job
+    inside `pvlogger-fusionsolar` itself (job-dispatch pattern; no new service,
+    per ADR-0007) using tern (pgx ecosystem) with `go:embed`-ded SQL files,
+    executed manually as a plain K8s Job. The operator's original plan — a
+    dedicated manually-activated migration service — would work but fails the
+    ADR-0007 bar; keeping migrations next to the sqlc queries they must match
+    is the decisive argument for the in-module job.

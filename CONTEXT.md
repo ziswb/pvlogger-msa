@@ -132,8 +132,9 @@ flowchart LR
 Rule: **all Modbus-derived data flows through the data accessor's REST API** —
 collectors never touch `pvdata` directly. The FusionSolar pipeline is the
 exception: it writes its own `fsdata` DB directly. ⚠️ GAP: deliberate exception
-or drift? (`fsdata` also has no Flyway migrations — its schema exists only in the
-running DB and old dumps.)
+or drift? (`fsdata`'s missing migrations, by contrast, are explained: knowingly
+dropped in the Kotlin→Go rewrite — see ADR-0002 — and to be reintroduced per
+backlog item 29.)
 
 ## Databases
 
@@ -145,7 +146,7 @@ owned by exactly one service, which also owns its Flyway migrations:
 | `pvdata` | modbus-data-accessor | register values, raw KPI registers, house KPIs |
 | `pvmasterdata` | masterdata-server | register definitions |
 | `sunrisesunset` | sunrise-sunset | cached sun times — deprecated, drop with the module (ADR-0005) |
-| `fsdata` | fusionsolar (no migrations — ⚠️ GAP above) | FusionSolar responses & KPIs |
+| `fsdata` | fusionsolar (no migrations — known gap, backlog item 29) | FusionSolar responses & KPIs |
 
 All four are dumped nightly by the db-backup CronJob (infrastructure repo).
 

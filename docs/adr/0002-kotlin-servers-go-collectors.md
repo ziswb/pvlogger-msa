@@ -25,5 +25,10 @@ API pulls, exports) that run as Kubernetes CronJobs on ARM64.
   by services that stay up.
 - Cross-cutting concerns must be maintained twice (REST path constants exist as a
   Kotlin object but only as scattered env defaults in Go — backlog item).
-- ⚠️ GAP: the actual historical rationale for the split is not written down; the
-  fit described above is inferred. Confirm or correct it.
+- ~~⚠️ GAP: the actual historical rationale for the split is not written down; the
+  fit described above is inferred. Confirm or correct it.~~ Confirmed 2026-08-07
+  (open question 4): fusionsolar was originally a long-running Kotlin/Ktor app
+  whose jobs were triggered by a homegrown quartz-based `pvlogger-heartbeat`
+  service, and it owned the `fsdata` migrations. With the switch to K8s jobs,
+  the JVM's startup cost proved too slow — that drove the rewrite to Go.
+  Migrations were knowingly dropped in that rewrite (backlog item 29).
