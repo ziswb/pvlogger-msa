@@ -54,8 +54,11 @@ inline, then promote stable answers to CONTEXT.md or an ADR and delete the quest
    platform comparing the energy/PV data of three family households (operator,
    another household, his own). Promoted to CONTEXT.md component table; format and
    cadence are a de-facto external contract.
-6. **Mock server in production?** The Helm chart ships a template + pinned tag
-   for it. Dev-only or actually deployed?
+6. ~~**Mock server in production?** The Helm chart ships a template + pinned tag
+   for it. Dev-only or actually deployed?~~
+   Answered 2026-08-07: never production — local development only. Promoted to
+   the CONTEXT.md component table. Whether the chart keeps shipping the
+   template depends on the dev-loop decision (Q8).
 7. **`Category.DEVLST` and `Type.MLD`** exist in the model; `MLD` throws
    `NotImplementedError` in the data accessor. Planned work or dead vocabulary?
 8. **Local dev loop**: is Tilt still the intended flow (Tiltfile references dead

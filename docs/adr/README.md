@@ -23,5 +23,4 @@ old one. Half a page max; the point is the *why*. Template: see
 - **Hand-rolled Modbus TCP** in `pvlogger-shared-modbus` instead of a library
   (the vendored `simonvetter_modbus` / `go-modbus` checkouts were evaluated and
   not adopted — why?).
-- **Mock server scope**: dev-only or also deployed?
 - **Tilt vs Helm** as the local dev loop (Tiltfile currently references dead paths).

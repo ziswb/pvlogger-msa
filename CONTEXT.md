@@ -81,7 +81,7 @@ themselves pragmatically — default to a job/endpoint in an existing service
 | `pvlogger-masterdata-server` | Owns the `pvmasterdata` DB. Imports register definitions from CSVs, serves them to collectors and the mock server. |
 | `pvlogger-frontend` | Serves the prebuilt Angular SPA, proxies the latest KPI as the `/livedata` WebSocket. History data goes **directly** SPA → data accessor (via ingress path `/v1`). |
 | `pvlogger-sunrise-sunset` | **Deprecated** (ADR-0005). Fetches and caches sunrise/sunset times for the site coordinates (own `sunrisesunset` DB). Historically gated FusionSolar collection to daylight hours; nothing calls it anymore — retirement is backlog item 28. |
-| `pvlogger-modbus-mock-server` | Emulates a Modbus TCP device (raw TCP, not HTTP) using real register definitions from the masterdata server. For development. ⚠️ GAP: is it ever deployed to the real cluster? The Helm chart can deploy it. |
+| `pvlogger-modbus-mock-server` | Emulates a Modbus TCP device (raw TCP, not HTTP) using real register definitions from the masterdata server. **Local development only — never deployed to production** (confirmed 2026-08-07); the Helm chart's mock-server template exists solely for local use. |
 
 ### Go CronJob collectors (short-lived batch runs)
 
