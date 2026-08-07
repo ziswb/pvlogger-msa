@@ -82,9 +82,9 @@ It runs as microservices on the homelab K3S cluster; deployment is owned by the
 
 | Service | Responsibility |
 |---|---|
-| `pv-fast-data-collector` | Every minute: reads 5 hard-coded registers, stores raw values, computes and stores live+today KPIs. **The currently active Modbus collector.** |
-| `pv-full-data-collector` | Reads *all* DYNAMIC+ALARM registers (definitions from masterdata), then aggregates KPIs. Designed as mutually exclusive alternative to the fast collector — **currently permanently suspended by a chart bug** (see infrastructure backlog #2). ⚠️ GAP: which collector is the strategic target? See [OPEN-QUESTIONS](docs/OPEN-QUESTIONS.md). |
-| `pv-device-data-collector` | Nightly: reads STATIC/CONFIG registers, device identifiers and device list. |
+| `pv-fast-data-collector` | Every minute: reads 5 hard-coded registers, stores raw values, computes and stores live+today KPIs. **The default Modbus collector** — registers are hard-coded *deliberately* for maximum speed (no masterdata dependency/API call; ADR-0004). |
+| `pv-full-data-collector` | Reads *all* DYNAMIC+ALARM registers (definitions from masterdata), then aggregates KPIs. The **manually-toggled permanent alternative** to the fast collector — exactly one of the two runs, because the Modbus endpoint allows only one client (ADR-0004). **Currently permanently suspended by a chart bug** (see infrastructure backlog #2), which defeats the intended manual toggle. |
+| `pv-device-data-collector` | Nightly: reads STATIC/CONFIG registers, device identifiers and device list. Stays permanently; scheduled at night to avoid the per-minute dynamic polling (one-Modbus-client constraint, ADR-0004). |
 | `pvlogger-fusionsolar` | Six scheduled jobs pulling FusionSolar OpenAPI KPIs (station/device, real-time/day/month/year) — writes **directly** to the `fsdata` DB (not via the data accessor). |
 | `pvlogger-fusionsolar-auth` | Refreshes the FusionSolar API token into a K8s secret every 20 min; the collector jobs read it. |
 | `pvlogger-kpi-exporter` | Every 5 min: reads the latest KPI and writes a German-keyed (`pv_*`) JSON file to an NFS/OneDrive-synced volume. Consumed by the operator's receiver: he runs a small platform comparing the energy/PV data of three family households (operator, another household, his own). This is an **external consumer** — treat the file naming, keys, and 5-min cadence as a de-facto contract. |

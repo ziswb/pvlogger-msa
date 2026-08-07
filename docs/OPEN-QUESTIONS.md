@@ -5,12 +5,19 @@ inline, then promote stable answers to CONTEXT.md or an ADR and delete the quest
 
 ## Strategy
 
-1. **Collector end state** (most consequential): `pv-fast-data-collector` (0.x,
+1. ~~**Collector end state** (most consequential): `pv-fast-data-collector` (0.x,
    5 hard-coded registers, currently the one running) and `pv-full-data-collector`
    (0.x, all dynamic registers, currently suspended — partly by a chart bug) look
    like the successor pair to `pv-device-data-collector` (3.x, still deployed for
    nightly static data). What is the intended end state? Which module can be
-   deprecated, and should `pv-full`'s duplicated code be extracted or deleted?
+   deprecated, and should `pv-full`'s duplicated code be extracted or deleted?~~
+   Answered 2026-08-07: not a migration — all three collectors are permanent.
+   Fast (hard-coded registers for speed, no masterdata dependency) and full
+   (all dynamic data) are mutually exclusive alternatives switched by a manual
+   toggle, because the Modbus endpoint allows only one client; the device
+   collector runs nightly, scheduled around the dynamic polling. Full's
+   duplicated code should be extracted, not deleted (backlog 6–7). Promoted
+   to **ADR-0004** and the CONTEXT.md component table.
 2. **Battery decision**: the battery simulator (newest module, active until
    2026-07) exists to evaluate a LUNA2000 purchase. Has the decision been made?
    If yes, does the simulator stay (e.g. for tariff studies per the
