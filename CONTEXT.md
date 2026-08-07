@@ -50,6 +50,10 @@ themselves pragmatically — default to a job/endpoint in an existing service
 - **Register** — a Modbus holding register described by a *register definition*:
   address, quantity, type (U16/U32/I16/I32/STR/…), gain, unit, and a **category**:
   `STATIC` (nameplate data), `DYNAMIC` (measurements), `CONFIG`, `ALARM`, `DEVLST`.
+  `Category.DEVLST` and `Type.MLD` are currently unhandled **by design** — the
+  `NotImplementedError` in the data accessor is a deliberate fail-fast guard so a
+  future feature that receives such data cannot silently skip it. `DEVLST` is
+  loosely planned for implementation one day (confirmed 2026-08-07).
 - **Master data** — the register definitions themselves, imported from three
   Huawei SUN2000 CSV files into the masterdata database and served over REST.
 - **Raw KPI register values** — the five per-minute register readings the KPI

@@ -3,6 +3,11 @@
 Things that could **not** be derived from the repository (2026-08-06 review). Answer
 inline, then promote stable answers to CONTEXT.md or an ADR and delete the question.
 
+**Status 2026-08-07: all questions answered** (Q1–10 from the initial review plus
+Q11, discovered along the way). Each entry is struck through with its answer and a
+pointer to where it was promoted (ADRs 0004–0007, CONTEXT.md, backlog items 27–30).
+Add new questions below as they arise.
+
 ## Strategy
 
 1. ~~**Collector end state** (most consequential): `pv-fast-data-collector` (0.x,
@@ -59,8 +64,13 @@ inline, then promote stable answers to CONTEXT.md or an ADR and delete the quest
    Answered 2026-08-07: never production — local development only. Promoted to
    the CONTEXT.md component table. Whether the chart keeps shipping the
    template depends on the dev-loop decision (Q8).
-7. **`Category.DEVLST` and `Type.MLD`** exist in the model; `MLD` throws
-   `NotImplementedError` in the data accessor. Planned work or dead vocabulary?
+7. ~~**`Category.DEVLST` and `Type.MLD`** exist in the model; `MLD` throws
+   `NotImplementedError` in the data accessor. Planned work or dead vocabulary?~~
+   Answered 2026-08-07: neither dead nor a defect — deliberate **fail-fast
+   guards**: if a future feature ever receives such a data type from Modbus
+   without implementing a handler, it fails loudly instead of silently
+   skipping data. `DEVLST` is loosely planned for implementation one day.
+   Promoted to CONTEXT.md (Domain vocabulary → Register).
 8. ~~**Local dev loop**: is Tilt still the intended flow (Tiltfile references dead
    paths), or has "build → push → helm upgrade" replaced it?~~
    Answered 2026-08-07: Tilt (including the mock server) remains the intended
