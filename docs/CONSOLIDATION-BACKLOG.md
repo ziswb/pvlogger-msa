@@ -75,9 +75,9 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     different ways. Extract a tiny shared "service bootstrap" into
     `pvlogger-shared-*`.
 16. **logback.xml**: only masterdata logs `%X{call-id}`; frontend has none at all.
-17. **HOCON config sets uneven** (prod/dev/test vs prod/dev vs prod-only), and
-    **`application-test.conf` uses real PostgreSQL, not H2** (H2 is the *dev*
-    profile) — CLAUDE.md said the opposite until 2026-08-06.
+17. **HOCON config sets uneven** (prod/dev/test vs prod/dev vs prod-only).
+    (The H2-vs-PostgreSQL half of this item is obsolete since 2026-08-07: H2
+    is removed, all profiles are PostgreSQL — ADR-0009.)
 18. **Duplicated code**: `MasterDataPaths` object copied between masterdata-server
     and mock server (belongs in `pvlogger-shared-rest`); `PvHttpClient` duplicated
     between mock server and frontend.
@@ -136,6 +136,7 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     Testcontainers — V6 was PostgreSQL-only syntax and unfixable on H2 without
     a checksum-breaking edit. The move also exposed and fixed a test asserting
     UTC day-bucketing that production (TIMESTAMPTZ, `TZ=Europe/Zurich`) never
-    had. `pvdata` migrations no longer need H2 compatibility; masterdata's
-    still do (its tests remain on H2). Tests now require a running Docker
-    daemon.
+    had. Extended same day: masterdata tests moved to Testcontainers too, the
+    H2 dev profiles now point at the local compose PostgreSQL, and H2 is
+    removed entirely — no migration needs H2 compatibility anymore. Tests
+    require a running Docker daemon.

@@ -38,19 +38,16 @@ private fun Application.readImportConfig(appConfig: AppConfig) = with(environmen
 }
 
 private fun Application.readDbConfig(appConfig: AppConfig) = with(environment.config.config("database")) {
-    val base = DatabaseConfig(
-        driverClass = property("driverClass").getString(),
-        driverDelegateClass = "",
-        dbServerUrl = property("dbServerUrl").getString(),
-        dbName = property("dbName").getString(),
-        user = property("user").getString(),
-        password = property("password").getString(),
-        maxPoolSize = property("maxPoolSize").getString().toInt(),
-        dbUrlParams = propertyOrNull("dbUrlParams")?.getString() ?: "",
-    )
-    val canonicalOverride = propertyOrNull("dbServerCanonicalUrl")?.getString()
     appConfig.apply {
-        databaseConfig = if (canonicalOverride != null) base.copy(dbServerCanonicalUrl = canonicalOverride) else base
+        databaseConfig = DatabaseConfig(
+            driverClass = property("driverClass").getString(),
+            dbServerUrl = property("dbServerUrl").getString(),
+            dbName = property("dbName").getString(),
+            user = property("user").getString(),
+            password = property("password").getString(),
+            maxPoolSize = property("maxPoolSize").getString().toInt(),
+            dbUrlParams = propertyOrNull("dbUrlParams")?.getString() ?: "",
+        )
     }
 }
 

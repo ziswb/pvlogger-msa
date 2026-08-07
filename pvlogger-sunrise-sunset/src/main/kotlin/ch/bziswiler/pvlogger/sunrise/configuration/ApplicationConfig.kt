@@ -45,13 +45,12 @@ private fun Application.readDbConfig(appConfig: AppConfig) = with(environment.co
     appConfig.apply {
         databaseConfig = DatabaseConfig(
             driverClass = property("driverClass").getString(),
-            driverDelegateClass = "",
             dbServerUrl = property("dbServerUrl").getString(),
             dbName = property("dbName").getString(),
-            dbServerCanonicalUrl = property("dbServerCanonicalUrl").getString(),
             user = property("user").getString(),
             password = property("password").getString(),
-            maxPoolSize = property("maxPoolSize").getString().toInt()
+            maxPoolSize = property("maxPoolSize").getString().toInt(),
+            dbUrlParams = propertyOrNull("dbUrlParams")?.getString() ?: "",
         )
     }
 }

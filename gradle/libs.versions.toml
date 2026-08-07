@@ -3,7 +3,6 @@ commonsCsvVersion = "1.14.1"
 exposedVersion = "1.0.0"
 flyway = "11.20.3"
 hikaricpVersion = "7.0.2"
-h2Version = "2.4.240"
 koinVersion = "4.1.1"
 kotlinVersion = "2.2.20"
 kotlinxVersion = "1.9.0"
@@ -28,7 +27,6 @@ exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "e
 flywaydb = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway" }
 
 hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricpVersion" }
-h2 = { module = "com.h2database:h2", version.ref = "h2Version" }
 
 koin-ktor = { module = "io.insert-koin:koin-ktor", version.ref = "koinVersion" }
 koin-logger-slf4j = { module = "io.insert-koin:koin-logger-slf4j", version.ref = "koinVersion" }

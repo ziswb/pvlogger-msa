@@ -72,9 +72,6 @@ dependencies {
     // DB migrations
     implementation(libs.flywaydb)
 
-    // In-memory DB for testing
-    implementation(libs.h2)
-
     // Testing
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.koin.test)

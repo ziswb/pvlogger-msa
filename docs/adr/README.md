@@ -15,7 +15,7 @@ old one. Half a page max; the point is the *why*. Template: see
 - [0006 — Defer the battery purchase; keep the simulator for re-evaluation](0006-defer-battery-purchase-keep-simulator.md)
 - [0007 — Microservices were chosen for learning; the bar for new services is pragmatic now](0007-microservices-for-learning-pragmatism-now.md)
 - [0008 — Database name is stated once; the canonical JDBC URL is derived](0008-derive-canonical-db-url.md)
-- [0009 — Data-accessor tests run against real PostgreSQL (Testcontainers)](0009-data-accessor-tests-on-real-postgresql.md)
+- [0009 — JVM tests run against real PostgreSQL (Testcontainers); H2 removed](0009-data-accessor-tests-on-real-postgresql.md)
 
 ## Candidate ADRs (implicit decisions worth writing down)
 

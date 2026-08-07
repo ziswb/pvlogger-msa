@@ -132,7 +132,6 @@ Centralized in `gradle/libs.versions.toml`. Key versions are managed there — a
 
 JVM tests use Ktor test host, Koin test, and JUnit 5. Test utilities live in `testutils` packages.
 
-- **modbus-data-accessor** tests run against a real PostgreSQL 18 via Testcontainers (ADR-0009) — a Docker daemon (Rancher Desktop) must be running. Its `pvdata` migrations no longer need H2 compatibility.
-- **masterdata-server** tests still use in-memory H2 (via `MapApplicationConfig`); its migrations must stay H2-compatible.
-- `application-test.conf` points at a real local PostgreSQL; the H2 in-memory database is used by the **dev** profiles (`application-dev.conf`).
+- DB-touching tests (modbus-data-accessor, masterdata-server) run against a real PostgreSQL 18 via Testcontainers (ADR-0009) — a Docker daemon (Rancher Desktop) must be running. **There is no H2 anywhere; migrations never need H2 compatibility.**
+- The dev profiles (`application-dev.conf`) and `application-test.conf` point at the local `pvlogger-database` Docker Compose PostgreSQL (`localhost:5432`).
 - Timestamp test data for the daily-delta SQL must be built in the JVM's zone, not UTC — `CAST(... AS DATE)`/`CURRENT_DATE` follow the session timezone.
