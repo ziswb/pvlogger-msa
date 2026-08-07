@@ -34,6 +34,14 @@ It runs as microservices on the homelab K3S cluster; deployment is owned by the
 
 - **Device** — a Modbus logic device addressed by unit ID. Exactly two types:
   `METER` and `INVERTER`. Current site: meter ID `1`, inverter IDs `1,16`.
+  Physical topology behind the IDs: the **SmartDongle** (`<dongle-ip>`) is
+  the Modbus TCP gateway, physically plugged into inverter `1`; inverter `16`
+  (the second SUN2000-8KTL-M1) is RS485 daisy-chained to inverter `1` and
+  reached through the same dongle. The meter at ID `1` is a **virtual
+  device**: the DTSU666-H is wired to inverter `1` via RS485 and has no unit
+  ID of its own — its readings are exposed in the meter register block of
+  unit `1`, so meter and inverter `1` share a unit ID and are distinguished
+  only by register addresses.
 - **Register** — a Modbus holding register described by a *register definition*:
   address, quantity, type (U16/U32/I16/I32/STR/…), gain, unit, and a **category**:
   `STATIC` (nameplate data), `DYNAMIC` (measurements), `CONFIG`, `ALARM`, `DEVLST`.

@@ -39,7 +39,12 @@ inline, then promote stable answers to CONTEXT.md or an ADR and delete the quest
 
 ## Site / hardware (partially in the Batteriespeicher doc — confirm)
 
-9. Which physical device answers Modbus at `<dongle-ip>` (SmartDongle?), and
-   which physical units are Modbus IDs meter `1`, inverters `1,16`?
+9. ~~Which physical device answers Modbus at `<dongle-ip>` (SmartDongle?), and
+   which physical units are Modbus IDs meter `1`, inverters `1,16`?~~
+   Answered 2026-08-07: `.224` is the SmartDongle, plugged into inverter `1`;
+   IDs `1` and `16` are the two SUN2000-8KTL-M1 inverters (16 RS485
+   daisy-chained to 1). The meter at ID `1` is a virtual device backed by the
+   DTSU666-H wired to inverter `1`. Promoted to CONTEXT.md (Domain
+   vocabulary → Device).
 10. The site coordinates hard-coded in sunrise-sunset (<site-lat>…, <site-lon>…) — correct
     and intentionally public in the repo?
