@@ -159,7 +159,10 @@ All four are dumped nightly by the db-backup CronJob (infrastructure repo).
   infrastructure repo (declared single source of truth for what runs).
 - Cron schedules and runtime config (Modbus host `<dongle-ip>`, device IDs,
   DB endpoints) live in the chart/Ansible role, not here.
-- Local dev: `tilt up` per CLAUDE.md — ⚠️ GAP: the Tiltfile references a
+- Local dev: `tilt up` per CLAUDE.md. Tilt (including the mock server) is the
+  **intended environment for developing larger changes** (confirmed
+  2026-08-07) — but it has rotted: the Tiltfile references a
   `pvlogger-infrastructure/` directory that no longer exists and has no
-  `docker_build` steps; it likely predates the move to the Helm chart. Verify
-  whether the Tilt flow still works before relying on it.
+  `docker_build` steps, and the mock server is outdated. Repair is backlog
+  item 23 (fix, don't remove), the mock-server refresh is item 30 — both low
+  priority; verify before relying on the flow.

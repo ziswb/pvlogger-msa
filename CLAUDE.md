@@ -44,9 +44,11 @@ tilt up     # Start full local K8s dev environment (requires Docker Desktop K8s)
 tilt down   # Tear down
 ```
 
-⚠️ The Tiltfile references a `pvlogger-infrastructure/` directory that no longer
-exists and has no `docker_build` steps — verify it still works before relying on it
-(tracked in docs/CONSOLIDATION-BACKLOG.md).
+⚠️ Tilt (with the mock server) is the intended environment for developing larger
+changes, but it has rotted: the Tiltfile references a `pvlogger-infrastructure/`
+directory that no longer exists and has no `docker_build` steps, and the mock
+server is outdated. Verify before relying on it — repair is consolidation-backlog
+item 23, the mock-server refresh item 30 (both low priority).
 
 Database runs via Docker Compose in `pvlogger-database/`.
 

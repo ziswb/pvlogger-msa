@@ -61,8 +61,13 @@ inline, then promote stable answers to CONTEXT.md or an ADR and delete the quest
    template depends on the dev-loop decision (Q8).
 7. **`Category.DEVLST` and `Type.MLD`** exist in the model; `MLD` throws
    `NotImplementedError` in the data accessor. Planned work or dead vocabulary?
-8. **Local dev loop**: is Tilt still the intended flow (Tiltfile references dead
-   paths), or has "build → push → helm upgrade" replaced it?
+8. ~~**Local dev loop**: is Tilt still the intended flow (Tiltfile references dead
+   paths), or has "build → push → helm upgrade" replaced it?~~
+   Answered 2026-08-07: Tilt (including the mock server) remains the intended
+   environment for developing **larger changes** — so the Tiltfile rot gets
+   fixed, not removed (backlog 23). The mock server went unused and is
+   outdated; refreshing it, possibly as the basis for e2e tests (none exist
+   today), is a new low-prio todo (backlog 30).
 
 ## Site / hardware (partially in the Batteriespeicher doc — confirm)
 

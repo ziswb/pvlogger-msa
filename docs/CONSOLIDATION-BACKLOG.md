@@ -89,7 +89,9 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
 22. **Test coverage very uneven**: `pv-full-data-collector` and the shared
     Kotlin `-rest`/`-database` libs have zero tests; frontend has one.
 23. **Tiltfile rot**: references non-existent `pvlogger-infrastructure/` paths, no
-    `docker_build` steps. Fix or remove (see CONTEXT.md GAP).
+    `docker_build` steps. Decision (2026-08-07, ex open question 8): **fix, don't
+    remove** — Tilt is the intended dev loop for larger changes. Low priority;
+    pairs with the mock-server refresh (item 30).
 24. Committed IDE files (`.ipr`, `.iws`, `.iml`), `.DS_Store`; simulator output
     files (`summary-2024.*`) committed at module root.
 25. `pvlogger-frontend/src/web/README.md` is stock Angular-CLI boilerplate citing
@@ -118,3 +120,7 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     dedicated manually-activated migration service — would work but fails the
     ADR-0007 bar; keeping migrations next to the sqlc queries they must match
     is the decisive argument for the in-module job.
+30. **Refresh the outdated mock server** (low prio, ex open question 8): unused
+    for a while and out of date. Update it so the Tilt environment (item 23)
+    works again for larger changes, and consider building e2e tests around it —
+    none exist today. It stays local-only, never production (open question 6).
