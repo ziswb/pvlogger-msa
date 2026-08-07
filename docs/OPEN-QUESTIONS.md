@@ -27,10 +27,15 @@ inline, then promote stable answers to CONTEXT.md or an ADR and delete the quest
    for when parameters change (energy price up, feed-in toward zero, battery
    prices halved); reusability for those scenarios confirmed. Promoted to
    **ADR-0006**.
-3. **Why microservices at all** for a single-site homelab app — resume-driven,
+3. ~~**Why microservices at all** for a single-site homelab app — resume-driven,
    fault isolation, independent deploys? Worth one honest paragraph in an ADR;
    it sets the bar for when a new service is justified vs. a new job in an
-   existing one.
+   existing one.~~
+   Answered 2026-08-07: learning-driven — hands-on K8s and modern
+   architectural patterns for a Dev(Sec)Ops engineer. The perspective has
+   shifted to pragmatism: effectiveness and economy now set the bar, so new
+   capabilities default to a job/endpoint in an existing service. Promoted to
+   **ADR-0007**.
 
 ## Architecture details
 

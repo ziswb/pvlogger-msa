@@ -31,6 +31,9 @@ description, in German). It:
 
 It runs as microservices on the homelab K3S cluster; deployment is owned by the
 `infrastructure` repo (Helm chart under `ansible/roles/pvlogger_helm_deploy/`).
+The microservice architecture was learning-driven; new services must justify
+themselves pragmatically — default to a job/endpoint in an existing service
+(ADR-0007).
 
 ## Domain vocabulary
 

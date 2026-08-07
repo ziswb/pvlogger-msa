@@ -13,6 +13,7 @@ old one. Half a page max; the point is the *why*. Template: see
 - [0004 — Three Modbus collectors: fast by default, full as manual alternative, device nightly](0004-three-modbus-collectors-manual-toggle.md)
 - [0005 — Retire sunrise-sunset: FusionSolar collection runs around the clock](0005-retire-sunrise-sunset.md)
 - [0006 — Defer the battery purchase; keep the simulator for re-evaluation](0006-defer-battery-purchase-keep-simulator.md)
+- [0007 — Microservices were chosen for learning; the bar for new services is pragmatic now](0007-microservices-for-learning-pragmatism-now.md)
 
 ## Candidate ADRs (implicit decisions worth writing down)
 
