@@ -75,7 +75,7 @@ It runs as microservices on the homelab K3S cluster; deployment is owned by the
 | `pvlogger-modbus-data-accessor` | **The central data service.** Owns the `pvdata` DB (register values, raw KPI registers, house KPIs). All collectors write through it; frontend and exporter read from it. REST paths are defined in `pvlogger-shared-rest`. |
 | `pvlogger-masterdata-server` | Owns the `pvmasterdata` DB. Imports register definitions from CSVs, serves them to collectors and the mock server. |
 | `pvlogger-frontend` | Serves the prebuilt Angular SPA, proxies the latest KPI as the `/livedata` WebSocket. History data goes **directly** SPA → data accessor (via ingress path `/v1`). |
-| `pvlogger-sunrise-sunset` | Fetches and caches sunrise/sunset times for the site coordinates (own `sunrisesunset` DB). |
+| `pvlogger-sunrise-sunset` | **Deprecated** (ADR-0005). Fetches and caches sunrise/sunset times for the site coordinates (own `sunrisesunset` DB). Historically gated FusionSolar collection to daylight hours; nothing calls it anymore — retirement is backlog item 28. |
 | `pvlogger-modbus-mock-server` | Emulates a Modbus TCP device (raw TCP, not HTTP) using real register definitions from the masterdata server. For development. ⚠️ GAP: is it ever deployed to the real cluster? The Helm chart can deploy it. |
 
 ### Go CronJob collectors (short-lived batch runs)
@@ -137,7 +137,7 @@ owned by exactly one service, which also owns its Flyway migrations:
 |---|---|---|
 | `pvdata` | modbus-data-accessor | register values, raw KPI registers, house KPIs |
 | `pvmasterdata` | masterdata-server | register definitions |
-| `sunrisesunset` | sunrise-sunset | cached sun times |
+| `sunrisesunset` | sunrise-sunset | cached sun times — deprecated, drop with the module (ADR-0005) |
 | `fsdata` | fusionsolar (no migrations — ⚠️ GAP above) | FusionSolar responses & KPIs |
 
 All four are dumped nightly by the db-backup CronJob (infrastructure repo).

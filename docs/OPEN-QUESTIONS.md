@@ -61,9 +61,14 @@ inline, then promote stable answers to CONTEXT.md or an ADR and delete the quest
 
 ## Added after the initial review
 
-11. **Is `pvlogger-sunrise-sunset` deployed at all, and who calls it?**
+11. ~~**Is `pvlogger-sunrise-sunset` deployed at all, and who calls it?**
     (Noticed 2026-08-07 while answering Q10.) The Helm chart in the
     infrastructure repo has no template for it, and nothing else in this repo
     references it — only the chart's `db-backup.yaml` backs up a
     `sunrisesunset` database. Orphaned module, or deployed/consumed some way
-    not visible here? Affects CONSOLIDATION-BACKLOG item 27.
+    not visible here? Affects CONSOLIDATION-BACKLOG item 27.~~
+    Answered 2026-08-07: it historically gated the FusionSolar collectors
+    (which predate the Modbus collectors) to daylight hours, to save disk
+    space because nightly data was uninteresting. Both motivations are gone —
+    the service is **deprecated**. Promoted to ADR-0005; retirement is
+    backlog item 28 (chart/database side: infrastructure backlog 32).

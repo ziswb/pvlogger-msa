@@ -96,12 +96,14 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     the wrong version.
 26. `pvlogger-database/migration/irrelevant/` — delete or archive; the PG18
     migration guide is a finished runbook and could move to a `docs/history/`.
-27. **Site coordinates hard-coded in sunrise-sunset** — all three HOCON profiles
-    (`pvlogger-sunrise-sunset/src/main/resources/application-{prod,dev,test}.conf`)
-    carry the literal values `<site-lat>`/`<site-lon>`. They are correct (the
-    operator's home, confirmed 2026-08-07, ex open question 10), but personal
-    location data baked into repo and image instead of following the `${ENV_VAR}`
-    interpolation pattern the other services use. Externalize to env vars supplied
-    at deploy time. Note: the pvlogger Helm chart currently has **no template for
-    sunrise-sunset at all** (see open question 11) — clarify how/whether the
-    service is deployed before deciding where the config lives.
+27. ~~**Site coordinates hard-coded in sunrise-sunset**~~ **Superseded
+    2026-08-07**: the service turned out to be deprecated (ADR-0005), so the
+    hard-coded coordinates (the operator's home — personal location data in
+    repo and image) disappear with the module. Folded into item 28.
+28. **Retire `pvlogger-sunrise-sunset`** (deprecated per ADR-0005: it gated
+    FusionSolar collection to daylight hours, and that gating is no longer
+    wanted). Delete the module (Gradle settings, CLAUDE.md service map,
+    CONTEXT.md rows), drop the `sunrisesunset` database, and remove its entry
+    from the chart's db-backup job — the chart/database side is infrastructure
+    backlog item 32. Until deleted, the module still ships the operator's home
+    coordinates in its HOCON profiles (ex item 27).
