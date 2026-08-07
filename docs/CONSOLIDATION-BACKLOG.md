@@ -96,3 +96,10 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     the wrong version.
 26. `pvlogger-database/migration/irrelevant/` — delete or archive; the PG18
     migration guide is a finished runbook and could move to a `docs/history/`.
+27. **Site coordinates hard-coded in sunrise-sunset** — all three HOCON profiles
+    (`pvlogger-sunrise-sunset/src/main/resources/application-{prod,dev,test}.conf`)
+    carry the literal values `<site-lat>`/`<site-lon>`. They are correct (the
+    operator's home, confirmed 2026-08-07, ex open question 10), but personal
+    location data baked into repo and image instead of following the `${ENV_VAR}`
+    interpolation pattern the other services use. Externalize to env vars supplied
+    at deploy time (Helm chart in the infrastructure repo).

@@ -46,5 +46,8 @@ inline, then promote stable answers to CONTEXT.md or an ADR and delete the quest
    daisy-chained to 1). The meter at ID `1` is a virtual device backed by the
    DTSU666-H wired to inverter `1`. Promoted to CONTEXT.md (Domain
    vocabulary → Device).
-10. The site coordinates hard-coded in sunrise-sunset (<site-lat>…, <site-lon>…) — correct
-    and intentionally public in the repo?
+10. ~~The site coordinates hard-coded in sunrise-sunset (<site-lat>…, <site-lon>…) — correct
+    and intentionally public in the repo?~~
+    Answered 2026-08-07: correct — they are the operator's home coordinates.
+    But hard-coding them is not intentional design: moving them to
+    configuration is now CONSOLIDATION-BACKLOG item 27.
