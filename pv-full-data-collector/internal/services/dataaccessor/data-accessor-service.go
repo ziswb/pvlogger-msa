@@ -57,9 +57,9 @@ func (s *DataAccessorService) MeterEnergyToday() *kpis.MeterEnergyToday {
 		logging.Fatal("error retrieving master data for meter exported energy", "error", err)
 	}
 	return kpis.NewMeterEnergyToday(
-		s.computeImportedEnergyToday(sharedconfig.DevIdConfig().MeterDeviceIds),
+		s.retrieveEnergyTodaySoFar(mdImported),
 		kpis.ParseUnitFromString(mdImported.Unit),
-		s.computeExportedEnergyToday(sharedconfig.DevIdConfig().MeterDeviceIds),
+		s.retrieveEnergyTodaySoFar(mdExported),
 		kpis.ParseUnitFromString(mdExported.Unit),
 	)
 }
@@ -125,30 +125,6 @@ func (s *DataAccessorService) retrieveValue(registerDefinition *model.RegisterDe
 		logging.Debug("value calculated", "value", value, "gain", gain, "result", result)
 	}
 	return result
-}
-
-func (s *DataAccessorService) computeImportedEnergyToday(deviceIds []model.UByte) float64 {
-	md, err := s.masterDataService.MasterDataForMeterImportedEnergy()
-	if err != nil {
-		logging.Fatal("error retrieving master data for meter imported energy", "error", err)
-	}
-	return s.sumUp(deviceIds, md)
-}
-
-func (s *DataAccessorService) computeExportedEnergyToday(deviceIds []model.UByte) float64 {
-	md, err := s.masterDataService.MasterDataForMeterExportedEnergy()
-	if err != nil {
-		logging.Fatal("error retrieving master data for meter exported energy", "error", err)
-	}
-	return s.sumUp(deviceIds, md)
-}
-
-func (s *DataAccessorService) sumUp(deviceIds []model.UByte, md *model.RegisterDefinition) float64 {
-	var energyToday = 0.0
-	for i := 0; i < len(deviceIds); i++ {
-		energyToday += s.retrieveEnergyTodaySoFar(md)
-	}
-	return energyToday
 }
 
 func toFloat64OrDefault(text string, fallback float64) float64 {

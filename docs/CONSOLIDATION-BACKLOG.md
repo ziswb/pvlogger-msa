@@ -20,11 +20,16 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
    (`pvmasterdata` → `pvdata`) fixed too; deprecated sunrise-sunset deliberately
    untouched (item 28). Reaches prod with the next image rebuild of both
    services.
-2. **`sumUp` adds the same value N times**:
-   `pv-full-data-collector/internal/services/dataaccessor/data-accessor-service.go`
-   loops over `deviceIds` but calls `retrieveEnergyTodaySoFar(md)` without a
-   device parameter. (Currently latent — the full collector is suspended by the
-   chart bug tracked as infrastructure backlog #2.)
+2. ~~**`sumUp` adds the same value N times**~~ **Resolved 2026-08-08.**
+   `data-accessor-service.go` looped over `deviceIds` but called
+   `retrieveEnergyTodaySoFar(md)` without a device parameter (latent: single
+   virtual meter → loop ran once). Root cause: the backing endpoint
+   `read-kw-today-so-far/{type}/{registerAddress}` is device-agnostic — no
+   deviceId in the route and the SQL never filters on `logic_device_id` — so
+   one call already covers all devices. The loop (and `sumUp`,
+   `computeImported/ExportedEnergyToday` with their duplicate masterdata
+   fetches) was removed rather than parameterized; regression test added
+   (the module's first).
 3. **SQL logger in production code**: `RegisterReader.kt` (data accessor) calls
    `addLogger(StdOutSqlLogger)` inside a production transaction.
 4. **Frontend dev environment points nowhere**: `src/web/.../environment.ts`
