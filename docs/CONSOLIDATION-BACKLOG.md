@@ -30,8 +30,12 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
    `computeImported/ExportedEnergyToday` with their duplicate masterdata
    fetches) was removed rather than parameterized; regression test added
    (the module's first).
-3. **SQL logger in production code**: `RegisterReader.kt` (data accessor) calls
-   `addLogger(StdOutSqlLogger)` inside a production transaction.
+3. ~~**SQL logger in production code**~~ **Resolved 2026-08-09**: the
+   `addLogger(StdOutSqlLogger)` call in `RegisterReader.kt` (data accessor) was
+   removed without replacement. It dumped SQL to stdout on every production
+   call, bypassing logback — and never captured the raw-JDBC daily-delta query
+   it sat next to anyway (`StdOutSqlLogger` only sees Exposed-pipeline
+   statements). Log-output-only change, no functional impact, no ADR needed.
 4. **Frontend dev environment points nowhere**: `src/web/.../environment.ts`
    hard-codes `localhost:8090`; the Ktor dev server runs on 8085 and the data
    accessor on 8083.

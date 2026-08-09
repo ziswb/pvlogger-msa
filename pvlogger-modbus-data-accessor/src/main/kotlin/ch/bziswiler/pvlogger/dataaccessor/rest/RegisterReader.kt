@@ -12,7 +12,6 @@ import ch.bziswiler.pvlogger.shared.masterdata.modbus.Type
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.SortOrder.DESC
-import org.jetbrains.exposed.v1.core.StdOutSqlLogger
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.eq
@@ -127,7 +126,6 @@ object RegisterReader {
     private fun readKwSoFarToday(registerAddress: RegisterAddress): Int {
         val kWhColumn = 2
         return transaction {
-            addLogger(StdOutSqlLogger)
             val query = """
                 SELECT dt,
                        max - lag(max) OVER (ORDER BY dt) AS kwh
