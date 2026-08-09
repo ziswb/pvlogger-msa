@@ -21,7 +21,7 @@ func TestPersistenceService_StoreRawValues(t *testing.T) {
 		defer mu.Unlock()
 		method = r.Method
 		contentType = r.Header.Get("Content-Type")
-		json.NewDecoder(r.Body).Decode(&receivedBody)
+		_ = json.NewDecoder(r.Body).Decode(&receivedBody)
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer server.Close()
@@ -73,7 +73,7 @@ func TestPersistenceService_StoreKpiValues(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		mu.Lock()
 		defer mu.Unlock()
-		json.NewDecoder(r.Body).Decode(&receivedBody)
+		_ = json.NewDecoder(r.Body).Decode(&receivedBody)
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer server.Close()
@@ -119,7 +119,7 @@ func TestPersistenceService_ReadMeterEnergyToday(t *testing.T) {
 		mu.Unlock()
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(MeterEnergyTodayResponse{
+		_ = json.NewEncoder(w).Encode(MeterEnergyTodayResponse{
 			ExportedEnergyToday: 10.5,
 			ImportedEnergyToday: 3.2,
 		})

@@ -156,7 +156,7 @@ func TestAuthenticate_Success(t *testing.T) {
 		http.SetCookie(w, &http.Cookie{Name: "XSRF-TOKEN", Value: "my-token-123"})
 		w.Header().Set("Content-Type", "application/json")
 		resp := LoginResponse{FailCode: 0, Success: true}
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer server.Close()
 
@@ -174,7 +174,7 @@ func TestAuthenticate_NonZeroFailCode(t *testing.T) {
 		http.SetCookie(w, &http.Cookie{Name: "XSRF-TOKEN", Value: "tok"})
 		w.Header().Set("Content-Type", "application/json")
 		resp := LoginResponse{FailCode: 305, Message: "invalid credentials"}
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer server.Close()
 
@@ -195,7 +195,7 @@ func TestAuthenticate_MissingCookie(t *testing.T) {
 		// No XSRF-TOKEN cookie set
 		w.Header().Set("Content-Type", "application/json")
 		resp := LoginResponse{FailCode: 0, Success: true}
-		json.NewEncoder(w).Encode(resp)
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer server.Close()
 
@@ -226,7 +226,7 @@ func TestAuthenticate_HttpError(t *testing.T) {
 func TestAuthenticate_InvalidJsonResponse(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte("not valid json"))
+		_, _ = w.Write([]byte("not valid json"))
 	}))
 	defer server.Close()
 

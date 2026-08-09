@@ -11,7 +11,9 @@ func TestWriteJSON_CreatesFile(t *testing.T) {
 	dir := t.TempDir()
 	data := map[string]string{"key": "value"}
 
-	WriteJSON(&data, dir, "test-output")
+	if err := WriteJSON(&data, dir, "test-output"); err != nil {
+		t.Fatalf("WriteJSON returned error: %v", err)
+	}
 
 	path := filepath.Join(dir, "test-output.json")
 	if _, err := os.Stat(path); os.IsNotExist(err) {
@@ -23,7 +25,9 @@ func TestWriteJSON_ValidJSON(t *testing.T) {
 	dir := t.TempDir()
 	data := map[string]string{"hello": "world"}
 
-	WriteJSON(&data, dir, "test-json")
+	if err := WriteJSON(&data, dir, "test-json"); err != nil {
+		t.Fatalf("WriteJSON returned error: %v", err)
+	}
 
 	path := filepath.Join(dir, "test-json.json")
 	content, err := os.ReadFile(path)
@@ -44,7 +48,9 @@ func TestWriteJSON_IndentedOutput(t *testing.T) {
 	dir := t.TempDir()
 	data := map[string]string{"key": "value"}
 
-	WriteJSON(&data, dir, "test-indent")
+	if err := WriteJSON(&data, dir, "test-indent"); err != nil {
+		t.Fatalf("WriteJSON returned error: %v", err)
+	}
 
 	path := filepath.Join(dir, "test-indent.json")
 	content, err := os.ReadFile(path)
@@ -63,7 +69,9 @@ func TestWriteJSON_CreatesDirectory(t *testing.T) {
 	dir := filepath.Join(t.TempDir(), "nested", "dir")
 
 	data := map[string]int{"n": 42}
-	WriteJSON(&data, dir, "test-mkdir")
+	if err := WriteJSON(&data, dir, "test-mkdir"); err != nil {
+		t.Fatalf("WriteJSON returned error: %v", err)
+	}
 
 	path := filepath.Join(dir, "test-mkdir.json")
 	if _, err := os.Stat(path); os.IsNotExist(err) {
@@ -80,7 +88,9 @@ func TestWriteJSON_StructData(t *testing.T) {
 	}
 	data := TestStruct{Name: "test", Value: 3.14}
 
-	WriteJSON(&data, dir, "test-struct")
+	if err := WriteJSON(&data, dir, "test-struct"); err != nil {
+		t.Fatalf("WriteJSON returned error: %v", err)
+	}
 
 	path := filepath.Join(dir, "test-struct.json")
 	content, err := os.ReadFile(path)

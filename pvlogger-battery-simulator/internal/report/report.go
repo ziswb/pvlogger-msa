@@ -71,24 +71,24 @@ func Print(w io.Writer, engines []*sim.Engine, tariff Tariff) {
 	base := engines[0].Total // baseline columns are identical across engines
 	baseD := derive(engines[0], tariff)
 
-	fmt.Fprintf(w, "\nPeriod coverage: %.0f h simulated, %.0f h excluded (%d gaps), %d samples\n",
+	_, _ = fmt.Fprintf(w, "\nPeriod coverage: %.0f h simulated, %.0f h excluded (%d gaps), %d samples\n",
 		base.CoveredHours, base.ExcludedHours, base.GapsSkipped, base.Samples)
-	fmt.Fprintf(w, "Baseline: production %.0f kWh, consumption %.0f kWh, import %.0f kWh, export %.0f kWh\n",
+	_, _ = fmt.Fprintf(w, "Baseline: production %.0f kWh, consumption %.0f kWh, import %.0f kWh, export %.0f kWh\n",
 		base.ProductionKWh, base.ConsumptionKWh, base.ImportKWh, base.ExportKWh)
-	fmt.Fprintf(w, "Baseline: self-consumption %.1f %%, autarky %.1f %%\n\n",
+	_, _ = fmt.Fprintf(w, "Baseline: self-consumption %.1f %%, autarky %.1f %%\n\n",
 		baseD.BaseSelfConsPct, baseD.BaseAutarkyPct)
 
 	header := fmt.Sprintf("%-28s %12s %12s %12s %12s %10s %10s %11s %12s", "battery",
 		"import kWh", "export kWh", "self-cons %", "autarky %", "cycles", "RT eff %", "saved/y", "ΔSoC kWh")
-	fmt.Fprintln(w, header)
+	_, _ = fmt.Fprintln(w, header)
 
 	for _, e := range engines {
 		d := derive(e, tariff)
-		fmt.Fprintf(w, "%-28s %12.0f %12.0f %12.1f %12.1f %10.0f %10.1f %11.0f %12.1f\n",
+		_, _ = fmt.Fprintf(w, "%-28s %12.0f %12.0f %12.1f %12.1f %10.0f %10.1f %11.0f %12.1f\n",
 			e.Battery.Name, d.ImportWithBatteryKWh, d.ExportWithBatteryKWh, d.SelfConsPct, d.AutarkyPct,
 			d.Cycles, d.RoundTripPct, d.Savings, d.DeltaSoCKWh)
 	}
-	fmt.Fprintf(w, "\nEconomics assume import %.4f/kWh and feed-in %.4f/kWh; 'saved/y' scales with the simulated period.\n",
+	_, _ = fmt.Fprintf(w, "\nEconomics assume import %.4f/kWh and feed-in %.4f/kWh; 'saved/y' scales with the simulated period.\n",
 		tariff.ImportPrice, tariff.FeedInPrice)
 }
 
@@ -99,10 +99,9 @@ func WriteSummaryCSV(path string, engines []*sim.Engine, tariff Tariff) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	w := csv.NewWriter(f)
-	defer w.Flush()
 
 	if err := w.Write([]string{
 		"battery", "capacity_kwh",
@@ -137,7 +136,11 @@ func WriteSummaryCSV(path string, engines []*sim.Engine, tariff Tariff) error {
 			return err
 		}
 	}
-	return nil
+	w.Flush()
+	if err := w.Error(); err != nil {
+		return err
+	}
+	return f.Close()
 }
 
 // WriteMonthlyCSV exports per-month, per-battery results.
@@ -146,10 +149,9 @@ func WriteMonthlyCSV(path string, engines []*sim.Engine) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	w := csv.NewWriter(f)
-	defer w.Flush()
 
 	if err := w.Write([]string{
 		"month", "battery", "production_kwh", "consumption_kwh",
@@ -183,7 +185,11 @@ func WriteMonthlyCSV(path string, engines []*sim.Engine) error {
 			}
 		}
 	}
-	return nil
+	w.Flush()
+	if err := w.Error(); err != nil {
+		return err
+	}
+	return f.Close()
 }
 
 func f2(v float64) string { return strconv.FormatFloat(v, 'f', 2, 64) }

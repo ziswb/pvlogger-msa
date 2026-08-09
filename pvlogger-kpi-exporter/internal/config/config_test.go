@@ -9,10 +9,10 @@ func TestLoad_Defaults(t *testing.T) {
 	t.Setenv("KPI_EXPORT_PATH", "/tmp/export")
 	t.Setenv("KPI_FILE_PREFIX", "kpi")
 
-	os.Unsetenv("REST_HOST")
-	os.Unsetenv("REST_PORT")
-	os.Unsetenv("REST_PATH")
-	os.Unsetenv("REST_PROTOCOL")
+	_ = os.Unsetenv("REST_HOST")
+	_ = os.Unsetenv("REST_PORT")
+	_ = os.Unsetenv("REST_PATH")
+	_ = os.Unsetenv("REST_PROTOCOL")
 
 	cfg := Load()
 
@@ -67,7 +67,7 @@ func TestLoad_CustomValues(t *testing.T) {
 }
 
 func TestGetEnv_FallbackUsed(t *testing.T) {
-	os.Unsetenv("TEST_KPI_NONEXISTENT")
+	_ = os.Unsetenv("TEST_KPI_NONEXISTENT")
 	if got := GetEnv("TEST_KPI_NONEXISTENT", "fallback"); got != "fallback" {
 		t.Errorf("expected 'fallback', got '%s'", got)
 	}

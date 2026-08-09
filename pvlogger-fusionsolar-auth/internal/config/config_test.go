@@ -51,12 +51,12 @@ func TestLoad_Defaults(t *testing.T) {
 	t.Setenv("USERNAME", "testuser")
 	t.Setenv("FUSIONSOLAR_PASSWORD", "testpass")
 
-	os.Unsetenv("FS_HOST")
-	os.Unsetenv("FS_PATH")
-	os.Unsetenv("FS_PROTOCOL")
-	os.Unsetenv("K8S_NAMESPACE")
-	os.Unsetenv("K8S_SECRET_NAME")
-	os.Unsetenv("K8S_TOKEN_KEY")
+	_ = os.Unsetenv("FS_HOST")
+	_ = os.Unsetenv("FS_PATH")
+	_ = os.Unsetenv("FS_PROTOCOL")
+	_ = os.Unsetenv("K8S_NAMESPACE")
+	_ = os.Unsetenv("K8S_SECRET_NAME")
+	_ = os.Unsetenv("K8S_TOKEN_KEY")
 
 	cfg := Load()
 
@@ -119,7 +119,7 @@ func TestLoad_CustomValues(t *testing.T) {
 }
 
 func TestLoad_PanicsOnMissingUsername(t *testing.T) {
-	os.Unsetenv("USERNAME")
+	_ = os.Unsetenv("USERNAME")
 	t.Setenv("FUSIONSOLAR_PASSWORD", "pass")
 
 	defer func() {
@@ -132,7 +132,7 @@ func TestLoad_PanicsOnMissingUsername(t *testing.T) {
 
 func TestLoad_PanicsOnMissingPassword(t *testing.T) {
 	t.Setenv("USERNAME", "user")
-	os.Unsetenv("FUSIONSOLAR_PASSWORD")
+	_ = os.Unsetenv("FUSIONSOLAR_PASSWORD")
 
 	defer func() {
 		if r := recover(); r == nil {
@@ -143,7 +143,7 @@ func TestLoad_PanicsOnMissingPassword(t *testing.T) {
 }
 
 func TestGetEnv_FallbackUsed(t *testing.T) {
-	os.Unsetenv("TEST_NONEXISTENT_XYZ")
+	_ = os.Unsetenv("TEST_NONEXISTENT_XYZ")
 	if got := getEnv("TEST_NONEXISTENT_XYZ", "fallback"); got != "fallback" {
 		t.Errorf("expected 'fallback', got '%s'", got)
 	}
@@ -164,7 +164,7 @@ func TestGetEnvChecked_ReturnsValue(t *testing.T) {
 }
 
 func TestGetEnvChecked_PanicsOnMissing(t *testing.T) {
-	os.Unsetenv("TEST_MISSING_CHECKED")
+	_ = os.Unsetenv("TEST_MISSING_CHECKED")
 	defer func() {
 		if r := recover(); r == nil {
 			t.Error("expected panic for missing env var")

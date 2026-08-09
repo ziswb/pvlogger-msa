@@ -16,9 +16,13 @@ func TestCleanup_DeletesOldFiles(t *testing.T) {
 		t.Fatal(err)
 	}
 	oldTime := time.Now().Add(-49 * time.Hour)
-	os.Chtimes(oldFile, oldTime, oldTime)
+	if err := os.Chtimes(oldFile, oldTime, oldTime); err != nil {
+		t.Fatal(err)
+	}
 
-	Cleanup(dir)
+	if err := Cleanup(dir); err != nil {
+		t.Fatalf("Cleanup returned error: %v", err)
+	}
 
 	if _, err := os.Stat(oldFile); !os.IsNotExist(err) {
 		t.Error("expected old file to be deleted")
@@ -34,7 +38,9 @@ func TestCleanup_KeepsRecentFiles(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	Cleanup(dir)
+	if err := Cleanup(dir); err != nil {
+		t.Fatalf("Cleanup returned error: %v", err)
+	}
 
 	if _, err := os.Stat(recentFile); os.IsNotExist(err) {
 		t.Error("expected recent file to be kept")
@@ -46,11 +52,17 @@ func TestCleanup_KeepsDirectories(t *testing.T) {
 
 	// Create a subdirectory with old mtime
 	subDir := filepath.Join(dir, "subdir")
-	os.Mkdir(subDir, 0755)
+	if err := os.Mkdir(subDir, 0755); err != nil {
+		t.Fatal(err)
+	}
 	oldTime := time.Now().Add(-49 * time.Hour)
-	os.Chtimes(subDir, oldTime, oldTime)
+	if err := os.Chtimes(subDir, oldTime, oldTime); err != nil {
+		t.Fatal(err)
+	}
 
-	Cleanup(dir)
+	if err := Cleanup(dir); err != nil {
+		t.Fatalf("Cleanup returned error: %v", err)
+	}
 
 	if _, err := os.Stat(subDir); os.IsNotExist(err) {
 		t.Error("expected directory to be kept (only regular files deleted)")
@@ -62,21 +74,33 @@ func TestCleanup_MixedFiles(t *testing.T) {
 
 	// Old file
 	oldFile := filepath.Join(dir, "old.json")
-	os.WriteFile(oldFile, []byte("old"), 0644)
+	if err := os.WriteFile(oldFile, []byte("old"), 0644); err != nil {
+		t.Fatal(err)
+	}
 	oldTime := time.Now().Add(-72 * time.Hour)
-	os.Chtimes(oldFile, oldTime, oldTime)
+	if err := os.Chtimes(oldFile, oldTime, oldTime); err != nil {
+		t.Fatal(err)
+	}
 
 	// Recent file
 	recentFile := filepath.Join(dir, "recent.json")
-	os.WriteFile(recentFile, []byte("recent"), 0644)
+	if err := os.WriteFile(recentFile, []byte("recent"), 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	// File right at boundary (47h - should be kept)
 	boundaryFile := filepath.Join(dir, "boundary.json")
-	os.WriteFile(boundaryFile, []byte("boundary"), 0644)
+	if err := os.WriteFile(boundaryFile, []byte("boundary"), 0644); err != nil {
+		t.Fatal(err)
+	}
 	boundaryTime := time.Now().Add(-47 * time.Hour)
-	os.Chtimes(boundaryFile, boundaryTime, boundaryTime)
+	if err := os.Chtimes(boundaryFile, boundaryTime, boundaryTime); err != nil {
+		t.Fatal(err)
+	}
 
-	Cleanup(dir)
+	if err := Cleanup(dir); err != nil {
+		t.Fatalf("Cleanup returned error: %v", err)
+	}
 
 	if _, err := os.Stat(oldFile); !os.IsNotExist(err) {
 		t.Error("expected old file to be deleted")
@@ -92,5 +116,7 @@ func TestCleanup_MixedFiles(t *testing.T) {
 func TestCleanup_EmptyDirectory(t *testing.T) {
 	dir := t.TempDir()
 	// Should not panic or error on empty directory
-	Cleanup(dir)
+	if err := Cleanup(dir); err != nil {
+		t.Fatalf("Cleanup returned error: %v", err)
+	}
 }

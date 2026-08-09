@@ -7,7 +7,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	os.Setenv("TZ", "Europe/Zurich")
+	_ = os.Setenv("TZ", "Europe/Zurich")
 	os.Exit(m.Run())
 }
 

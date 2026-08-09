@@ -158,3 +158,9 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     H2 dev profiles now point at the local compose PostgreSQL, and H2 is
     removed entirely — no migration needs H2 compatibility anymore. Tests
     require a running Docker daemon.
+32. **Repo-wide `gofmt -w`**: ~13 Go files fail `gofmt -l` (import ordering,
+    struct-field alignment) — pre-existing, surfaced when golangci-lint was
+    first run locally (2026-08-09; its gofmt linter is not enabled, so lint
+    stays green regardless). One mechanical formatting commit, ideally with
+    nothing else in it; consider enabling the gofmt/gofumpt linter in the
+    golangci-lint config afterwards to keep it that way.

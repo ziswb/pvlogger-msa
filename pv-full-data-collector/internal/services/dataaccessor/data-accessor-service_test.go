@@ -21,7 +21,7 @@ func TestDataAccessorService_RetrieveEnergyTodaySoFar(t *testing.T) {
 		requestPath = r.URL.Path
 		mu.Unlock()
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, "12345")
+		_, _ = fmt.Fprint(w, "12345")
 	}))
 	defer server.Close()
 

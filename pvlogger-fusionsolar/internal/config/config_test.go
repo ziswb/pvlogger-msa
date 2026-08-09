@@ -56,17 +56,17 @@ func TestLoad_Defaults(t *testing.T) {
 	t.Setenv("POSTGRESQL_HOST", "localhost")
 
 	// Clear optional vars to test defaults
-	os.Unsetenv("JOB_NAME")
-	os.Unsetenv("FS_HOST")
-	os.Unsetenv("FS_PATH")
-	os.Unsetenv("FS_PROTOCOL")
-	os.Unsetenv("POSTGRESQL_USERNAME")
-	os.Unsetenv("POSTGRESQL_PORT")
-	os.Unsetenv("DB_NAME")
-	os.Unsetenv("K8S_NAMESPACE")
-	os.Unsetenv("K8S_TOKEN_SECRET_NAME")
-	os.Unsetenv("K8S_TOKEN_KEY")
-	os.Unsetenv("USE_TOKEN_SECRET")
+	_ = os.Unsetenv("JOB_NAME")
+	_ = os.Unsetenv("FS_HOST")
+	_ = os.Unsetenv("FS_PATH")
+	_ = os.Unsetenv("FS_PROTOCOL")
+	_ = os.Unsetenv("POSTGRESQL_USERNAME")
+	_ = os.Unsetenv("POSTGRESQL_PORT")
+	_ = os.Unsetenv("DB_NAME")
+	_ = os.Unsetenv("K8S_NAMESPACE")
+	_ = os.Unsetenv("K8S_TOKEN_SECRET_NAME")
+	_ = os.Unsetenv("K8S_TOKEN_KEY")
+	_ = os.Unsetenv("USE_TOKEN_SECRET")
 
 	cfg := Load()
 
@@ -141,11 +141,11 @@ func TestLoad_CustomValues(t *testing.T) {
 
 func TestLoad_PanicsOnMissingRequired(t *testing.T) {
 	// Clear all required env vars
-	os.Unsetenv("USERNAME")
-	os.Unsetenv("FS_STATION_CODE")
-	os.Unsetenv("FS_DEV_TYPE_ID")
-	os.Unsetenv("POSTGRES_PASSWORD")
-	os.Unsetenv("POSTGRESQL_HOST")
+	_ = os.Unsetenv("USERNAME")
+	_ = os.Unsetenv("FS_STATION_CODE")
+	_ = os.Unsetenv("FS_DEV_TYPE_ID")
+	_ = os.Unsetenv("POSTGRES_PASSWORD")
+	_ = os.Unsetenv("POSTGRESQL_HOST")
 
 	defer func() {
 		if r := recover(); r == nil {
@@ -163,7 +163,7 @@ func TestLoad_PasswordOptionalWhenUseTokenSecret(t *testing.T) {
 	t.Setenv("POSTGRES_PASSWORD", "secret")
 	t.Setenv("POSTGRESQL_HOST", "localhost")
 	t.Setenv("USE_TOKEN_SECRET", "true")
-	os.Unsetenv("FUSIONSOLAR_PASSWORD")
+	_ = os.Unsetenv("FUSIONSOLAR_PASSWORD")
 
 	// Should not panic — password is optional when using token secret
 	cfg := Load()
@@ -179,7 +179,7 @@ func TestLoad_PasswordRequiredWhenNotUseTokenSecret(t *testing.T) {
 	t.Setenv("POSTGRES_PASSWORD", "secret")
 	t.Setenv("POSTGRESQL_HOST", "localhost")
 	t.Setenv("USE_TOKEN_SECRET", "false")
-	os.Unsetenv("FUSIONSOLAR_PASSWORD")
+	_ = os.Unsetenv("FUSIONSOLAR_PASSWORD")
 
 	defer func() {
 		if r := recover(); r == nil {
@@ -191,7 +191,7 @@ func TestLoad_PasswordRequiredWhenNotUseTokenSecret(t *testing.T) {
 }
 
 func TestGetEnv_FallbackUsed(t *testing.T) {
-	os.Unsetenv("TEST_NONEXISTENT_VAR_XYZ")
+	_ = os.Unsetenv("TEST_NONEXISTENT_VAR_XYZ")
 	result := getEnv("TEST_NONEXISTENT_VAR_XYZ", "fallback")
 	if result != "fallback" {
 		t.Errorf("expected 'fallback', got '%s'", result)
@@ -215,7 +215,7 @@ func TestGetIntEnv_ValidInt(t *testing.T) {
 }
 
 func TestGetIntEnv_FallbackUsed(t *testing.T) {
-	os.Unsetenv("TEST_INT_VAR_MISSING")
+	_ = os.Unsetenv("TEST_INT_VAR_MISSING")
 	result := getIntEnv("TEST_INT_VAR_MISSING", "99")
 	if result != 99 {
 		t.Errorf("expected 99, got %d", result)
