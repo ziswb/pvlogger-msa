@@ -2,12 +2,35 @@ package services
 
 import (
 	"encoding/json"
+	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"pvlogger-shared-modbus/kpis"
+	"pvlogger-shared-modbus/persistence"
+	"strconv"
 	"sync"
 	"testing"
 )
+
+// testService wires a PersistenceService to an httptest server through the
+// shared persistence client.
+func testService(t *testing.T, server *httptest.Server) *PersistenceService {
+	t.Helper()
+	u, err := url.Parse(server.URL)
+	if err != nil {
+		t.Fatalf("failed to parse test server URL: %v", err)
+	}
+	host, portStr, err := net.SplitHostPort(u.Host)
+	if err != nil {
+		t.Fatalf("failed to split test server host/port: %v", err)
+	}
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		t.Fatalf("failed to parse test server port: %v", err)
+	}
+	return &PersistenceService{client: persistence.NewPersistingService(host, port, "http", "v1")}
+}
 
 func TestPersistenceService_StoreRawValues(t *testing.T) {
 	var (
@@ -26,10 +49,7 @@ func TestPersistenceService_StoreRawValues(t *testing.T) {
 	}))
 	defer server.Close()
 
-	svc := &PersistenceService{
-		baseURL:    server.URL,
-		httpClient: server.Client(),
-	}
+	svc := testService(t, server)
 
 	t.Setenv("DA_BASE_PATH", "v1")
 	t.Setenv("DA_STORE_RAW_KPI_REGISTER_VALUES_PATH", "store-raw-kpi-register-values")
@@ -78,10 +98,7 @@ func TestPersistenceService_StoreKpiValues(t *testing.T) {
 	}))
 	defer server.Close()
 
-	svc := &PersistenceService{
-		baseURL:    server.URL,
-		httpClient: server.Client(),
-	}
+	svc := testService(t, server)
 
 	t.Setenv("DA_BASE_PATH", "v1")
 	t.Setenv("DA_STORE_KPI_VALUES_PATH", "store-kpi-values")
@@ -126,10 +143,7 @@ func TestPersistenceService_ReadMeterEnergyToday(t *testing.T) {
 	}))
 	defer server.Close()
 
-	svc := &PersistenceService{
-		baseURL:    server.URL,
-		httpClient: server.Client(),
-	}
+	svc := testService(t, server)
 
 	t.Setenv("DA_BASE_PATH", "v1")
 	t.Setenv("DA_READ_METER_ENERGY_TODAY_PATH", "meter-energy-today")
@@ -149,5 +163,21 @@ func TestPersistenceService_ReadMeterEnergyToday(t *testing.T) {
 	}
 	if result.ImportedEnergyToday != 3.2 {
 		t.Errorf("ImportedEnergyToday = %f, want 3.2", result.ImportedEnergyToday)
+	}
+}
+
+func TestPersistenceService_StoreRawValues_FailsOnServerError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer server.Close()
+
+	svc := testService(t, server)
+
+	t.Setenv("DA_BASE_PATH", "v1")
+	t.Setenv("DA_STORE_RAW_KPI_REGISTER_VALUES_PATH", "store-raw-kpi-register-values")
+
+	if err := svc.StoreRawValues(&RawKpiRegisterValues{JobId: "j"}); err == nil {
+		t.Error("expected error for HTTP 500, got nil (a failed store must fail the run)")
 	}
 }

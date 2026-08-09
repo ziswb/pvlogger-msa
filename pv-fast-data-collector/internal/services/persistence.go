@@ -1,15 +1,11 @@
 package services
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"net/http"
-	"net/url"
 	"pv-fast-data-collector/internal/config"
 	"pvlogger-shared-modbus/kpis"
+	"pvlogger-shared-modbus/persistence"
 	"pv-logger/logging"
-	"time"
 )
 
 type RawKpiRegisterValues struct {
@@ -26,89 +22,35 @@ type MeterEnergyTodayResponse struct {
 	ImportedEnergyToday float64 `json:"importedEnergyToday"`
 }
 
+// PersistenceService is a thin domain wrapper around the shared
+// pvlogger-shared-modbus/persistence client (ADR-0010 error style).
 type PersistenceService struct {
-	baseURL    string
-	httpClient *http.Client
+	client *persistence.PersistingService
 }
 
 func NewPersistenceService() *PersistenceService {
 	cfg := config.DataAccessorCfg()
 	return &PersistenceService{
-		baseURL: fmt.Sprintf("%s://%s:%d", cfg.Protocol, cfg.Host, cfg.Port),
-		httpClient: &http.Client{
-			Timeout: 30 * time.Second,
-		},
+		client: persistence.NewPersistingService(cfg.Host, cfg.Port, cfg.Protocol, cfg.BasePath),
 	}
 }
 
 func (s *PersistenceService) StoreRawValues(values *RawKpiRegisterValues) error {
 	logging.Info("storing raw KPI register values")
-	cfg := config.DataAccessorCfg()
-	return s.postJSON(values, cfg.StoreRawKpiRegisterValues)
+	return s.client.StoreValues(values, config.DataAccessorCfg().StoreRawKpiRegisterValues)
 }
 
 func (s *PersistenceService) StoreKpiValues(kpiValues *kpis.PvLoggerKpiData) error {
 	logging.Info("storing KPI values")
-	cfg := config.DataAccessorCfg()
-	return s.postJSON(kpiValues, cfg.StoreKpiValuesPath)
+	return s.client.StoreValues(kpiValues, config.DataAccessorCfg().StoreKpiValuesPath)
 }
 
 func (s *PersistenceService) ReadMeterEnergyToday() (*MeterEnergyTodayResponse, error) {
 	logging.Info("reading meter energy today")
-	cfg := config.DataAccessorCfg()
-	getURL, err := url.Parse(fmt.Sprintf("%s/%s/%s", s.baseURL, cfg.BasePath, cfg.ReadMeterEnergyTodayPath))
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse URL: %w", err)
-	}
-	if logging.DebugEnabled() {
-		logging.Debug("GET request", "url", getURL.String())
-	}
-	resp, err := s.httpClient.Get(getURL.String())
-	if err != nil {
-		return nil, fmt.Errorf("failed to send GET request: %w", err)
-	}
-	defer closeBody(resp)
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("error reading meter energy today: unexpected status %s", resp.Status)
-	}
 	var result MeterEnergyTodayResponse
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil, fmt.Errorf("failed to decode meter energy today response: %w", err)
+	if err := s.client.GetJSON(config.DataAccessorCfg().ReadMeterEnergyTodayPath, &result); err != nil {
+		return nil, fmt.Errorf("error reading meter energy today: %w", err)
 	}
 	logging.Info("meter energy today", "exported", result.ExportedEnergyToday, "imported", result.ImportedEnergyToday)
 	return &result, nil
-}
-
-func (s *PersistenceService) postJSON(values any, storagePath string) error {
-	cfg := config.DataAccessorCfg()
-	postURL, err := url.Parse(fmt.Sprintf("%s/%s/%s", s.baseURL, cfg.BasePath, storagePath))
-	if err != nil {
-		return fmt.Errorf("failed to parse URL: %w", err)
-	}
-	logging.Debug("POST request", "url", postURL.String())
-	var b bytes.Buffer
-	if err := json.NewEncoder(&b).Encode(values); err != nil {
-		return fmt.Errorf("failed to encode object: %w", err)
-	}
-	request, err := http.NewRequest("POST", postURL.String(), &b)
-	if err != nil {
-		return fmt.Errorf("failed to create request: %w", err)
-	}
-	request.Header.Set("Content-Type", "application/json")
-	serverResponse, err := s.httpClient.Do(request)
-	if err != nil {
-		return fmt.Errorf("failed to send request: %w", err)
-	}
-	defer closeBody(serverResponse)
-	logging.Info("values stored", "status", serverResponse.Status)
-	return nil
-}
-
-func closeBody(resp *http.Response) {
-	if resp != nil && resp.Body != nil {
-		logging.Debug("closing response body")
-		if err := resp.Body.Close(); err != nil {
-			logging.Error("failed to close response body", "error", err)
-		}
-	}
 }

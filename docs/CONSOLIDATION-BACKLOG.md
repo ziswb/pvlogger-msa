@@ -65,10 +65,15 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
    absorbed from fusionsolar. Behavior changes only on misconfiguration
    (panic trace/exit 2; fusionsolar-auth now treats set-but-empty as
    missing, like the rest).
-7. **Two persistence clients for the same API**:
-   `pvlogger-shared-modbus/persistence/service.go` (used by device+full
-   collectors, carries `// Deprecated:` markers) vs a private one in
-   `pv-fast-data-collector/internal/services/persistence.go`.
+7. ~~**Two persistence clients for the same API**~~ **Resolved 2026-08-09**:
+   the fast collector's private client is now a thin domain wrapper
+   (`StoreRawValues`/`StoreKpiValues`/`ReadMeterEnergyToday`) around the
+   shared `pvlogger-shared-modbus/persistence` client; the duplicated
+   HTTP/JSON plumbing is gone, as are the shared client's unused
+   `// Deprecated:` accessors. Bonus defect fix: `StoreValues` used to
+   ignore the response status (a 500 logged "values stored" and returned
+   nil) — non-2xx is now an error for all three collectors; regression
+   test added.
 8. **Copied collector code**: `pv-full-data-collector`'s
    `read-register-values-{model,service}.go` are near-copies of
    `pv-device-data-collector`'s; the `metrics` package is byte-identical between

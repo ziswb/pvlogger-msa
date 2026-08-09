@@ -48,6 +48,9 @@ func (s *PersistingService) StoreValues(values any, storagePath string) error {
 		return fmt.Errorf("failed to send request: %w", err)
 	}
 	defer CloseBody(serverResponse)
+	if serverResponse.StatusCode < 200 || serverResponse.StatusCode >= 300 {
+		return fmt.Errorf("unexpected status code %d storing values", serverResponse.StatusCode)
+	}
 	logging.Info("values stored", "status", serverResponse.Status)
 	return nil
 }
@@ -79,20 +82,4 @@ func CloseBody(resp *http.Response) {
 			logging.Error("failed to close response body", "error", err)
 		}
 	}
-}
-
-// Deprecated: BaseURL returns the base URL for backwards compatibility.
-// Prefer using StoreValues and GetJSON directly.
-func (s *PersistingService) BaseURL() string {
-	return s.baseURL
-}
-
-// Deprecated: HTTPClient returns the http.Client for backwards compatibility.
-func (s *PersistingService) HTTPClient() *http.Client {
-	return s.httpClient
-}
-
-// BasePath returns the base API path.
-func (s *PersistingService) BasePath() string {
-	return s.basePath
 }
