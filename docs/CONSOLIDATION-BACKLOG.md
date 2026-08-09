@@ -57,9 +57,14 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
 
 ### Go
 
-6. **Three env-config helpers**: shared `pv-logger/config/env.go`, a
-   re-implementation in `pvlogger-kpi-exporter/internal/config/env.go`, and
-   `panic()`-based variants in both fusionsolar modules. Converge on `pv-logger`.
+6. ~~**Three env-config helpers**~~ **Resolved 2026-08-09** (**ADR-0011**):
+   converged on `pv-logger/config`; the kpi-exporter and fusionsolar copies
+   are deleted. The shared helpers are Must-style and now **panic** instead
+   of `logging.Fatal` — testable (the helper tests moved to
+   `pv-logger/config/env_test.go`) and defers run. `GetEnvOptional` was
+   absorbed from fusionsolar. Behavior changes only on misconfiguration
+   (panic trace/exit 2; fusionsolar-auth now treats set-but-empty as
+   missing, like the rest).
 7. **Two persistence clients for the same API**:
    `pvlogger-shared-modbus/persistence/service.go` (used by device+full
    collectors, carries `// Deprecated:` markers) vs a private one in

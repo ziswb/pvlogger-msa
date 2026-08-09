@@ -2,8 +2,8 @@ package config
 
 import (
 	"net/url"
-	"os"
-	"strconv"
+
+	env "pv-logger/config"
 )
 
 type Config struct {
@@ -43,31 +43,31 @@ type DatabaseConfig struct {
 }
 
 func Load() *Config {
-	useTokenSecret := getEnv("USE_TOKEN_SECRET", "true") == "true"
+	useTokenSecret := env.GetEnv("USE_TOKEN_SECRET", "true") == "true"
 	return &Config{
 		Job: JobConfig{
-			Name: getEnv("JOB_NAME", "STATION_REAL_KPI"),
+			Name: env.GetEnv("JOB_NAME", "STATION_REAL_KPI"),
 		},
 		Fs: FusionSolarConfig{
-			Username:    getEnvChecked("USERNAME"),
-			Password:    getEnvOptional("FUSIONSOLAR_PASSWORD", useTokenSecret),
-			Host:        getEnv("FS_HOST", "eu5.fusionsolar.huawei.com"),
-			Path:        getEnv("FS_PATH", "thirdData"),
-			Protocol:    getEnv("FS_PROTOCOL", "https"),
-			StationCode: getEnvChecked("FS_STATION_CODE"),
-			DevIds:      getEnvChecked("FS_DEV_TYPE_ID"),
+			Username:    env.GetEnvChecked("USERNAME"),
+			Password:    env.GetEnvOptional("FUSIONSOLAR_PASSWORD", useTokenSecret),
+			Host:        env.GetEnv("FS_HOST", "eu5.fusionsolar.huawei.com"),
+			Path:        env.GetEnv("FS_PATH", "thirdData"),
+			Protocol:    env.GetEnv("FS_PROTOCOL", "https"),
+			StationCode: env.GetEnvChecked("FS_STATION_CODE"),
+			DevIds:      env.GetEnvChecked("FS_DEV_TYPE_ID"),
 		},
 		Database: DatabaseConfig{
-			Username: getEnv("POSTGRESQL_USERNAME", "postgres"),
-			Password: getEnvChecked("POSTGRES_PASSWORD"),
-			Host:     getEnvChecked("POSTGRESQL_HOST"),
-			Port:     getIntEnv("POSTGRESQL_PORT", "5434"),
-			DbName:   getEnv("DB_NAME", "fsdata"),
+			Username: env.GetEnv("POSTGRESQL_USERNAME", "postgres"),
+			Password: env.GetEnvChecked("POSTGRES_PASSWORD"),
+			Host:     env.GetEnvChecked("POSTGRESQL_HOST"),
+			Port:     env.GetIntEnv("POSTGRESQL_PORT", "5434"),
+			DbName:   env.GetEnv("DB_NAME", "fsdata"),
 		},
 		K8s: K8sConfig{
-			Namespace:       getEnv("K8S_NAMESPACE", "pvlogger"),
-			TokenSecretName: getEnv("K8S_TOKEN_SECRET_NAME", "fusionsolar-token-secret"),
-			TokenKey:        getEnv("K8S_TOKEN_KEY", "FUSIONSOLAR_TOKEN"),
+			Namespace:       env.GetEnv("K8S_NAMESPACE", "pvlogger"),
+			TokenSecretName: env.GetEnv("K8S_TOKEN_SECRET_NAME", "fusionsolar-token-secret"),
+			TokenKey:        env.GetEnv("K8S_TOKEN_KEY", "FUSIONSOLAR_TOKEN"),
 			UseTokenSecret:  useTokenSecret,
 		},
 	}
@@ -82,34 +82,3 @@ func (c *Config) FsUrl() string {
 	return u.String()
 }
 
-func getEnv(key, fallback string) string {
-	value := os.Getenv(key)
-	if len(value) == 0 {
-		return fallback
-	}
-	return value
-}
-
-func getIntEnv(key, fallback string) int {
-	value, err := strconv.Atoi(getEnv(key, fallback))
-	if err != nil {
-		panic(err)
-	}
-	return value
-}
-
-func getEnvChecked(key string) string {
-	value := os.Getenv(key)
-	if len(value) == 0 {
-		panic("Missing environment variable: " + key)
-	}
-	return value
-}
-
-func getEnvOptional(key string, optional bool) string {
-	value := os.Getenv(key)
-	if len(value) == 0 && !optional {
-		panic("Missing environment variable: " + key)
-	}
-	return value
-}

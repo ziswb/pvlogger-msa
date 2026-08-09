@@ -2,7 +2,8 @@ package config
 
 import (
 	"net/url"
-	"os"
+
+	env "pv-logger/config"
 )
 
 type Config struct {
@@ -27,16 +28,16 @@ type K8sConfig struct {
 func Load() *Config {
 	return &Config{
 		FusionSolar: FusionSolarConfig{
-			Username: getEnvChecked("USERNAME"),
-			Password: getEnvChecked("FUSIONSOLAR_PASSWORD"),
-			Host:     getEnv("FS_HOST", "eu5.fusionsolar.huawei.com"),
-			Path:     getEnv("FS_PATH", "thirdData"),
-			Protocol: getEnv("FS_PROTOCOL", "https"),
+			Username: env.GetEnvChecked("USERNAME"),
+			Password: env.GetEnvChecked("FUSIONSOLAR_PASSWORD"),
+			Host:     env.GetEnv("FS_HOST", "eu5.fusionsolar.huawei.com"),
+			Path:     env.GetEnv("FS_PATH", "thirdData"),
+			Protocol: env.GetEnv("FS_PROTOCOL", "https"),
 		},
 		K8s: K8sConfig{
-			Namespace:  getEnv("K8S_NAMESPACE", "pvlogger"),
-			SecretName: getEnv("K8S_SECRET_NAME", "fusionsolar-token-secret"),
-			TokenKey:   getEnv("K8S_TOKEN_KEY", "FUSIONSOLAR_TOKEN"),
+			Namespace:  env.GetEnv("K8S_NAMESPACE", "pvlogger"),
+			SecretName: env.GetEnv("K8S_SECRET_NAME", "fusionsolar-token-secret"),
+			TokenKey:   env.GetEnv("K8S_TOKEN_KEY", "FUSIONSOLAR_TOKEN"),
 		},
 	}
 }
@@ -50,17 +51,3 @@ func (c *Config) FsUrl() string {
 	return u.String()
 }
 
-func getEnv(key, defaultValue string) string {
-	if value, exists := os.LookupEnv(key); exists {
-		return value
-	}
-	return defaultValue
-}
-
-func getEnvChecked(key string) string {
-	value, exists := os.LookupEnv(key)
-	if !exists || value == "" {
-		panic("required environment variable " + key + " is not set")
-	}
-	return value
-}

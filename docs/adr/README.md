@@ -17,6 +17,7 @@ old one. Half a page max; the point is the *why*. Template: see
 - [0008 — Database name is stated once; the canonical JDBC URL is derived](0008-derive-canonical-db-url.md)
 - [0009 — JVM tests run against real PostgreSQL (Testcontainers); H2 removed](0009-data-accessor-tests-on-real-postgresql.md)
 - [0010 — Go library code returns errors; Fatal only in cmd/ and job dispatch](0010-go-libraries-return-errors.md)
+- [0011 — Env-config helpers live in pv-logger/config and panic (Must-style)](0011-env-config-helpers-in-pv-logger.md)
 
 ## Candidate ADRs (implicit decisions worth writing down)
 

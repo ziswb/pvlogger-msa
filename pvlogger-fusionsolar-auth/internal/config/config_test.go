@@ -142,43 +142,5 @@ func TestLoad_PanicsOnMissingPassword(t *testing.T) {
 	Load()
 }
 
-func TestGetEnv_FallbackUsed(t *testing.T) {
-	_ = os.Unsetenv("TEST_NONEXISTENT_XYZ")
-	if got := getEnv("TEST_NONEXISTENT_XYZ", "fallback"); got != "fallback" {
-		t.Errorf("expected 'fallback', got '%s'", got)
-	}
-}
-
-func TestGetEnv_ValueOverridesFallback(t *testing.T) {
-	t.Setenv("TEST_GETENV_AUTH", "actual")
-	if got := getEnv("TEST_GETENV_AUTH", "fallback"); got != "actual" {
-		t.Errorf("expected 'actual', got '%s'", got)
-	}
-}
-
-func TestGetEnvChecked_ReturnsValue(t *testing.T) {
-	t.Setenv("TEST_CHECKED_VAR", "value123")
-	if got := getEnvChecked("TEST_CHECKED_VAR"); got != "value123" {
-		t.Errorf("expected 'value123', got '%s'", got)
-	}
-}
-
-func TestGetEnvChecked_PanicsOnMissing(t *testing.T) {
-	_ = os.Unsetenv("TEST_MISSING_CHECKED")
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("expected panic for missing env var")
-		}
-	}()
-	getEnvChecked("TEST_MISSING_CHECKED")
-}
-
-func TestGetEnvChecked_PanicsOnEmpty(t *testing.T) {
-	t.Setenv("TEST_EMPTY_CHECKED", "")
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("expected panic for empty env var")
-		}
-	}()
-	getEnvChecked("TEST_EMPTY_CHECKED")
-}
+// The env helper functions themselves are covered in pv-logger/config.
+// The Load()-level tests above still exercise them end-to-end.

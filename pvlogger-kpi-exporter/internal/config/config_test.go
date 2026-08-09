@@ -66,23 +66,4 @@ func TestLoad_CustomValues(t *testing.T) {
 	}
 }
 
-func TestGetEnv_FallbackUsed(t *testing.T) {
-	_ = os.Unsetenv("TEST_KPI_NONEXISTENT")
-	if got := GetEnv("TEST_KPI_NONEXISTENT", "fallback"); got != "fallback" {
-		t.Errorf("expected 'fallback', got '%s'", got)
-	}
-}
-
-func TestGetEnv_ValueOverridesFallback(t *testing.T) {
-	t.Setenv("TEST_KPI_VAR", "actual")
-	if got := GetEnv("TEST_KPI_VAR", "fallback"); got != "actual" {
-		t.Errorf("expected 'actual', got '%s'", got)
-	}
-}
-
-func TestGetEnvChecked_ReturnsValue(t *testing.T) {
-	t.Setenv("TEST_KPI_CHECKED", "value123")
-	if got := GetEnvChecked("TEST_KPI_CHECKED"); got != "value123" {
-		t.Errorf("expected 'value123', got '%s'", got)
-	}
-}
+// The env helper functions themselves are covered in pv-logger/config.

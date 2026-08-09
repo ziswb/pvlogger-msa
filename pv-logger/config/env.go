@@ -1,11 +1,15 @@
 package config
 
 import (
+	"fmt"
 	"os"
-	"pv-logger/logging"
 	"strconv"
 	"strings"
 )
+
+// The helpers in this package are Must-style: missing required variables or
+// unparseable values panic. They are meant for startup configuration only,
+// where aborting the process is the single sane outcome (ADR-0010/0011).
 
 func GetEnv(key, fallback string) string {
 	value := os.Getenv(key)
@@ -18,7 +22,17 @@ func GetEnv(key, fallback string) string {
 func GetEnvChecked(key string) string {
 	value := os.Getenv(key)
 	if len(value) == 0 {
-		logging.Fatal("missing required environment variable", "key", key)
+		panic("missing required environment variable: " + key)
+	}
+	return value
+}
+
+// GetEnvOptional returns the variable's value, panicking only when it is
+// missing and optional is false.
+func GetEnvOptional(key string, optional bool) string {
+	value := os.Getenv(key)
+	if len(value) == 0 && !optional {
+		panic("missing required environment variable: " + key)
 	}
 	return value
 }
@@ -26,7 +40,7 @@ func GetEnvChecked(key string) string {
 func GetIntEnv(key, fallback string) int {
 	value, err := strconv.Atoi(GetEnv(key, fallback))
 	if err != nil {
-		logging.Fatal("error getting value for int environment variable", "key", key, "error", err)
+		panic(fmt.Sprintf("invalid int environment variable %s: %v", key, err))
 	}
 	return value
 }
@@ -34,7 +48,7 @@ func GetIntEnv(key, fallback string) int {
 func GetBoolEnv(key, fallback string) bool {
 	value, err := strconv.ParseBool(GetEnv(key, fallback))
 	if err != nil {
-		logging.Fatal("error getting value for bool environment variable", "key", key, "error", err)
+		panic(fmt.Sprintf("invalid bool environment variable %s: %v", key, err))
 	}
 	return value
 }
@@ -51,7 +65,7 @@ func GetUByteArrayEnv(key, fallback string) []uint8 {
 	for _, id := range parts {
 		safeId, err := strconv.Atoi(id)
 		if err != nil {
-			logging.Fatal("error getting value for ubyte array environment variable", "key", key, "error", err)
+			panic(fmt.Sprintf("invalid ubyte array environment variable %s: %v", key, err))
 		}
 		result = append(result, uint8(safeId))
 	}

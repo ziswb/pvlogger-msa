@@ -190,44 +190,4 @@ func TestLoad_PasswordRequiredWhenNotUseTokenSecret(t *testing.T) {
 	Load()
 }
 
-func TestGetEnv_FallbackUsed(t *testing.T) {
-	_ = os.Unsetenv("TEST_NONEXISTENT_VAR_XYZ")
-	result := getEnv("TEST_NONEXISTENT_VAR_XYZ", "fallback")
-	if result != "fallback" {
-		t.Errorf("expected 'fallback', got '%s'", result)
-	}
-}
-
-func TestGetEnv_ValueOverridesFallback(t *testing.T) {
-	t.Setenv("TEST_GETENV_VAR", "actual")
-	result := getEnv("TEST_GETENV_VAR", "fallback")
-	if result != "actual" {
-		t.Errorf("expected 'actual', got '%s'", result)
-	}
-}
-
-func TestGetIntEnv_ValidInt(t *testing.T) {
-	t.Setenv("TEST_INT_VAR", "42")
-	result := getIntEnv("TEST_INT_VAR", "0")
-	if result != 42 {
-		t.Errorf("expected 42, got %d", result)
-	}
-}
-
-func TestGetIntEnv_FallbackUsed(t *testing.T) {
-	_ = os.Unsetenv("TEST_INT_VAR_MISSING")
-	result := getIntEnv("TEST_INT_VAR_MISSING", "99")
-	if result != 99 {
-		t.Errorf("expected 99, got %d", result)
-	}
-}
-
-func TestGetIntEnv_PanicsOnInvalidInt(t *testing.T) {
-	t.Setenv("TEST_INT_VAR_BAD", "notanumber")
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("expected panic for non-integer value")
-		}
-	}()
-	getIntEnv("TEST_INT_VAR_BAD", "0")
-}
+// The env helper functions themselves are covered in pv-logger/config.

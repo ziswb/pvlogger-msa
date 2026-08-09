@@ -1,11 +1,10 @@
 package datetime
 
 import (
+	"fmt"
 	"os"
 	"sync"
 	"time"
-
-	"pv-logger/logging"
 )
 
 var (
@@ -17,11 +16,11 @@ func initTimezone() {
 	tzOnce.Do(func() {
 		tz := os.Getenv("TZ")
 		if tz == "" {
-			logging.Fatal("TZ environment variable is not set — set it to the local timezone (e.g. TZ=Europe/Zurich)")
+			panic("TZ environment variable is not set — set it to the local timezone (e.g. TZ=Europe/Zurich)")
 		}
 		loc, err := time.LoadLocation(tz)
 		if err != nil {
-			logging.Fatal("failed to load timezone", "tz", tz, "error", err)
+			panic(fmt.Sprintf("failed to load timezone %q: %v", tz, err))
 		}
 		localZone = loc
 	})
