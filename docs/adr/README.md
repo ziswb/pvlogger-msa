@@ -16,6 +16,7 @@ old one. Half a page max; the point is the *why*. Template: see
 - [0007 — Microservices were chosen for learning; the bar for new services is pragmatic now](0007-microservices-for-learning-pragmatism-now.md)
 - [0008 — Database name is stated once; the canonical JDBC URL is derived](0008-derive-canonical-db-url.md)
 - [0009 — JVM tests run against real PostgreSQL (Testcontainers); H2 removed](0009-data-accessor-tests-on-real-postgresql.md)
+- [0010 — Go library code returns errors; Fatal only in cmd/ and job dispatch](0010-go-libraries-return-errors.md)
 
 ## Candidate ADRs (implicit decisions worth writing down)
 

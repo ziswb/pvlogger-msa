@@ -2,6 +2,7 @@ package kpi
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -11,7 +12,7 @@ import (
 	"pvlogger-kpi-exporter/internal/config"
 )
 
-func FetchKpis(cfg *config.Config) *Values {
+func FetchKpis(cfg *config.Config) (*Values, error) {
 	u := &url.URL{
 		Scheme: cfg.RestProtocol,
 		Host:   net.JoinHostPort(cfg.RestHost, cfg.RestPort),
@@ -21,7 +22,7 @@ func FetchKpis(cfg *config.Config) *Values {
 
 	resp, err := http.Get(targetURL)
 	if err != nil {
-		logging.Fatal("failed to fetch KPIs", "error", err)
+		return nil, fmt.Errorf("failed to fetch KPIs: %w", err)
 	}
 	defer func(body io.ReadCloser) {
 		err := body.Close()
@@ -35,12 +36,12 @@ func FetchKpis(cfg *config.Config) *Values {
 		logging.Debug("received message", "body", string(body))
 	}
 	if readErr != nil {
-		logging.Fatal("failed to read response body", "error", readErr)
+		return nil, fmt.Errorf("failed to read response body: %w", readErr)
 	}
 	kpiValues := Values{}
 	err = json.Unmarshal(body, &kpiValues)
 	if err != nil {
-		logging.Fatal("failed to unmarshal KPI values", "error", err)
+		return nil, fmt.Errorf("failed to unmarshal KPI values: %w", err)
 	}
-	return &kpiValues
+	return &kpiValues, nil
 }

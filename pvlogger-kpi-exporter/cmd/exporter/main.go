@@ -1,6 +1,7 @@
 package main
 
 import (
+	"pv-logger/logging"
 	"pvlogger-kpi-exporter/internal/config"
 	"pvlogger-kpi-exporter/internal/datetime"
 	"pvlogger-kpi-exporter/internal/file"
@@ -10,8 +11,15 @@ import (
 func main() {
 	cfg := config.Load()
 
-	kpis := kpi.FetchKpis(cfg)
+	kpis, err := kpi.FetchKpis(cfg)
+	if err != nil {
+		logging.Fatal("failed to fetch KPIs", "error", err)
+	}
 	record := kpi.MapToExportRecord(kpis)
-	file.WriteJSON(&record, cfg.ExportPath, cfg.FilePrefix+"-"+datetime.FormatFileNameSafe(kpis.CreatedAt))
-	file.Cleanup(cfg.ExportPath)
+	if err := file.WriteJSON(&record, cfg.ExportPath, cfg.FilePrefix+"-"+datetime.FormatFileNameSafe(kpis.CreatedAt)); err != nil {
+		logging.Fatal("failed to write KPI export file", "error", err)
+	}
+	if err := file.Cleanup(cfg.ExportPath); err != nil {
+		logging.Fatal("failed to clean up export directory", "error", err)
+	}
 }

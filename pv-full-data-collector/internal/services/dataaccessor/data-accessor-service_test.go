@@ -37,7 +37,10 @@ func TestDataAccessorService_RetrieveEnergyTodaySoFar(t *testing.T) {
 		Gain:            "HUNDRED",
 		RegisterAddress: model.RegisterAddress{Value: 37121},
 	}
-	result := svc.retrieveEnergyTodaySoFar(md)
+	result, err := svc.retrieveEnergyTodaySoFar(md)
+	if err != nil {
+		t.Fatalf("retrieveEnergyTodaySoFar returned error: %v", err)
+	}
 
 	mu.Lock()
 	defer mu.Unlock()

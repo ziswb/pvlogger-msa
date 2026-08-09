@@ -1,7 +1,7 @@
 package response
 
 import (
-	"pv-logger/logging"
+	"fmt"
 	"pvlogger-shared-modbus/model"
 	"time"
 )
@@ -12,7 +12,10 @@ func NewReadDeviceIdentifiersResponseFromBytes(
 	requestTime time.Time,
 	header model.MbapHeader,
 	bytes []byte,
-) *ReadDeviceIdentifiersResponse {
+) (*ReadDeviceIdentifiersResponse, error) {
+	if len(bytes) < 7 {
+		return nil, fmt.Errorf("not enough bytes for read device identifiers response header: got %d, need 7", len(bytes))
+	}
 	functionCode := model.NewFunctionCodeFromByte(bytes[0])
 	meiType := bytes[1]
 	readDevIdCode := bytes[2]
@@ -20,7 +23,10 @@ func NewReadDeviceIdentifiersResponseFromBytes(
 	more := bytes[4]
 	nextObjectId := bytes[5]
 	numberOfObjects := bytes[6]
-	objectList := readObjectList(numberOfObjects, bytes[7:])
+	objectList, err := readObjectList(numberOfObjects, bytes[7:])
+	if err != nil {
+		return nil, err
+	}
 	return &ReadDeviceIdentifiersResponse{
 		JobId:            jobId,
 		RequestId:        requestId,
@@ -36,29 +42,28 @@ func NewReadDeviceIdentifiersResponseFromBytes(
 		NextObjectId:     nextObjectId,
 		NumberOfObjects:  numberOfObjects,
 		ObjectList:       objectList,
-	}
+	}, nil
 }
 
-func readObjectList(numberOfObjects model.UByte, bytes []byte) []*ModbusObject {
+func readObjectList(numberOfObjects model.UByte, bytes []byte) ([]*ModbusObject, error) {
 	var objects []*ModbusObject
 	if len(bytes) < 2 {
-		logging.Fatal("not enough bytes for first pair of (objectId, objectLength) in object list")
+		return nil, fmt.Errorf("not enough bytes for first pair of (objectId, objectLength) in object list")
 	}
 	pos := 0
 	for range numberOfObjects {
 		if len(bytes[pos:]) <= 3 {
-			logging.Fatal("not enough bytes for object id, length and value in object list")
+			return nil, fmt.Errorf("not enough bytes for object id, length and value in object list")
 		}
 		objectId := bytes[pos]
 		pos++
 		objectLength := bytes[pos]
 		pos++
 		if len(bytes[pos:]) < int(objectLength) {
-			logging.Fatal("not enough bytes for object value in object list")
-		} else {
-			objects = append(objects, NewModbusObject(objectId, objectLength, bytes[pos:pos+int(objectLength)]))
-			pos += int(objectLength)
+			return nil, fmt.Errorf("not enough bytes for object value in object list")
 		}
+		objects = append(objects, NewModbusObject(objectId, objectLength, bytes[pos:pos+int(objectLength)]))
+		pos += int(objectLength)
 	}
-	return objects
+	return objects, nil
 }

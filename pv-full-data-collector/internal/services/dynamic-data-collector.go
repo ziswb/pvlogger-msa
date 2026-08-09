@@ -6,14 +6,19 @@ import (
 	"pv-logger/logging"
 )
 
-func FetchDynamicDataAndAggregateKpis() {
-	jobId := FetchModbusDynamicRegisterValues()
-	AggregateKpisFor(jobId)
+func FetchDynamicDataAndAggregateKpis() error {
+	jobId, err := FetchModbusDynamicRegisterValues()
+	if err != nil {
+		return err
+	}
+	return AggregateKpisFor(jobId)
 }
 
-func FetchModbusDynamicRegisterValues() *model.JobId {
+func FetchModbusDynamicRegisterValues() (*model.JobId, error) {
 	logging.Info("fetching modbus dynamic register values")
 	service := jobs.NewReadRegisterValuesService([]model.Category{model.DynamicCategory, model.AlarmCategory})
-	service.ExecuteFetchRegisterValuesJob()
-	return service.JobId()
+	if err := service.ExecuteFetchRegisterValuesJob(); err != nil {
+		return nil, err
+	}
+	return service.JobId(), nil
 }

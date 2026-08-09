@@ -44,10 +44,14 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
    mirroring the Traefik ingress routing, and `environment.ts` uses the same
    same-origin `location.host` URLs as prod. Don't reintroduce absolute
    backend URLs in the Angular environments — add routes to the proxy instead.
-5. **`logging.Fatal` (= `os.Exit`) inside library code** makes errors
-   unrecoverable for callers: `pvlogger-shared-modbus/masterdata/service.go`,
-   `pv-full-data-collector/.../data-accessor-service.go`. The fusionsolar modules
-   show the better pattern (return `error`, `Fatal` only in `cmd/`).
+5. ~~**`logging.Fatal` (= `os.Exit`) inside library code**~~ **Resolved
+   2026-08-09** (**ADR-0010**): all ~60 library-code Fatals converted to
+   wrapped error returns — pvlogger-shared-modbus (masterdata, persistence,
+   response), the internal layers of all three collectors, and the
+   kpi-exporter. `Fatal` remains only in `cmd/` mains, job-dispatch layers,
+   and Must-style startup-config helpers (env helpers → item 6). Run-level
+   behavior unchanged (error → exit 1), but defers now run on error paths
+   (metrics push, item 11) and the packages are unit-testable.
 
 ## 🟡 Duplication & divergence
 

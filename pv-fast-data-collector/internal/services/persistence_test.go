@@ -42,7 +42,9 @@ func TestPersistenceService_StoreRawValues(t *testing.T) {
 		MeterExportedEnergy: 8.0,
 		MeterImportedEnergy: 2.0,
 	}
-	svc.StoreRawValues(values)
+	if err := svc.StoreRawValues(values); err != nil {
+		t.Fatalf("StoreRawValues returned error: %v", err)
+	}
 
 	mu.Lock()
 	defer mu.Unlock()
@@ -92,7 +94,9 @@ func TestPersistenceService_StoreKpiValues(t *testing.T) {
 		Produced:  kpis.Wh{Wh: 15000},
 		Exported:  kpis.Wh{Wh: 8000},
 	}
-	svc.StoreKpiValues(kpiValues)
+	if err := svc.StoreKpiValues(kpiValues); err != nil {
+		t.Fatalf("StoreKpiValues returned error: %v", err)
+	}
 
 	mu.Lock()
 	defer mu.Unlock()
@@ -130,7 +134,10 @@ func TestPersistenceService_ReadMeterEnergyToday(t *testing.T) {
 	t.Setenv("DA_BASE_PATH", "v1")
 	t.Setenv("DA_READ_METER_ENERGY_TODAY_PATH", "meter-energy-today")
 
-	result := svc.ReadMeterEnergyToday()
+	result, err := svc.ReadMeterEnergyToday()
+	if err != nil {
+		t.Fatalf("ReadMeterEnergyToday returned error: %v", err)
+	}
 
 	mu.Lock()
 	defer mu.Unlock()

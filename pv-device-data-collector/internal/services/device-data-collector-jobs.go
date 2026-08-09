@@ -6,17 +6,17 @@ import (
 	"pv-device-data-collector/internal/services/jobs"
 )
 
-func FetchModbusStaticRegisterValues() {
+func FetchModbusStaticRegisterValues() error {
 	logging.Info("fetching modbus static register values")
-	jobs.NewReadRegisterValuesService([]model.Category{model.StaticCategory, model.ConfigCategory}).ExecuteFetchRegisterValuesJob()
+	return jobs.NewReadRegisterValuesService([]model.Category{model.StaticCategory, model.ConfigCategory}).ExecuteFetchRegisterValuesJob()
 }
 
-func FetchDeviceIdentifiers() {
+func FetchDeviceIdentifiers() error {
 	logging.Info("fetching modbus device identifiers")
-	jobs.NewReadDeviceIdentifiersService().ExecuteFetchDeviceIdentifiersJob()
+	return jobs.NewReadDeviceIdentifiersService().ExecuteFetchDeviceIdentifiersJob()
 }
 
-func FetchDeviceList() {
+func FetchDeviceList() error {
 	logging.Info("fetching modbus device list")
-	jobs.NewReadDeviceListService().ExecuteFetchDeviceIdentifiersJob()
+	return jobs.NewReadDeviceListService().ExecuteFetchDeviceIdentifiersJob()
 }

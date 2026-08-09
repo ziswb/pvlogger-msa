@@ -95,12 +95,13 @@ func (s *ReadRegisterValuesService) Close() {
 	}
 }
 
-func (s *ReadRegisterValuesService) Connect() {
+func (s *ReadRegisterValuesService) Connect() error {
 	logging.Info("connecting to modbus device")
 	err := s.tcpHandler.Connect()
 	if err != nil {
-		logging.Fatal("error connecting to modbus device", "error", err)
+		return fmt.Errorf("error connecting to modbus device: %w", err)
 	}
+	return nil
 }
 
 func (s *ReadRegisterValuesService) NextRequestId() model.UShort {

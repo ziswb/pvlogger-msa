@@ -13,6 +13,8 @@ func main() {
 		return
 	}
 	logging.Info("starting pv-fast-data-collector")
-	services.CollectAndComputeKpis()
+	if err := services.CollectAndComputeKpis(); err != nil {
+		logging.Fatal("pv-fast-data-collector failed", "error", err)
+	}
 	logging.Info("finished pv-fast-data-collector")
 }

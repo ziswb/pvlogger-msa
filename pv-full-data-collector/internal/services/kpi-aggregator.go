@@ -12,10 +12,16 @@ import (
 	"time"
 )
 
-func AggregateKpisFor(jobId *model.JobId) {
+func AggregateKpisFor(jobId *model.JobId) error {
 	logging.Info("aggregating KPIs", "job_id", jobId.Id)
-	liveKpis := collectLiveKpis(jobId)
-	todayKpis := collectEnergiesTodaySoFar(jobId)
+	liveKpis, err := collectLiveKpis(jobId)
+	if err != nil {
+		return err
+	}
+	todayKpis, err := collectEnergiesTodaySoFar(jobId)
+	if err != nil {
+		return err
+	}
 	kpiValues := kpis.PvLoggerKpiData{
 		JobId:         jobId.Id,
 		DateCreated:   time.Now().UnixMilli(),
@@ -31,8 +37,11 @@ func AggregateKpisFor(jobId *model.JobId) {
 		SelfConsumed:  todayKpis.SelfConsumed().ToWh(),
 	}
 	daCfg := config.DataAccessorCfg()
-	persistence.NewPersistingService(daCfg.Host, daCfg.Port, daCfg.Protocol, daCfg.BasePath).StoreValues(&kpiValues, daCfg.StoreKpiValuesPath)
+	if err := persistence.NewPersistingService(daCfg.Host, daCfg.Port, daCfg.Protocol, daCfg.BasePath).StoreValues(&kpiValues, daCfg.StoreKpiValuesPath); err != nil {
+		return err
+	}
 	pushKpiMetrics(&kpiValues)
+	return nil
 }
 
 func pushKpiMetrics(kpiValues *kpis.PvLoggerKpiData) {
@@ -44,20 +53,32 @@ func pushKpiMetrics(kpiValues *kpis.PvLoggerKpiData) {
 	metrics.NewMetricsPushService(cfg).PushKpiMetrics(kpiValues)
 }
 
-func collectLiveKpis(jobId *model.JobId) *kpis.KpiLiveData {
-	myInverterActivePower := dataaccessor.NewDataAccessorService().InverterActivePower(jobId)
-	myMeterActivePower := dataaccessor.NewDataAccessorService().MeterActivePower(jobId)
+func collectLiveKpis(jobId *model.JobId) (*kpis.KpiLiveData, error) {
+	myInverterActivePower, err := dataaccessor.NewDataAccessorService().InverterActivePower(jobId)
+	if err != nil {
+		return nil, err
+	}
+	myMeterActivePower, err := dataaccessor.NewDataAccessorService().MeterActivePower(jobId)
+	if err != nil {
+		return nil, err
+	}
 	return &kpis.KpiLiveData{
 		InverterActivePower: myInverterActivePower,
 		MeterActivePower:    myMeterActivePower,
-	}
+	}, nil
 }
 
-func collectEnergiesTodaySoFar(jobId *model.JobId) *kpis.KpiTodayData {
-	myInverterActivePower := dataaccessor.NewDataAccessorService().InverterEnergyToday(jobId)
-	myMeterActivePower := dataaccessor.NewDataAccessorService().MeterEnergyToday()
+func collectEnergiesTodaySoFar(jobId *model.JobId) (*kpis.KpiTodayData, error) {
+	myInverterActivePower, err := dataaccessor.NewDataAccessorService().InverterEnergyToday(jobId)
+	if err != nil {
+		return nil, err
+	}
+	myMeterActivePower, err := dataaccessor.NewDataAccessorService().MeterEnergyToday()
+	if err != nil {
+		return nil, err
+	}
 	return &kpis.KpiTodayData{
 		InverterTodayEnergy: myInverterActivePower,
 		MeterTodayEnergy:    myMeterActivePower,
-	}
+	}, nil
 }

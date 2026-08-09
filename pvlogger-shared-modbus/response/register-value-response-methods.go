@@ -108,7 +108,8 @@ func handleI16(register model.RegisterDefinition, payload []byte) *RegisterValue
 
 func handleI32(register model.RegisterDefinition, payload []byte) *RegisterValue {
 	if len(payload) < 4 {
-		logging.Fatal("error reading register value", "payload_length", len(payload), "required", 4)
+		logging.Error("error reading register value", "payload_length", len(payload), "required", 4)
+		return nil
 	}
 	return NewRegisterValue(register, int32(binary.BigEndian.Uint32(payload[0:4])))
 }

@@ -26,48 +26,50 @@ func NewPersistingService(host string, port int, protocol string, basePath strin
 	}
 }
 
-func (s *PersistingService) StoreValues(values any, storagePath string) {
+func (s *PersistingService) StoreValues(values any, storagePath string) error {
 	logging.Info("storing values")
 	postURL, err := url.Parse(fmt.Sprintf("%s/%s/%s", s.baseURL, s.basePath, storagePath))
 	if err != nil {
-		logging.Fatal("failed to parse URL", "error", err)
+		return fmt.Errorf("failed to parse URL: %w", err)
 	}
 	logging.Debug("POST request", "url", postURL.String())
 	var b bytes.Buffer
 	err = json.NewEncoder(&b).Encode(values)
 	if err != nil {
-		logging.Fatal("failed to encode object", "error", err)
+		return fmt.Errorf("failed to encode object: %w", err)
 	}
 	request, err := http.NewRequest("POST", postURL.String(), &b)
 	if err != nil {
-		logging.Fatal("failed to create request", "error", err)
+		return fmt.Errorf("failed to create request: %w", err)
 	}
 	request.Header.Set("Content-Type", "application/json")
 	serverResponse, err := s.httpClient.Do(request)
 	if err != nil {
-		logging.Fatal("failed to send request", "error", err)
+		return fmt.Errorf("failed to send request: %w", err)
 	}
 	defer CloseBody(serverResponse)
 	logging.Info("values stored", "status", serverResponse.Status)
+	return nil
 }
 
-func (s *PersistingService) GetJSON(path string, result any) {
+func (s *PersistingService) GetJSON(path string, result any) error {
 	getURL, err := url.Parse(fmt.Sprintf("%s/%s/%s", s.baseURL, s.basePath, path))
 	if err != nil {
-		logging.Fatal("failed to parse URL", "error", err)
+		return fmt.Errorf("failed to parse URL: %w", err)
 	}
 	logging.Debug("GET request", "url", getURL.String())
 	resp, err := s.httpClient.Get(getURL.String())
 	if err != nil {
-		logging.Fatal("failed to send GET request", "error", err)
+		return fmt.Errorf("failed to send GET request: %w", err)
 	}
 	defer CloseBody(resp)
 	if resp.StatusCode != http.StatusOK {
-		logging.Fatal("unexpected status code", "status_code", resp.StatusCode)
+		return fmt.Errorf("unexpected status code %d", resp.StatusCode)
 	}
 	if err := json.NewDecoder(resp.Body).Decode(result); err != nil {
-		logging.Fatal("failed to decode response", "error", err)
+		return fmt.Errorf("failed to decode response: %w", err)
 	}
+	return nil
 }
 
 func CloseBody(resp *http.Response) {

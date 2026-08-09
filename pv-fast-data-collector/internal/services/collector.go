@@ -18,11 +18,14 @@ import (
 	"github.com/google/uuid"
 )
 
-func CollectAndComputeKpis() {
+func CollectAndComputeKpis() error {
 	jobId := uuid.New().String()
 	logging.Info("starting collection", "job_id", jobId)
 
-	rawValues := readModbusRegisters(jobId)
+	rawValues, err := readModbusRegisters(jobId)
+	if err != nil {
+		return err
+	}
 	logging.Info("raw values collected",
 		"inverter_active_power", rawValues.InverterActivePower,
 		"meter_active_power", rawValues.MeterActivePower,
@@ -34,17 +37,22 @@ func CollectAndComputeKpis() {
 	persistence := NewPersistenceService()
 
 	// Store raw values
-	persistence.StoreRawValues(&RawKpiRegisterValues{
+	if err := persistence.StoreRawValues(&RawKpiRegisterValues{
 		JobId:               jobId,
 		InverterActivePower: rawValues.InverterActivePower,
 		MeterActivePower:    rawValues.MeterActivePower,
 		InverterDailyYield:  rawValues.InverterDailyYield,
 		MeterExportedEnergy: rawValues.MeterExportedEnergy,
 		MeterImportedEnergy: rawValues.MeterImportedEnergy,
-	})
+	}); err != nil {
+		return err
+	}
 
 	// Read meter energy today (delta computation from data accessor)
-	meterEnergyToday := persistence.ReadMeterEnergyToday()
+	meterEnergyToday, err := persistence.ReadMeterEnergyToday()
+	if err != nil {
+		return err
+	}
 
 	// Compute KPIs
 	liveKpis := computeLiveKpis(rawValues)
@@ -65,9 +73,12 @@ func CollectAndComputeKpis() {
 		SelfConsumed:  todayKpis.SelfConsumed().ToWh(),
 	}
 
-	persistence.StoreKpiValues(&kpiValues)
+	if err := persistence.StoreKpiValues(&kpiValues); err != nil {
+		return err
+	}
 	pushKpiMetrics(&kpiValues)
 	logging.Info("KPIs computed and stored", "job_id", jobId)
+	return nil
 }
 
 type collectedRawValues struct {
@@ -78,14 +89,14 @@ type collectedRawValues struct {
 	MeterImportedEnergy float64
 }
 
-func readModbusRegisters(jobId string) *collectedRawValues {
+func readModbusRegisters(jobId string) (*collectedRawValues, error) {
 	cfg := sharedconfig.ModbusConfig()
 	devCfg := sharedconfig.DevIdConfig()
 	address := fmt.Sprintf("%s:%s", cfg.Host, strconv.Itoa(cfg.Port))
 
 	handler := modbus.NewTcpHandler(address, cfg.Timeout, cfg.ConnectionSleep)
 	if err := handler.Connect(); err != nil {
-		logging.Fatal("failed to connect to modbus device", "error", err)
+		return nil, fmt.Errorf("failed to connect to modbus device: %w", err)
 	}
 	defer func() {
 		if err := handler.Close(); err != nil {
@@ -101,11 +112,17 @@ func readModbusRegisters(jobId string) *collectedRawValues {
 		logging.Info("reading inverter registers", "device_id", deviceId)
 
 		// Inverter active power (U32) - read separately
-		activePower := readRegisters(handler, jobId, &requestCounter, deviceId, registers.InverterActivePowerRegisters())
+		activePower, err := readRegisters(handler, jobId, &requestCounter, deviceId, registers.InverterActivePowerRegisters())
+		if err != nil {
+			return nil, err
+		}
 		result.InverterActivePower += applyGain(activePower, registers.InverterActivePower)
 
 		// Inverter daily yield (U32) - read separately
-		dailyYield := readRegisters(handler, jobId, &requestCounter, deviceId, registers.InverterDailyYieldRegisters())
+		dailyYield, err := readRegisters(handler, jobId, &requestCounter, deviceId, registers.InverterDailyYieldRegisters())
+		if err != nil {
+			return nil, err
+		}
 		result.InverterDailyYield += applyGain(dailyYield, registers.InverterDailyYield)
 	}
 
@@ -114,19 +131,25 @@ func readModbusRegisters(jobId string) *collectedRawValues {
 		logging.Info("reading meter registers", "device_id", deviceId)
 
 		// Meter active power (I32) - read separately
-		meterPowerValues := readRegisters(handler, jobId, &requestCounter, deviceId, registers.MeterActivePowerRegisters())
+		meterPowerValues, err := readRegisters(handler, jobId, &requestCounter, deviceId, registers.MeterActivePowerRegisters())
+		if err != nil {
+			return nil, err
+		}
 		result.MeterActivePower += applyGain(meterPowerValues, registers.MeterActivePower)
 
 		// Meter energy registers (consecutive U32 block: 37119 + 37121)
-		meterEnergyValues := readRegisters(handler, jobId, &requestCounter, deviceId, registers.MeterEnergyRegisters())
+		meterEnergyValues, err := readRegisters(handler, jobId, &requestCounter, deviceId, registers.MeterEnergyRegisters())
+		if err != nil {
+			return nil, err
+		}
 		result.MeterExportedEnergy += applyGain(meterEnergyValues, registers.MeterExportedEnergy)
 		result.MeterImportedEnergy += applyGain(meterEnergyValues, registers.MeterImportedEnergy)
 	}
 
-	return result
+	return result, nil
 }
 
-func readRegisters(handler *modbus.TcpHandler, jobId string, requestCounter *model.UShort, deviceId uint8, regDefs []model.RegisterDefinition) []*response.RegisterValue {
+func readRegisters(handler *modbus.TcpHandler, jobId string, requestCounter *model.UShort, deviceId uint8, regDefs []model.RegisterDefinition) ([]*response.RegisterValue, error) {
 	req := &request.ReadHoldingRegistersValueRequest{
 		JobId:               model.NewJobId(jobId),
 		RequestTime:         time.Now(),
@@ -138,11 +161,11 @@ func readRegisters(handler *modbus.TcpHandler, jobId string, requestCounter *mod
 
 	header, pduBytes, err := handler.ExecuteRequest(req.EncodeToBytes())
 	if err != nil {
-		logging.Fatal("failed to execute modbus request", "error", err)
+		return nil, fmt.Errorf("failed to execute modbus request: %w", err)
 	}
 
 	resp := response.NewRegisterValueResponseFromBytes(regDefs, req.JobId, req.RequestId, req.RequestTime, *header, pduBytes)
-	return resp.Values
+	return resp.Values, nil
 }
 
 func applyGain(values []*response.RegisterValue, targetDef model.RegisterDefinition) float64 {

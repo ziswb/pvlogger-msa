@@ -1,6 +1,7 @@
 package file
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -10,21 +11,25 @@ import (
 
 const FortyEightHours = 48 * time.Hour
 
-func shouldDelete(entry os.DirEntry) bool {
+func shouldDelete(entry os.DirEntry) (bool, error) {
 	info, err := entry.Info()
 	if err != nil {
-		logging.Fatal("failed to get file info", "error", err)
+		return false, fmt.Errorf("failed to get file info: %w", err)
 	}
-	return info.Mode().IsRegular() && (time.Since(info.ModTime()) > FortyEightHours)
+	return info.Mode().IsRegular() && (time.Since(info.ModTime()) > FortyEightHours), nil
 }
 
-func Cleanup(path string) {
+func Cleanup(path string) error {
 	dir, err := os.ReadDir(path)
 	if err != nil {
-		logging.Fatal("failed to read directory", "path", path, "error", err)
+		return fmt.Errorf("failed to read directory %s: %w", path, err)
 	}
 	for _, f := range dir {
-		if shouldDelete(f) {
+		delete, err := shouldDelete(f)
+		if err != nil {
+			return err
+		}
+		if delete {
 			fp := filepath.Join(path, f.Name())
 			logging.Info("deleting file", "path", fp)
 			err := os.Remove(fp)
@@ -33,4 +38,5 @@ func Cleanup(path string) {
 			}
 		}
 	}
+	return nil
 }

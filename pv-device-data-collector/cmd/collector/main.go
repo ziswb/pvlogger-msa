@@ -17,21 +17,19 @@ const (
 func main() {
 	logging.Info("starting")
 	jobName := config.JobConfig().JobName
+	var err error
 	switch jobName {
 	case FetchModbusStaticDataJob:
-		{
-			services.FetchModbusStaticRegisterValues()
-		}
+		err = services.FetchModbusStaticRegisterValues()
 	case FetchDeviceIdentifiersJob:
-		{
-			services.FetchDeviceIdentifiers()
-		}
+		err = services.FetchDeviceIdentifiers()
 	case FetchDeviceListJob:
-		{
-			services.FetchDeviceList()
-		}
+		err = services.FetchDeviceList()
 	default:
 		logging.Fatal("unknown job name", "job_name", jobName)
+	}
+	if err != nil {
+		logging.Fatal("job failed", "job_name", jobName, "error", err)
 	}
 	logging.Info("finished")
 }

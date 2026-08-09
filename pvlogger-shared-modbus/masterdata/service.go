@@ -50,14 +50,14 @@ func NewMasterDataService() *MasterDataService {
 func (s *MasterDataService) FetchRegisterDefinitions(
 	deviceTypes []model.DeviceType,
 	categories []model.Category,
-) *[]model.RegisterDefinition {
+) (*[]model.RegisterDefinition, error) {
 	logging.Info("fetching master data")
 	devTypesParam := strings.Join(arrayOfDeviceTypesToArrayOfStrings(deviceTypes), paramValueSeparator)
 	categoriesParam := strings.Join(arrayOfCategoriesToArrayOfStrings(categories), paramValueSeparator)
 
 	reqURL, err := url.Parse(fmt.Sprintf("%s/%s", s.baseURL, s.masterDataPath))
 	if err != nil {
-		logging.Fatal("failed to parse URL", "error", err)
+		return nil, fmt.Errorf("failed to parse URL: %w", err)
 	}
 
 	q := reqURL.Query()
@@ -67,27 +67,27 @@ func (s *MasterDataService) FetchRegisterDefinitions(
 
 	logging.Debug("fetching master data", "url", reqURL.String())
 	resp, err := s.httpClient.Get(reqURL.String())
-	defer s.close(resp)
 	if err != nil {
-		logging.Fatal("failed to fetch master data", "error", err)
+		return nil, fmt.Errorf("failed to fetch master data: %w", err)
 	}
+	defer s.close(resp)
 
 	logging.Debug("response received", "status", resp.Status)
 	if resp.StatusCode != http.StatusOK {
-		logging.Fatal("unexpected status code", "status_code", resp.StatusCode)
+		return nil, fmt.Errorf("unexpected status code %d fetching master data", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		logging.Fatal("failed to read response body", "error", err)
+		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 	var definitions []model.RegisterDefinition
 	if err := json.Unmarshal(body, &definitions); err != nil {
-		logging.Fatal("failed to unmarshal response", "error", err)
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
 	logging.Info("fetched master data successfully")
-	return &definitions
+	return &definitions, nil
 }
 
 func (s *MasterDataService) MasterDataForSmartMeterActivePower() (*model.RegisterDefinition, error) {
@@ -113,27 +113,27 @@ func (s *MasterDataService) MasterDataForMeterImportedEnergy() (*model.RegisterD
 func (s *MasterDataService) fetchMasterDataFor(registerAddress int) (*model.RegisterDefinition, error) {
 	reqURL, err := url.Parse(fmt.Sprintf("%s/%s/%d", s.baseURL, s.masterDataPath, registerAddress))
 	if err != nil {
-		logging.Fatal("failed to parse URL", "error", err)
+		return nil, fmt.Errorf("failed to parse URL: %w", err)
 	}
 	logging.Debug("retrieving master data", "url", reqURL.String())
 	resp, err := s.httpClient.Get(reqURL.String())
-	defer s.close(resp)
 	if err != nil {
-		logging.Fatal("error retrieving master data", "error", err)
+		return nil, fmt.Errorf("error retrieving master data: %w", err)
 	}
+	defer s.close(resp)
 	logging.Debug("response received", "status", resp.Status)
 	if resp.StatusCode != http.StatusOK {
-		logging.Fatal("unexpected status code", "status_code", resp.StatusCode)
+		return nil, fmt.Errorf("unexpected status code %d retrieving master data for register %d", resp.StatusCode, registerAddress)
 	}
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		logging.Fatal("failed to read response body", "error", err)
+		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 	registerDefinition := model.RegisterDefinition{}
 	logging.Debug("received message", "body", string(body))
 	err = json.Unmarshal(body, &registerDefinition)
 	if err != nil {
-		logging.Fatal("error unmarshalling master data", "error", err)
+		return nil, fmt.Errorf("error unmarshalling master data: %w", err)
 	}
 	return &registerDefinition, nil
 }

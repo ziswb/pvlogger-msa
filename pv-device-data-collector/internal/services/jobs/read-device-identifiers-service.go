@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"fmt"
 	"pv-device-data-collector/internal/config"
 	"pv-logger/logging"
 	sharedconfig "pvlogger-shared-modbus/config"
@@ -10,23 +11,31 @@ import (
 	"time"
 )
 
-func (s *ReadRegisterValuesService) ExecuteFetchDeviceIdentifiersJob() {
+func (s *ReadRegisterValuesService) ExecuteFetchDeviceIdentifiersJob() error {
 	logging.Info("executing fetch device identifiers job", "job_id", s.jobId.Id)
 	for _, deviceId := range sharedconfig.DevIdConfig().InverterDeviceIds {
-		resp := s.readDeviceIdentifiers(deviceId)
-		s.persistenceService.StoreValues(resp, config.DataAccessorCfg().StoreDeviceIdValuesPath)
+		resp, err := s.readDeviceIdentifiers(deviceId)
+		if err != nil {
+			return err
+		}
+		if err := s.persistenceService.StoreValues(resp, config.DataAccessorCfg().StoreDeviceIdValuesPath); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
-func (s *ReadRegisterValuesService) readDeviceIdentifiers(deviceId model.UByte) *response.ReadDeviceIdentifiersResponse {
+func (s *ReadRegisterValuesService) readDeviceIdentifiers(deviceId model.UByte) (*response.ReadDeviceIdentifiersResponse, error) {
 	req := s.newReadDeviceIdentifiersRequest(deviceId)
 	logging.Info("fetching device identifiers")
-	s.Connect()
+	if err := s.Connect(); err != nil {
+		return nil, err
+	}
 	defer s.Close()
 	mbapHeader, pduBytes, err := s.tcpHandler.ExecuteRequest(req.EncodeToBytes())
 	s.Close()
 	if err != nil {
-		logging.Fatal("error executing read device identifiers request", "error", err)
+		return nil, fmt.Errorf("error executing read device identifiers request: %w", err)
 	}
 	return response.NewReadDeviceIdentifiersResponseFromBytes(req.JobId, req.RequestId, req.RequestTime, *mbapHeader, pduBytes)
 }

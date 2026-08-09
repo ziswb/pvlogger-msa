@@ -14,65 +14,80 @@ import (
 	"strings"
 )
 
-func (s *DataAccessorService) InverterActivePower(jobId *model.JobId) *kpis.InverterActivePower {
+func (s *DataAccessorService) InverterActivePower(jobId *model.JobId) (*kpis.InverterActivePower, error) {
 	md, err := s.masterDataService.MasterDataForInverterActivePower()
 	if err != nil {
-		logging.Fatal("error retrieving master data for inverter active power", "error", err)
+		return nil, fmt.Errorf("error retrieving master data for inverter active power: %w", err)
 	}
-	return kpis.NewInverterActivePower(
-		s.retrieveLatestRegisterValuesAggregated(md, sharedconfig.DevIdConfig().InverterDeviceIds, jobId),
-		kpis.ParseUnitFromString(md.Unit),
-	)
+	value, err := s.retrieveLatestRegisterValuesAggregated(md, sharedconfig.DevIdConfig().InverterDeviceIds, jobId)
+	if err != nil {
+		return nil, err
+	}
+	return kpis.NewInverterActivePower(value, kpis.ParseUnitFromString(md.Unit)), nil
 }
 
-func (s *DataAccessorService) MeterActivePower(jobId *model.JobId) *kpis.MeterActivePower {
+func (s *DataAccessorService) MeterActivePower(jobId *model.JobId) (*kpis.MeterActivePower, error) {
 	md, err := s.masterDataService.MasterDataForSmartMeterActivePower()
 	if err != nil {
-		logging.Fatal("error retrieving master data for smart meter active power", "error", err)
+		return nil, fmt.Errorf("error retrieving master data for smart meter active power: %w", err)
 	}
-	return kpis.NewMeterActivePower(
-		s.retrieveLatestRegisterValuesAggregated(md, sharedconfig.DevIdConfig().MeterDeviceIds, jobId),
-		kpis.ParseUnitFromString(md.Unit),
-	)
+	value, err := s.retrieveLatestRegisterValuesAggregated(md, sharedconfig.DevIdConfig().MeterDeviceIds, jobId)
+	if err != nil {
+		return nil, err
+	}
+	return kpis.NewMeterActivePower(value, kpis.ParseUnitFromString(md.Unit)), nil
 }
 
-func (s *DataAccessorService) InverterEnergyToday(jobId *model.JobId) *kpis.InverterEnergyToday {
+func (s *DataAccessorService) InverterEnergyToday(jobId *model.JobId) (*kpis.InverterEnergyToday, error) {
 	md, err := s.masterDataService.MasterDataForInverterEnergyYield()
 	if err != nil {
-		logging.Fatal("error retrieving master data for inverter energy yield", "error", err)
+		return nil, fmt.Errorf("error retrieving master data for inverter energy yield: %w", err)
 	}
-	return kpis.NewInverterEnergyToday(
-		s.retrieveLatestRegisterValuesAggregated(md, sharedconfig.DevIdConfig().InverterDeviceIds, jobId),
-		kpis.ParseUnitFromString(md.Unit),
-	)
+	value, err := s.retrieveLatestRegisterValuesAggregated(md, sharedconfig.DevIdConfig().InverterDeviceIds, jobId)
+	if err != nil {
+		return nil, err
+	}
+	return kpis.NewInverterEnergyToday(value, kpis.ParseUnitFromString(md.Unit)), nil
 }
 
-func (s *DataAccessorService) MeterEnergyToday() *kpis.MeterEnergyToday {
+func (s *DataAccessorService) MeterEnergyToday() (*kpis.MeterEnergyToday, error) {
 	mdImported, err := s.masterDataService.MasterDataForMeterImportedEnergy()
 	if err != nil {
-		logging.Fatal("error retrieving master data for meter imported energy", "error", err)
+		return nil, fmt.Errorf("error retrieving master data for meter imported energy: %w", err)
 	}
 	mdExported, err := s.masterDataService.MasterDataForMeterExportedEnergy()
 	if err != nil {
-		logging.Fatal("error retrieving master data for meter exported energy", "error", err)
+		return nil, fmt.Errorf("error retrieving master data for meter exported energy: %w", err)
+	}
+	imported, err := s.retrieveEnergyTodaySoFar(mdImported)
+	if err != nil {
+		return nil, err
+	}
+	exported, err := s.retrieveEnergyTodaySoFar(mdExported)
+	if err != nil {
+		return nil, err
 	}
 	return kpis.NewMeterEnergyToday(
-		s.retrieveEnergyTodaySoFar(mdImported),
+		imported,
 		kpis.ParseUnitFromString(mdImported.Unit),
-		s.retrieveEnergyTodaySoFar(mdExported),
+		exported,
 		kpis.ParseUnitFromString(mdExported.Unit),
-	)
+	), nil
 }
 
-func (s *DataAccessorService) retrieveLatestRegisterValuesAggregated(masterData *model.RegisterDefinition, deviceIds []model.UByte, jobId *model.JobId) float64 {
+func (s *DataAccessorService) retrieveLatestRegisterValuesAggregated(masterData *model.RegisterDefinition, deviceIds []model.UByte, jobId *model.JobId) (float64, error) {
 	var sum = 0.0
 	for _, deviceId := range deviceIds {
-		sum += s.retrieveLatestRegisterValue(masterData, deviceId, jobId)
+		value, err := s.retrieveLatestRegisterValue(masterData, deviceId, jobId)
+		if err != nil {
+			return 0, err
+		}
+		sum += value
 	}
-	return sum
+	return sum, nil
 }
 
-func (s *DataAccessorService) retrieveLatestRegisterValue(registerDefinition *model.RegisterDefinition, deviceId uint8, jobId *model.JobId) float64 {
+func (s *DataAccessorService) retrieveLatestRegisterValue(registerDefinition *model.RegisterDefinition, deviceId uint8, jobId *model.JobId) (float64, error) {
 	pathSegments := []string{
 		config.DataAccessorCfg().ReadLatestRegisterValuePath,
 		registerDefinition.Type,
@@ -83,7 +98,7 @@ func (s *DataAccessorService) retrieveLatestRegisterValue(registerDefinition *mo
 	return s.retrieveValue(registerDefinition, pathSegments)
 }
 
-func (s *DataAccessorService) retrieveEnergyTodaySoFar(registerDefinition *model.RegisterDefinition) float64 {
+func (s *DataAccessorService) retrieveEnergyTodaySoFar(registerDefinition *model.RegisterDefinition) (float64, error) {
 	pathSegments := []string{
 		config.DataAccessorCfg().ReadKwTodaySoFarPath,
 		registerDefinition.Type,
@@ -92,28 +107,28 @@ func (s *DataAccessorService) retrieveEnergyTodaySoFar(registerDefinition *model
 	return s.retrieveValue(registerDefinition, pathSegments)
 }
 
-func (s *DataAccessorService) retrieveValue(registerDefinition *model.RegisterDefinition, pathSegments []string) float64 {
+func (s *DataAccessorService) retrieveValue(registerDefinition *model.RegisterDefinition, pathSegments []string) (float64, error) {
 	getUrl, err := url.Parse(fmt.Sprintf("%s/%s", s.baseURL, strings.Join(pathSegments, "/")))
 	if err != nil {
-		logging.Fatal("error creating url for retrieving value", "error", err)
+		return 0, fmt.Errorf("error creating url for retrieving value: %w", err)
 	}
 	if logging.DebugEnabled() {
 		logging.Debug("retrieving value", "url", getUrl.String())
 	}
 	response, err := s.httpClient.Get(getUrl.String())
-	defer s.close(response)
 	if err != nil {
-		logging.Fatal("error retrieving value", "error", err)
+		return 0, fmt.Errorf("error retrieving value: %w", err)
 	}
+	defer s.close(response)
 	if response.StatusCode != http.StatusOK {
-		logging.Fatal("error retrieving value", "status", response.Status)
+		return 0, fmt.Errorf("error retrieving value: unexpected status %s", response.Status)
 	}
 	if logging.DebugEnabled() {
 		logging.Debug("response received", "status", response.Status)
 	}
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		logging.Fatal("error reading response body", "error", err)
+		return 0, fmt.Errorf("error reading response body: %w", err)
 	}
 	if logging.DebugEnabled() {
 		logging.Debug("received message", "body", string(body))
@@ -124,7 +139,7 @@ func (s *DataAccessorService) retrieveValue(registerDefinition *model.RegisterDe
 	if logging.DebugEnabled() {
 		logging.Debug("value calculated", "value", value, "gain", gain, "result", result)
 	}
-	return result
+	return result, nil
 }
 
 func toFloat64OrDefault(text string, fallback float64) float64 {
