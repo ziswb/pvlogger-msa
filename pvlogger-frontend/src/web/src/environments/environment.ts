@@ -2,10 +2,13 @@
 // `ng build` replaces `environment.ts` with `environment.prod.ts`.
 // The list of file replacements can be found in `angular.json`.
 
+// Same-origin URLs as in production: the `ng serve` dev server proxies
+// /v1 (data accessor, :8083) and /livedata (frontend Ktor, :8085) per
+// proxy.conf.json, mirroring the Traefik ingress routing.
 export const environment = {
   production: false,
-  serverHost: "localhost:8090",
-  serverUrl: "http://localhost:8090",
+  serverHost: location.host,
+  serverUrl: `${location.protocol}//${location.host}`,
   webSocketProtocol: `${location.protocol === 'https:' ? 'wss' : 'ws'}`
 };
 

@@ -36,9 +36,14 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
    call, bypassing logback — and never captured the raw-JDBC daily-delta query
    it sat next to anyway (`StdOutSqlLogger` only sees Exposed-pipeline
    statements). Log-output-only change, no functional impact, no ADR needed.
-4. **Frontend dev environment points nowhere**: `src/web/.../environment.ts`
-   hard-codes `localhost:8090`; the Ktor dev server runs on 8085 and the data
-   accessor on 8083.
+4. ~~**Frontend dev environment points nowhere**~~ **Resolved 2026-08-09**:
+   the hard-coded `localhost:8090` in `environment.ts` was the port of a
+   personal, never-committed IntelliJ run config — dev only ever worked on
+   that one machine. Now `ng serve` proxies `/v1` → data accessor (:8083)
+   and `/livedata` (ws) → frontend Ktor (:8085) via `proxy.conf.json`,
+   mirroring the Traefik ingress routing, and `environment.ts` uses the same
+   same-origin `location.host` URLs as prod. Don't reintroduce absolute
+   backend URLs in the Angular environments — add routes to the proxy instead.
 5. **`logging.Fatal` (= `os.Exit`) inside library code** makes errors
    unrecoverable for callers: `pvlogger-shared-modbus/masterdata/service.go`,
    `pv-full-data-collector/.../data-accessor-service.go`. The fusionsolar modules
