@@ -71,7 +71,7 @@ Database runs via Docker Compose in `pvlogger-database/`.
 - `pvlogger-fusionsolar` — FusionSolar API data integration (writes its own `fsdata` DB directly)
 - `pvlogger-fusionsolar-auth` — Refreshes the FusionSolar token into a K8s secret
 - `pvlogger-kpi-exporter` — Exports latest KPIs as JSON files (OneDrive-synced volume)
-- `pv-logger`, `pvlogger-shared-modbus` — Shared Go libraries (logging/env config; Modbus TCP client, KPI math, REST clients)
+- `pv-logger`, `pvlogger-shared-modbus` — Shared Go libraries (logging/env config; Modbus TCP client, KPI math, REST clients, collector jobs, Pushgateway metrics)
 
 **Tools (not deployed):** `pvlogger-battery-simulator` (local CLI, see its README), `pvlogger-database` (local compose DB + migration history).
 

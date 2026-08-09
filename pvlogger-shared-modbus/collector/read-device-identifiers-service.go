@@ -1,8 +1,7 @@
-package jobs
+package collector
 
 import (
 	"fmt"
-	"pv-device-data-collector/internal/config"
 	"pv-logger/logging"
 	sharedconfig "pvlogger-shared-modbus/config"
 	"pvlogger-shared-modbus/model"
@@ -18,7 +17,7 @@ func (s *ReadRegisterValuesService) ExecuteFetchDeviceIdentifiersJob() error {
 		if err != nil {
 			return err
 		}
-		if err := s.persistenceService.StoreValues(resp, config.DataAccessorCfg().StoreDeviceIdValuesPath); err != nil {
+		if err := s.persistenceService.StoreValues(resp, sharedconfig.DataAccessorCfg().StoreDeviceIdValuesPath); err != nil {
 			return err
 		}
 	}

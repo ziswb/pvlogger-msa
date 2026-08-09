@@ -5,11 +5,10 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"pv-full-data-collector/internal/config"
+	"pv-logger/logging"
 	sharedconfig "pvlogger-shared-modbus/config"
 	"pvlogger-shared-modbus/kpis"
 	"pvlogger-shared-modbus/model"
-	"pv-logger/logging"
 	"strconv"
 	"strings"
 )
@@ -89,7 +88,7 @@ func (s *DataAccessorService) retrieveLatestRegisterValuesAggregated(masterData 
 
 func (s *DataAccessorService) retrieveLatestRegisterValue(registerDefinition *model.RegisterDefinition, deviceId uint8, jobId *model.JobId) (float64, error) {
 	pathSegments := []string{
-		config.DataAccessorCfg().ReadLatestRegisterValuePath,
+		sharedconfig.DataAccessorCfg().ReadLatestRegisterValuePath,
 		registerDefinition.Type,
 		strconv.Itoa(int(deviceId)),
 		strconv.Itoa(registerDefinition.RegisterAddress.Value),
@@ -100,7 +99,7 @@ func (s *DataAccessorService) retrieveLatestRegisterValue(registerDefinition *mo
 
 func (s *DataAccessorService) retrieveEnergyTodaySoFar(registerDefinition *model.RegisterDefinition) (float64, error) {
 	pathSegments := []string{
-		config.DataAccessorCfg().ReadKwTodaySoFarPath,
+		sharedconfig.DataAccessorCfg().ReadKwTodaySoFarPath,
 		registerDefinition.Type,
 		strconv.Itoa(registerDefinition.RegisterAddress.Value),
 	}

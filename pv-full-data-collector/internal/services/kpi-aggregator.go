@@ -1,14 +1,13 @@
 package services
 
 import (
-	"pv-full-data-collector/internal/config"
+	"pv-full-data-collector/internal/services/dataaccessor"
+	"pv-logger/logging"
 	sharedconfig "pvlogger-shared-modbus/config"
 	"pvlogger-shared-modbus/kpis"
+	"pvlogger-shared-modbus/metrics"
 	"pvlogger-shared-modbus/model"
-	"pv-full-data-collector/internal/services/dataaccessor"
-	"pv-full-data-collector/internal/services/metrics"
 	"pvlogger-shared-modbus/persistence"
-	"pv-logger/logging"
 	"time"
 )
 
@@ -36,7 +35,7 @@ func AggregateKpisFor(jobId *model.JobId) error {
 		Consumed:      todayKpis.Consumed().ToWh(),
 		SelfConsumed:  todayKpis.SelfConsumed().ToWh(),
 	}
-	daCfg := config.DataAccessorCfg()
+	daCfg := sharedconfig.DataAccessorCfg()
 	if err := persistence.NewPersistingService(daCfg.Host, daCfg.Port, daCfg.Protocol, daCfg.BasePath).StoreValues(&kpiValues, daCfg.StoreKpiValuesPath); err != nil {
 		return err
 	}

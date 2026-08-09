@@ -3,10 +3,10 @@ package services
 import (
 	"fmt"
 	"pv-fast-data-collector/internal/registers"
-	"pv-fast-data-collector/internal/services/metrics"
 	modbus "pvlogger-shared-modbus"
 	sharedconfig "pvlogger-shared-modbus/config"
 	"pvlogger-shared-modbus/kpis"
+	"pvlogger-shared-modbus/metrics"
 	"pvlogger-shared-modbus/model"
 	"pvlogger-shared-modbus/request"
 	"pvlogger-shared-modbus/response"

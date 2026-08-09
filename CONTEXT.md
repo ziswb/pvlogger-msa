@@ -103,7 +103,8 @@ themselves pragmatically — default to a job/endpoint in an existing service
 Kotlin: `pvlogger-shared-model` (Modbus domain model), `pvlogger-shared-rest`
 (REST path constants + KPI DTO), `pvlogger-shared-database` (Hikari + Flyway
 bootstrap). Go: `pv-logger` (logging, env config), `pvlogger-shared-modbus`
-(hand-rolled Modbus TCP client, KPI math, masterdata/persistence REST clients).
+(hand-rolled Modbus TCP client, KPI math, masterdata/persistence REST clients,
+register/device-identifier collector jobs, Pushgateway metrics).
 
 ### Tools (not deployed)
 

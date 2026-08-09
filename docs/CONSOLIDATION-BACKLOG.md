@@ -74,15 +74,20 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
    ignore the response status (a 500 logged "values stored" and returned
    nil) — non-2xx is now an error for all three collectors; regression
    test added.
-8. **Copied collector code**: `pv-full-data-collector`'s
-   `read-register-values-{model,service}.go` are near-copies of
-   `pv-device-data-collector`'s; the `metrics` package is byte-identical between
-   fast and full collectors. Extract to `pvlogger-shared-modbus` — or resolve the
-   collector end-state question first (see OPEN-QUESTIONS) and delete instead.
+8. ~~**Copied collector code**~~ **Resolved 2026-08-09** (extract per
+   ADR-0004, not delete): the register-values/device-identifier job code
+   moved to `pvlogger-shared-modbus/collector` (device collector's superset
+   version, tests ported along), the byte-identical `metrics` package to
+   `pvlogger-shared-modbus/metrics`. Full and device collectors now hold only
+   their dispatch layers and full's KPI `dataaccessor` package; the fast
+   collector keeps its deliberately hard-coded register path.
 9. **REST path constants exist in Kotlin (`pvlogger-shared-rest`) but only as
-   scattered env defaults in Go** — three different
-   `internal/config/data-accessor-config.go` files. A shared Go constants package
-   would prevent drift.
+   scattered env defaults in Go.** *Narrowed 2026-08-09 (item 8):* the three
+   `data-accessor-config.go` copies are now one union
+   `pvlogger-shared-modbus/config/data-accessor-config.go`, so Go-side drift
+   is gone. Remaining: the path *defaults* there can still drift against the
+   Kotlin `pvlogger-shared-rest` constants — decide if that cross-language
+   drift risk is worth a generated/shared source of truth.
 10. **k8s client-go version skew** between `pvlogger-fusionsolar` and
     `pvlogger-fusionsolar-auth` for accessing the same secret.
 11. **Pushgateway metrics** only in fast+full collectors; device collector,

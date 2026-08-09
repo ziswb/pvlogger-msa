@@ -1,10 +1,9 @@
-package jobs
+package collector
 
 import (
 	"errors"
 	"fmt"
 	"net"
-	"pv-device-data-collector/internal/config"
 	"pv-logger/logging"
 	modbus "pvlogger-shared-modbus"
 	sharedconfig "pvlogger-shared-modbus/config"
@@ -31,7 +30,7 @@ type ReadRegisterValuesService struct {
 }
 
 func NewReadRegisterValuesService(categories []model.Category) *ReadRegisterValuesService {
-	daCfg := config.DataAccessorCfg()
+	daCfg := sharedconfig.DataAccessorCfg()
 	mbCfg := sharedconfig.ModbusConfig()
 	return &ReadRegisterValuesService{
 		jobId:              model.NewJobId(uuid.New().String()),
@@ -44,7 +43,7 @@ func NewReadRegisterValuesService(categories []model.Category) *ReadRegisterValu
 }
 
 func NewReadDeviceIdentifiersService() *ReadRegisterValuesService {
-	daCfg := config.DataAccessorCfg()
+	daCfg := sharedconfig.DataAccessorCfg()
 	mbCfg := sharedconfig.ModbusConfig()
 	return &ReadRegisterValuesService{
 		jobId:              model.NewJobId(uuid.New().String()),
@@ -57,7 +56,7 @@ func NewReadDeviceIdentifiersService() *ReadRegisterValuesService {
 }
 
 func NewReadDeviceListService() *ReadRegisterValuesService {
-	daCfg := config.DataAccessorCfg()
+	daCfg := sharedconfig.DataAccessorCfg()
 	mbCfg := sharedconfig.ModbusConfig()
 	return &ReadRegisterValuesService{
 		jobId:              model.NewJobId(uuid.New().String()),

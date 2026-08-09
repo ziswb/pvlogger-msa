@@ -1,4 +1,4 @@
-package jobs
+package collector
 
 import (
 	"pvlogger-shared-modbus/model"

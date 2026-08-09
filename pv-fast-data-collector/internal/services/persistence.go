@@ -2,10 +2,10 @@ package services
 
 import (
 	"fmt"
-	"pv-fast-data-collector/internal/config"
+	"pv-logger/logging"
+	sharedconfig "pvlogger-shared-modbus/config"
 	"pvlogger-shared-modbus/kpis"
 	"pvlogger-shared-modbus/persistence"
-	"pv-logger/logging"
 )
 
 type RawKpiRegisterValues struct {
@@ -29,7 +29,7 @@ type PersistenceService struct {
 }
 
 func NewPersistenceService() *PersistenceService {
-	cfg := config.DataAccessorCfg()
+	cfg := sharedconfig.DataAccessorCfg()
 	return &PersistenceService{
 		client: persistence.NewPersistingService(cfg.Host, cfg.Port, cfg.Protocol, cfg.BasePath),
 	}
@@ -37,18 +37,18 @@ func NewPersistenceService() *PersistenceService {
 
 func (s *PersistenceService) StoreRawValues(values *RawKpiRegisterValues) error {
 	logging.Info("storing raw KPI register values")
-	return s.client.StoreValues(values, config.DataAccessorCfg().StoreRawKpiRegisterValues)
+	return s.client.StoreValues(values, sharedconfig.DataAccessorCfg().StoreRawKpiRegisterValues)
 }
 
 func (s *PersistenceService) StoreKpiValues(kpiValues *kpis.PvLoggerKpiData) error {
 	logging.Info("storing KPI values")
-	return s.client.StoreValues(kpiValues, config.DataAccessorCfg().StoreKpiValuesPath)
+	return s.client.StoreValues(kpiValues, sharedconfig.DataAccessorCfg().StoreKpiValuesPath)
 }
 
 func (s *PersistenceService) ReadMeterEnergyToday() (*MeterEnergyTodayResponse, error) {
 	logging.Info("reading meter energy today")
 	var result MeterEnergyTodayResponse
-	if err := s.client.GetJSON(config.DataAccessorCfg().ReadMeterEnergyTodayPath, &result); err != nil {
+	if err := s.client.GetJSON(sharedconfig.DataAccessorCfg().ReadMeterEnergyTodayPath, &result); err != nil {
 		return nil, fmt.Errorf("error reading meter energy today: %w", err)
 	}
 	logging.Info("meter energy today", "exported", result.ExportedEnergyToday, "imported", result.ImportedEnergyToday)

@@ -3,7 +3,7 @@ package dataaccessor
 import (
 	"fmt"
 	"net/http"
-	"pv-full-data-collector/internal/config"
+	sharedconfig "pvlogger-shared-modbus/config"
 	"pvlogger-shared-modbus/masterdata"
 	"time"
 )
@@ -16,7 +16,7 @@ type DataAccessorService struct {
 
 func NewDataAccessorService() *DataAccessorService {
 	return &DataAccessorService{
-		baseURL: fmt.Sprintf("%s://%s:%d", config.DataAccessorCfg().Protocol, config.DataAccessorCfg().Host, config.DataAccessorCfg().Port),
+		baseURL: fmt.Sprintf("%s://%s:%d", sharedconfig.DataAccessorCfg().Protocol, sharedconfig.DataAccessorCfg().Host, sharedconfig.DataAccessorCfg().Port),
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
