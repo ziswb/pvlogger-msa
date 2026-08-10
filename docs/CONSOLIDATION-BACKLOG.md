@@ -81,13 +81,18 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
    `pvlogger-shared-modbus/metrics`. Full and device collectors now hold only
    their dispatch layers and full's KPI `dataaccessor` package; the fast
    collector keeps its deliberately hard-coded register path.
-9. **REST path constants exist in Kotlin (`pvlogger-shared-rest`) but only as
-   scattered env defaults in Go.** *Narrowed 2026-08-09 (item 8):* the three
-   `data-accessor-config.go` copies are now one union
-   `pvlogger-shared-modbus/config/data-accessor-config.go`, so Go-side drift
-   is gone. Remaining: the path *defaults* there can still drift against the
-   Kotlin `pvlogger-shared-rest` constants — decide if that cross-language
-   drift risk is worth a generated/shared source of truth.
+9. ~~**REST path constants exist in Kotlin (`pvlogger-shared-rest`) but only as
+   scattered env defaults in Go.**~~ **Resolved 2026-08-10** (**ADR-0012**):
+   a generated source of truth was rejected (over-machinery for two
+   consumers); instead the paths stopped being config. They were actually
+   stated in *three* places — the live values came from Ansible defaults via
+   Helm env vars, with the Go defaults dead in prod. Now the Go side mirrors
+   the Kotlin route constants as plain constants in
+   `pvlogger-shared-modbus/config` (env-overridability removed — the server
+   routes are compiled in, so a path override could only break the client),
+   a drift test (`config/paths_drift_test.go`) parses the Kotlin sources and
+   fails the Go build on divergence, and the `DA_*_PATH`/`MD_PATH` plumbing
+   is deleted from the infrastructure repo. Host/port/protocol stay env-based.
 10. **k8s client-go version skew** between `pvlogger-fusionsolar` and
     `pvlogger-fusionsolar-auth` for accessing the same secret.
 11. **Pushgateway metrics** only in fast+full collectors; device collector,

@@ -38,7 +38,7 @@ func NewReadRegisterValuesService(categories []model.Category) *ReadRegisterValu
 		categories:         categories,
 		deviceIdToTypesMap: newDeviceIdToTypesMap(),
 		tcpHandler:         modbus.NewTcpHandler(fmt.Sprintf("%s:%d", mbCfg.Host, mbCfg.Port), mbCfg.Timeout, mbCfg.ConnectionSleep),
-		persistenceService: persistence.NewPersistingService(daCfg.Host, daCfg.Port, daCfg.Protocol, daCfg.BasePath),
+		persistenceService: persistence.NewPersistingService(daCfg.Host, daCfg.Port, daCfg.Protocol, sharedconfig.DataAccessorBasePath),
 	}
 }
 
@@ -49,7 +49,7 @@ func NewReadDeviceIdentifiersService() *ReadRegisterValuesService {
 		jobId:              model.NewJobId(uuid.New().String()),
 		lastTransactionId:  atomic.Int32{},
 		tcpHandler:         modbus.NewTcpHandler(fmt.Sprintf("%s:%d", mbCfg.Host, mbCfg.Port), mbCfg.Timeout, mbCfg.ConnectionSleep),
-		persistenceService: persistence.NewPersistingService(daCfg.Host, daCfg.Port, daCfg.Protocol, daCfg.BasePath),
+		persistenceService: persistence.NewPersistingService(daCfg.Host, daCfg.Port, daCfg.Protocol, sharedconfig.DataAccessorBasePath),
 		ReadDevIdCode:      model.UByte(0x01),
 		ObjectId:           model.UByte(0x00),
 	}
@@ -62,7 +62,7 @@ func NewReadDeviceListService() *ReadRegisterValuesService {
 		jobId:              model.NewJobId(uuid.New().String()),
 		lastTransactionId:  atomic.Int32{},
 		tcpHandler:         modbus.NewTcpHandler(fmt.Sprintf("%s:%d", mbCfg.Host, mbCfg.Port), mbCfg.Timeout, mbCfg.ConnectionSleep),
-		persistenceService: persistence.NewPersistingService(daCfg.Host, daCfg.Port, daCfg.Protocol, daCfg.BasePath),
+		persistenceService: persistence.NewPersistingService(daCfg.Host, daCfg.Port, daCfg.Protocol, sharedconfig.DataAccessorBasePath),
 		ReadDevIdCode:      model.UByte(0x03),
 		ObjectId:           model.UByte(0x87),
 	}

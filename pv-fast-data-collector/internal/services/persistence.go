@@ -31,24 +31,24 @@ type PersistenceService struct {
 func NewPersistenceService() *PersistenceService {
 	cfg := sharedconfig.DataAccessorCfg()
 	return &PersistenceService{
-		client: persistence.NewPersistingService(cfg.Host, cfg.Port, cfg.Protocol, cfg.BasePath),
+		client: persistence.NewPersistingService(cfg.Host, cfg.Port, cfg.Protocol, sharedconfig.DataAccessorBasePath),
 	}
 }
 
 func (s *PersistenceService) StoreRawValues(values *RawKpiRegisterValues) error {
 	logging.Info("storing raw KPI register values")
-	return s.client.StoreValues(values, sharedconfig.DataAccessorCfg().StoreRawKpiRegisterValues)
+	return s.client.StoreValues(values, sharedconfig.StoreRawKpiRegisterValuesPath)
 }
 
 func (s *PersistenceService) StoreKpiValues(kpiValues *kpis.PvLoggerKpiData) error {
 	logging.Info("storing KPI values")
-	return s.client.StoreValues(kpiValues, sharedconfig.DataAccessorCfg().StoreKpiValuesPath)
+	return s.client.StoreValues(kpiValues, sharedconfig.StoreKpiValuesPath)
 }
 
 func (s *PersistenceService) ReadMeterEnergyToday() (*MeterEnergyTodayResponse, error) {
 	logging.Info("reading meter energy today")
 	var result MeterEnergyTodayResponse
-	if err := s.client.GetJSON(sharedconfig.DataAccessorCfg().ReadMeterEnergyTodayPath, &result); err != nil {
+	if err := s.client.GetJSON(sharedconfig.ReadMeterEnergyTodayPath, &result); err != nil {
 		return nil, fmt.Errorf("error reading meter energy today: %w", err)
 	}
 	logging.Info("meter energy today", "exported", result.ExportedEnergyToday, "imported", result.ImportedEnergyToday)

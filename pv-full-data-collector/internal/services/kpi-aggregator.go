@@ -36,7 +36,7 @@ func AggregateKpisFor(jobId *model.JobId) error {
 		SelfConsumed:  todayKpis.SelfConsumed().ToWh(),
 	}
 	daCfg := sharedconfig.DataAccessorCfg()
-	if err := persistence.NewPersistingService(daCfg.Host, daCfg.Port, daCfg.Protocol, daCfg.BasePath).StoreValues(&kpiValues, daCfg.StoreKpiValuesPath); err != nil {
+	if err := persistence.NewPersistingService(daCfg.Host, daCfg.Port, daCfg.Protocol, sharedconfig.DataAccessorBasePath).StoreValues(&kpiValues, sharedconfig.StoreKpiValuesPath); err != nil {
 		return err
 	}
 	pushKpiMetrics(&kpiValues)

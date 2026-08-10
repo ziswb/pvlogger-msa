@@ -88,7 +88,7 @@ func (s *DataAccessorService) retrieveLatestRegisterValuesAggregated(masterData 
 
 func (s *DataAccessorService) retrieveLatestRegisterValue(registerDefinition *model.RegisterDefinition, deviceId uint8, jobId *model.JobId) (float64, error) {
 	pathSegments := []string{
-		sharedconfig.DataAccessorCfg().ReadLatestRegisterValuePath,
+		sharedconfig.ReadLatestRegisterValuePath,
 		registerDefinition.Type,
 		strconv.Itoa(int(deviceId)),
 		strconv.Itoa(registerDefinition.RegisterAddress.Value),
@@ -99,7 +99,7 @@ func (s *DataAccessorService) retrieveLatestRegisterValue(registerDefinition *mo
 
 func (s *DataAccessorService) retrieveEnergyTodaySoFar(registerDefinition *model.RegisterDefinition) (float64, error) {
 	pathSegments := []string{
-		sharedconfig.DataAccessorCfg().ReadKwTodaySoFarPath,
+		sharedconfig.ReadKwTodaySoFarPath,
 		registerDefinition.Type,
 		strconv.Itoa(registerDefinition.RegisterAddress.Value),
 	}

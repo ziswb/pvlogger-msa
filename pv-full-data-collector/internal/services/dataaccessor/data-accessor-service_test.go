@@ -30,8 +30,6 @@ func TestDataAccessorService_RetrieveEnergyTodaySoFar(t *testing.T) {
 		httpClient: server.Client(),
 	}
 
-	t.Setenv("DA_READ_KW_TODAY_SO_FAR_PATH", "read-kw-today-so-far")
-
 	md := &model.RegisterDefinition{
 		Type:            "I32",
 		Gain:            "HUNDRED",

@@ -43,7 +43,7 @@ func (s *ReadRegisterValuesService) fetchRegisterValues(deviceId model.UByte, de
 				logging.Debug("register value", "register_address", v.Definition.RegisterAddress, "value", v.Value)
 			}
 		}
-		if err := s.persistenceService.StoreValues(valueResponse, sharedconfig.DataAccessorCfg().StoreModbusValuesPath); err != nil {
+		if err := s.persistenceService.StoreValues(valueResponse, sharedconfig.StoreModbusValuesPath); err != nil {
 			return err
 		}
 	}

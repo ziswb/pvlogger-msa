@@ -17,7 +17,7 @@ func (s *ReadRegisterValuesService) ExecuteFetchDeviceIdentifiersJob() error {
 		if err != nil {
 			return err
 		}
-		if err := s.persistenceService.StoreValues(resp, sharedconfig.DataAccessorCfg().StoreDeviceIdValuesPath); err != nil {
+		if err := s.persistenceService.StoreValues(resp, sharedconfig.StoreDeviceIdValuesPath); err != nil {
 			return err
 		}
 	}

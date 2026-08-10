@@ -40,7 +40,7 @@ func NewMasterDataService() *MasterDataService {
 	cfg := config.MdConfig()
 	return &MasterDataService{
 		baseURL:        fmt.Sprintf("%s://%s:%d", cfg.Protocol, cfg.Host, cfg.Port),
-		masterDataPath: cfg.MasterDataPath,
+		masterDataPath: config.MasterDataPath,
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},

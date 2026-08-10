@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	sharedconfig "pvlogger-shared-modbus/config"
 	"pvlogger-shared-modbus/kpis"
 	"pvlogger-shared-modbus/persistence"
 	"strconv"
@@ -29,7 +30,7 @@ func testService(t *testing.T, server *httptest.Server) *PersistenceService {
 	if err != nil {
 		t.Fatalf("failed to parse test server port: %v", err)
 	}
-	return &PersistenceService{client: persistence.NewPersistingService(host, port, "http", "v1")}
+	return &PersistenceService{client: persistence.NewPersistingService(host, port, "http", sharedconfig.DataAccessorBasePath)}
 }
 
 func TestPersistenceService_StoreRawValues(t *testing.T) {
@@ -50,9 +51,6 @@ func TestPersistenceService_StoreRawValues(t *testing.T) {
 	defer server.Close()
 
 	svc := testService(t, server)
-
-	t.Setenv("DA_BASE_PATH", "v1")
-	t.Setenv("DA_STORE_RAW_KPI_REGISTER_VALUES_PATH", "store-raw-kpi-register-values")
 
 	values := &RawKpiRegisterValues{
 		JobId:               "test-job",
@@ -100,9 +98,6 @@ func TestPersistenceService_StoreKpiValues(t *testing.T) {
 
 	svc := testService(t, server)
 
-	t.Setenv("DA_BASE_PATH", "v1")
-	t.Setenv("DA_STORE_KPI_VALUES_PATH", "store-kpi-values")
-
 	kpiValues := &kpis.PvLoggerKpiData{
 		JobId:     "kpi-job",
 		Producing: kpis.W{W: 5000},
@@ -145,9 +140,6 @@ func TestPersistenceService_ReadMeterEnergyToday(t *testing.T) {
 
 	svc := testService(t, server)
 
-	t.Setenv("DA_BASE_PATH", "v1")
-	t.Setenv("DA_READ_METER_ENERGY_TODAY_PATH", "meter-energy-today")
-
 	result, err := svc.ReadMeterEnergyToday()
 	if err != nil {
 		t.Fatalf("ReadMeterEnergyToday returned error: %v", err)
@@ -173,9 +165,6 @@ func TestPersistenceService_StoreRawValues_FailsOnServerError(t *testing.T) {
 	defer server.Close()
 
 	svc := testService(t, server)
-
-	t.Setenv("DA_BASE_PATH", "v1")
-	t.Setenv("DA_STORE_RAW_KPI_REGISTER_VALUES_PATH", "store-raw-kpi-register-values")
 
 	if err := svc.StoreRawValues(&RawKpiRegisterValues{JobId: "j"}); err == nil {
 		t.Error("expected error for HTTP 500, got nil (a failed store must fail the run)")

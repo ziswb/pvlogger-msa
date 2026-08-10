@@ -18,6 +18,7 @@ old one. Half a page max; the point is the *why*. Template: see
 - [0009 — JVM tests run against real PostgreSQL (Testcontainers); H2 removed](0009-data-accessor-tests-on-real-postgresql.md)
 - [0010 — Go library code returns errors; Fatal only in cmd/ and job dispatch](0010-go-libraries-return-errors.md)
 - [0011 — Env-config helpers live in pv-logger/config and panic (Must-style)](0011-env-config-helpers-in-pv-logger.md)
+- [0012 — REST paths are API contract constants, not deployment config](0012-rest-paths-are-contract-not-config.md)
 
 ## Candidate ADRs (implicit decisions worth writing down)
 
