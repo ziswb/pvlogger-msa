@@ -93,8 +93,14 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
    a drift test (`config/paths_drift_test.go`) parses the Kotlin sources and
    fails the Go build on divergence, and the `DA_*_PATH`/`MD_PATH` plumbing
    is deleted from the infrastructure repo. Host/port/protocol stay env-based.
-10. **k8s client-go version skew** between `pvlogger-fusionsolar` and
-    `pvlogger-fusionsolar-auth` for accessing the same secret.
+10. ~~**k8s client-go version skew** between `pvlogger-fusionsolar` and
+    `pvlogger-fusionsolar-auth` for accessing the same secret.~~ **Resolved
+    2026-08-10**: fusionsolar-auth bumped v0.32.0 → v0.35.0
+    (client-go/api/apimachinery), matching fusionsolar. The two
+    `internal/k8s/secret.go` files turned out complementary (reader vs
+    writer), not duplicates — no extraction warranted. Go has no
+    cross-module version catalog, so nothing *prevents* future skew;
+    re-check when bumping either module.
 11. **Pushgateway metrics** only in fast+full collectors; device collector,
     fusionsolar and exporter fail silently. Decide: metrics everywhere or an
     explicit reason why not.
