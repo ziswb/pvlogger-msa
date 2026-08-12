@@ -101,9 +101,15 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     writer), not duplicates — no extraction warranted. Go has no
     cross-module version catalog, so nothing *prevents* future skew;
     re-check when bumping either module.
-11. **Pushgateway metrics** only in fast+full collectors; device collector,
+11. ~~**Pushgateway metrics** only in fast+full collectors; device collector,
     fusionsolar and exporter fail silently. Decide: metrics everywhere or an
-    explicit reason why not.
+    explicit reason why not.~~ **Resolved 2026-08-12** (**ADR-0013**): explicit
+    reason why not. The failures were never silent at the K8s level — every
+    CronJob exits non-zero (ADR-0010) and kube-state-metrics already exposes
+    per-CronJob failure/staleness. PrometheusRules + a "Collector health"
+    Grafana row (infrastructure repo: `roles/prometheus`,
+    `roles/grafana_install`) now surface them; the Pushgateway stays reserved
+    for domain KPI gauges. No collector code changed.
 12. **Hard-coded daily pause window** (00:00, 00:02–00:04) in
     `pv-fast-data-collector/cmd/collector/main.go` instead of the cron schedule.
 

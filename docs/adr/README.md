@@ -19,6 +19,7 @@ old one. Half a page max; the point is the *why*. Template: see
 - [0010 — Go library code returns errors; Fatal only in cmd/ and job dispatch](0010-go-libraries-return-errors.md)
 - [0011 — Env-config helpers live in pv-logger/config and panic (Must-style)](0011-env-config-helpers-in-pv-logger.md)
 - [0012 — REST paths are API contract constants, not deployment config](0012-rest-paths-are-contract-not-config.md)
+- [0013 — CronJob health via kube-state-metrics; Pushgateway carries domain KPIs only](0013-cronjob-health-via-kube-state-metrics.md)
 
 ## Candidate ADRs (implicit decisions worth writing down)
 
