@@ -117,16 +117,26 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     32114, whose reset lands *after* midnight; daily production now derives
     from the lifetime counter 32106 as a day-delta and the skip is deleted.
     Remaining: 00:02–00:04 is a reserved Modbus window for the nightly device
-    collectors (single-client SmartDongle, `TcpHandler.Connect()` has no
-    retry). A single CronJob schedule cannot express "every minute except…";
-    options are a connect-retry with backoff in `pvlogger-shared-modbus`
-    (preferred — needs a controlled dongle concurrency test first) or
-    splitting the fast collector into two CronJobs (`* 1-23 * * *` +
-    `0-1,5-59 0 * * *`, which needs its own staleness-alert tier, see
-    ADR-0013). Also open: the **full collector** still derives `Produced`
-    from register 32114's latest value (masked by its `5-59/2` schedule and
-    by being suspended) — align it with ADR-0014 before the fast/full toggle
-    is used again (details in the ADR's consequences).
+    collectors. Dongle concurrency test (2026-08-13, live): the SmartDongle is
+    **last-connect-wins** — a new client's connect kills the *established*
+    connection (EOF), nothing is refused. So the fast collector always wins a
+    collision and the long-running device jobs are the victims; connect-retry
+    is the wrong fix (connects never fail), and `ExecuteRequest`'s 3 read
+    attempts are useless without a reconnect (all EOF on the dead socket
+    within 1 ms). K8s `backoffLimit` retry *does* recover the device job
+    systematically (respawn ~10 s after the :00–:04 collision lands in the
+    ~56 s gap between fast runs, job needs ~45 s) — but each collision leaves
+    a failed pod, which fires `PvloggerCronJobFailed` (the alert counts failed
+    pods even when the job eventually succeeds). Preferred fix: split the
+    fast collector into two CronJobs (`* 1-23 * * *` + `0-1,5-59 0 * * *`),
+    delete the in-code skip, add an hour-0 staleness-alert tier (ADR-0013
+    anticipated this). Optional hardening: reconnect between `ExecuteRequest`
+    attempts (with jittered backoff — two reconnecting clients ping-pong the
+    line on this dongle until the shorter job finishes). Also open: the
+    **full collector** still derives `Produced` from register 32114's latest
+    value (masked by its `5-59/2` schedule and by being suspended) — align it
+    with ADR-0014 before the fast/full toggle is used again (details in the
+    ADR's consequences).
 
 ### Kotlin
 
