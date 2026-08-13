@@ -211,3 +211,20 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     stays green regardless). One mechanical formatting commit, ideally with
     nothing else in it; consider enabling the gofmt/gofumpt linter in the
     golangci-lint config afterwards to keep it that way.
+33. **Negative live consumption under fast irradiance changes** (observed
+    2026-08-13): when sun and shadow alternate quickly, the frontend chart
+    shows negative consumption. `Consuming = Producing − Exporting +
+    Importing` (`KpiLiveData`, pvlogger-shared-modbus), but `Producing`
+    (inverter 32080) and the meter power (37113) are sampled sequentially —
+    several Modbus round-trips apart, and the inverter refreshes 32080 on a
+    slower internal cycle than the near-real-time meter — so under fast
+    fluctuation the two operands describe different moments and the
+    difference can go negative (`SelfConsuming` too). Unrelated to the
+    midnight peak (ADR-0014: daily *energy counters*; this is live *power*
+    skew). Physically consumption is never negative. Options: clamp
+    `Consuming`/`SelfConsuming` at ≥ 0 in `KpiLiveData` (honest given the
+    measurement can't resolve the skew; log when clamping), tighten the read
+    order so 32080 and 37113 are adjacent requests (reduces but cannot
+    eliminate the device-side refresh lag), or clamp in the frontend only
+    (weakest — the stored KPI stays wrong). Daily-energy KPIs are largely
+    immune (counters integrate over the fluctuations).
