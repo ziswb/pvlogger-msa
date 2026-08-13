@@ -110,33 +110,23 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     Grafana row (infrastructure repo: `roles/prometheus`,
     `roles/grafana_install`) now surface them; the Pushgateway stays reserved
     for domain KPI gauges. No collector code changed.
-12. **Hard-coded daily pause window** (~~00:00~~, 00:02–00:04) in
-    `pv-fast-data-collector/cmd/collector/main.go` instead of the cron schedule.
-    **Half resolved 2026-08-13** (**ADR-0014**): the 00:00 skip masked the real
-    defect — `Produced` came from the inverter's self-resetting daily register
-    32114, whose reset lands *after* midnight; daily production now derives
-    from the lifetime counter 32106 as a day-delta and the skip is deleted.
-    Remaining: 00:02–00:04 is a reserved Modbus window for the nightly device
-    collectors. Dongle concurrency test (2026-08-13, live): the SmartDongle is
-    **last-connect-wins** — a new client's connect kills the *established*
-    connection (EOF), nothing is refused. So the fast collector always wins a
-    collision and the long-running device jobs are the victims; connect-retry
-    is the wrong fix (connects never fail), and `ExecuteRequest`'s 3 read
-    attempts are useless without a reconnect (all EOF on the dead socket
-    within 1 ms). K8s `backoffLimit` retry *does* recover the device job
-    systematically (respawn ~10 s after the :00–:04 collision lands in the
-    ~56 s gap between fast runs, job needs ~45 s) — but each collision leaves
-    a failed pod, which fires `PvloggerCronJobFailed` (the alert counts failed
-    pods even when the job eventually succeeds). Preferred fix: split the
-    fast collector into two CronJobs (`* 1-23 * * *` + `0-1,5-59 0 * * *`),
-    delete the in-code skip, add an hour-0 staleness-alert tier (ADR-0013
-    anticipated this). Optional hardening: reconnect between `ExecuteRequest`
-    attempts (with jittered backoff — two reconnecting clients ping-pong the
-    line on this dongle until the shorter job finishes). Also open: the
-    **full collector** still derives `Produced` from register 32114's latest
-    value (masked by its `5-59/2` schedule and by being suspended) — align it
-    with ADR-0014 before the fast/full toggle is used again (details in the
-    ADR's consequences).
+12. ~~**Hard-coded daily pause window** (00:00, 00:02–00:04) in
+    `pv-fast-data-collector/cmd/collector/main.go` instead of the cron
+    schedule.~~ **Resolved 2026-08-13** in two halves. (1) **ADR-0014**: the
+    00:00 skip masked the real defect — `Produced` came from the inverter's
+    self-resetting daily register 32114, whose reset lands *after* midnight;
+    daily production now derives from the lifetime counter 32106 as a
+    day-delta. (2) **ADR-0015**: a live dongle concurrency test showed the
+    SmartDongle is **last-connect-wins** (a new client's connect kills the
+    established connection; nothing is refused), so the 00:02–00:04 window
+    protects the *device jobs from the fast collector* — it now lives in the
+    CronJob schedules (`* 1-23 * * *` + `0-1,5-59 0 * * *` in the Helm
+    chart), `main.go` has no time logic, and monitoring treats the pair as
+    one logical job. Still open (tracked in ADR-0014/0015 consequences): the
+    **full collector** derives `Produced` from register 32114's latest value
+    (masked by its `5-59/2` schedule and by being suspended) — align it with
+    ADR-0014 before the fast/full toggle is used again; optional `TcpHandler`
+    reconnect-between-attempts hardening.
 
 ### Kotlin
 
