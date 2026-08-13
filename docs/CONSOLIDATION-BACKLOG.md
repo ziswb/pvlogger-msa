@@ -241,4 +241,11 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     KPIs (`Producing`/`Consuming`/grid exchange) from this block instead of
     combining 32080×2 + 37113; keep ADR-0014's energy registers unchanged.
     Before implementing, verify a daytime snapshot (export-sign of 37502,
-    37516 under production) and the block's refresh cadence.
+    37516 under production) and the block's refresh cadence. Scope note: the
+    full collector's KPI aggregator is unaffected either way (own path:
+    32080/37113 by jobId via data accessor into the same shared
+    `KpiLiveData`); if fast takes `Consuming` directly from 37500 instead of
+    the shared formula, that is a fast/full divergence to document — and the
+    full collector cannot adopt the dongle block without a new device type in
+    masterdata and its device model (unit 100 is outside INVERTER/METER),
+    which belongs with its ADR-0014 alignment before the toggle returns.
