@@ -221,10 +221,24 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     fluctuation the two operands describe different moments and the
     difference can go negative (`SelfConsuming` too). Unrelated to the
     midnight peak (ADR-0014: daily *energy counters*; this is live *power*
-    skew). Physically consumption is never negative. Options: clamp
-    `Consuming`/`SelfConsuming` at ≥ 0 in `KpiLiveData` (honest given the
-    measurement can't resolve the skew; log when clamping), tighten the read
-    order so 32080 and 37113 are adjacent requests (reduces but cannot
-    eliminate the device-side refresh lag), or clamp in the frontend only
-    (weakest — the stored KPI stays wrong). Daily-energy KPIs are largely
-    immune (counters integrate over the fluctuations).
+    skew). Physically consumption is never negative. **Register research
+    (2026-08-13, verified live):** the SmartDongle's own logical device
+    (unit **100** — unit 0 times out, unit 1 returns illegal-data-address)
+    serves an aggregate block computed by the dongle itself, readable in
+    **one** 20-register request (= one coherent snapshot, no skew):
+    - 37498 total input power (U32, W) — DC, all inverters
+    - **37500 load power (U32, W) — house consumption, directly**
+    - 37502 grid power (I32, W, **positive = import** — sign is inverted
+      vs. meter register 37113 where positive = export)
+    - 37504 battery power (I32, W)
+    - 37516 total active power (I32, W) — AC sum over all cascaded
+      inverters (also removes the current two-inverter double-read)
+    Night verification: load 624 W = grid import 624 W, production 0 —
+    exactly consistent. Register names/types per the `wlcrs/huawei-solar-lib`
+    register table (not in Huawei's inverter interface PDF — it's the
+    *dongle's* register space; absent from our masterdata catalog, which has
+    no load register on inverter or meter). Proposed fix: source the live
+    KPIs (`Producing`/`Consuming`/grid exchange) from this block instead of
+    combining 32080×2 + 37113; keep ADR-0014's energy registers unchanged.
+    Before implementing, verify a daytime snapshot (export-sign of 37502,
+    37516 under production) and the block's refresh cadence.
