@@ -54,3 +54,12 @@ is resolved.
 - If a second inverter is ever added, summing lifetime counters stays correct
   only while the device set is stable; a device joining or leaving breaks the
   summed baseline for one day.
+- **The full collector still violates this decision**: it computes `Produced`
+  from the *latest value* of register 32114 (`InverterEnergyToday` in
+  `data-accessor-service.go`), masked only by its `5-59/2` schedule never
+  sampling 00:00–00:04 — and by being suspended (infrastructure backlog 2).
+  Before the fast/full toggle is ever used again, align it: route `Produced`
+  through the existing "kW today so far" delta endpoint with register 32106
+  (the mechanism its meter KPIs already use), and port the newest-row anchor
+  fix to `RegisterReader`'s copy of the delta SQL (see backlog item 20's
+  duplication note).

@@ -123,7 +123,10 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     (preferred — needs a controlled dongle concurrency test first) or
     splitting the fast collector into two CronJobs (`* 1-23 * * *` +
     `0-1,5-59 0 * * *`, which needs its own staleness-alert tier, see
-    ADR-0013).
+    ADR-0013). Also open: the **full collector** still derives `Produced`
+    from register 32114's latest value (masked by its `5-59/2` schedule and
+    by being suspended) — align it with ADR-0014 before the fast/full toggle
+    is used again (details in the ADR's consequences).
 
 ### Kotlin
 
