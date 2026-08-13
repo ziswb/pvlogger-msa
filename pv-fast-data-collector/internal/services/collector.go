@@ -30,6 +30,7 @@ func CollectAndComputeKpis() error {
 		"inverter_active_power", rawValues.InverterActivePower,
 		"meter_active_power", rawValues.MeterActivePower,
 		"inverter_daily_yield", rawValues.InverterDailyYield,
+		"inverter_accumulated_yield", rawValues.InverterAccumulatedYield,
 		"meter_exported_energy", rawValues.MeterExportedEnergy,
 		"meter_imported_energy", rawValues.MeterImportedEnergy,
 	)
@@ -38,25 +39,27 @@ func CollectAndComputeKpis() error {
 
 	// Store raw values
 	if err := persistence.StoreRawValues(&RawKpiRegisterValues{
-		JobId:               jobId,
-		InverterActivePower: rawValues.InverterActivePower,
-		MeterActivePower:    rawValues.MeterActivePower,
-		InverterDailyYield:  rawValues.InverterDailyYield,
-		MeterExportedEnergy: rawValues.MeterExportedEnergy,
-		MeterImportedEnergy: rawValues.MeterImportedEnergy,
+		JobId:                    jobId,
+		InverterActivePower:      rawValues.InverterActivePower,
+		MeterActivePower:         rawValues.MeterActivePower,
+		InverterDailyYield:       rawValues.InverterDailyYield,
+		InverterAccumulatedYield: rawValues.InverterAccumulatedYield,
+		MeterExportedEnergy:      rawValues.MeterExportedEnergy,
+		MeterImportedEnergy:      rawValues.MeterImportedEnergy,
 	}); err != nil {
 		return err
 	}
 
-	// Read meter energy today (delta computation from data accessor)
-	meterEnergyToday, err := persistence.ReadMeterEnergyToday()
+	// Read energy today (delta computation from data accessor; must run after
+	// StoreRawValues — the deltas are anchored on the row stored above)
+	energyToday, err := persistence.ReadEnergyToday()
 	if err != nil {
 		return err
 	}
 
 	// Compute KPIs
 	liveKpis := computeLiveKpis(rawValues)
-	todayKpis := computeTodayKpis(rawValues, meterEnergyToday)
+	todayKpis := computeTodayKpis(rawValues, energyToday)
 
 	kpiValues := kpis.PvLoggerKpiData{
 		JobId:         jobId,
@@ -82,11 +85,12 @@ func CollectAndComputeKpis() error {
 }
 
 type collectedRawValues struct {
-	InverterActivePower float64
-	MeterActivePower    float64
-	InverterDailyYield  float64
-	MeterExportedEnergy float64
-	MeterImportedEnergy float64
+	InverterActivePower      float64
+	MeterActivePower         float64
+	InverterDailyYield       float64
+	InverterAccumulatedYield float64
+	MeterExportedEnergy      float64
+	MeterImportedEnergy      float64
 }
 
 func readModbusRegisters(jobId string) (*collectedRawValues, error) {
@@ -118,12 +122,20 @@ func readModbusRegisters(jobId string) (*collectedRawValues, error) {
 		}
 		result.InverterActivePower += applyGain(activePower, registers.InverterActivePower)
 
-		// Inverter daily yield (U32) - read separately
+		// Inverter daily yield (U32) - read separately; kept as raw reference
+		// and as fallback while the lifetime-delta has no baseline (ADR-0014)
 		dailyYield, err := readRegisters(handler, jobId, &requestCounter, deviceId, registers.InverterDailyYieldRegisters())
 		if err != nil {
 			return nil, err
 		}
 		result.InverterDailyYield += applyGain(dailyYield, registers.InverterDailyYield)
+
+		// Inverter accumulated (lifetime) yield (U32) - read separately
+		accumulatedYield, err := readRegisters(handler, jobId, &requestCounter, deviceId, registers.InverterAccumulatedYieldRegisters())
+		if err != nil {
+			return nil, err
+		}
+		result.InverterAccumulatedYield += applyGain(accumulatedYield, registers.InverterAccumulatedYield)
 	}
 
 	// Read meter registers for each meter device
@@ -223,11 +235,18 @@ func pushKpiMetrics(kpiValues *kpis.PvLoggerKpiData) {
 	metrics.NewMetricsPushService(cfg).PushKpiMetrics(kpiValues)
 }
 
-func computeTodayKpis(raw *collectedRawValues, meterEnergy *MeterEnergyTodayResponse) *kpis.KpiTodayData {
-	inverterEnergy := kpis.NewInverterEnergyToday(raw.InverterDailyYield, kpis.ParseUnitFromString("kWh"))
+func computeTodayKpis(raw *collectedRawValues, energyToday *EnergyTodayResponse) *kpis.KpiTodayData {
+	// Produced comes from the lifetime-counter delta (ADR-0014): immune to the
+	// midnight reset of the device's daily register. Only while the data
+	// accessor has no baseline yet does the daily register fill in.
+	produced := raw.InverterDailyYield
+	if energyToday.ProducedEnergyToday != nil {
+		produced = *energyToday.ProducedEnergyToday
+	}
+	inverterEnergy := kpis.NewInverterEnergyToday(produced, kpis.ParseUnitFromString("kWh"))
 	meterEnergyToday := kpis.NewMeterEnergyToday(
-		meterEnergy.ImportedEnergyToday, kpis.ParseUnitFromString("kWh"),
-		meterEnergy.ExportedEnergyToday, kpis.ParseUnitFromString("kWh"),
+		energyToday.ImportedEnergyToday, kpis.ParseUnitFromString("kWh"),
+		energyToday.ExportedEnergyToday, kpis.ParseUnitFromString("kWh"),
 	)
 	return &kpis.KpiTodayData{
 		InverterTodayEnergy: inverterEnergy,

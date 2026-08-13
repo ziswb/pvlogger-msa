@@ -21,8 +21,8 @@ fun Routing.rawKpiRegisterValues() {
             call.respond(HttpStatusCode.OK)
         }
         get("/$DATA_ACCESSOR_READ_METER_ENERGY_TODAY") {
-            val meterEnergy = RawKpiRegisterValuesDao.meterEnergyToday()
-            call.respond(HttpStatusCode.OK, meterEnergy)
+            val energy = RawKpiRegisterValuesDao.energyToday()
+            call.respond(HttpStatusCode.OK, energy)
         }
     }
 }

@@ -10,6 +10,7 @@ object RawKpiRegisterValuesTable : IntIdTable("raw_kpi_register_values") {
     val inverterActivePower = double("inverter_active_power").default(0.0)
     val meterActivePower = double("meter_active_power").default(0.0)
     val inverterDailyYield = double("inverter_daily_yield").default(0.0)
+    val inverterAccumulatedYield = double("inverter_accumulated_yield").default(0.0)
     val meterExportedEnergy = double("meter_exported_energy").default(0.0)
     val meterImportedEnergy = double("meter_imported_energy").default(0.0)
 }

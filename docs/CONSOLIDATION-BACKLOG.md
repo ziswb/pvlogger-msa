@@ -110,8 +110,20 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     Grafana row (infrastructure repo: `roles/prometheus`,
     `roles/grafana_install`) now surface them; the Pushgateway stays reserved
     for domain KPI gauges. No collector code changed.
-12. **Hard-coded daily pause window** (00:00, 00:02–00:04) in
+12. **Hard-coded daily pause window** (~~00:00~~, 00:02–00:04) in
     `pv-fast-data-collector/cmd/collector/main.go` instead of the cron schedule.
+    **Half resolved 2026-08-13** (**ADR-0014**): the 00:00 skip masked the real
+    defect — `Produced` came from the inverter's self-resetting daily register
+    32114, whose reset lands *after* midnight; daily production now derives
+    from the lifetime counter 32106 as a day-delta and the skip is deleted.
+    Remaining: 00:02–00:04 is a reserved Modbus window for the nightly device
+    collectors (single-client SmartDongle, `TcpHandler.Connect()` has no
+    retry). A single CronJob schedule cannot express "every minute except…";
+    options are a connect-retry with backoff in `pvlogger-shared-modbus`
+    (preferred — needs a controlled dongle concurrency test first) or
+    splitting the fast collector into two CronJobs (`* 1-23 * * *` +
+    `0-1,5-59 0 * * *`, which needs its own staleness-alert tier, see
+    ADR-0013).
 
 ### Kotlin
 

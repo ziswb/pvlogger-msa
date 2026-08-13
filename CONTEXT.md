@@ -91,7 +91,7 @@ themselves pragmatically — default to a job/endpoint in an existing service
 
 | Service | Responsibility |
 |---|---|
-| `pv-fast-data-collector` | Every minute: reads 5 hard-coded registers, stores raw values, computes and stores live+today KPIs. **The default Modbus collector** — registers are hard-coded *deliberately* for maximum speed (no masterdata dependency/API call; ADR-0004). |
+| `pv-fast-data-collector` | Every minute: reads 6 hard-coded registers, stores raw values, computes and stores live+today KPIs (daily production as a lifetime-counter delta, ADR-0014). **The default Modbus collector** — registers are hard-coded *deliberately* for maximum speed (no masterdata dependency/API call; ADR-0004). |
 | `pv-full-data-collector` | Reads *all* DYNAMIC+ALARM registers (definitions from masterdata), then aggregates KPIs. The **manually-toggled permanent alternative** to the fast collector — exactly one of the two runs, because the Modbus endpoint allows only one client (ADR-0004). **Currently permanently suspended by a chart bug** (see infrastructure backlog #2), which defeats the intended manual toggle. |
 | `pv-device-data-collector` | Nightly: reads STATIC/CONFIG registers, device identifiers and device list. Stays permanently; scheduled at night to avoid the per-minute dynamic polling (one-Modbus-client constraint, ADR-0004). |
 | `pvlogger-fusionsolar` | Six scheduled jobs pulling FusionSolar OpenAPI KPIs (station/device, real-time/day/month/year) — writes **directly** to the `fsdata` DB (not via the data accessor). |

@@ -89,6 +89,7 @@ object TestDataFactory {
         inverterActivePower: Double = 0.0,
         meterActivePower: Double = 0.0,
         inverterDailyYield: Double = 0.0,
+        inverterAccumulatedYield: Double = 0.0,
     ) {
         transaction {
             RawKpiRegisterValuesTable.insert {
@@ -98,6 +99,7 @@ object TestDataFactory {
                 it[RawKpiRegisterValuesTable.inverterActivePower] = inverterActivePower
                 it[RawKpiRegisterValuesTable.meterActivePower] = meterActivePower
                 it[RawKpiRegisterValuesTable.inverterDailyYield] = inverterDailyYield
+                it[RawKpiRegisterValuesTable.inverterAccumulatedYield] = inverterAccumulatedYield
             }
         }
     }

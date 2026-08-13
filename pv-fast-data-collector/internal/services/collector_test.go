@@ -149,18 +149,27 @@ func TestComputeLiveKpis(t *testing.T) {
 }
 
 func TestComputeTodayKpis(t *testing.T) {
+	producedDelta := 14.0
 	tests := []struct {
 		name        string
 		raw         *collectedRawValues
-		meterEnergy *MeterEnergyTodayResponse
+		energyToday *EnergyTodayResponse
 		want        struct {
 			produced, exported, imported, consumed, selfConsumed float64
 		}
 	}{
 		{
-			name:        "typical day values",
+			name:        "produced comes from the lifetime-counter delta",
 			raw:         &collectedRawValues{InverterDailyYield: 15.5},
-			meterEnergy: &MeterEnergyTodayResponse{ExportedEnergyToday: 8.0, ImportedEnergyToday: 2.0},
+			energyToday: &EnergyTodayResponse{ExportedEnergyToday: 8.0, ImportedEnergyToday: 2.0, ProducedEnergyToday: &producedDelta},
+			want: struct{ produced, exported, imported, consumed, selfConsumed float64 }{
+				produced: 14000, exported: 8000, imported: 2000, consumed: 8000, selfConsumed: 6000,
+			},
+		},
+		{
+			name:        "no delta baseline falls back to the daily register",
+			raw:         &collectedRawValues{InverterDailyYield: 15.5},
+			energyToday: &EnergyTodayResponse{ExportedEnergyToday: 8.0, ImportedEnergyToday: 2.0},
 			want: struct{ produced, exported, imported, consumed, selfConsumed float64 }{
 				produced: 15500, exported: 8000, imported: 2000, consumed: 9500, selfConsumed: 7500,
 			},
@@ -168,7 +177,7 @@ func TestComputeTodayKpis(t *testing.T) {
 		{
 			name:        "zero values",
 			raw:         &collectedRawValues{},
-			meterEnergy: &MeterEnergyTodayResponse{},
+			energyToday: &EnergyTodayResponse{},
 			want: struct{ produced, exported, imported, consumed, selfConsumed float64 }{
 				produced: 0, exported: 0, imported: 0, consumed: 0, selfConsumed: 0,
 			},
@@ -177,7 +186,7 @@ func TestComputeTodayKpis(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			today := computeTodayKpis(tt.raw, tt.meterEnergy)
+			today := computeTodayKpis(tt.raw, tt.energyToday)
 
 			assertFloat(t, "Produced", today.Produced().ToWh().Wh, tt.want.produced)
 			assertFloat(t, "Exported", today.Exported().ToWh().Wh, tt.want.exported)

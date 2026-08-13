@@ -24,6 +24,19 @@ var InverterDailyYield = model.RegisterDefinition{
 	Quantity:        model.Quantity{Value: 2},
 }
 
+// InverterAccumulatedYield - Register 32106 (U32, 2 registers, kWh, gain 100)
+// Lifetime energy yield, monotonic. Daily production is derived from this
+// counter as a day-delta (ADR-0014) — unlike register 32114, it has no
+// midnight reset the collector could race against.
+var InverterAccumulatedYield = model.RegisterDefinition{
+	Name:            "Accumulated energy yield",
+	Type:            "U32",
+	Unit:            "kWh",
+	Gain:            "HUNDRED",
+	RegisterAddress: model.RegisterAddress{Value: 32106},
+	Quantity:        model.Quantity{Value: 2},
+}
+
 // MeterActivePower - Register 37113 (I32, 2 registers, W, gain 1)
 // Active power at the meter. Positive = export, negative = import.
 var MeterActivePower = model.RegisterDefinition{
@@ -65,6 +78,11 @@ func InverterActivePowerRegisters() []model.RegisterDefinition {
 // InverterDailyYieldRegisters returns the daily yield power register definition
 func InverterDailyYieldRegisters() []model.RegisterDefinition {
 	return []model.RegisterDefinition{InverterDailyYield}
+}
+
+// InverterAccumulatedYieldRegisters returns the lifetime yield register definition
+func InverterAccumulatedYieldRegisters() []model.RegisterDefinition {
+	return []model.RegisterDefinition{InverterAccumulatedYield}
 }
 
 // MeterActivePowerRegisters returns the meter active power register (read separately as I32).

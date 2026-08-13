@@ -120,29 +120,31 @@ func TestPersistenceService_StoreKpiValues(t *testing.T) {
 	}
 }
 
-func TestPersistenceService_ReadMeterEnergyToday(t *testing.T) {
+func TestPersistenceService_ReadEnergyToday(t *testing.T) {
 	var (
 		mu     sync.Mutex
 		method string
 	)
+	produced := 7.5
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		mu.Lock()
 		method = r.Method
 		mu.Unlock()
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(MeterEnergyTodayResponse{
+		_ = json.NewEncoder(w).Encode(EnergyTodayResponse{
 			ExportedEnergyToday: 10.5,
 			ImportedEnergyToday: 3.2,
+			ProducedEnergyToday: &produced,
 		})
 	}))
 	defer server.Close()
 
 	svc := testService(t, server)
 
-	result, err := svc.ReadMeterEnergyToday()
+	result, err := svc.ReadEnergyToday()
 	if err != nil {
-		t.Fatalf("ReadMeterEnergyToday returned error: %v", err)
+		t.Fatalf("ReadEnergyToday returned error: %v", err)
 	}
 
 	mu.Lock()
@@ -155,6 +157,30 @@ func TestPersistenceService_ReadMeterEnergyToday(t *testing.T) {
 	}
 	if result.ImportedEnergyToday != 3.2 {
 		t.Errorf("ImportedEnergyToday = %f, want 3.2", result.ImportedEnergyToday)
+	}
+	if result.ProducedEnergyToday == nil || *result.ProducedEnergyToday != 7.5 {
+		t.Errorf("ProducedEnergyToday = %v, want 7.5", result.ProducedEnergyToday)
+	}
+}
+
+func TestPersistenceService_ReadEnergyToday_ProducedNull(t *testing.T) {
+	// A data accessor without a lifetime-yield baseline sends an explicit
+	// null (encodeDefaults = true on the Kotlin side) — it must decode to nil.
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"exportedEnergyToday": 1.0, "importedEnergyToday": 2.0, "producedEnergyToday": null}`))
+	}))
+	defer server.Close()
+
+	svc := testService(t, server)
+
+	result, err := svc.ReadEnergyToday()
+	if err != nil {
+		t.Fatalf("ReadEnergyToday returned error: %v", err)
+	}
+	if result.ProducedEnergyToday != nil {
+		t.Errorf("ProducedEnergyToday = %v, want nil", *result.ProducedEnergyToday)
 	}
 }
 

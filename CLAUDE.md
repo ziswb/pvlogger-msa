@@ -65,7 +65,7 @@ Database runs via Docker Compose in `pvlogger-database/`.
 - `pvlogger-shared-model`, `pvlogger-shared-rest`, `pvlogger-shared-database` — Shared Kotlin libraries (Modbus domain model; REST path constants + KPI DTO; Hikari/Flyway bootstrap)
 
 **Go Services (CronJob-based):**
-- `pv-fast-data-collector` — Per-minute Modbus polling of 5 KPI registers, computes and stores KPIs (the active collector)
+- `pv-fast-data-collector` — Per-minute Modbus polling of 6 KPI registers, computes and stores KPIs (the active collector)
 - `pv-full-data-collector` — Full dynamic-register collection (mutually exclusive with fast; currently suspended, see CONTEXT.md)
 - `pv-device-data-collector` — Nightly static/config register + device identifier collection
 - `pvlogger-fusionsolar` — FusionSolar API data integration (writes its own `fsdata` DB directly)
