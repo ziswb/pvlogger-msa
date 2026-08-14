@@ -9,7 +9,7 @@ FROM gcr.io/distroless/static-debian12
 
 LABEL author="Bruno Ziswiler"
 LABEL description="PV Device Data Collector written in Go"
-LABEL version="3.6.1"
+LABEL version="3.7.0"
 
 COPY --from=golang /device-data-collector .
 

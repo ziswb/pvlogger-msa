@@ -66,7 +66,7 @@ Database runs via Docker Compose in `pvlogger-database/`.
 
 **Go Services (CronJob-based):**
 - `pv-fast-data-collector` — Per-minute Modbus polling of the hard-coded KPI register set; KPIs are derived by the shared `aggregate(jobId)` path (ADR-0016)
-- `pv-full-data-collector` — Masterdata-driven extended register sweep, same shared KPI aggregation (currently suspended, see CONTEXT.md)
+- `pv-full-data-collector` — Masterdata-driven extended register sweep, same shared KPI aggregation (hourly, see CONTEXT.md)
 - `pv-device-data-collector` — Nightly static/config register + device identifier collection
 - `pvlogger-fusionsolar` — FusionSolar API data integration (writes its own `fsdata` DB directly)
 - `pvlogger-fusionsolar-auth` — Refreshes the FusionSolar token into a K8s secret
