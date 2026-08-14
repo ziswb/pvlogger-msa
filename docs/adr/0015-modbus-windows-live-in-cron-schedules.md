@@ -1,6 +1,7 @@
 # 0015 — Modbus access windows live in cron schedules, not in code
 
-- Status: accepted
+- Status: accepted; the two-CronJob fast split and its pair monitoring are
+  superseded by 0016 (the windows-live-in-cron-schedules principle stands)
 - Date: 2026-08-13
 
 ## Context

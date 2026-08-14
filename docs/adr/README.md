@@ -20,6 +20,9 @@ old one. Half a page max; the point is the *why*. Template: see
 - [0011 — Env-config helpers live in pv-logger/config and panic (Must-style)](0011-env-config-helpers-in-pv-logger.md)
 - [0012 — REST paths are API contract constants, not deployment config](0012-rest-paths-are-contract-not-config.md)
 - [0013 — CronJob health via kube-state-metrics; Pushgateway carries domain KPIs only](0013-cronjob-health-via-kube-state-metrics.md)
+- [0014 — Daily energy KPIs derive from lifetime counters, not device daily registers](0014-daily-kpis-from-lifetime-counters.md)
+- [0015 — Modbus access windows live in cron schedules, not in code](0015-modbus-windows-live-in-cron-schedules.md)
+- [0016 — One KPI path: fast collects per-minute, full sweeps hourly in a uniform window](0016-one-kpi-path-fast-per-minute-full-hourly.md)
 
 ## Candidate ADRs (implicit decisions worth writing down)
 

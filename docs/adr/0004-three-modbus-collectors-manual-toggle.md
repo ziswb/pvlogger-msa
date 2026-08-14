@@ -1,6 +1,6 @@
 # 0004 — Three Modbus collectors: fast by default, full as manual alternative, device nightly
 
-- Status: accepted (recorded 2026-08-07 from the operator's answer to open question 1)
+- Status: superseded by 0016 (was: accepted, recorded 2026-08-07 from the operator's answer to open question 1)
 - Date: 2026-08-07
 
 ## Context

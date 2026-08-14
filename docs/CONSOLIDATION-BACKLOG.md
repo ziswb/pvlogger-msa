@@ -122,10 +122,11 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     protects the *device jobs from the fast collector* — it now lives in the
     CronJob schedules (`* 1-23 * * *` + `0-1,5-59 0 * * *` in the Helm
     chart), `main.go` has no time logic, and monitoring treats the pair as
-    one logical job. Still open (tracked in ADR-0014/0015 consequences): the
-    **full collector** derives `Produced` from register 32114's latest value
-    (masked by its `5-59/2` schedule and by being suspended) — align it with
-    ADR-0014 before the fast/full toggle is used again; optional `TcpHandler`
+    one logical job. Follow-ups since resolved by decision: the **full
+    collector's** ADR-0014 violation (`Produced` from register 32114's latest
+    value) dissolves under **ADR-0016** — its private KPI path gets deleted,
+    not aligned (item 34) — and the two-CronJob fast pair is superseded by the
+    uniform hourly window (item 36). Still optional: `TcpHandler`
     reconnect-between-attempts hardening.
 
 ### Kotlin
@@ -241,11 +242,31 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     KPIs (`Producing`/`Consuming`/grid exchange) from this block instead of
     combining 32080×2 + 37113; keep ADR-0014's energy registers unchanged.
     Before implementing, verify a daytime snapshot (export-sign of 37502,
-    37516 under production) and the block's refresh cadence. Scope note: the
-    full collector's KPI aggregator is unaffected either way (own path:
-    32080/37113 by jobId via data accessor into the same shared
-    `KpiLiveData`); if fast takes `Consuming` directly from 37500 instead of
-    the shared formula, that is a fast/full divergence to document — and the
-    full collector cannot adopt the dongle block without a new device type in
-    masterdata and its device model (unit 100 is outside INVERTER/METER),
-    which belongs with its ADR-0014 alignment before the toggle returns.
+    37516 under production) and the block's refresh cadence. Scope per
+    **ADR-0016** (2026-08-14): implement the live-KPI mapping inside the
+    single shared `aggregate(jobId)` path (item 34), not in fast-local code —
+    there is no fast/full divergence to document because full's private KPI
+    aggregator is being deleted. The masterdata device type for unit 100 is
+    item 35 and does not gate this fix (fast reads the block hard-coded).
+34. **Single KPI aggregation path** (ADR-0016): extract/promote an
+    `aggregate(jobId)` component in `pvlogger-shared-modbus` that reads a
+    run's raw rows back from the data accessor and derives + stores the KPIs
+    (live mapping from the unit-100 block per item 33; daily figures keep
+    coming from the accessor's ADR-0014 delta endpoint). Both collectors call
+    it in-process after POSTing raw values. Delete fast's private KPI
+    computation and full's private aggregator path (incl. its 32080/37113
+    by-jobId route). Hard invariant: aggregation is per `jobId` — never
+    "newest value per register" across runs (snapshot coherence, see item 33).
+35. **Masterdata dongle device type** (ADR-0016): unit 100 is outside
+    INVERTER/METER, so the register catalog cannot represent the device that
+    serves the primary live-KPI block. Add a DONGLE device type across
+    masterdata-server, the shared device model, and the importer; register
+    the 37498×20 block (names/types per `wlcrs/huawei-solar-lib`). Then the
+    full collector's sweep picks the block up masterdata-driven.
+36. **Uniform hourly Modbus window** (ADR-0016): fast back to a single
+    CronJob `0-1,5-59 * * * *`; full scheduled `2 1-23 * * *` with
+    `activeDeadlineSeconds` inside the window (last-connect-wins dongle — an
+    overrun must fail, not fight fast). Prerequisite: the chart bug
+    (infrastructure backlog 2). Infra cleanup rides along: retire
+    `PvloggerFastCollectorStale` and the dashboard pair-merge, return fast to
+    the generic frequent alert tier, add full to it (hourly cadence).
