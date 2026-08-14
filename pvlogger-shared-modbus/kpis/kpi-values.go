@@ -3,10 +3,10 @@ package kpis
 type KpiLiveData struct {
 	InverterActivePower *InverterActivePower
 	MeterActivePower    *MeterActivePower
-	// LoadPower is optional: set when the collector read the dongle's coherent
-	// aggregate block (backlog 33). When nil, Consuming falls back to the
-	// formula over inverter + meter power.
-	LoadPower *LoadPower
+	// ConsumingPower is optional: set when the collector read the dongle's
+	// coherent aggregate block (load register 37500, backlog 33). When nil,
+	// Consuming falls back to the formula over inverter + meter power.
+	ConsumingPower *ConsumingPower
 }
 
 func (k *KpiLiveData) Producing() W {
@@ -26,8 +26,8 @@ func (k *KpiLiveData) Consuming() W {
 	// snapshot as Producing/Exporting/Importing, so it cannot go negative
 	// under fast irradiance changes the way the formula over separately
 	// sampled registers could (backlog 33).
-	if k.LoadPower != nil {
-		return k.LoadPower.Consuming()
+	if k.ConsumingPower != nil {
+		return k.ConsumingPower.Consuming()
 	}
 	return k.Producing().Minus(k.Exporting()).Plus(k.Importing())
 }

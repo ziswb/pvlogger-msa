@@ -241,11 +241,11 @@ func toFloat64FromGain(gainStr string) float64 {
 func computeLiveKpis(raw *collectedRawValues) *kpis.KpiLiveData {
 	inverterPower := kpis.NewInverterActivePower(raw.InverterActivePower, kpis.ParseUnitFromString("kW"))
 	meterPower := kpis.NewMeterActivePower(raw.MeterActivePower, kpis.ParseUnitFromString("W"))
-	loadPower := kpis.NewLoadPower(raw.LoadPower, kpis.ParseUnitFromString("W"))
+	consumingPower := kpis.NewConsumingPower(raw.LoadPower, kpis.ParseUnitFromString("W"))
 	return &kpis.KpiLiveData{
 		InverterActivePower: inverterPower,
 		MeterActivePower:    meterPower,
-		LoadPower:           loadPower,
+		ConsumingPower:      consumingPower,
 	}
 }
 

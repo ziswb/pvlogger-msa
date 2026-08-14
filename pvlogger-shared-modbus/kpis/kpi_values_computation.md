@@ -24,8 +24,9 @@ Measured:
 Computed (no register exists):
 * eigv = prod - exp
 
-Callers without a load-power source (`KpiLiveData.LoadPower == nil`, i.e. the
-full collector until backlog item 34) fall back to the historical formula:
+Callers without a measured consumption source (`KpiLiveData.ConsumingPower ==
+nil`, i.e. the full collector until backlog item 34) fall back to the
+historical formula:
 * verbr = prod - exp + imp
 
 ## Today KPIs (daily energy)
