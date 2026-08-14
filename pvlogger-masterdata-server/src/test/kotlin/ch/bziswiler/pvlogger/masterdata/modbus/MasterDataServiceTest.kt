@@ -9,7 +9,11 @@ import ch.bziswiler.pvlogger.masterdata.server.rest.MasterDataPaths.MASTER_DATA_
 import ch.bziswiler.pvlogger.masterdata.server.service.MasterDataImporter
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category.ALARM
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category.DEVLST
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.Category.DYNAMIC
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType.DONGLE
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.DeviceType.INVERTER
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.Type
+import ch.bziswiler.pvlogger.shared.masterdata.modbus.Unit
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
@@ -95,6 +99,34 @@ class MasterDataServiceTest : BaseApplicationTest() {
             assertEquals(NoContent, status)
             val actual = bodyAsText()
             assertNotNull(actual)
+        }
+    }
+
+    @Test
+    fun `test get master data for the dongle device type`() = withApp {
+        startApplication()
+        // The dongle rows themselves ship as migration V2 (ADR-0017), which the
+        // per-test TRUNCATE wipes — seed a representative row and verify the
+        // DONGLE device type round-trips through store, query, and DTO.
+        val records = TestRecordBuilder.createTestRecords(
+            name = "Load power",
+            type = Type.U32,
+            unit = Unit.W,
+            address = 37500,
+            quantity = 2,
+            category = DYNAMIC,
+        )
+        MasterDataImporter(appConfig, dao).storeMasterData(DONGLE, records)
+        client.get("/$MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES") {
+            url {
+                parameters.append("deviceTypes", DONGLE.name)
+                parameters.append("categories", DYNAMIC.name)
+            }
+        }.apply {
+            assertEquals(OK, status)
+            val result = decodeFromString<Array<ModbusRegisterDefinition>>(bodyAsText())
+            assertEquals(37500, result.single().registerAddress.value)
+            assertEquals(Type.U32, result.single().type)
         }
     }
 }

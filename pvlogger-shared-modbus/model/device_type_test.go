@@ -12,6 +12,7 @@ func TestDeviceType_String(t *testing.T) {
 	}{
 		{"INVERTER", InverterDeviceType, "INVERTER"},
 		{"METER", MeterDeviceType, "METER"},
+		{"DONGLE", DongleDeviceType, "DONGLE"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -31,6 +32,7 @@ func TestDeviceType_Int(t *testing.T) {
 	}{
 		{"INVERTER is 1", InverterDeviceType, 1},
 		{"METER is 47", MeterDeviceType, 47},
+		{"DONGLE is 62", DongleDeviceType, 62},
 		{"unknown is -1", DeviceType("UNKNOWN"), -1},
 	}
 	for _, tt := range tests {

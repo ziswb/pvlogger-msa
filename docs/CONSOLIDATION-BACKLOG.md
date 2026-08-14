@@ -283,12 +283,27 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     on the `/v1` route + server-side fallback). **Full's aggregation step
     fails until item 35** puts the unit-100 block into its sweep — do 35
     before scheduling full (item 36).
-35. **Masterdata dongle device type** (ADR-0016): unit 100 is outside
-    INVERTER/METER, so the register catalog cannot represent the device that
-    serves the primary live-KPI block. Add a DONGLE device type across
-    masterdata-server, the shared device model, and the importer; register
-    the 37498×20 block (names/types per `wlcrs/huawei-solar-lib`). Then the
-    full collector's sweep picks the block up masterdata-driven.
+35. ~~**Masterdata dongle device type** (ADR-0016)~~ **Resolved 2026-08-14**
+    (**ADR-0017**). DONGLE added to both device models (Kotlin enum +
+    Go constant; FusionSolar devTypeId 62, informational). The 37498×20 block
+    ships as masterdata migration `V2__DongleAggregateBlock.sql` — a Flyway
+    data migration, NOT a fourth CSV: the block is project-curated (from
+    `wlcrs/huawei-solar-lib`, absent from Huawei's exports) and must stay in
+    lock-step with `pvlogger-shared-modbus/registers`; a drift test there
+    parses the migration and fails on divergence (types especially — the
+    aggregate's per-type read-back). The undocumented 37506–37515 filler is
+    catalogued (MLD, DYNAMIC) on purpose: it keeps 37498..37517 one
+    consecutive run so the collector's merge sweeps the block in a SINGLE
+    Modbus request = one coherent snapshot (item 33's invariant); its MLD
+    values land in the accessor's characteristic-curve table — accepted
+    noise, hourly. The shared `deviceIdToTypesMap` now includes
+    `DONGLE_DEVICE_ID` (default 100) → DONGLE, and the Go masterdata client
+    treats 204 No Content as an empty register list (not an error) so the
+    device collector's STATIC/CONFIG sweep no-ops for the dongle instead of
+    failing. Verified live in prod masterdata: addresses 37203–37600 were
+    free, no unique-index collision. **Deploy masterdata-server (applies V2)
+    before rebuilding/enabling the full collector**; full's aggregation gate
+    from item 34 is hereby lifted once both are deployed. Item 36 remains.
 36. **Uniform hourly Modbus window** (ADR-0016): fast back to a single
     CronJob `0-1,5-59 * * * *`; full scheduled `2 1-23 * * *` with
     `activeDeadlineSeconds` inside the window (last-connect-wins dongle — an

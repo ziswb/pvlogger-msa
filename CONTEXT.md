@@ -54,8 +54,9 @@ themselves pragmatically — default to a job/endpoint in an existing service
   `NotImplementedError` in the data accessor is a deliberate fail-fast guard so a
   future feature that receives such data cannot silently skip it. `DEVLST` is
   loosely planned for implementation one day (confirmed 2026-08-07).
-- **Master data** — the register definitions themselves, imported from three
-  Huawei SUN2000 CSV files into the masterdata database and served over REST.
+- **Master data** — the register definitions themselves: Huawei's imported
+  from three SUN2000 CSV files, project-curated ones (the DONGLE block) added
+  by Flyway data migration (ADR-0017); served over REST.
 - **Raw KPI register values** — the per-minute raw snapshot row (one per fast
   run): inverter active power, meter active power, inverter daily yield,
   inverter accumulated (lifetime) yield, meter exported energy, meter imported
@@ -85,7 +86,7 @@ themselves pragmatically — default to a job/endpoint in an existing service
 | Service | Responsibility |
 |---|---|
 | `pvlogger-modbus-data-accessor` | **The central data service.** Owns the `pvdata` DB (register values, raw KPI registers, house KPIs). All collectors write through it; frontend and exporter read from it. REST paths are defined in `pvlogger-shared-rest`. |
-| `pvlogger-masterdata-server` | Owns the `pvmasterdata` DB. Imports register definitions from CSVs, serves them to collectors and the mock server. |
+| `pvlogger-masterdata-server` | Owns the `pvmasterdata` DB. Imports Huawei's register definitions from CSVs; project-curated definitions (the DONGLE unit-100 block) ship as Flyway data migrations instead (ADR-0017). Serves the catalog to collectors and the mock server. |
 | `pvlogger-frontend` | Serves the prebuilt Angular SPA, proxies the latest KPI as the `/livedata` WebSocket. History data goes **directly** SPA → data accessor (via ingress path `/v1`). |
 | `pvlogger-sunrise-sunset` | **Deprecated** (ADR-0005). Fetches and caches sunrise/sunset times for the site coordinates (own `sunrisesunset` DB). Historically gated FusionSolar collection to daylight hours; nothing calls it anymore — retirement is backlog item 28. |
 | `pvlogger-modbus-mock-server` | Emulates a Modbus TCP device (raw TCP, not HTTP) using real register definitions from the masterdata server. **Local development only — never deployed to production** (confirmed 2026-08-07); the Helm chart's mock-server template exists solely for local use. |
@@ -95,7 +96,7 @@ themselves pragmatically — default to a job/endpoint in an existing service
 | Service | Responsibility |
 |---|---|
 | `pv-fast-data-collector` | Every minute except 00:02–00:04 (two cron schedules — the device collectors' reserved Modbus window, ADR-0015): reads the dongle's aggregate live-power block (unit 100, one coherent request — backlog 33) plus the energy counters, stores the block in the generic register store and the raw KPI row, then invokes the **shared `aggregate(jobId)` path** (`pvlogger-shared-modbus/aggregate`, ADR-0016/backlog 34) which derives and stores the KPIs (daily production as a lifetime-counter delta, ADR-0014). **The sole per-minute KPI collector** — registers are hard-coded *deliberately* for maximum speed (no masterdata dependency/API call; the set lives in `pvlogger-shared-modbus/registers`). Still pending from ADR-0016: back to a **single CronJob** (`0-1,5-59 * * * *` — minutes 02–04 of *every* hour become the reserved non-fast window, backlog 36). |
-| `pv-full-data-collector` | Reads *all* DYNAMIC+ALARM registers (definitions from masterdata), then invokes the same shared `aggregate(jobId)` path as fast — its private aggregator was deleted (ADR-0016/backlog 34). **Currently permanently suspended by a chart bug** (see infrastructure backlog #2). Target per ADR-0016 (supersedes the ADR-0004 toggle): the masterdata-driven **extended sweep**, running **hourly in the 02–04 window of hours 1–23** (backlog 36), no KPI role of its own. Until masterdata has a dongle device type (backlog 35) the sweep lacks the unit-100 block, so the aggregation step fails and a run exits non-zero — do 35 before scheduling it. |
+| `pv-full-data-collector` | Reads *all* DYNAMIC+ALARM registers (definitions from masterdata) — including the dongle's unit-100 block as one consecutive Modbus request (backlog 35, migration V2 + DONGLE device type) — then invokes the same shared `aggregate(jobId)` path as fast; its private aggregator was deleted (ADR-0016/backlog 34). **Currently permanently suspended by a chart bug** (see infrastructure backlog #2). Target per ADR-0016 (supersedes the ADR-0004 toggle): the masterdata-driven **extended sweep**, running **hourly in the 02–04 window of hours 1–23** (backlog 36), no KPI role of its own. Deploy masterdata-server (applies V2) before enabling it, or the aggregation step fails for lack of the block. |
 | `pv-device-data-collector` | Nightly: reads STATIC/CONFIG registers, device identifiers and device list. Stays permanently; scheduled at night to avoid the per-minute dynamic polling (one-Modbus-client constraint, ADR-0004). |
 | `pvlogger-fusionsolar` | Six scheduled jobs pulling FusionSolar OpenAPI KPIs (station/device, real-time/day/month/year) — writes **directly** to the `fsdata` DB (not via the data accessor). |
 | `pvlogger-fusionsolar-auth` | Refreshes the FusionSolar API token into a K8s secret every 20 min; the collector jobs read it. |

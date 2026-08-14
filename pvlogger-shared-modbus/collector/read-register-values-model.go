@@ -111,6 +111,10 @@ func newDeviceIdToTypesMap() DeviceIdToTypesMap {
 	var deviceIdToTypesMap = make(map[model.UByte][]model.DeviceType)
 	appendIdToTypeEntries(deviceIdToTypesMap, sharedconfig.DevIdConfig().MeterDeviceIds, model.MeterDeviceType)
 	appendIdToTypeEntries(deviceIdToTypesMap, sharedconfig.DevIdConfig().InverterDeviceIds, model.InverterDeviceType)
+	// The dongle's own logical device (unit 100) serves the aggregate
+	// live-power block (backlog 35). Its catalog rows are DYNAMIC only, so
+	// jobs sweeping other categories fetch an empty list for it and skip.
+	appendIdToTypeEntries(deviceIdToTypesMap, []model.UByte{sharedconfig.DevIdConfig().DongleDeviceId}, model.DongleDeviceType)
 	return deviceIdToTypesMap
 }
 

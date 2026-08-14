@@ -62,6 +62,15 @@ func (s *MasterDataService) FetchRegisterDefinitions(
 	defer s.close(resp)
 
 	logging.Debug("response received", "status", resp.Status)
+	if resp.StatusCode == http.StatusNoContent {
+		// A device-type/category combination with no registers is a
+		// legitimate empty result, not an error — e.g. the DONGLE type has
+		// DYNAMIC rows only, so the device collector's STATIC/CONFIG sweep
+		// simply has nothing to read for it.
+		logging.Info("no master data for the requested device types and categories",
+			"device_types", devTypesParam, "categories", categoriesParam)
+		return &[]model.RegisterDefinition{}, nil
+	}
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected status code %d fetching master data", resp.StatusCode)
 	}
