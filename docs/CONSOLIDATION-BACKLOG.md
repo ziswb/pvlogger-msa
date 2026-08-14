@@ -212,8 +212,17 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     stays green regardless). One mechanical formatting commit, ideally with
     nothing else in it; consider enabling the gofmt/gofumpt linter in the
     golangci-lint config afterwards to keep it that way.
-33. **Negative live consumption under fast irradiance changes** (observed
-    2026-08-13): when sun and shadow alternate quickly, the frontend chart
+33. ~~**Negative live consumption under fast irradiance changes**~~ (observed
+    2026-08-13) **Resolved 2026-08-14** (fast collector 0.12.0, deployed): live
+    KPIs now come from the dongle aggregate block in one coherent request —
+    Producing ← 37516, Consuming ← 37500 (measured directly), grid ← 37502
+    sign-flipped; SelfConsuming stays derived (no register). Daytime
+    verification: export sign confirmed (−6.1 kW while exporting), refresh
+    ~10 s, and `total_active + grid = load` held exactly in every sample.
+    Registers 32080/37113 retired from the fast collector; raw-store columns
+    keep their semantics. Original analysis kept below; follow-ups are items
+    34 (single aggregate path) and 35 (masterdata dongle device type).
+    Original: when sun and shadow alternate quickly, the frontend chart
     shows negative consumption. `Consuming = Producing − Exporting +
     Importing` (`KpiLiveData`, pvlogger-shared-modbus), but `Producing`
     (inverter 32080) and the meter power (37113) are sampled sequentially —
