@@ -20,12 +20,17 @@ repositories {
 }
 
 dependencies {
-    // Ktor (api: Application and StatusPagesConfig appear in the public bootstrap signatures)
+    // Ktor (api: Application, StatusPagesConfig and HttpClient appear in the public signatures)
     api(libs.ktor.server.core)
     api(libs.ktor.server.status.pages)
+    api(libs.ktor.client.core)
     implementation(libs.ktor.server.call.id)
     implementation(libs.ktor.server.call.logging)
     implementation(libs.ktor.server.metrics.micrometer)
+    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.client.logging)
+    implementation(libs.ktor.serialization.kotlinx.json)
 
     // Logging
     implementation(libs.kotlin.logging)

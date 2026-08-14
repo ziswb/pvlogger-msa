@@ -107,7 +107,7 @@ themselves pragmatically — default to a job/endpoint in an existing service
 Kotlin: `pvlogger-shared-model` (Modbus domain model), `pvlogger-shared-rest`
 (REST path constants + KPI DTO), `pvlogger-shared-database` (Hikari + Flyway
 bootstrap), `pvlogger-shared-ktor` (HTTP service bootstrap: CallLogging/CallId,
-Prometheus `/metrics`, StatusPages — ADR-0018). Go: `pv-logger` (logging, env
+Prometheus `/metrics`, StatusPages, shared `PvHttpClient` — ADR-0018). Go: `pv-logger` (logging, env
 config), `pvlogger-shared-modbus`
 (hand-rolled Modbus TCP client, KPI math, masterdata/persistence REST clients,
 register/device-identifier collector jobs, Pushgateway metrics, the hard-coded

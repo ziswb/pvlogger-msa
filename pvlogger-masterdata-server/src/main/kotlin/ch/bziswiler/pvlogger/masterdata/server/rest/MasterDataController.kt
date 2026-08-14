@@ -4,9 +4,9 @@ import ch.bziswiler.pvlogger.masterdata.server.configuration.AppConfig
 import ch.bziswiler.pvlogger.masterdata.server.database.access.MasterDataDao
 import ch.bziswiler.pvlogger.masterdata.server.database.schema.MasterDataTable.category
 import ch.bziswiler.pvlogger.masterdata.server.database.schema.MasterDataTable.deviceType
-import ch.bziswiler.pvlogger.masterdata.server.rest.MasterDataPaths.IMPORT_MASTER_DATA_PATH
-import ch.bziswiler.pvlogger.masterdata.server.rest.MasterDataPaths.MASTER_DATA_FOR_ADDRESS_PATH
-import ch.bziswiler.pvlogger.masterdata.server.rest.MasterDataPaths.MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES
+import ch.bziswiler.pvlogger.shared.rest.MasterDataPaths.IMPORT_MASTER_DATA_PATH
+import ch.bziswiler.pvlogger.shared.rest.MasterDataPaths.MASTER_DATA_FOR_ADDRESS_PATH
+import ch.bziswiler.pvlogger.shared.rest.MasterDataPaths.MASTER_DATA_FOR_CATEGORIES_AND_DEVICE_TYPES
 import ch.bziswiler.pvlogger.masterdata.server.rest.MasterDataRequestParameters.ADDRESS
 import ch.bziswiler.pvlogger.masterdata.server.rest.MasterDataRequestParameters.CATEGORIES
 import ch.bziswiler.pvlogger.masterdata.server.rest.MasterDataRequestParameters.DEVICE_TYPES

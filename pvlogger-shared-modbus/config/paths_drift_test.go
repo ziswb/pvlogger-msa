@@ -13,7 +13,7 @@ import (
 
 const (
 	dataAccessorPathsKt = "../../pvlogger-shared-rest/src/main/kotlin/ch/bziswiler/pvlogger/shared/rest/DataAccessorPaths.kt"
-	masterDataPathsKt   = "../../pvlogger-masterdata-server/src/main/kotlin/ch/bziswiler/pvlogger/masterdata/server/rest/MasterDataPaths.kt"
+	masterDataPathsKt   = "../../pvlogger-shared-rest/src/main/kotlin/ch/bziswiler/pvlogger/shared/rest/MasterDataPaths.kt"
 )
 
 var kotlinConstPattern = regexp.MustCompile(`const val (\w+)\s*=\s*"([^"]*)"`)

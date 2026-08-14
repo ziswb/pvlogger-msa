@@ -169,8 +169,14 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     `DataAccessor` and `MasterDataServer` must switch `-config=application-test.conf` → `-config=application-dev.conf`
     (the `DB_PASSWORD` env they set keeps working — dev reads `${?DB_PASSWORD}`). Mock server stays prod-only (nothing
     environment-specific in its conf); deprecated sunrise-sunset (ADR-0005) untouched.
-18. **Duplicated code**: `MasterDataPaths` object copied between masterdata-server and mock server (belongs in
-    `pvlogger-shared-rest`); `PvHttpClient` duplicated between mock server and frontend.
+18. ~~**Duplicated code**: `MasterDataPaths` object copied between masterdata-server and mock server (belongs in
+    `pvlogger-shared-rest`); `PvHttpClient` duplicated between mock server and frontend.~~
+
+    **Resolved 2026-08-14.** Both copies were byte-identical. `MasterDataPaths` → `pvlogger-shared-rest` (next to
+    `DataAccessorPaths`; the Go drift test's hard-coded Kotlin path was updated with it — ADR-0012 still holds).
+    `PvHttpClient` → `pvlogger-shared-ktor` (its `var client` became `val` — nothing ever reassigned it). Mock server
+    now depends on both shared modules and lost four client/serialization deps it no longer references directly;
+    the frontend lost three.
 19. **Mock server hard-codes the cluster DNS name** of the masterdata server (`MasterDataCache.kt`) instead of reading
     config like every other client.
 20. **Business logic under `rest/`** in the data accessor (`HouseKpiController`,

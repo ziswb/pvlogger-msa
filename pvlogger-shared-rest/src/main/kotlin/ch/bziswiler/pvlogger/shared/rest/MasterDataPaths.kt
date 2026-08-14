@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.masterdata.server.rest
+package ch.bziswiler.pvlogger.shared.rest
 
 object MasterDataPaths {
     const val IMPORT_MASTER_DATA_PATH = "import-master-data"

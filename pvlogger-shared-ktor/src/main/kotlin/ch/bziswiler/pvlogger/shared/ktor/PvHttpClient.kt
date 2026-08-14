@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.frontend.rest
+package ch.bziswiler.pvlogger.shared.ktor
 
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
@@ -10,7 +10,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
 object PvHttpClient {
-    var client: HttpClient = HttpClient(CIO) {
+    val client: HttpClient = HttpClient(CIO) {
         install(Logging) { level = LogLevel.INFO }
         install(ContentNegotiation) {
             json(Json {

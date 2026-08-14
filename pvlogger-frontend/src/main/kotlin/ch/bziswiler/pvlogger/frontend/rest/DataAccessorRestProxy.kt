@@ -1,7 +1,7 @@
 package ch.bziswiler.pvlogger.frontend.rest
 
 import ch.bziswiler.pvlogger.frontend.configuration.DataAccessorConfig
-import ch.bziswiler.pvlogger.frontend.rest.PvHttpClient.client
+import ch.bziswiler.pvlogger.shared.ktor.PvHttpClient.client
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_API_V1_PATH
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_LATEST_KPI_PATH
 import ch.bziswiler.pvlogger.shared.rest.KpiValuesDto
