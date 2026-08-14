@@ -7,11 +7,15 @@ import (
 	"net/http/httptest"
 	"net/url"
 	sharedconfig "pvlogger-shared-modbus/config"
-	"pvlogger-shared-modbus/kpis"
+	"pvlogger-shared-modbus/model"
 	"pvlogger-shared-modbus/persistence"
+	"pvlogger-shared-modbus/registers"
+	"pvlogger-shared-modbus/response"
 	"strconv"
+	"strings"
 	"sync"
 	"testing"
+	"time"
 )
 
 // testService wires a PersistenceService to an httptest server through the
@@ -83,14 +87,16 @@ func TestPersistenceService_StoreRawValues(t *testing.T) {
 	}
 }
 
-func TestPersistenceService_StoreKpiValues(t *testing.T) {
+func TestPersistenceService_StoreModbusValues(t *testing.T) {
 	var (
 		mu           sync.Mutex
-		receivedBody kpis.PvLoggerKpiData
+		requestPath  string
+		receivedBody map[string]any
 	)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		mu.Lock()
 		defer mu.Unlock()
+		requestPath = r.URL.Path
 		_ = json.NewDecoder(r.Body).Decode(&receivedBody)
 		w.WriteHeader(http.StatusOK)
 	}))
@@ -98,89 +104,29 @@ func TestPersistenceService_StoreKpiValues(t *testing.T) {
 
 	svc := testService(t, server)
 
-	kpiValues := &kpis.PvLoggerKpiData{
-		JobId:     "kpi-job",
-		Producing: kpis.W{W: 5000},
-		Exporting: kpis.W{W: 2000},
-		Importing: kpis.W{W: 0},
-		Produced:  kpis.Wh{Wh: 15000},
-		Exported:  kpis.Wh{Wh: 8000},
+	resp := &response.RegisterValueResponse{
+		JobId:       model.NewJobId("dongle-job"),
+		RequestTime: time.Now(),
+		Values: []*response.RegisterValue{
+			response.NewRegisterValue(registers.DongleLoadPower, uint32(885)),
+		},
 	}
-	if err := svc.StoreKpiValues(kpiValues); err != nil {
-		t.Fatalf("StoreKpiValues returned error: %v", err)
-	}
-
-	mu.Lock()
-	defer mu.Unlock()
-	if receivedBody.JobId != "kpi-job" {
-		t.Errorf("JobId = %q, want %q", receivedBody.JobId, "kpi-job")
-	}
-	if receivedBody.Producing.W != 5000 {
-		t.Errorf("Producing = %f, want 5000", receivedBody.Producing.W)
-	}
-}
-
-func TestPersistenceService_ReadEnergyToday(t *testing.T) {
-	var (
-		mu     sync.Mutex
-		method string
-	)
-	produced := 7.5
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		mu.Lock()
-		method = r.Method
-		mu.Unlock()
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(EnergyTodayResponse{
-			ExportedEnergyToday: 10.5,
-			ImportedEnergyToday: 3.2,
-			ProducedEnergyToday: &produced,
-		})
-	}))
-	defer server.Close()
-
-	svc := testService(t, server)
-
-	result, err := svc.ReadEnergyToday()
-	if err != nil {
-		t.Fatalf("ReadEnergyToday returned error: %v", err)
+	if err := svc.StoreModbusValues(resp); err != nil {
+		t.Fatalf("StoreModbusValues returned error: %v", err)
 	}
 
 	mu.Lock()
 	defer mu.Unlock()
-	if method != http.MethodGet {
-		t.Errorf("method = %s, want GET", method)
+	if !strings.HasSuffix(requestPath, "/"+sharedconfig.StoreModbusValuesPath) {
+		t.Errorf("path = %s, want suffix /%s", requestPath, sharedconfig.StoreModbusValuesPath)
 	}
-	if result.ExportedEnergyToday != 10.5 {
-		t.Errorf("ExportedEnergyToday = %f, want 10.5", result.ExportedEnergyToday)
+	jobId, ok := receivedBody["jobId"].(map[string]any)
+	if !ok || jobId["id"] != "dongle-job" {
+		t.Errorf("jobId = %v, want id dongle-job", receivedBody["jobId"])
 	}
-	if result.ImportedEnergyToday != 3.2 {
-		t.Errorf("ImportedEnergyToday = %f, want 3.2", result.ImportedEnergyToday)
-	}
-	if result.ProducedEnergyToday == nil || *result.ProducedEnergyToday != 7.5 {
-		t.Errorf("ProducedEnergyToday = %v, want 7.5", result.ProducedEnergyToday)
-	}
-}
-
-func TestPersistenceService_ReadEnergyToday_ProducedNull(t *testing.T) {
-	// A data accessor without a lifetime-yield baseline sends an explicit
-	// null (encodeDefaults = true on the Kotlin side) — it must decode to nil.
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(`{"exportedEnergyToday": 1.0, "importedEnergyToday": 2.0, "producedEnergyToday": null}`))
-	}))
-	defer server.Close()
-
-	svc := testService(t, server)
-
-	result, err := svc.ReadEnergyToday()
-	if err != nil {
-		t.Fatalf("ReadEnergyToday returned error: %v", err)
-	}
-	if result.ProducedEnergyToday != nil {
-		t.Errorf("ProducedEnergyToday = %v, want nil", *result.ProducedEnergyToday)
+	values, ok := receivedBody["registerValues"].([]any)
+	if !ok || len(values) != 1 {
+		t.Fatalf("registerValues = %v, want one entry", receivedBody["registerValues"])
 	}
 }
 

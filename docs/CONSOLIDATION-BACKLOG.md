@@ -257,15 +257,32 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     there is no fast/full divergence to document because full's private KPI
     aggregator is being deleted. The masterdata device type for unit 100 is
     item 35 and does not gate this fix (fast reads the block hard-coded).
-34. **Single KPI aggregation path** (ADR-0016): extract/promote an
-    `aggregate(jobId)` component in `pvlogger-shared-modbus` that reads a
-    run's raw rows back from the data accessor and derives + stores the KPIs
-    (live mapping from the unit-100 block per item 33; daily figures keep
-    coming from the accessor's ADR-0014 delta endpoint). Both collectors call
-    it in-process after POSTing raw values. Delete fast's private KPI
-    computation and full's private aggregator path (incl. its 32080/37113
-    by-jobId route). Hard invariant: aggregation is per `jobId` — never
-    "newest value per register" across runs (snapshot coherence, see item 33).
+34. ~~**Single KPI aggregation path** (ADR-0016)~~ **Resolved 2026-08-14.**
+    KPI computation now exists exactly once: `pvlogger-shared-modbus/aggregate`
+    (`KpiAggregator.KpisFor(jobId)`) reads the run's rows back from the data
+    accessor **per jobId** (hard invariant — never "newest value per
+    register"), derives + stores the KPIs and pushes the metrics. Live mapping
+    per item 33 (Producing ← 37516, Consuming ← 37500, grid ← 37502
+    sign-flipped) from the **generic register store**: fast now POSTs the
+    dongle block there (reserved filler 37506–37515 filtered out) in addition
+    to the raw KPI row, then invokes the aggregator; full invokes it after its
+    sweep. Deleted, not aligned: fast's local KPI computation/fallback, full's
+    `dataaccessor` package + `kpi-aggregator.go` (the 32080/37113 by-jobId
+    route), the masterdata single-register helpers, and `KpiLiveData`'s
+    Consuming formula fallback (`ConsumingPower` is now required). The
+    hard-coded KPI register set moved to `pvlogger-shared-modbus/registers`
+    (wire-complete definitions; a Kotlin round-trip test pins the exact Go
+    wire JSON). Daily figures keep coming from `meter-energy-today`; the
+    "no lifetime baseline → daily register 32114" fallback moved server-side
+    into that endpoint (newest row's `inverter_daily_yield`; null only when
+    the store is empty). Accessor API consolidation riding along:
+    `read-latest-register-value` moved under `/v1` like every other route, and
+    the orphaned `read-kw-today-so-far` endpoint (only ever used by full's
+    deleted private path — a second, competing day-delta) was removed.
+    **Deploy ordering: data accessor before the fast collector** (fast relies
+    on the `/v1` route + server-side fallback). **Full's aggregation step
+    fails until item 35** puts the unit-100 block into its sweep — do 35
+    before scheduling full (item 36).
 35. **Masterdata dongle device type** (ADR-0016): unit 100 is outside
     INVERTER/METER, so the register catalog cannot represent the device that
     serves the primary live-KPI block. Add a DONGLE device type across

@@ -45,7 +45,7 @@ class StatusPagesTest : TestBase() {
     fun `unhandled exception returns 500`() = withApp {
         startApplication()
         cleanAllTables()
-        val response = client.get("/$DATA_ACCESSOR_READ_LATEST_REGISTER_VALUE_PATH") {
+        val response = client.get("/$DATA_ACCESSOR_API_V1_PATH/$DATA_ACCESSOR_READ_LATEST_REGISTER_VALUE_PATH") {
             url { appendPathSegments("MLD", "1", "37113", "job-1") }
         }
         assertEquals(InternalServerError, response.status)

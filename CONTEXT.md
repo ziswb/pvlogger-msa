@@ -56,9 +56,12 @@ themselves pragmatically — default to a job/endpoint in an existing service
   loosely planned for implementation one day (confirmed 2026-08-07).
 - **Master data** — the register definitions themselves, imported from three
   Huawei SUN2000 CSV files into the masterdata database and served over REST.
-- **Raw KPI register values** — the five per-minute register readings the KPI
-  computation is based on: inverter active power, meter active power, inverter
-  daily yield, meter exported energy, meter imported energy.
+- **Raw KPI register values** — the per-minute raw snapshot row (one per fast
+  run): inverter active power, meter active power, inverter daily yield,
+  inverter accumulated (lifetime) yield, meter exported energy, meter imported
+  energy. Its lifetime counters feed the accessor's day-delta endpoint
+  (ADR-0014); the live KPI values are read back per run from the dongle block
+  in the generic register store (ADR-0016).
 - **KPI** — derived household energy figures. Two naming vocabularies exist and
   map 1:1 (the mapping is documented in `PvLoggerKpiData.kt`):
 
@@ -91,8 +94,8 @@ themselves pragmatically — default to a job/endpoint in an existing service
 
 | Service | Responsibility |
 |---|---|
-| `pv-fast-data-collector` | Every minute except 00:02–00:04 (two cron schedules — the device collectors' reserved Modbus window, ADR-0015): reads the dongle's aggregate live-power block (unit 100, one coherent request — backlog 33) plus the energy counters, stores raw values, computes and stores live+today KPIs (daily production as a lifetime-counter delta, ADR-0014). **The sole per-minute KPI collector** — registers are hard-coded *deliberately* for maximum speed (no masterdata dependency/API call). Still pending from ADR-0016 (decided 2026-08-14): back to a **single CronJob** (`0-1,5-59 * * * *` — minutes 02–04 of *every* hour become the reserved non-fast window) and KPI storage via the shared `aggregate(jobId)` path (backlog 34/36). |
-| `pv-full-data-collector` | Reads *all* DYNAMIC+ALARM registers (definitions from masterdata), then aggregates KPIs via its own private path. **Currently permanently suspended by a chart bug** (see infrastructure backlog #2). Target per ADR-0016 (decided 2026-08-14, not yet implemented; supersedes the ADR-0004 toggle): the masterdata-driven **extended sweep**, running **hourly in the 02–04 window of hours 1–23**, no KPI role of its own — its private aggregator is deleted and any KPI rows it produces flow through the same shared `aggregate(jobId)` path as fast. Gains the dongle's unit-100 block once masterdata has a dongle device type. |
+| `pv-fast-data-collector` | Every minute except 00:02–00:04 (two cron schedules — the device collectors' reserved Modbus window, ADR-0015): reads the dongle's aggregate live-power block (unit 100, one coherent request — backlog 33) plus the energy counters, stores the block in the generic register store and the raw KPI row, then invokes the **shared `aggregate(jobId)` path** (`pvlogger-shared-modbus/aggregate`, ADR-0016/backlog 34) which derives and stores the KPIs (daily production as a lifetime-counter delta, ADR-0014). **The sole per-minute KPI collector** — registers are hard-coded *deliberately* for maximum speed (no masterdata dependency/API call; the set lives in `pvlogger-shared-modbus/registers`). Still pending from ADR-0016: back to a **single CronJob** (`0-1,5-59 * * * *` — minutes 02–04 of *every* hour become the reserved non-fast window, backlog 36). |
+| `pv-full-data-collector` | Reads *all* DYNAMIC+ALARM registers (definitions from masterdata), then invokes the same shared `aggregate(jobId)` path as fast — its private aggregator was deleted (ADR-0016/backlog 34). **Currently permanently suspended by a chart bug** (see infrastructure backlog #2). Target per ADR-0016 (supersedes the ADR-0004 toggle): the masterdata-driven **extended sweep**, running **hourly in the 02–04 window of hours 1–23** (backlog 36), no KPI role of its own. Until masterdata has a dongle device type (backlog 35) the sweep lacks the unit-100 block, so the aggregation step fails and a run exits non-zero — do 35 before scheduling it. |
 | `pv-device-data-collector` | Nightly: reads STATIC/CONFIG registers, device identifiers and device list. Stays permanently; scheduled at night to avoid the per-minute dynamic polling (one-Modbus-client constraint, ADR-0004). |
 | `pvlogger-fusionsolar` | Six scheduled jobs pulling FusionSolar OpenAPI KPIs (station/device, real-time/day/month/year) — writes **directly** to the `fsdata` DB (not via the data accessor). |
 | `pvlogger-fusionsolar-auth` | Refreshes the FusionSolar API token into a K8s secret every 20 min; the collector jobs read it. |
@@ -104,7 +107,9 @@ Kotlin: `pvlogger-shared-model` (Modbus domain model), `pvlogger-shared-rest`
 (REST path constants + KPI DTO), `pvlogger-shared-database` (Hikari + Flyway
 bootstrap). Go: `pv-logger` (logging, env config), `pvlogger-shared-modbus`
 (hand-rolled Modbus TCP client, KPI math, masterdata/persistence REST clients,
-register/device-identifier collector jobs, Pushgateway metrics).
+register/device-identifier collector jobs, Pushgateway metrics, the hard-coded
+KPI register set in `registers`, and the single KPI aggregation path in
+`aggregate` — ADR-0016).
 
 ### Tools (not deployed)
 

@@ -4,11 +4,12 @@ import (
 	"testing"
 )
 
-func newKpiLiveData(producing, meterPower float64) *KpiLiveData {
+func newKpiLiveData(producing, meterPower, loadPower float64) *KpiLiveData {
 	wUnit := ParseUnitFromString("W")
 	return &KpiLiveData{
 		InverterActivePower: NewInverterActivePower(producing, wUnit),
 		MeterActivePower:    NewMeterActivePower(meterPower, wUnit),
+		ConsumingPower:      NewConsumingPower(loadPower, wUnit),
 	}
 }
 
@@ -21,40 +22,19 @@ func newKpiTodayData(produced, imported, exported float64) *KpiTodayData {
 }
 
 func TestKpiLiveData_Consuming_DirectLoad(t *testing.T) {
-	// With a ConsumingPower source (dongle load register 37500), Consuming is
-	// the measured value — the formula is not consulted (it would give 2000).
-	kpi := newKpiLiveData(5000, 3000)
-	kpi.ConsumingPower = NewConsumingPower(2100, ParseUnitFromString("W"))
+	// Consuming is the measured load register (dongle 37500) — even where a
+	// formula over the other registers would disagree (it would give 2000).
+	kpi := newKpiLiveData(5000, 3000, 2100)
 	got := kpi.Consuming()
 	if got.W != 2100 {
 		t.Errorf("Consuming() = %v, want 2100", got.W)
 	}
 }
 
-func TestKpiLiveData_Consuming(t *testing.T) {
-	// Producing 5000W, exporting 3000W (positive meter = export)
-	// Consuming = Producing - Exporting + Importing = 5000 - 3000 + 0 = 2000
-	kpi := newKpiLiveData(5000, 3000)
-	got := kpi.Consuming()
-	if got.W != 2000 {
-		t.Errorf("Consuming() = %v, want 2000", got.W)
-	}
-}
-
-func TestKpiLiveData_Consuming_WithImport(t *testing.T) {
-	// Producing 2000W, importing 1000W (negative meter = import)
-	// Consuming = 2000 - 0 + 1000 = 3000
-	kpi := newKpiLiveData(2000, -1000)
-	got := kpi.Consuming()
-	if got.W != 3000 {
-		t.Errorf("Consuming() = %v, want 3000", got.W)
-	}
-}
-
 func TestKpiLiveData_SelfConsuming(t *testing.T) {
 	// Producing 5000W, exporting 3000W
 	// SelfConsuming = 5000 - 3000 = 2000
-	kpi := newKpiLiveData(5000, 3000)
+	kpi := newKpiLiveData(5000, 3000, 2000)
 	got := kpi.SelfConsuming()
 	if got.W != 2000 {
 		t.Errorf("SelfConsuming() = %v, want 2000", got.W)
@@ -64,7 +44,7 @@ func TestKpiLiveData_SelfConsuming(t *testing.T) {
 func TestKpiLiveData_SelfConsuming_NoExport(t *testing.T) {
 	// Producing 2000W, importing 500W (negative meter)
 	// SelfConsuming = 2000 - 0 = 2000
-	kpi := newKpiLiveData(2000, -500)
+	kpi := newKpiLiveData(2000, -500, 2500)
 	got := kpi.SelfConsuming()
 	if got.W != 2000 {
 		t.Errorf("SelfConsuming() = %v, want 2000", got.W)
@@ -92,9 +72,9 @@ func TestKpiTodayData_SelfConsumed(t *testing.T) {
 }
 
 func TestKpiLiveData_ZeroProduction(t *testing.T) {
-	// No production, importing 1000W
-	// Consuming = 0 - 0 + 1000 = 1000
-	kpi := newKpiLiveData(0, -1000)
+	// No production, importing 1000W: the measured load matches the import
+	// (verified live at night: load 624 W = grid import 624 W, backlog 33).
+	kpi := newKpiLiveData(0, -1000, 1000)
 	got := kpi.Consuming()
 	if got.W != 1000 {
 		t.Errorf("Consuming() = %v, want 1000", got.W)

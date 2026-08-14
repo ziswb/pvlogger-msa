@@ -93,11 +93,14 @@ class RawKpiControllerTest : TestBase() {
     }
 
     @Test
-    fun `produced is null while yesterday has no lifetime baseline`() = withApp {
+    fun `produced falls back to the newest daily-yield register without a lifetime baseline`() = withApp {
         startApplication()
         cleanAllTables()
-        // Pre-V9 rows carry 0.0 in inverter_accumulated_yield; a delta against
-        // that would report the counter's full lifetime value as "today".
+        // Rows without a real lifetime counter carry 0.0 in
+        // inverter_accumulated_yield; a delta against that would report the
+        // counter's full lifetime value as "today". Instead the newest row's
+        // daily-yield register fills in (the collector's pre-ADR-0016 local
+        // fallback, moved server-side).
         seedRawKpiRow(
             dateCreated = yesterday.atTime(12, 0).atZone(zone).toInstant(),
             meterExportedEnergy = 100.0,
@@ -108,11 +111,12 @@ class RawKpiControllerTest : TestBase() {
             dateCreated = today.atTime(12, 0).atZone(zone).toInstant(),
             meterExportedEnergy = 150.0,
             meterImportedEnergy = 90.0,
+            inverterDailyYield = 15.5,
             inverterAccumulatedYield = 90025.0,
         )
         val energy = readEnergyToday()
         assertEquals(50.0, energy.exportedEnergyToday)
-        assertNull(energy.producedEnergyToday)
+        assertEquals(15.5, energy.producedEnergyToday)
     }
 
     @Test

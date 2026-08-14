@@ -65,13 +65,13 @@ Database runs via Docker Compose in `pvlogger-database/`.
 - `pvlogger-shared-model`, `pvlogger-shared-rest`, `pvlogger-shared-database` — Shared Kotlin libraries (Modbus domain model; REST path constants + KPI DTO; Hikari/Flyway bootstrap)
 
 **Go Services (CronJob-based):**
-- `pv-fast-data-collector` — Per-minute Modbus polling of 6 KPI registers, computes and stores KPIs (the active collector)
-- `pv-full-data-collector` — Full dynamic-register collection (mutually exclusive with fast; currently suspended, see CONTEXT.md)
+- `pv-fast-data-collector` — Per-minute Modbus polling of the hard-coded KPI register set; KPIs are derived by the shared `aggregate(jobId)` path (ADR-0016)
+- `pv-full-data-collector` — Masterdata-driven extended register sweep, same shared KPI aggregation (currently suspended, see CONTEXT.md)
 - `pv-device-data-collector` — Nightly static/config register + device identifier collection
 - `pvlogger-fusionsolar` — FusionSolar API data integration (writes its own `fsdata` DB directly)
 - `pvlogger-fusionsolar-auth` — Refreshes the FusionSolar token into a K8s secret
 - `pvlogger-kpi-exporter` — Exports latest KPIs as JSON files (OneDrive-synced volume)
-- `pv-logger`, `pvlogger-shared-modbus` — Shared Go libraries (logging/env config; Modbus TCP client, KPI math, REST clients, collector jobs, Pushgateway metrics)
+- `pv-logger`, `pvlogger-shared-modbus` — Shared Go libraries (logging/env config; Modbus TCP client, KPI math + single KPI aggregation path, hard-coded KPI register set, REST clients, collector jobs, Pushgateway metrics)
 
 **Tools (not deployed):** `pvlogger-battery-simulator` (local CLI, see its README), `pvlogger-database` (local compose DB + migration history).
 

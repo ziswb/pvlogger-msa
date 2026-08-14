@@ -1,6 +1,6 @@
 package ch.bziswiler
 
-import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_KW_TODAY_SO_FAR_PATH
+import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_API_V1_PATH
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_LATEST_REGISTER_VALUE_PATH
 import ch.bziswiler.testutils.TestBase
 import io.ktor.client.request.get
@@ -14,7 +14,7 @@ import kotlin.test.assertTrue
 class ApplicationTest : TestBase() {
     @Test
     fun testRoot() = withApp {
-        client.get("/$DATA_ACCESSOR_READ_LATEST_REGISTER_VALUE_PATH") {
+        client.get("/$DATA_ACCESSOR_API_V1_PATH/$DATA_ACCESSOR_READ_LATEST_REGISTER_VALUE_PATH") {
             url {
                 appendPathSegments("I32", "16", "37113")
             }
@@ -22,16 +22,5 @@ class ApplicationTest : TestBase() {
             assertEquals(HttpStatusCode.NotFound, status)
             assertTrue(bodyAsText().isEmpty())
         }
-    }
-
-    @Test
-    fun `test so far today energy`() = withApp {
-        val kws = client.get("/$DATA_ACCESSOR_READ_KW_TODAY_SO_FAR_PATH") {
-            url {
-                appendPathSegments("I32", "32080")
-            }
-        }
-        assertEquals(HttpStatusCode.OK, kws.status)
-        assertEquals(0, kws.bodyAsText().toInt())
     }
 }

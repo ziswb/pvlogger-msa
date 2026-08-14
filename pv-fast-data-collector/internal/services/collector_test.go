@@ -3,8 +3,8 @@ package services
 import (
 	"encoding/hex"
 	"math"
-	"pv-fast-data-collector/internal/registers"
 	"pvlogger-shared-modbus/model"
+	"pvlogger-shared-modbus/registers"
 	"pvlogger-shared-modbus/response"
 	"testing"
 	"time"
@@ -106,113 +106,12 @@ func TestApplyGain(t *testing.T) {
 	}
 }
 
-func TestComputeLiveKpis(t *testing.T) {
-	tests := []struct {
-		name string
-		raw  *collectedRawValues
-		want struct {
-			producing, exporting, importing, consuming, selfConsuming float64
-		}
-	}{
-		{
-			name: "producing and exporting",
-			raw:  &collectedRawValues{InverterActivePower: 5.0, MeterActivePower: 2000.0, LoadPower: 3000.0},
-			want: struct{ producing, exporting, importing, consuming, selfConsuming float64 }{
-				producing: 5000, exporting: 2000, importing: 0, consuming: 3000, selfConsuming: 3000,
-			},
-		},
-		{
-			name: "producing and importing",
-			raw:  &collectedRawValues{InverterActivePower: 1.0, MeterActivePower: -500.0, LoadPower: 1500.0},
-			want: struct{ producing, exporting, importing, consuming, selfConsuming float64 }{
-				producing: 1000, exporting: 0, importing: 500, consuming: 1500, selfConsuming: 1000,
-			},
-		},
-		{
-			name: "zero production with import",
-			raw:  &collectedRawValues{InverterActivePower: 0.0, MeterActivePower: -1000.0, LoadPower: 1000.0},
-			want: struct{ producing, exporting, importing, consuming, selfConsuming float64 }{
-				producing: 0, exporting: 0, importing: 1000, consuming: 1000, selfConsuming: 0,
-			},
-		},
-		{
-			// Consuming is the measured load register, not the formula: even if
-			// load disagrees with producing-exporting+importing, load wins.
-			name: "consuming comes from the load register",
-			raw:  &collectedRawValues{InverterActivePower: 5.0, MeterActivePower: 2000.0, LoadPower: 3100.0},
-			want: struct{ producing, exporting, importing, consuming, selfConsuming float64 }{
-				producing: 5000, exporting: 2000, importing: 0, consuming: 3100, selfConsuming: 3000,
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			live := computeLiveKpis(tt.raw)
-
-			assertFloat(t, "Producing", live.Producing().W, tt.want.producing)
-			assertFloat(t, "Exporting", live.Exporting().W, tt.want.exporting)
-			assertFloat(t, "Importing", live.Importing().W, tt.want.importing)
-			assertFloat(t, "Consuming", live.Consuming().W, tt.want.consuming)
-			assertFloat(t, "SelfConsuming", live.SelfConsuming().W, tt.want.selfConsuming)
-		})
-	}
-}
-
-func TestComputeTodayKpis(t *testing.T) {
-	producedDelta := 14.0
-	tests := []struct {
-		name        string
-		raw         *collectedRawValues
-		energyToday *EnergyTodayResponse
-		want        struct {
-			produced, exported, imported, consumed, selfConsumed float64
-		}
-	}{
-		{
-			name:        "produced comes from the lifetime-counter delta",
-			raw:         &collectedRawValues{InverterDailyYield: 15.5},
-			energyToday: &EnergyTodayResponse{ExportedEnergyToday: 8.0, ImportedEnergyToday: 2.0, ProducedEnergyToday: &producedDelta},
-			want: struct{ produced, exported, imported, consumed, selfConsumed float64 }{
-				produced: 14000, exported: 8000, imported: 2000, consumed: 8000, selfConsumed: 6000,
-			},
-		},
-		{
-			name:        "no delta baseline falls back to the daily register",
-			raw:         &collectedRawValues{InverterDailyYield: 15.5},
-			energyToday: &EnergyTodayResponse{ExportedEnergyToday: 8.0, ImportedEnergyToday: 2.0},
-			want: struct{ produced, exported, imported, consumed, selfConsumed float64 }{
-				produced: 15500, exported: 8000, imported: 2000, consumed: 9500, selfConsumed: 7500,
-			},
-		},
-		{
-			name:        "zero values",
-			raw:         &collectedRawValues{},
-			energyToday: &EnergyTodayResponse{},
-			want: struct{ produced, exported, imported, consumed, selfConsumed float64 }{
-				produced: 0, exported: 0, imported: 0, consumed: 0, selfConsumed: 0,
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			today := computeTodayKpis(tt.raw, tt.energyToday)
-
-			assertFloat(t, "Produced", today.Produced().ToWh().Wh, tt.want.produced)
-			assertFloat(t, "Exported", today.Exported().ToWh().Wh, tt.want.exported)
-			assertFloat(t, "Imported", today.Imported().ToWh().Wh, tt.want.imported)
-			assertFloat(t, "Consumed", today.Consumed().ToWh().Wh, tt.want.consumed)
-			assertFloat(t, "SelfConsumed", today.SelfConsumed().ToWh().Wh, tt.want.selfConsumed)
-		})
-	}
-}
-
 // TestApplyDongleBlock_RealDevicePayload decodes a PDU captured live from the
 // SmartDongle (unit 100, FC03 37498 x20) on 2026-08-14 10:23 while exporting:
 // input=6974W load=885W grid=-6089W battery=0W total_active=6974W. It pins the
 // whole chain: block tiling (incl. the 10-register MLD filler), I32 decoding,
-// gain handling, and the grid sign flip to the meter convention.
+// gain handling, and the grid sign flip to the meter convention. (The live-KPI
+// mapping itself lives in the shared aggregate package since ADR-0016.)
 func TestApplyDongleBlock_RealDevicePayload(t *testing.T) {
 	data, err := hex.DecodeString("00001b3e00000375ffffe837000000000000000000000000000000000000000000572fd400001b3e")
 	if err != nil {
@@ -229,13 +128,28 @@ func TestApplyDongleBlock_RealDevicePayload(t *testing.T) {
 	assertFloat(t, "MeterActivePower (W, positive=export)", raw.MeterActivePower, 6089)
 	assertFloat(t, "LoadPower (W)", raw.LoadPower, 885)
 	assertFloat(t, "BatteryPower (W)", raw.BatteryPower, 0)
+}
 
-	live := computeLiveKpis(raw)
-	assertFloat(t, "Producing", live.Producing().W, 6974)
-	assertFloat(t, "Exporting", live.Exporting().W, 6089)
-	assertFloat(t, "Importing", live.Importing().W, 0)
-	assertFloat(t, "Consuming", live.Consuming().W, 885)
-	assertFloat(t, "SelfConsuming", live.SelfConsuming().W, 885)
+// TestWithoutReservedBlock ensures the undocumented 37506–37515 filler never
+// reaches the data accessor's generic register store.
+func TestWithoutReservedBlock(t *testing.T) {
+	data, err := hex.DecodeString("00001b3e00000375ffffe837000000000000000000000000000000000000000000572fd400001b3e")
+	if err != nil {
+		t.Fatalf("bad test payload: %v", err)
+	}
+	pdu := append([]byte{0x03, 0x28}, data...)
+	resp := response.NewRegisterValueResponseFromBytes(
+		registers.DongleBlockRegisters(), model.NewJobId("test-job"), model.NewRequestId(1), time.Now(), model.MbapHeader{}, pdu)
+
+	filtered := withoutReservedBlock(resp.Values)
+	if len(filtered) != len(registers.DongleBlockRegisters())-1 {
+		t.Fatalf("filtered length = %d, want %d", len(filtered), len(registers.DongleBlockRegisters())-1)
+	}
+	for _, v := range filtered {
+		if v.Definition.RegisterAddress.Value == registers.DongleReservedBlock.RegisterAddress.Value {
+			t.Errorf("reserved block (register %d) survived the filter", v.Definition.RegisterAddress.Value)
+		}
+	}
 }
 
 func assertFloat(t *testing.T, name string, got, want float64) {

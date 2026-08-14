@@ -2,8 +2,10 @@ package ch.bziswiler.pvlogger.dataaccessor.database.access
 
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.RawKpiRegisterValuesTable
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 object RawKpiRegisterValuesDao {
@@ -36,9 +38,22 @@ object RawKpiRegisterValuesDao {
         EnergyToday(
             exportedEnergyToday = computeEnergyDelta(EnergyColumn.EXPORTED) ?: 0.0,
             importedEnergyToday = computeEnergyDelta(EnergyColumn.IMPORTED) ?: 0.0,
-            producedEnergyToday = computeEnergyDelta(EnergyColumn.PRODUCED),
+            producedEnergyToday = computeEnergyDelta(EnergyColumn.PRODUCED) ?: newestDailyYield(),
         )
     }
+
+    // Fallback while the lifetime counter has no yesterday baseline
+    // (ADR-0014): the newest row's daily-yield register — the value the
+    // collector stored just before asking. Null only when the store is empty.
+    // Lives server-side so the single KPI aggregation path (ADR-0016) needs
+    // no register knowledge of its own for the daily figures.
+    private fun newestDailyYield(): Double? =
+        RawKpiRegisterValuesTable
+            .select(RawKpiRegisterValuesTable.inverterDailyYield)
+            .orderBy(RawKpiRegisterValuesTable.dateCreated to SortOrder.DESC)
+            .limit(1)
+            .firstOrNull()
+            ?.get(RawKpiRegisterValuesTable.inverterDailyYield)
 
     private fun computeEnergyDelta(column: EnergyColumn): Double? {
         val kWhColumn = 2

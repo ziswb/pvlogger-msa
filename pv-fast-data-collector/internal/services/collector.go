@@ -2,12 +2,12 @@ package services
 
 import (
 	"fmt"
-	"pv-fast-data-collector/internal/registers"
 	modbus "pvlogger-shared-modbus"
+	"pvlogger-shared-modbus/aggregate"
 	sharedconfig "pvlogger-shared-modbus/config"
 	"pvlogger-shared-modbus/kpis"
-	"pvlogger-shared-modbus/metrics"
 	"pvlogger-shared-modbus/model"
+	"pvlogger-shared-modbus/registers"
 	"pvlogger-shared-modbus/request"
 	"pvlogger-shared-modbus/response"
 
@@ -18,11 +18,11 @@ import (
 	"github.com/google/uuid"
 )
 
-func CollectAndComputeKpis() error {
+func CollectAndAggregateKpis() error {
 	jobId := uuid.New().String()
 	logging.Info("starting collection", "job_id", jobId)
 
-	rawValues, err := readModbusRegisters(jobId)
+	rawValues, dongleBlock, err := readModbusRegisters(jobId)
 	if err != nil {
 		return err
 	}
@@ -39,7 +39,14 @@ func CollectAndComputeKpis() error {
 
 	persistence := NewPersistenceService()
 
-	// Store raw values
+	// Store the dongle block in the generic register-value store: the shared
+	// KPI aggregation reads it back per jobId (ADR-0016).
+	if err := persistence.StoreModbusValues(dongleBlock); err != nil {
+		return err
+	}
+
+	// Store the raw KPI row — it anchors the accessor's ADR-0014 day-delta,
+	// so it must exist before the aggregation asks for today's energies.
 	if err := persistence.StoreRawValues(&RawKpiRegisterValues{
 		JobId:                    jobId,
 		InverterActivePower:      rawValues.InverterActivePower,
@@ -52,38 +59,9 @@ func CollectAndComputeKpis() error {
 		return err
 	}
 
-	// Read energy today (delta computation from data accessor; must run after
-	// StoreRawValues — the deltas are anchored on the row stored above)
-	energyToday, err := persistence.ReadEnergyToday()
-	if err != nil {
-		return err
-	}
-
-	// Compute KPIs
-	liveKpis := computeLiveKpis(rawValues)
-	todayKpis := computeTodayKpis(rawValues, energyToday)
-
-	kpiValues := kpis.PvLoggerKpiData{
-		JobId:         jobId,
-		DateCreated:   time.Now().UnixMilli(),
-		Producing:     liveKpis.Producing(),
-		Exporting:     liveKpis.Exporting(),
-		Importing:     liveKpis.Importing(),
-		Consuming:     liveKpis.Consuming(),
-		SelfConsuming: liveKpis.SelfConsuming(),
-		Produced:      todayKpis.Produced().ToWh(),
-		Exported:      todayKpis.Exported().ToWh(),
-		Imported:      todayKpis.Imported().ToWh(),
-		Consumed:      todayKpis.Consumed().ToWh(),
-		SelfConsumed:  todayKpis.SelfConsumed().ToWh(),
-	}
-
-	if err := persistence.StoreKpiValues(&kpiValues); err != nil {
-		return err
-	}
-	pushKpiMetrics(&kpiValues)
-	logging.Info("KPIs computed and stored", "job_id", jobId)
-	return nil
+	// One KPI path (ADR-0016): the shared aggregator reads this run's rows
+	// back from the data accessor, derives the KPIs and stores them.
+	return aggregate.NewKpiAggregator().KpisFor(model.NewJobId(jobId))
 }
 
 type collectedRawValues struct {
@@ -103,14 +81,14 @@ type collectedRawValues struct {
 	MeterImportedEnergy      float64
 }
 
-func readModbusRegisters(jobId string) (*collectedRawValues, error) {
+func readModbusRegisters(jobId string) (*collectedRawValues, *response.RegisterValueResponse, error) {
 	cfg := sharedconfig.ModbusConfig()
 	devCfg := sharedconfig.DevIdConfig()
 	address := fmt.Sprintf("%s:%s", cfg.Host, strconv.Itoa(cfg.Port))
 
 	handler := modbus.NewTcpHandler(address, cfg.Timeout, cfg.ConnectionSleep)
 	if err := handler.Connect(); err != nil {
-		return nil, fmt.Errorf("failed to connect to modbus device: %w", err)
+		return nil, nil, fmt.Errorf("failed to connect to modbus device: %w", err)
 	}
 	defer func() {
 		if err := handler.Close(); err != nil {
@@ -125,30 +103,34 @@ func readModbusRegisters(jobId string) (*collectedRawValues, error) {
 	// request = one coherent snapshot. Grid power is sign-flipped to the
 	// meter convention (positive = export) for the raw store and KPI types.
 	logging.Info("reading dongle aggregate block", "device_id", devCfg.DongleDeviceId)
-	dongleValues, err := readRegisters(handler, jobId, &requestCounter, devCfg.DongleDeviceId, registers.DongleBlockRegisters())
+	dongleResponse, err := readRegisters(handler, jobId, &requestCounter, devCfg.DongleDeviceId, registers.DongleBlockRegisters())
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	applyDongleBlock(result, dongleValues)
+	applyDongleBlock(result, dongleResponse.Values)
+	// The undocumented 37506–37515 filler is read for block contiguity only —
+	// it never gets stored.
+	dongleResponse.Values = withoutReservedBlock(dongleResponse.Values)
 
 	// Read inverter registers for each inverter device
 	for _, deviceId := range devCfg.InverterDeviceIds {
 		logging.Info("reading inverter registers", "device_id", deviceId)
 
 		// Inverter daily yield (U32) - read separately; kept as raw reference
-		// and as fallback while the lifetime-delta has no baseline (ADR-0014)
+		// and as the accessor-side fallback while the lifetime-delta has no
+		// baseline (ADR-0014)
 		dailyYield, err := readRegisters(handler, jobId, &requestCounter, deviceId, registers.InverterDailyYieldRegisters())
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		result.InverterDailyYield += applyGain(dailyYield, registers.InverterDailyYield)
+		result.InverterDailyYield += applyGain(dailyYield.Values, registers.InverterDailyYield)
 
 		// Inverter accumulated (lifetime) yield (U32) - read separately
 		accumulatedYield, err := readRegisters(handler, jobId, &requestCounter, deviceId, registers.InverterAccumulatedYieldRegisters())
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		result.InverterAccumulatedYield += applyGain(accumulatedYield, registers.InverterAccumulatedYield)
+		result.InverterAccumulatedYield += applyGain(accumulatedYield.Values, registers.InverterAccumulatedYield)
 	}
 
 	// Read meter registers for each meter device (energy counters only — the
@@ -159,13 +141,13 @@ func readModbusRegisters(jobId string) (*collectedRawValues, error) {
 		// Meter energy registers (consecutive U32 block: 37119 + 37121)
 		meterEnergyValues, err := readRegisters(handler, jobId, &requestCounter, deviceId, registers.MeterEnergyRegisters())
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		result.MeterExportedEnergy += applyGain(meterEnergyValues, registers.MeterExportedEnergy)
-		result.MeterImportedEnergy += applyGain(meterEnergyValues, registers.MeterImportedEnergy)
+		result.MeterExportedEnergy += applyGain(meterEnergyValues.Values, registers.MeterExportedEnergy)
+		result.MeterImportedEnergy += applyGain(meterEnergyValues.Values, registers.MeterImportedEnergy)
 	}
 
-	return result, nil
+	return result, dongleResponse, nil
 }
 
 // applyDongleBlock maps the dongle's aggregate block onto the collected raw
@@ -179,7 +161,17 @@ func applyDongleBlock(result *collectedRawValues, values []*response.RegisterVal
 	result.BatteryPower = applyGain(values, registers.DongleBatteryPower)
 }
 
-func readRegisters(handler *modbus.TcpHandler, jobId string, requestCounter *model.UShort, deviceId uint8, regDefs []model.RegisterDefinition) ([]*response.RegisterValue, error) {
+func withoutReservedBlock(values []*response.RegisterValue) []*response.RegisterValue {
+	filtered := make([]*response.RegisterValue, 0, len(values))
+	for _, v := range values {
+		if v.Definition.RegisterAddress.Value != registers.DongleReservedBlock.RegisterAddress.Value {
+			filtered = append(filtered, v)
+		}
+	}
+	return filtered
+}
+
+func readRegisters(handler *modbus.TcpHandler, jobId string, requestCounter *model.UShort, deviceId uint8, regDefs []model.RegisterDefinition) (*response.RegisterValueResponse, error) {
 	req := &request.ReadHoldingRegistersValueRequest{
 		JobId:               model.NewJobId(jobId),
 		RequestTime:         time.Now(),
@@ -194,8 +186,7 @@ func readRegisters(handler *modbus.TcpHandler, jobId string, requestCounter *mod
 		return nil, fmt.Errorf("failed to execute modbus request: %w", err)
 	}
 
-	resp := response.NewRegisterValueResponseFromBytes(regDefs, req.JobId, req.RequestId, req.RequestTime, *header, pduBytes)
-	return resp.Values, nil
+	return response.NewRegisterValueResponseFromBytes(regDefs, req.JobId, req.RequestId, req.RequestTime, *header, pduBytes), nil
 }
 
 func applyGain(values []*response.RegisterValue, targetDef model.RegisterDefinition) float64 {
@@ -233,46 +224,4 @@ func toFloat64FromGain(gainStr string) float64 {
 		return 1.0
 	}
 	return value
-}
-
-// computeLiveKpis maps the dongle block onto the live KPIs — values are taken
-// from registers wherever one exists (Producing ← 37516, Consuming ← 37500,
-// grid exchange ← 37502); only SelfConsuming has no register and stays derived.
-func computeLiveKpis(raw *collectedRawValues) *kpis.KpiLiveData {
-	inverterPower := kpis.NewInverterActivePower(raw.InverterActivePower, kpis.ParseUnitFromString("kW"))
-	meterPower := kpis.NewMeterActivePower(raw.MeterActivePower, kpis.ParseUnitFromString("W"))
-	consumingPower := kpis.NewConsumingPower(raw.LoadPower, kpis.ParseUnitFromString("W"))
-	return &kpis.KpiLiveData{
-		InverterActivePower: inverterPower,
-		MeterActivePower:    meterPower,
-		ConsumingPower:      consumingPower,
-	}
-}
-
-func pushKpiMetrics(kpiValues *kpis.PvLoggerKpiData) {
-	cfg := sharedconfig.PushGatewayCfg()
-	if !cfg.Enabled {
-		logging.Debug("push gateway is disabled")
-		return
-	}
-	metrics.NewMetricsPushService(cfg).PushKpiMetrics(kpiValues)
-}
-
-func computeTodayKpis(raw *collectedRawValues, energyToday *EnergyTodayResponse) *kpis.KpiTodayData {
-	// Produced comes from the lifetime-counter delta (ADR-0014): immune to the
-	// midnight reset of the device's daily register. Only while the data
-	// accessor has no baseline yet does the daily register fill in.
-	produced := raw.InverterDailyYield
-	if energyToday.ProducedEnergyToday != nil {
-		produced = *energyToday.ProducedEnergyToday
-	}
-	inverterEnergy := kpis.NewInverterEnergyToday(produced, kpis.ParseUnitFromString("kWh"))
-	meterEnergyToday := kpis.NewMeterEnergyToday(
-		energyToday.ImportedEnergyToday, kpis.ParseUnitFromString("kWh"),
-		energyToday.ExportedEnergyToday, kpis.ParseUnitFromString("kWh"),
-	)
-	return &kpis.KpiTodayData{
-		InverterTodayEnergy: inverterEnergy,
-		MeterTodayEnergy:    meterEnergyToday,
-	}
 }

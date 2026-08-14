@@ -114,44 +114,4 @@ object RegisterReader {
                 .also { logger.info { "No register value found for device ID '$deviceId' and register address '$registerAddress'." } }
         }
 
-    fun readKwSoFarToday(
-        type: Type,
-        registerAddress: RegisterAddress,
-    ): Int =
-        when (type) {
-            Type.I32 -> readKwSoFarToday(registerAddress)
-            else -> throw NotImplementedError()
-        }
-
-    private fun readKwSoFarToday(registerAddress: RegisterAddress): Int {
-        val kWhColumn = 2
-        return transaction {
-            val query = """
-                SELECT dt,
-                       max - lag(max) OVER (ORDER BY dt) AS kwh
-                FROM (SELECT CAST(mrd.date_created AS DATE) AS dt,
-                             max(mriv.register_value)       AS max
-                      FROM modbus_register_integer_values mriv
-                               JOIN modbus_response_data mrd ON mriv.response_id = mrd.id
-                      WHERE mriv.register_address = ?
-                        AND mrd.date_created >= CURRENT_DATE - 1
-                          AND mrd.date_created < CURRENT_DATE + 1
-                      GROUP BY CAST(mrd.date_created AS DATE)) tbl
-                WHERE max IS NOT NULL
-                ORDER BY dt DESC
-                LIMIT 1;
-                """.trimIndent()
-            val conn = this.connection.connection as java.sql.Connection
-            conn.prepareStatement(query).use { stmt ->
-                stmt.setInt(1, registerAddress.value)
-                stmt.executeQuery().use { resultSet ->
-                    if (resultSet.next()) {
-                        resultSet.getInt(kWhColumn)
-                    } else {
-                        0
-                    }
-                }
-            }
-        }
-    }
 }

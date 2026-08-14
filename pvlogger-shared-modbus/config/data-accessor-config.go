@@ -13,7 +13,6 @@ const (
 	StoreDeviceIdValuesPath       = "store-device-id-values"
 	StoreRawKpiRegisterValuesPath = "store-raw-kpi-register-values"
 	ReadLatestRegisterValuePath   = "read-latest-register-value"
-	ReadKwTodaySoFarPath          = "read-kw-today-so-far"
 	ReadMeterEnergyTodayPath      = "meter-energy-today"
 )
 
