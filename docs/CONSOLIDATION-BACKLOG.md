@@ -152,7 +152,12 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     frontend also lost its dead extras (unconsumed `NotFoundEvent`, unread global `Metrics.addRegistry`,
     `ApplicationMonitoringPlugin` + Koin lifecycle start/stop logs — same noise item 13 dropped). Mock server (no HTTP
     pipeline) and deprecated sunrise-sunset (ADR-0005) deliberately excluded.
-16. **logback.xml**: only masterdata logs `%X{call-id}`; frontend has none at all.
+16. ~~**logback.xml**: only masterdata logs `%X{call-id}`; frontend has none at all.~~
+
+    **Resolved 2026-08-14.** Trivial after item 15 put CallId + `call-id` MDC into every HTTP service (ADR-0018):
+    masterdata's pattern (with `%X{call-id}`) is the standard — the accessor's file gained the field and the frontend
+    got a logback.xml at last (it had been running on logback's DEBUG-root default). The mock server keeps the plain
+    pattern (raw TCP, no CallId — the field would always render empty); deprecated sunrise-sunset (ADR-0005) untouched.
 17. **HOCON config sets uneven** (prod/dev/test vs prod/dev vs prod-only). (The H2-vs-PostgreSQL half of this item is
     obsolete since 2026-08-07: H2 is removed, all profiles are PostgreSQL — ADR-0009.)
 18. **Duplicated code**: `MasterDataPaths` object copied between masterdata-server and mock server (belongs in
