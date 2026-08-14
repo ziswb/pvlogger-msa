@@ -121,9 +121,16 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
 
 ### Kotlin
 
-13. **Bootstrap differs per service**: data accessor uses `install(Koin)` +
-    `TimeZones.requireConfigured()`; frontend uses `startKoin{}` without the TZ check; mock server has no DI at all.
-    Pick one bootstrap shape.
+13. ~~**Bootstrap differs per service**~~
+
+    **Resolved 2026-08-14.** The shape is the data accessor's: `install(Koin)` (Ktor plugin, application-scoped — not
+    `startKoin{}`'s global context) guarded by the `testing` flag, and `TimeZones.requireConfigured()` in `main()` for
+    **DB-touching services only** (it guards the daily-delta SQL against a UTC JVM; the chart's `pvlogger.timezoneEnv`
+    helper already sets `TZ` on every pvlogger workload). Applied: frontend switched `startKoin{}` → `install(Koin)`;
+    masterdata-server gained the TZ check; the ApplicationStopping/Stopped/StopPreparing shutdown-log subscriptions were
+    dropped everywhere as noise. Deliberate exceptions: the mock server stays DI-less (raw TCP tool, nothing to
+    inject — its other gaps are items 18/19/21) and deprecated sunrise-sunset (ADR-0005, item 28) was left untouched.
+    StatusPages/CallLogging/metrics-registry unification remain items 14/15.
 14. **StatusPages** (error handling) present in data accessor + masterdata, absent in sunrise-sunset + frontend.
 15. **CallLogging** installed in two services, missing in sunrise-sunset (whose
     `Monitoring.kt` is otherwise a byte-copy). Metrics registry constructed four different ways. Extract a tiny shared

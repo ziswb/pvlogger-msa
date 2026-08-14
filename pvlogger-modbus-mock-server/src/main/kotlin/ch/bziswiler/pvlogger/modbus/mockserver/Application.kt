@@ -11,9 +11,6 @@ import io.ktor.network.sockets.aSocket
 import io.ktor.network.sockets.openReadChannel
 import io.ktor.network.sockets.openWriteChannel
 import io.ktor.server.application.Application
-import io.ktor.server.application.ApplicationStopPreparing
-import io.ktor.server.application.ApplicationStopped
-import io.ktor.server.application.ApplicationStopping
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.isActive
@@ -30,15 +27,6 @@ fun Application.module(testing: Boolean = false) {
 
 suspend fun Application.startSocketServer(testing: Boolean) {
     val logger = KotlinLogging.logger {}
-    environment.monitor.subscribe(ApplicationStopping) {
-        logger.info("Shutting down application...")
-    }
-    environment.monitor.subscribe(ApplicationStopped) {
-        logger.info("Application stopped.")
-    }
-    environment.monitor.subscribe(ApplicationStopPreparing) {
-        logger.info("Preparing to stop application...")
-    }
     val port = environment.config.propertyOrNull("ktor.socket-server.tcp-port")?.getString()?.toInt() ?: 8502
     val ip = environment.config.propertyOrNull("ktor.socket-server.ip")?.getString() ?: "0.0.0.0"
     logger.info { "socket server: starting at  $ip:$port" }
