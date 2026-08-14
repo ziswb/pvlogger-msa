@@ -317,7 +317,11 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     before rebuilding/enabling the full collector**; full's aggregation gate
     from item 34 is hereby lifted once both are deployed. Item 36 remains.
 36. ~~**Uniform hourly Modbus window** (ADR-0016)~~ **Resolved 2026-08-14**
-    (infrastructure repo; helm-template-verified, awaiting deployment). Fast
+    (infrastructure repo; deployed same day, first 18:02 handover verified
+    live: fast quiet exactly 02–04, full's first run succeeded in ~42 s and
+    emitted a KPI row at 18:02:42 through the shared aggregate path — no raw
+    row, values dovetailing with fast's neighbors; no failed jobs, no
+    alerts). Fast
     is a single CronJob again (`0-1,5-59 * * * *`), full runs `2 1-23 * * *`
     with `activeDeadlineSeconds: 150` in the job template — an overrun dies
     ~30 s before fast's minute-5 reconnect instead of fighting it
