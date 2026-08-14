@@ -16,6 +16,16 @@
 --  * 37516 is catalogued as the device serves it (W, gain 1); the Go
 --    definitions deliberately carry kW/THOUSAND there to match the raw-row
 --    column convention — documented in register-definitions.go.
+-- Realign the id sequence with the data first: the production table was
+-- populated by a data copy (PG18 migration) that never advanced the serial
+-- sequence, so nextval() collides with existing ids — the first V2 rollout
+-- (3.3.0) failed exactly there. This also un-breaks the CSV importer for
+-- FUTURE rows: its ON CONFLICT DO NOTHING silently swallowed the same pkey
+-- collisions, so genuinely new catalog rows would have been dropped.
+select setval(pg_get_serial_sequence('modbus_register_master_data', 'id'),
+              coalesce((select max(id) from modbus_register_master_data), 0) + 1,
+              false);
+
 insert into modbus_register_master_data
     (device_type, no, name, read_write, type, unit, gain, address, quantity, scope, category)
 values ('DONGLE', 1, 'Total input power', 'RO', 'U32', 'W', 'ONE', 37498, 2, '', 'DYNAMIC'),

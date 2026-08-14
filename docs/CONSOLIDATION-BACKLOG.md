@@ -301,7 +301,19 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     treats 204 No Content as an empty register list (not an error) so the
     device collector's STATIC/CONFIG sweep no-ops for the dongle instead of
     failing. Verified live in prod masterdata: addresses 37203–37600 were
-    free, no unique-index collision. **Deploy masterdata-server (applies V2)
+    free, no unique-index collision. **Rollout addendum (2026-08-14,
+    masterdata 3.3.1):** the first rollout (3.3.0) failed on a pkey
+    collision — prod's id sequence was never advanced past the data (the
+    table was populated by a data copy during the PG18 migration), and
+    `on conflict (address)` does not arbitrate pkey conflicts. The failed
+    migration rolled back cleanly incl. its history row (transactional DDL),
+    so V2 was edited in place — legal, it never applied anywhere durable —
+    and now runs `setval(max(id)+1)` before inserting; verified against a
+    simulated prod state on PG18 (desynced sequence → success, re-run
+    idempotent). Side effect fixed for good: the CSV importer's bare
+    ON CONFLICT DO NOTHING silently swallowed the same pkey collisions, so
+    genuinely NEW rows from a re-import would have been dropped.
+    **Deploy masterdata-server (applies V2)
     before rebuilding/enabling the full collector**; full's aggregation gate
     from item 34 is hereby lifted once both are deployed. Item 36 remains.
 36. ~~**Uniform hourly Modbus window** (ADR-0016)~~ **Resolved 2026-08-14**
