@@ -8,6 +8,7 @@ import ch.bziswiler.pvlogger.frontend.plugins.configureLogging
 import ch.bziswiler.pvlogger.frontend.plugins.configureMonitoring
 import ch.bziswiler.pvlogger.frontend.plugins.configureRouting
 import ch.bziswiler.pvlogger.frontend.plugins.configureSerialization
+import ch.bziswiler.pvlogger.frontend.plugins.configureStatusPages
 import ch.bziswiler.pvlogger.frontend.plugins.configureWebSockets
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
@@ -33,6 +34,7 @@ fun Application.module(testing: Boolean = false) {
     val registry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
     addRegistry(registry)
     readConfiguration()
+    configureStatusPages()
     configureMonitoring(registry, environment)
     configureWebSockets()
     configureHTTP()

@@ -131,7 +131,14 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     dropped everywhere as noise. Deliberate exceptions: the mock server stays DI-less (raw TCP tool, nothing to
     inject — its other gaps are items 18/19/21) and deprecated sunrise-sunset (ADR-0005, item 28) was left untouched.
     StatusPages/CallLogging/metrics-registry unification remain items 14/15.
-14. **StatusPages** (error handling) present in data accessor + masterdata, absent in sunrise-sunset + frontend.
+14. ~~**StatusPages** (error handling) present in data accessor + masterdata, absent in sunrise-sunset + frontend.~~
+
+    **Resolved 2026-08-14.** The frontend got a `plugins/StatusPages.kt` mirroring masterdata's shape
+    (`BadRequestException` → 400, `Throwable` → 500, plain-text bodies, logged); the accessor's extra
+    `DateTimeParseException` handler stays service-specific. Deprecated sunrise-sunset (ADR-0005, item 28) untouched,
+    as with item 13. Notes: StatusPages doesn't cover WebSocket sessions, so `/livedata` keeps its own error handling;
+    a SPA 404→index.html fallback was deliberately *not* added (single Angular route today — revisit when a second
+    client-side route appearzs). Extraction into a shared module remains item 15.
 15. **CallLogging** installed in two services, missing in sunrise-sunset (whose
     `Monitoring.kt` is otherwise a byte-copy). Metrics registry constructed four different ways. Extract a tiny shared
     "service bootstrap" into

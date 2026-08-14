@@ -54,6 +54,7 @@ dependencies {
     implementation(libs.ktor.server.metrics.micrometer)
     implementation(libs.ktor.server.netty)
     implementation(libs.ktor.server.resources)
+    implementation(libs.ktor.server.status.pages)
     implementation(libs.ktor.server.websockets)
     implementation(libs.ktor.server.webjars)
 
