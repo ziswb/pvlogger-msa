@@ -158,8 +158,17 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     masterdata's pattern (with `%X{call-id}`) is the standard — the accessor's file gained the field and the frontend
     got a logback.xml at last (it had been running on logback's DEBUG-root default). The mock server keeps the plain
     pattern (raw TCP, no CallId — the field would always render empty); deprecated sunrise-sunset (ADR-0005) untouched.
-17. **HOCON config sets uneven** (prod/dev/test vs prod/dev vs prod-only). (The H2-vs-PostgreSQL half of this item is
-    obsolete since 2026-08-07: H2 is removed, all profiles are PostgreSQL — ADR-0009.)
+17. ~~**HOCON config sets uneven** (prod/dev/test vs prod/dev vs prod-only). (The H2-vs-PostgreSQL half of this item is
+    obsolete since 2026-08-07: H2 is removed, all profiles are PostgreSQL — ADR-0009.)~~
+
+    **Resolved 2026-08-14.** Standard: `application-prod.conf` always, `application-dev.conf` where a local run
+    differs from prod, **no `application-test.conf`** — no test suite ever loaded one (JVM tests build config
+    programmatically via `MapApplicationConfig`; Testcontainers ports are dynamic, ADR-0009). The three test confs
+    (accessor, masterdata, frontend's dead copy in `src/test/resources`) are deleted; they were near-duplicates of dev
+    (only password strictness and pool size differed). **Operator action**: the personal IntelliJ run configs
+    `DataAccessor` and `MasterDataServer` must switch `-config=application-test.conf` → `-config=application-dev.conf`
+    (the `DB_PASSWORD` env they set keeps working — dev reads `${?DB_PASSWORD}`). Mock server stays prod-only (nothing
+    environment-specific in its conf); deprecated sunrise-sunset (ADR-0005) untouched.
 18. **Duplicated code**: `MasterDataPaths` object copied between masterdata-server and mock server (belongs in
     `pvlogger-shared-rest`); `PvHttpClient` duplicated between mock server and frontend.
 19. **Mock server hard-codes the cluster DNS name** of the masterdata server (`MasterDataCache.kt`) instead of reading

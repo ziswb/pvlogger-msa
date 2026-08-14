@@ -108,7 +108,7 @@ src/main/kotlin/ch/bziswiler/pvlogger/<service>/
   model/                       # Kotlinx Serialization data classes
 ```
 
-Configuration uses HOCON files: `application-prod.conf`, `application-dev.conf`, `application-test.conf` with environment variable interpolation (`${ENV_VAR}`).
+Configuration uses HOCON files with environment variable interpolation (`${ENV_VAR}`): `application-prod.conf` always, `application-dev.conf` where a local run differs from prod (points at the local Docker Compose DB). There are no `application-test.conf` files — JVM tests build their config programmatically (Testcontainers ports are dynamic, ADR-0009).
 
 ### Go Service Structure
 
@@ -133,5 +133,5 @@ Centralized in `gradle/libs.versions.toml`. Key versions are managed there — a
 JVM tests use Ktor test host, Koin test, and JUnit 5. Test utilities live in `testutils` packages.
 
 - DB-touching tests (modbus-data-accessor, masterdata-server) run against a real PostgreSQL 18 via Testcontainers (ADR-0009) — a Docker daemon (Rancher Desktop) must be running. **There is no H2 anywhere; migrations never need H2 compatibility.**
-- The dev profiles (`application-dev.conf`) and `application-test.conf` point at the local `pvlogger-database` Docker Compose PostgreSQL (`localhost:5432`).
+- The dev profiles (`application-dev.conf`) point at the local `pvlogger-database` Docker Compose PostgreSQL (`localhost:5432`).
 - Timestamp test data for the daily-delta SQL must be built in the JVM's zone, not UTC — `CAST(... AS DATE)`/`CURRENT_DATE` follow the session timezone.
