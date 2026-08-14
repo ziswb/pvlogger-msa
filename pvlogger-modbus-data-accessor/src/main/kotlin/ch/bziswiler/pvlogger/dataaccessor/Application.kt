@@ -3,11 +3,11 @@ package ch.bziswiler.pvlogger.dataaccessor
 import ch.bziswiler.pvlogger.shared.configuration.TimeZones
 import ch.bziswiler.pvlogger.dataaccessor.configuration.appModule
 import ch.bziswiler.pvlogger.dataaccessor.configuration.configureDatabases
-import ch.bziswiler.pvlogger.dataaccessor.configuration.configureMonitoring
 import ch.bziswiler.pvlogger.dataaccessor.configuration.configureRouting
 import ch.bziswiler.pvlogger.dataaccessor.configuration.configureSerialization
 import ch.bziswiler.pvlogger.dataaccessor.configuration.configureStatusPages
 import ch.bziswiler.pvlogger.dataaccessor.configuration.setupConfig
+import ch.bziswiler.pvlogger.shared.ktor.configureMonitoring
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.netty.EngineMain

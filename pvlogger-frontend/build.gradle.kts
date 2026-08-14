@@ -41,24 +41,20 @@ dependencies {
     implementation(libs.ktor.client.logging)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.ktor.server.caching.headers)
-    implementation(libs.ktor.server.call.logging)
     implementation(libs.ktor.server.core)
-    implementation(libs.ktor.server.call.id)
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.server.compression)
     implementation(libs.ktor.server.cors)
     implementation(libs.ktor.server.default.headers)
     implementation(libs.ktor.server.forwarded.header)
     implementation(libs.ktor.server.host.common)
-    implementation(libs.ktor.server.metrics)
-    implementation(libs.ktor.server.metrics.micrometer)
     implementation(libs.ktor.server.netty)
     implementation(libs.ktor.server.resources)
-    implementation(libs.ktor.server.status.pages)
     implementation(libs.ktor.server.websockets)
     implementation(libs.ktor.server.webjars)
 
     // Shared pvlogger-resources
+    implementation(project(":pvlogger-shared-ktor"))
     implementation(project(":pvlogger-shared-rest"))
 
     // Logging
@@ -68,10 +64,6 @@ dependencies {
     // Koin
     implementation(libs.koin.ktor)
     implementation(libs.koin.logger.slf4j)
-
-
-    // Monitoring
-    implementation(libs.micrometer.registry.prometheus)
 
     // Testing
     testImplementation(libs.ktor.server.test.host)

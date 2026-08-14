@@ -64,6 +64,7 @@ logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "lo
 micrometer-registry-prometheus = { module = "io.micrometer:micrometer-registry-prometheus", version.ref = "prometheusVersion" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresVersion" }
 
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version = "5.11.2" }
 koin-test = { module = "io.insert-koin:koin-test", version.ref = "koinVersion" }
 koin-test-junit5 = { module = "io.insert-koin:koin-test-junit5", version.ref = "koinVersion" }
 

@@ -9,6 +9,7 @@ include(
     "pvlogger-modbus-mock-server",
     "pvlogger-sunrise-sunset",
     "pvlogger-shared-database",
+    "pvlogger-shared-ktor",
     "pvlogger-shared-model",
     "pvlogger-shared-rest",
 )

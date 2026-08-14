@@ -1,8 +1,11 @@
-package ch.bziswiler.pvlogger.dataaccessor.configuration
+package ch.bziswiler.pvlogger.shared.ktor
 
+import io.ktor.http.HttpHeaders
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.metrics.micrometer.MicrometerMetrics
+import io.ktor.server.plugins.callid.CallId
+import io.ktor.server.plugins.callid.callIdMdc
 import io.ktor.server.plugins.calllogging.CallLogging
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
@@ -21,7 +24,16 @@ import org.slf4j.event.Level
 private const val METRICS_PATH = "/metrics"
 
 fun Application.configureMonitoring() {
-    install(CallLogging) { level = Level.INFO }
+    install(CallLogging) {
+        level = Level.INFO
+        callIdMdc("call-id")
+    }
+    install(CallId) {
+        header(HttpHeaders.XRequestId)
+        verify { callId: String ->
+            callId.isNotEmpty()
+        }
+    }
     val appMicrometerRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
     install(MicrometerMetrics) {
         registry = appMicrometerRegistry

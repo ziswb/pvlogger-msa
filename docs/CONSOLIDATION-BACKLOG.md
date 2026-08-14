@@ -139,10 +139,19 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     as with item 13. Notes: StatusPages doesn't cover WebSocket sessions, so `/livedata` keeps its own error handling;
     a SPA 404→index.html fallback was deliberately *not* added (single Angular route today — revisit when a second
     client-side route appearzs). Extraction into a shared module remains item 15.
-15. **CallLogging** installed in two services, missing in sunrise-sunset (whose
+15. ~~**CallLogging** installed in two services, missing in sunrise-sunset (whose
     `Monitoring.kt` is otherwise a byte-copy). Metrics registry constructed four different ways. Extract a tiny shared
     "service bootstrap" into
-    `pvlogger-shared-*`.
+    `pvlogger-shared-*`.~~
+
+    **Resolved 2026-08-14** (**ADR-0018**): new module **`pvlogger-shared-ktor`** with `configureMonitoring()`
+    (CallLogging with `call-id` MDC + CallId(X-Request-Id) + Prometheus registry with the standard binders + `/metrics`
+    route — the frontend's richer CallLogging shape won and is now everywhere, making item 16 a pure logback change)
+    and `configureStatusPages(extra)` (the accessor passes its `DateTimeParseException` handler through the hook).
+    The three per-service `Monitoring.kt`/`StatusPages.kt` copies and the frontend's `Logging.kt` are deleted; the
+    frontend also lost its dead extras (unconsumed `NotFoundEvent`, unread global `Metrics.addRegistry`,
+    `ApplicationMonitoringPlugin` + Koin lifecycle start/stop logs — same noise item 13 dropped). Mock server (no HTTP
+    pipeline) and deprecated sunrise-sunset (ADR-0005) deliberately excluded.
 16. **logback.xml**: only masterdata logs `%X{call-id}`; frontend has none at all.
 17. **HOCON config sets uneven** (prod/dev/test vs prod/dev vs prod-only). (The H2-vs-PostgreSQL half of this item is
     obsolete since 2026-08-07: H2 is removed, all profiles are PostgreSQL — ADR-0009.)

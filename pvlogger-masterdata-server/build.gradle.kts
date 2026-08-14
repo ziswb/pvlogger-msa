@@ -37,12 +37,9 @@ repositories {
 dependencies {
     // Ktor
     implementation(libs.ktor.serialization.kotlinx.json)
-    implementation(libs.ktor.server.call.logging)
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.server.core)
-    implementation(libs.ktor.server.metrics.micrometer)
     implementation(libs.ktor.server.netty)
-    implementation(libs.ktor.server.status.pages)
 
     // Logging
     implementation(libs.logback.classic)
@@ -50,15 +47,13 @@ dependencies {
 
     // Shared pvlogger-resources
     implementation(project(":pvlogger-shared-database"))
+    implementation(project(":pvlogger-shared-ktor"))
     implementation(project(":pvlogger-shared-model"))
     implementation(project(":pvlogger-shared-rest"))
 
     // Koin
     implementation(libs.koin.ktor)
     implementation(libs.koin.logger.slf4j)
-
-    // Monitoring
-    implementation(libs.micrometer.registry.prometheus)
 
     // Database
     implementation(libs.exposed.core)

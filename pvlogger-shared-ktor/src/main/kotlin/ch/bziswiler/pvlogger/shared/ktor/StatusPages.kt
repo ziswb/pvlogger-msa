@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.masterdata.server.configuration
+package ch.bziswiler.pvlogger.shared.ktor
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpStatusCode
@@ -6,11 +6,12 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.plugins.statuspages.StatusPages
+import io.ktor.server.plugins.statuspages.StatusPagesConfig
 import io.ktor.server.response.respondText
 
 private val logger = KotlinLogging.logger {}
 
-fun Application.configureStatusPages() {
+fun Application.configureStatusPages(extra: StatusPagesConfig.() -> Unit = {}) {
     install(StatusPages) {
         exception<BadRequestException> { call, cause ->
             logger.warn(cause) { "Bad request" }
@@ -20,5 +21,6 @@ fun Application.configureStatusPages() {
             logger.error(cause) { "Unhandled exception" }
             call.respondText("Internal server error", status = HttpStatusCode.InternalServerError)
         }
+        extra()
     }
 }

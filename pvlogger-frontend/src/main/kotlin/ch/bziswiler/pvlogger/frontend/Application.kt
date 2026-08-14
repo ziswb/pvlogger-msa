@@ -4,18 +4,14 @@ import ch.bziswiler.pvlogger.frontend.configuration.appModule
 import ch.bziswiler.pvlogger.frontend.configuration.readConfiguration
 import ch.bziswiler.pvlogger.frontend.plugins.configureCors
 import ch.bziswiler.pvlogger.frontend.plugins.configureHTTP
-import ch.bziswiler.pvlogger.frontend.plugins.configureLogging
-import ch.bziswiler.pvlogger.frontend.plugins.configureMonitoring
 import ch.bziswiler.pvlogger.frontend.plugins.configureRouting
 import ch.bziswiler.pvlogger.frontend.plugins.configureSerialization
-import ch.bziswiler.pvlogger.frontend.plugins.configureStatusPages
 import ch.bziswiler.pvlogger.frontend.plugins.configureWebSockets
+import ch.bziswiler.pvlogger.shared.ktor.configureMonitoring
+import ch.bziswiler.pvlogger.shared.ktor.configureStatusPages
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.netty.EngineMain
-import io.micrometer.core.instrument.Metrics.addRegistry
-import io.micrometer.prometheusmetrics.PrometheusConfig
-import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
 
@@ -31,15 +27,12 @@ fun Application.module(testing: Boolean = false) {
             modules(appModule)
         }
     }
-    val registry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
-    addRegistry(registry)
     readConfiguration()
     configureStatusPages()
-    configureMonitoring(registry, environment)
+    configureMonitoring()
     configureWebSockets()
     configureHTTP()
-    configureLogging()
     configureSerialization()
-    configureRouting(registry)
+    configureRouting()
     configureCors()
 }
