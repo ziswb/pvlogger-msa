@@ -29,6 +29,8 @@ func CollectAndComputeKpis() error {
 	logging.Info("raw values collected",
 		"inverter_active_power", rawValues.InverterActivePower,
 		"meter_active_power", rawValues.MeterActivePower,
+		"load_power", rawValues.LoadPower,
+		"battery_power", rawValues.BatteryPower,
 		"inverter_daily_yield", rawValues.InverterDailyYield,
 		"inverter_accumulated_yield", rawValues.InverterAccumulatedYield,
 		"meter_exported_energy", rawValues.MeterExportedEnergy,
@@ -85,8 +87,16 @@ func CollectAndComputeKpis() error {
 }
 
 type collectedRawValues struct {
+	// The live power values come from the SmartDongle's aggregate block
+	// (backlog 33) — one request, one coherent snapshot. The field names and
+	// conventions are kept: InverterActivePower is the AC total in kW
+	// (register 37516, previously 32080 summed per inverter), MeterActivePower
+	// is W with positive = export (register 37502 sign-flipped, previously
+	// 37113). LoadPower (37500, W) is the directly measured house consumption.
 	InverterActivePower      float64
 	MeterActivePower         float64
+	LoadPower                float64
+	BatteryPower             float64
 	InverterDailyYield       float64
 	InverterAccumulatedYield float64
 	MeterExportedEnergy      float64
@@ -111,16 +121,19 @@ func readModbusRegisters(jobId string) (*collectedRawValues, error) {
 	var requestCounter model.UShort = 1
 	result := &collectedRawValues{}
 
+	// Dongle aggregate block (backlog 33): all live power values in ONE
+	// request = one coherent snapshot. Grid power is sign-flipped to the
+	// meter convention (positive = export) for the raw store and KPI types.
+	logging.Info("reading dongle aggregate block", "device_id", devCfg.DongleDeviceId)
+	dongleValues, err := readRegisters(handler, jobId, &requestCounter, devCfg.DongleDeviceId, registers.DongleBlockRegisters())
+	if err != nil {
+		return nil, err
+	}
+	applyDongleBlock(result, dongleValues)
+
 	// Read inverter registers for each inverter device
 	for _, deviceId := range devCfg.InverterDeviceIds {
 		logging.Info("reading inverter registers", "device_id", deviceId)
-
-		// Inverter active power (U32) - read separately
-		activePower, err := readRegisters(handler, jobId, &requestCounter, deviceId, registers.InverterActivePowerRegisters())
-		if err != nil {
-			return nil, err
-		}
-		result.InverterActivePower += applyGain(activePower, registers.InverterActivePower)
 
 		// Inverter daily yield (U32) - read separately; kept as raw reference
 		// and as fallback while the lifetime-delta has no baseline (ADR-0014)
@@ -138,16 +151,10 @@ func readModbusRegisters(jobId string) (*collectedRawValues, error) {
 		result.InverterAccumulatedYield += applyGain(accumulatedYield, registers.InverterAccumulatedYield)
 	}
 
-	// Read meter registers for each meter device
+	// Read meter registers for each meter device (energy counters only — the
+	// live grid power comes from the dongle block above)
 	for _, deviceId := range devCfg.MeterDeviceIds {
 		logging.Info("reading meter registers", "device_id", deviceId)
-
-		// Meter active power (I32) - read separately
-		meterPowerValues, err := readRegisters(handler, jobId, &requestCounter, deviceId, registers.MeterActivePowerRegisters())
-		if err != nil {
-			return nil, err
-		}
-		result.MeterActivePower += applyGain(meterPowerValues, registers.MeterActivePower)
 
 		// Meter energy registers (consecutive U32 block: 37119 + 37121)
 		meterEnergyValues, err := readRegisters(handler, jobId, &requestCounter, deviceId, registers.MeterEnergyRegisters())
@@ -159,6 +166,17 @@ func readModbusRegisters(jobId string) (*collectedRawValues, error) {
 	}
 
 	return result, nil
+}
+
+// applyDongleBlock maps the dongle's aggregate block onto the collected raw
+// values. Register 37516 lands in InverterActivePower (kW, via its THOUSAND
+// gain); grid register 37502 (positive = import) is sign-flipped into
+// MeterActivePower's meter convention (positive = export).
+func applyDongleBlock(result *collectedRawValues, values []*response.RegisterValue) {
+	result.InverterActivePower = applyGain(values, registers.DongleTotalActivePower)
+	result.MeterActivePower = -applyGain(values, registers.DongleGridPower)
+	result.LoadPower = applyGain(values, registers.DongleLoadPower)
+	result.BatteryPower = applyGain(values, registers.DongleBatteryPower)
 }
 
 func readRegisters(handler *modbus.TcpHandler, jobId string, requestCounter *model.UShort, deviceId uint8, regDefs []model.RegisterDefinition) ([]*response.RegisterValue, error) {
@@ -217,12 +235,17 @@ func toFloat64FromGain(gainStr string) float64 {
 	return value
 }
 
+// computeLiveKpis maps the dongle block onto the live KPIs — values are taken
+// from registers wherever one exists (Producing ← 37516, Consuming ← 37500,
+// grid exchange ← 37502); only SelfConsuming has no register and stays derived.
 func computeLiveKpis(raw *collectedRawValues) *kpis.KpiLiveData {
 	inverterPower := kpis.NewInverterActivePower(raw.InverterActivePower, kpis.ParseUnitFromString("kW"))
 	meterPower := kpis.NewMeterActivePower(raw.MeterActivePower, kpis.ParseUnitFromString("W"))
+	loadPower := kpis.NewLoadPower(raw.LoadPower, kpis.ParseUnitFromString("W"))
 	return &kpis.KpiLiveData{
 		InverterActivePower: inverterPower,
 		MeterActivePower:    meterPower,
+		LoadPower:           loadPower,
 	}
 }
 

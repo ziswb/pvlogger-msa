@@ -1,11 +1,13 @@
 package services
 
 import (
+	"encoding/hex"
 	"math"
 	"pv-fast-data-collector/internal/registers"
 	"pvlogger-shared-modbus/model"
 	"pvlogger-shared-modbus/response"
 	"testing"
+	"time"
 )
 
 func TestToFloat64(t *testing.T) {
@@ -62,9 +64,9 @@ func TestApplyGain(t *testing.T) {
 		{
 			name: "matching register with THOUSAND gain",
 			values: []*response.RegisterValue{
-				{Definition: model.RegisterDefinition{RegisterAddress: model.RegisterAddress{Value: 32080}}, Value: uint32(5000)},
+				{Definition: model.RegisterDefinition{RegisterAddress: model.RegisterAddress{Value: 37516}}, Value: int32(5000)},
 			},
-			targetDef: registers.InverterActivePower,
+			targetDef: registers.DongleTotalActivePower,
 			want:      5.0, // 5000 / 1000
 		},
 		{
@@ -72,7 +74,7 @@ func TestApplyGain(t *testing.T) {
 			values: []*response.RegisterValue{
 				{Definition: model.RegisterDefinition{RegisterAddress: model.RegisterAddress{Value: 99999}}, Value: uint32(100)},
 			},
-			targetDef: registers.InverterActivePower,
+			targetDef: registers.DongleTotalActivePower,
 			want:      0.0,
 		},
 		{
@@ -87,9 +89,9 @@ func TestApplyGain(t *testing.T) {
 		{
 			name: "gain ONE with negative I32",
 			values: []*response.RegisterValue{
-				{Definition: model.RegisterDefinition{RegisterAddress: model.RegisterAddress{Value: 37113}}, Value: int32(-250)},
+				{Definition: model.RegisterDefinition{RegisterAddress: model.RegisterAddress{Value: 37502}}, Value: int32(-250)},
 			},
-			targetDef: registers.MeterActivePower,
+			targetDef: registers.DongleGridPower,
 			want:      -250.0, // -250 / 1
 		},
 	}
@@ -114,23 +116,32 @@ func TestComputeLiveKpis(t *testing.T) {
 	}{
 		{
 			name: "producing and exporting",
-			raw:  &collectedRawValues{InverterActivePower: 5.0, MeterActivePower: 2000.0},
+			raw:  &collectedRawValues{InverterActivePower: 5.0, MeterActivePower: 2000.0, LoadPower: 3000.0},
 			want: struct{ producing, exporting, importing, consuming, selfConsuming float64 }{
 				producing: 5000, exporting: 2000, importing: 0, consuming: 3000, selfConsuming: 3000,
 			},
 		},
 		{
 			name: "producing and importing",
-			raw:  &collectedRawValues{InverterActivePower: 1.0, MeterActivePower: -500.0},
+			raw:  &collectedRawValues{InverterActivePower: 1.0, MeterActivePower: -500.0, LoadPower: 1500.0},
 			want: struct{ producing, exporting, importing, consuming, selfConsuming float64 }{
 				producing: 1000, exporting: 0, importing: 500, consuming: 1500, selfConsuming: 1000,
 			},
 		},
 		{
 			name: "zero production with import",
-			raw:  &collectedRawValues{InverterActivePower: 0.0, MeterActivePower: -1000.0},
+			raw:  &collectedRawValues{InverterActivePower: 0.0, MeterActivePower: -1000.0, LoadPower: 1000.0},
 			want: struct{ producing, exporting, importing, consuming, selfConsuming float64 }{
 				producing: 0, exporting: 0, importing: 1000, consuming: 1000, selfConsuming: 0,
+			},
+		},
+		{
+			// Consuming is the measured load register, not the formula: even if
+			// load disagrees with producing-exporting+importing, load wins.
+			name: "consuming comes from the load register",
+			raw:  &collectedRawValues{InverterActivePower: 5.0, MeterActivePower: 2000.0, LoadPower: 3100.0},
+			want: struct{ producing, exporting, importing, consuming, selfConsuming float64 }{
+				producing: 5000, exporting: 2000, importing: 0, consuming: 3100, selfConsuming: 3000,
 			},
 		},
 	}
@@ -195,6 +206,36 @@ func TestComputeTodayKpis(t *testing.T) {
 			assertFloat(t, "SelfConsumed", today.SelfConsumed().ToWh().Wh, tt.want.selfConsumed)
 		})
 	}
+}
+
+// TestApplyDongleBlock_RealDevicePayload decodes a PDU captured live from the
+// SmartDongle (unit 100, FC03 37498 x20) on 2026-08-14 10:23 while exporting:
+// input=6974W load=885W grid=-6089W battery=0W total_active=6974W. It pins the
+// whole chain: block tiling (incl. the 10-register MLD filler), I32 decoding,
+// gain handling, and the grid sign flip to the meter convention.
+func TestApplyDongleBlock_RealDevicePayload(t *testing.T) {
+	data, err := hex.DecodeString("00001b3e00000375ffffe837000000000000000000000000000000000000000000572fd400001b3e")
+	if err != nil {
+		t.Fatalf("bad test payload: %v", err)
+	}
+	pdu := append([]byte{0x03, 0x28}, data...) // FC03, 0x28 = 40 payload bytes
+	resp := response.NewRegisterValueResponseFromBytes(
+		registers.DongleBlockRegisters(), model.NewJobId("test-job"), model.NewRequestId(1), time.Now(), model.MbapHeader{}, pdu)
+
+	raw := &collectedRawValues{}
+	applyDongleBlock(raw, resp.Values)
+
+	assertFloat(t, "InverterActivePower (kW)", raw.InverterActivePower, 6.974)
+	assertFloat(t, "MeterActivePower (W, positive=export)", raw.MeterActivePower, 6089)
+	assertFloat(t, "LoadPower (W)", raw.LoadPower, 885)
+	assertFloat(t, "BatteryPower (W)", raw.BatteryPower, 0)
+
+	live := computeLiveKpis(raw)
+	assertFloat(t, "Producing", live.Producing().W, 6974)
+	assertFloat(t, "Exporting", live.Exporting().W, 6089)
+	assertFloat(t, "Importing", live.Importing().W, 0)
+	assertFloat(t, "Consuming", live.Consuming().W, 885)
+	assertFloat(t, "SelfConsuming", live.SelfConsuming().W, 885)
 }
 
 func assertFloat(t *testing.T, name string, got, want float64) {

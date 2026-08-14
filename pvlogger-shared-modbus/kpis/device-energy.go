@@ -64,6 +64,25 @@ func (m *MeterActivePower) Importing() W {
 	return m.sourceUnit.ToW(0.0)
 }
 
+// LoadPower is the house consumption as measured directly by the SmartDongle's
+// aggregate block (register 37500), part of one coherent snapshot with the
+// production and grid registers (backlog 33).
+type LoadPower struct {
+	power      float64
+	sourceUnit Unit
+}
+
+func NewLoadPower(power float64, unit Unit) *LoadPower {
+	return &LoadPower{
+		power:      power,
+		sourceUnit: unit,
+	}
+}
+
+func (l *LoadPower) Consuming() W {
+	return l.sourceUnit.ToW(l.power)
+}
+
 type MeterEnergyToday struct {
 	importedValue float64
 	importUnit    Unit

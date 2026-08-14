@@ -20,6 +20,17 @@ func newKpiTodayData(produced, imported, exported float64) *KpiTodayData {
 	}
 }
 
+func TestKpiLiveData_Consuming_DirectLoad(t *testing.T) {
+	// With a LoadPower source (dongle register 37500), Consuming is the
+	// measured value — the formula is not consulted (here it would give 2000).
+	kpi := newKpiLiveData(5000, 3000)
+	kpi.LoadPower = NewLoadPower(2100, ParseUnitFromString("W"))
+	got := kpi.Consuming()
+	if got.W != 2100 {
+		t.Errorf("Consuming() = %v, want 2100", got.W)
+	}
+}
+
 func TestKpiLiveData_Consuming(t *testing.T) {
 	// Producing 5000W, exporting 3000W (positive meter = export)
 	// Consuming = Producing - Exporting + Importing = 5000 - 3000 + 0 = 2000
