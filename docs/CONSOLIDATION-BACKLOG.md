@@ -198,9 +198,16 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     No `service/` layer introduced: like masterdata-server, it exists only where there is real business logic, and
     date-window computation + rounding are thin. Behavior-neutral (query order/bounds preserved, incl. `todaysKpis()`
     DESC vs `kpisOf()` ASC).
-21. **Mock server build file** is the only one pinning a plugin outside
+21. ~~**Mock server build file** is the only one pinning a plugin outside
     `libs.versions.toml` (owasp dependencycheck) and lacks the ShadowJar workaround the other services carry (see
-    TROUBLESHOOTING.md).
+    TROUBLESHOOTING.md).~~
+
+    **Resolved 2026-08-15.** The owasp-dependencycheck plugin was **removed**, not centralized: it was unconfigured,
+    referenced nowhere else, and applied only to the least security-relevant service — a leftover experiment (its
+    redundant `buildscript { classpath }` block went with it; reintroduce via the catalog if ever wanted). The
+    ShadowJar workaround (`mergeServiceFiles()` + `duplicatesStrategy = INCLUDE`) was added to the mock server **and
+    the frontend**, which had the same gap (fat JAR in Docker, no Flyway so no visible symptom yet); TROUBLESHOOTING.md's
+    affected-services list updated. Mock server 3.2.2, frontend 3.9.1.
 
 ## ⚪ Hygiene
 

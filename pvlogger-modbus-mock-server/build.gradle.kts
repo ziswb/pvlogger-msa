@@ -1,3 +1,4 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 
 plugins {
@@ -5,13 +6,6 @@ plugins {
     alias(libs.plugins.ktor)
     idea
 //    alias(libs.plugins.idea)
-    id("org.owasp.dependencycheck") version "11.1.1"
-}
-
-buildscript {
-    dependencies {
-        classpath("org.owasp.dependencycheck:org.owasp.dependencycheck.gradle.plugin:11.1.1")
-    }
 }
 
 group = "ch.bziswiler"
@@ -70,4 +64,11 @@ tasks.test {
         exceptionFormat = TestExceptionFormat.FULL
         events("passed", "skipped", "failed")
     }
+}
+
+// Shadow 9.x (via Ktor 3.x) drops duplicate resources/service files during
+// buildFatJar without these — see TROUBLESHOOTING.md
+tasks.withType<ShadowJar>() {
+    mergeServiceFiles()
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
