@@ -1,4 +1,4 @@
-package ch.bziswiler.pvlogger.dataaccessor.rest
+package ch.bziswiler.pvlogger.dataaccessor.database.access
 
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.IntegerValueTable
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.ResponseTable
@@ -18,7 +18,7 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
-object RegisterReader {
+object RegisterValueDao {
     private const val ONE = 1
 
     private val logger = KotlinLogging.logger {}

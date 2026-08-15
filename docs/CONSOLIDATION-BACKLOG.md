@@ -179,9 +179,17 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     the frontend lost three.
 19. **Mock server hard-codes the cluster DNS name** of the masterdata server (`MasterDataCache.kt`) instead of reading
     config like every other client.
-20. **Business logic under `rest/`** in the data accessor (`HouseKpiController`,
+20. ~~**Business logic under `rest/`** in the data accessor (`HouseKpiController`,
     `RegisterReader` run transactions directly; raw JDBC/`exec()` escape hatches in two places for the same "daily
-    delta" pattern) while other services use the `rest/ → service/ → database/access/` layering CLAUDE.md describes.
+    delta" pattern) while other services use the `rest/ → service/ → database/access/` layering CLAUDE.md describes.~~
+
+    **Resolved 2026-08-15.** The `exec()` duplication had already collapsed to a single parameterized
+    `computeEnergyDelta(column)` in `RawKpiRegisterValuesDao` during the ADR-0014 work; only the layering remained.
+    `HouseKpiController` is now routes-only — its queries and `KpiValuesDto` rounding moved into `HousePowerKpiDao`
+    (same table as `store()`). `RegisterReader` was a pure DAO and moved to `database/access/` as `RegisterValueDao`.
+    No `service/` layer introduced: like masterdata-server, it exists only where there is real business logic, and
+    date-window computation + rounding are thin. Behavior-neutral (query order/bounds preserved, incl. `todaysKpis()`
+    DESC vs `kpisOf()` ASC).
 21. **Mock server build file** is the only one pinning a plugin outside
     `libs.versions.toml` (owasp dependencycheck) and lacks the ShadowJar workaround the other services carry (see
     TROUBLESHOOTING.md).

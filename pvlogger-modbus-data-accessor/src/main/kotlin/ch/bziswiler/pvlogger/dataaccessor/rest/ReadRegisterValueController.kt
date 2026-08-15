@@ -8,7 +8,7 @@ import ch.bziswiler.pvlogger.dataaccessor.rest.ParameterRetriever.retrieveDevice
 import ch.bziswiler.pvlogger.dataaccessor.rest.ParameterRetriever.retrieveJobIdParameter
 import ch.bziswiler.pvlogger.dataaccessor.rest.ParameterRetriever.retrieveRegisterAddressParameter
 import ch.bziswiler.pvlogger.dataaccessor.rest.ParameterRetriever.retrieveTypeParameter
-import ch.bziswiler.pvlogger.dataaccessor.rest.RegisterReader.readLatestRegisterValue
+import ch.bziswiler.pvlogger.dataaccessor.database.access.RegisterValueDao.readLatestRegisterValue
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_API_V1_PATH
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_LATEST_REGISTER_VALUE_PATH
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
