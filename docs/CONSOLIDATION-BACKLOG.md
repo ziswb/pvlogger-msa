@@ -177,8 +177,16 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     `PvHttpClient` → `pvlogger-shared-ktor` (its `var client` became `val` — nothing ever reassigned it). Mock server
     now depends on both shared modules and lost four client/serialization deps it no longer references directly;
     the frontend lost three.
-19. **Mock server hard-codes the cluster DNS name** of the masterdata server (`MasterDataCache.kt`) instead of reading
-    config like every other client.
+19. ~~**Mock server hard-codes the cluster DNS name** of the masterdata server (`MasterDataCache.kt`) instead of reading
+    config like every other client.~~
+
+    **Resolved 2026-08-15.** New `pvlogger.masterdata { host, port }` section in the mock server's
+    `application-prod.conf` (defaults `localhost:8081`), overridable via `MD_HOST`/`MD_PORT` — the same env names the
+    Go masterdata clients use (`pvlogger-shared-modbus/config/master-data-config.go`), so manifests stay uniform per
+    target service. Read at startup in `Application.module` and set on `MasterDataCache` via `configure(host, port)`
+    (no Koin introduced — the mock server has no DI and is a local test tool). Consequence: an in-cluster (Tilt) run
+    now needs `MD_HOST=pvlogger-masterdata-server-service.pvlogger.svc.cluster.local` in its manifest — fold into the
+    Tilt repair (item 23).
 20. ~~**Business logic under `rest/`** in the data accessor (`HouseKpiController`,
     `RegisterReader` run transactions directly; raw JDBC/`exec()` escape hatches in two places for the same "daily
     delta" pattern) while other services use the `rest/ → service/ → database/access/` layering CLAUDE.md describes.~~

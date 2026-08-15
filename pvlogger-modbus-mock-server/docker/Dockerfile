@@ -10,7 +10,7 @@ FROM eclipse-temurin:21-jre-ubi9-minimal
 
 LABEL author="Bruno Ziswiler"
 LABEL description="PV Logger Modbus Mock Data"
-LABEL version="3.2.0"
+LABEL version="3.2.1"
 
 RUN mkdir -p "/opt/pvlogger/"
 COPY --from=build "/workspace/pvlogger-modbus-mock-server/build/libs/pvlogger-modbus-mock-server-all.jar" "/opt/pvlogger/mock-server.jar"

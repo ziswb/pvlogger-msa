@@ -4,6 +4,7 @@ import ch.bziswiler.pvlogger.modbus.mockserver.utils.MockDataBuilder.buildData
 import ch.bziswiler.pvlogger.modbus.mockserver.utils.MockDataBuilder.buildDataUsingMasterData
 import ch.bziswiler.pvlogger.modbus.mockserver.utils.MockDataBuilder.buildFunctionCode
 import ch.bziswiler.pvlogger.modbus.mockserver.utils.MockDataBuilder.buildHeader
+import ch.bziswiler.pvlogger.modbus.mockserver.utils.MasterDataCache
 import ch.bziswiler.pvlogger.modbus.mockserver.utils.MockDataWriter
 import ch.bziswiler.pvlogger.modbus.mockserver.utils.RequestDataReader
 import io.ktor.network.selector.SelectorManager
@@ -22,7 +23,15 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module(testing: Boolean = false) {
+    configureMasterDataCache()
     launch { startSocketServer(testing) }
+}
+
+private fun Application.configureMasterDataCache() {
+    MasterDataCache.configure(
+        host = environment.config.propertyOrNull("pvlogger.masterdata.host")?.getString() ?: "localhost",
+        port = environment.config.propertyOrNull("pvlogger.masterdata.port")?.getString()?.toInt() ?: 8081,
+    )
 }
 
 suspend fun Application.startSocketServer(testing: Boolean) {

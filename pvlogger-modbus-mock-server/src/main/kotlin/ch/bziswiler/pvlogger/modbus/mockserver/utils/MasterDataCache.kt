@@ -14,7 +14,15 @@ import kotlin.time.Duration.Companion.hours
 
 object MasterDataCache {
 
+    private var host = "localhost"
+    private var port = 8081
+
     private val cache = Cache.Builder<RegisterAddress, ModbusRegisterDefinition>().expireAfterWrite(24.hours).build()
+
+    fun configure(host: String, port: Int) {
+        this.host = host
+        this.port = port
+    }
 
     suspend fun modbusRegisterDefinition(registerAddress: RegisterAddress) = cache.get(registerAddress) {
         with(getMasterData(registerAddress)) {
@@ -28,8 +36,8 @@ object MasterDataCache {
     private suspend fun getMasterData(registerAddress: RegisterAddress) = client.get {
         url {
             protocol = URLProtocol.HTTP
-            host = "pvlogger-masterdata-server-service.pvlogger.svc.cluster.local"
-            port = 8081
+            host = MasterDataCache.host
+            port = MasterDataCache.port
             pathSegments = listOf(MASTER_DATA_FOR_ADDRESS_PATH, registerAddress.value.toString())
         }
     }
