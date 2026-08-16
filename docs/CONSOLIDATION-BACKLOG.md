@@ -224,7 +224,12 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     choice — only the files the item names were removed). Two parts of the item were already stale: no `.DS_Store`
     was ever tracked (only present on disk), and the `summary-2024.*` simulator outputs no longer exist in the tree
     or the index. Files remain in git history — nothing sensitive (internal LAN hostnames only, already in docs).
-25. `pvlogger-frontend/src/web/README.md` is stock Angular-CLI boilerplate citing the wrong version.
+25. ~~`pvlogger-frontend/src/web/README.md` is stock Angular-CLI boilerplate citing the wrong version.~~
+
+    **Resolved 2026-08-16.** Rewritten in place (operator choice over module-root move or deletion) as a real README:
+    Angular 19, dev-server proxy targets, and — the load-bearing part — the committed-build-output workflow
+    (`ng build` emits into `src/main/resources/static/`, which is checked in; Gradle/Docker never runs npm, so SPA
+    changes must be committed together with the regenerated static files).
 26. `pvlogger-database/migration/irrelevant/` — delete or archive; the PG18 migration guide is a finished runbook and
     could move to a `docs/history/`.
 27. ~~**Site coordinates hard-coded in sunrise-sunset**~~
