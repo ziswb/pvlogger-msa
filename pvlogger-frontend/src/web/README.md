@@ -8,11 +8,13 @@ solar KPI data. It is served in production by the Ktor service in this module
 
 `ng build` writes directly into `../main/resources/static/` (see `outputPath` in
 `angular.json`), and those files are **checked into git**. The Gradle/Docker image build does
-not run npm — it packages whatever is committed there into the fat JAR.
+not run npm — it packages whatever is committed there into the fat JAR. This split is
+deliberate: the SPA changes rarely, so the image build doesn't pay the npm/Chromium cost.
 
-So after changing the SPA: run `npm run build` and **commit the regenerated
+So after changing the SPA: run `scripts/build-angular.sh` (repo root; runs tests + production
+build in a Node container, no local Node/Chrome needed) and **commit the regenerated
 `src/main/resources/static/` files together with your source change**, otherwise the deployed
-image won't contain it.
+image won't contain it. `npm run build` does the same thing using a local Node install.
 
 ## Development server
 
