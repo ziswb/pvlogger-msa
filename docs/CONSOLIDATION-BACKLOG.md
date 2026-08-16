@@ -212,7 +212,8 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
 ## ⚪ Hygiene
 
 22. **Test coverage very uneven**: `pv-full-data-collector` and the shared Kotlin `-rest`/`-database` libs have zero
-    tests; frontend has one.
+    tests. (The Angular SPA turned out to have 47 Karma specs — the "frontend has one" here matches the Ktor side,
+    which has a single test class. Corrected 2026-08-16; since item 37 the Karma specs gate the frontend image build.)
 23. **Tiltfile rot**: references non-existent `pvlogger-infrastructure/` paths, no
     `docker_build` steps. Decision (2026-08-07, ex open question 8): **fix, don't remove** — Tilt is the intended dev
     loop for larger changes. Low priority; pairs with the mock-server refresh (item 30).
@@ -229,7 +230,8 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     **Resolved 2026-08-16.** Rewritten in place (operator choice over module-root move or deletion) as a real README:
     Angular 19, dev-server proxy targets, and — the load-bearing part — the committed-build-output workflow
     (`ng build` emits into `src/main/resources/static/`, which is checked in; Gradle/Docker never runs npm, so SPA
-    changes must be committed together with the regenerated static files).
+    changes must be committed together with the regenerated static files). *That workflow was replaced the same day —
+    see item 37; the README was updated again with it.*
 26. `pvlogger-database/migration/irrelevant/` — delete or archive; the PG18 migration guide is a finished runbook and
     could move to a `docs/history/`.
 27. ~~**Site coordinates hard-coded in sunrise-sunset**~~
@@ -366,3 +368,14 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     images → run the pvlogger playbook (applies masterdata V2, new schedules, unsuspended full in one rollout) → re-run
     the prometheus/grafana roles for the alert/dashboard halves. Verify a full-hour handover afterwards like ADR-0015's
     was verified.
+37. ~~**Angular build output committed to git; separate `build-angular.sh` step**~~
+
+    **Resolved 2026-08-16.** The SPA is now compiled inside the frontend Docker image build (Dockerfile stage 1:
+    `node:22-alpine`, `npm ci`, Karma tests, `ng build`) and copied into the fat-JAR stage — `src/main/resources/static/`
+    is untracked/ignored and `scripts/build-angular.sh` is deleted. The old split's motivation (image build shouldn't
+    pay the npm/Chromium cost for a rarely-changing SPA) is preserved by layer caching: the Angular stage's `COPY`s see
+    only `src/web/`, so unchanged web sources make the whole stage a cache hit (cache is per-machine; a pruned cache
+    costs one ~2–3 min rebuild). Fixed alongside: `npm ci` instead of `npm install`, Node 22 LTS instead of
+    unsupported 25 (+ `engines` in package.json), `build:ci` npm script as single source of the CI command,
+    `angular.json` outputPath → normal `dist/web`, and `.dockerignore` now excludes `.git`/`**/node_modules`/
+    `**/.angular`/`**/build` etc. — the context every image build uploads shrank from ~3.5 GB to ~30 MB. Frontend 3.10.0.

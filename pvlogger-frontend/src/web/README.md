@@ -4,17 +4,18 @@ Angular 19 single-page application (Angular Material + Highcharts) showing live 
 solar KPI data. It is served in production by the Ktor service in this module
 (`pvlogger-frontend`, port 8085) — see [CONTEXT.md](../../../CONTEXT.md) for the service map.
 
-## ⚠️ Build output is committed
+## How the SPA reaches production
 
-`ng build` writes directly into `../main/resources/static/` (see `outputPath` in
-`angular.json`), and those files are **checked into git**. The Gradle/Docker image build does
-not run npm — it packages whatever is committed there into the fat JAR. This split is
-deliberate: the SPA changes rarely, so the image build doesn't pay the npm/Chromium cost.
+The SPA is compiled **inside the Docker image build** (`docker/Dockerfile` stage 1: `npm ci`,
+Karma tests, `ng build`) and copied into the Ktor fat JAR's `static/` resources — nothing
+built is committed to git. The stage is layered so that when `src/web/` is unchanged
+(the usual case), the whole Angular stage — including the Chromium install and tests — is a
+Docker layer-cache hit and costs nothing; only the lockfile invalidates `npm ci`, only web
+sources invalidate test+build. A Karma test failure fails the image build.
 
-So after changing the SPA: run `scripts/build-angular.sh` (repo root; runs tests + production
-build in a Node container, no local Node/Chrome needed) and **commit the regenerated
-`src/main/resources/static/` files together with your source change**, otherwise the deployed
-image won't contain it. `npm run build` does the same thing using a local Node install.
+Consequence for local runs: a locally started Ktor frontend serves no SPA (there is no
+`src/main/resources/static/` in the tree) — use `ng serve` for the UI and the local Ktor
+process only for `/livedata`.
 
 ## Development server
 
@@ -32,8 +33,9 @@ npm start        # ng serve on http://localhost:4200
 ## Build & tests
 
 ```bash
-npm run build    # Karma tests (ChromeHeadless) first, then ng build into ../main/resources/static/
+npm run build    # Karma tests (ChromeHeadless) first, then ng build into dist/web/
+npm run build:ci # same, but ChromeHeadlessNoSandbox — what the Docker image build runs
 npm test         # Karma tests only, watch mode
 ```
 
-There is currently only one real test (consolidation-backlog item 22).
+47 Karma specs across components, services, and models; they gate the Docker image build.

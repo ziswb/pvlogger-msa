@@ -1,5 +1,12 @@
+.git
+.gradle
 .idea
-build
 scripts
+gradle_home
+**/build
+**/dist
+**/node_modules
+**/.angular
+**/.DS_Store
 /docker/dumps
 /docker/postgres-data

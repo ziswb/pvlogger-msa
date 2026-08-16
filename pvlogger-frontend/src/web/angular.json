@@ -21,7 +21,7 @@
               "highcharts"
             ],
             "outputPath": {
-              "base": "../main/resources/static",
+              "base": "dist/web",
               "browser": ""
             },
             "index": "src/index.html",

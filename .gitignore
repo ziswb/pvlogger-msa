@@ -14,3 +14,6 @@ build/
 
 # macOS
 .DS_Store
+
+# Angular build output is produced inside the Docker image build (frontend Dockerfile stage 1)
+pvlogger-frontend/src/main/resources/static/

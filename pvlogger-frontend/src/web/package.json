@@ -5,10 +5,14 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng test --watch=false --browsers=ChromeHeadless && ng build",
+    "build:ci": "ng test --watch=false --browsers=ChromeHeadlessNoSandbox && ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
   "private": true,
+  "engines": {
+    "node": "^22.0.0"
+  },
   "dependencies": {
     "@angular/animations": "^19.2.19",
     "@angular/cdk": "^19.2.19",
