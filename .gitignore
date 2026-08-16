@@ -6,3 +6,11 @@ gradle_home/
 build/
 
 /.claude/settings.local.json
+
+# IDE project files (the .idea/ directory itself stays tracked — operator decision, backlog 24)
+*.iml
+*.ipr
+*.iws
+
+# macOS
+.DS_Store

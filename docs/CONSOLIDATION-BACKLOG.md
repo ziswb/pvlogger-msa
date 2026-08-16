@@ -216,8 +216,14 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
 23. **Tiltfile rot**: references non-existent `pvlogger-infrastructure/` paths, no
     `docker_build` steps. Decision (2026-08-07, ex open question 8): **fix, don't remove** — Tilt is the intended dev
     loop for larger changes. Low priority; pairs with the mock-server refresh (item 30).
-24. Committed IDE files (`.ipr`, `.iws`, `.iml`), `.DS_Store`; simulator output files (`summary-2024.*`) committed at
-    module root.
+24. ~~Committed IDE files (`.ipr`, `.iws`, `.iml`), `.DS_Store`; simulator output files (`summary-2024.*`) committed at
+    module root.~~
+
+    **Resolved 2026-08-16.** Untracked all 12 `.iml`/`.ipr`/`.iws` files (kept on disk) and added `*.iml`/`*.ipr`/
+    `*.iws`/`.DS_Store` to `.gitignore`. Scope decision: the `.idea/` directory itself **stays tracked** (operator
+    choice — only the files the item names were removed). Two parts of the item were already stale: no `.DS_Store`
+    was ever tracked (only present on disk), and the `summary-2024.*` simulator outputs no longer exist in the tree
+    or the index. Files remain in git history — nothing sensitive (internal LAN hostnames only, already in docs).
 25. `pvlogger-frontend/src/web/README.md` is stock Angular-CLI boilerplate citing the wrong version.
 26. `pvlogger-database/migration/irrelevant/` — delete or archive; the PG18 migration guide is a finished runbook and
     could move to a `docs/history/`.
