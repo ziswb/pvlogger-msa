@@ -5,7 +5,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Read first:** [CONTEXT.md](CONTEXT.md) (purpose, domain vocabulary, component map, data flow),
 [docs/adr/](docs/adr/) (decisions — check before introducing a new pattern),
 [docs/CONSOLIDATION-BACKLOG.md](docs/CONSOLIDATION-BACKLOG.md) (known divergences — don't imitate them),
-[docs/OPEN-QUESTIONS.md](docs/OPEN-QUESTIONS.md) (undocumented knowledge).
+[docs/OPEN-QUESTIONS.md](docs/OPEN-QUESTIONS.md) (undocumented knowledge),
+[docs/SECURITY-FINDINGS.md](docs/SECURITY-FINDINGS.md) (open security findings — note this
+system has no authentication anywhere; network isolation is the only boundary).
 Deployment lives in the sibling `infrastructure` repo (see `infrastructure/docs/LANDSCAPE.md`).
 
 ## Project Overview

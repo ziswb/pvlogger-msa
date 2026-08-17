@@ -4,8 +4,9 @@ This document describes PVLogger at the **stable** level: purpose, domain langua
 component responsibilities, and data flow. Volatile detail (versions, build
 commands, layouts) lives in [CLAUDE.md](CLAUDE.md). Decisions are in
 [docs/adr/](docs/adr/), known inconsistencies in
-[docs/CONSOLIDATION-BACKLOG.md](docs/CONSOLIDATION-BACKLOG.md), and undocumented
-knowledge in [docs/OPEN-QUESTIONS.md](docs/OPEN-QUESTIONS.md). How this repo relates
+[docs/CONSOLIDATION-BACKLOG.md](docs/CONSOLIDATION-BACKLOG.md), undocumented
+knowledge in [docs/OPEN-QUESTIONS.md](docs/OPEN-QUESTIONS.md), and open security
+findings in [docs/SECURITY-FINDINGS.md](docs/SECURITY-FINDINGS.md). How this repo relates
 to the `infrastructure` repo and the legacy folders:
 `infrastructure/docs/LANDSCAPE.md`.
 
