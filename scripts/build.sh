@@ -76,6 +76,23 @@ fi
 
 PV_LOGGER_COMPONENT="$component"
 
+# Validate component directory exists
+if [[ ! -d "${SCRIPT_DIR}/../${PV_LOGGER_COMPONENT}" ]]; then
+    echo "Error: Component directory not found: ${PV_LOGGER_COMPONENT}" >&2
+    echo "Available components in parent directory:" >&2
+    found_component=0
+    for dir in "${SCRIPT_DIR}/../"*/; do
+        if [ -f "${dir}docker/Dockerfile" ]; then
+            echo "$(basename "$dir")"
+            found_component=1
+        fi
+    done
+    if [ "$found_component" -eq 0 ]; then
+        echo "  No buildable components found" >&2
+    fi
+    exit 1
+fi
+
 if [ -z "${version}" ]; then
   version="$(${GREP_CMD} -e 'LABEL version="\([0-9.]*\)"' "${SCRIPT_DIR}/../${PV_LOGGER_COMPONENT}/docker/Dockerfile" | ${SED_CMD} -e 's/LABEL version=\"\([0-9.]*\)\"/\1/')";
 fi
@@ -88,14 +105,6 @@ fi
 # Validate Docker daemon is accessible
 if ! docker info >/dev/null 2>&1; then
     echo "Error: Docker daemon not accessible. Please ensure Docker is running." >&2
-    exit 1
-fi
-
-# Validate component directory exists
-if [[ ! -d "${SCRIPT_DIR}/../${PV_LOGGER_COMPONENT}" ]]; then
-    echo "Error: Component directory not found: ${PV_LOGGER_COMPONENT}" >&2
-    echo "Available components in parent directory:" >&2
-    ls -1 "${SCRIPT_DIR}/../" | grep "^pvlogger-" || echo "  No pvlogger components found" >&2
     exit 1
 fi
 
