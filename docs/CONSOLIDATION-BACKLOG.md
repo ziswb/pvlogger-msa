@@ -379,3 +379,77 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     unsupported 25 (+ `engines` in package.json), `build:ci` npm script as single source of the CI command,
     `angular.json` outputPath → normal `dist/web`, and `.dockerignore` now excludes `.git`/`**/node_modules`/
     `**/.angular`/`**/build` etc. — the context every image build uploads shrank from ~3.5 GB to ~30 MB. Frontend 3.10.0.
+38. 🔴 **Planner statistics rot silently: `read-latest-register-value` takes 29.6 s and races the fast collector's
+    timeout** (observed 2026-08-26)
+
+    `pv-fast-data-collector` jobs fail intermittently — several per hour — with
+    `context deadline exceeded (Client.Timeout exceeded while awaiting headers)` on
+    `GET /v1/read-latest-register-value/I32/100/37516/<run>`, surfaced as the misleading
+    "no value for register 37516 … the run must store the dongle aggregate block before aggregating". The message
+    points at item 35's ordering invariant; the actual cause is unrelated and lives in the database.
+
+    The accessor's own request log shows a perfectly deterministic split: **every** `I32` read of the dongle block
+    (37516, 37502) takes 29 134–29 889 ms, **every** `U32` read (37500) takes 5–91 ms. The time is spent inside
+    PostgreSQL, CPU-bound with no wait event — `RegisterReader`'s query
+    (`SELECT register_value … JOIN modbus_response_data … WHERE register_address = $1 AND logic_device_id = $2 AND
+    job_id = $3 ORDER BY response_time DESC LIMIT 1`) planned as:
+
+    ```
+    Nested Loop (actual time=31565.430..31565.431)
+      ->  Index Scan reg_addr_idx   rows=16554  loops=1
+      ->  Index Scan dev_id_idx     rows=1      loops=16554   -- 16 554 probes, 16 552 rows discarded each
+    ```
+
+    Root cause: `pvdata` column statistics were last collected **2026-04-28/29**. The dongle aggregate block
+    (`logic_device_id = 100`, registers 37502/37516 — item 35, ADR-0017) only went live **2026-08-14 17:13**, so the
+    MCV list for `modbus_response_data.logic_device_id` was still `{1,16}` with frequencies summing to 1.0, and
+    `register_address`'s 29-value MCV list predated 37516. The planner therefore estimated **1 row** for both
+    predicates (`cost=0.44..8.46 rows=1`) where reality is 16 557 each, and built a 1×1 nested loop that executes
+    16 557 × 16 557 ≈ **274 M** iterations. `modbus_response_data_dev_id_idx` had logged 3.0 **trillion** tuple reads.
+    Forcing any other join strategy runs the same query in **6.8 ms** — a 4 600× difference from row estimates alone,
+    with no change to indexes, schema or code. U32 escaped only by luck: identical 1-row fantasy, but the cost tie put
+    the materialised side on the outside, so each table is scanned once.
+
+    Why it never self-healed, and why this will recur: `autovacuum_analyze_scale_factor = 0.05` on a 34 M-row table
+    demands ~1.7 M modifications, while these tables grow a few thousand rows a day — the next autoanalyze was ~11
+    months out. A scale-factor threshold assumes churn is proportional to table *size*; for append-only fact tables it
+    is proportional to *time*. Every large table in `pvdata` carries this trap, so **any** future new logic device,
+    register range or device type will silently produce catastrophic plans until someone runs `ANALYZE` by hand.
+
+    **Fixed** by `pvlogger-modbus-data-accessor/src/main/resources/db/migration/V10__FixAutoanalyzeThresholds.sql`:
+    flat `autovacuum_analyze_threshold = 5000` with `autovacuum_analyze_scale_factor = 0` on the seven large
+    append-mostly tables (1–3 day cadence; ANALYZE samples 30 000 rows regardless of table size, so the cost is
+    negligible), plus a one-shot `ANALYZE` of the same tables so deploying the migration repairs an already-rotted
+    database. The two small tables (`modbus_characteristic_curve_data`, `modbus_register_string_values`) are left on
+    the scale factor, which is *tighter* for them. **Prod needs `ANALYZE` run manually (or the accessor restarted) to
+    fix the live incident — the migration only applies on the next data-accessor start.**
+
+    **Release:** data accessor `3.10.2` (patch — migration only, no code change), chart tag bumped to match in the
+    infrastructure repo. Deploy: `scripts/build.sh` the accessor image → `ansible-playbook playbooks/pvlogger.yml`,
+    which applies V10 on pod start. Verify afterwards that
+    `read-latest-register-value/I32/100/37516` drops from ~29.6 s to single-digit ms in the accessor log, that
+    `pv-fast-data-collector` stops producing failed jobs, and that central-server CPU falls once the 274 M-iteration
+    loop stops running every minute.
+
+    Follow-ups deliberately left out of the migration, worth doing separately:
+
+    - **~2.6 GB of never-used indexes** on these two tables, from `pg_stat_user_indexes`:
+      `modbus_register_integer_value_idx` (732 MB, **0 scans** — created by `V4__ModifyIndexes.sql` for exactly this
+      access pattern and never once chosen), `modbus_response_data_date_created_idx` / `_request_time_idx` /
+      `_response_time_idx` (398 MB each, 0 scans), `modbus_response_data_job_id_idx` (180 MB, **1 scan**), and both
+      table pkeys (732 MB + 335 MB, 0 scans). Drop candidates after confirming nothing seasonal needs them.
+    - **`job_id` is never used as an access path** even though it is the most selective predicate in the query (1 row
+      vs `logic_device_id`'s 16 557). `n_distinct` is estimated at 96 920 across 18.5 M rows — the classic ANALYZE
+      underestimate for a high-cardinality `text` column. `ALTER TABLE modbus_response_data ALTER COLUMN job_id SET
+      STATISTICS 1000` would likely make the planner prefer `job_id_idx` and turn the query into a sub-ms point
+      lookup, making the plan robust rather than merely acceptable.
+    - **No index on `response_id`** in any of the register-value tables, so the join can only ever be a hash join or a
+      filter — never an index nested loop. `(response_id, register_address)` would make the good plan reachable by
+      construction instead of by cost accident.
+    - **The 30 s HTTP client timeout in `pv-fast-data-collector` sits right on top of a 29.6 s query**, which is what
+      turned a slow path into a hard failure with a misleading error. Not worth raising the timeout, but the error
+      should distinguish "the accessor did not answer" from "the accessor answered, no such value" instead of folding
+      a transport failure into item 35's aggregation-ordering message.
+    - **infrastructure repo:** the data-accessor's CPU limit is `100m` with `requests == limits`
+      (`pvlogger-chart/values.yaml`). Not implicated here — the pod idles at 2 m and the wait was entirely in
+      PostgreSQL — but tight for a JVM service.
