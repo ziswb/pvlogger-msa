@@ -431,25 +431,62 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     `pv-fast-data-collector` stops producing failed jobs, and that central-server CPU falls once the 274 M-iteration
     loop stops running every minute.
 
-    Follow-ups deliberately left out of the migration, worth doing separately:
+    **Verified 2026-08-26 after the 3.10.2 rollout.** V10 applied (flyway history row 10, all seven tables carry the
+    reloptions, ANALYZE at 21:55:57). The route's latency fell from 29 134-29 889 ms to 7-401 ms and the failed jobs
+    stopped. The plan is now 0.99 ms end to end — a 32 000x improvement on the 31 565 ms measured before:
 
-    - **~2.6 GB of never-used indexes** on these two tables, from `pg_stat_user_indexes`:
-      `modbus_register_integer_value_idx` (732 MB, **0 scans** — created by `V4__ModifyIndexes.sql` for exactly this
-      access pattern and never once chosen), `modbus_response_data_date_created_idx` / `_request_time_idx` /
-      `_response_time_idx` (398 MB each, 0 scans), `modbus_response_data_job_id_idx` (180 MB, **1 scan**), and both
-      table pkeys (732 MB + 335 MB, 0 scans). Drop candidates after confirming nothing seasonal needs them.
-    - **`job_id` is never used as an access path** even though it is the most selective predicate in the query (1 row
-      vs `logic_device_id`'s 16 557). `n_distinct` is estimated at 96 920 across 18.5 M rows — the classic ANALYZE
-      underestimate for a high-cardinality `text` column. `ALTER TABLE modbus_response_data ALTER COLUMN job_id SET
-      STATISTICS 1000` would likely make the planner prefer `job_id_idx` and turn the query into a sub-ms point
-      lookup, making the plan robust rather than merely acceptable.
-    - **No index on `response_id`** in any of the register-value tables, so the join can only ever be a hash join or a
-      filter — never an index nested loop. `(response_id, register_address)` would make the good plan reachable by
-      construction instead of by cost accident.
-    - **The 30 s HTTP client timeout in `pv-fast-data-collector` sits right on top of a 29.6 s query**, which is what
-      turned a slow path into a hard failure with a misleading error. Not worth raising the timeout, but the error
-      should distinguish "the accessor did not answer" from "the accessor answered, no such value" instead of folding
-      a transport failure into item 35's aggregation-ordering message.
+    ```
+    Nested Loop
+      -> BitmapAnd on modbus_response_data
+           Bitmap Index Scan on modbus_response_data_job_id_idx
+           Bitmap Index Scan on modbus_response_data_dev_id_idx
+      -> Index Scan using modbus_register_integer_value_idx
+           Index Cond: (register_address = 37516 AND response_id = ...)
+    ```
+
+    That plan **corrects two claims made below before the rollout**, which are kept here only because the corrections
+    are the useful part:
+
+    - `modbus_register_integer_value_idx` is **not** dead weight and must not be dropped. `V4__ModifyIndexes.sql`
+      created it for exactly this access pattern and it now serves it with an equality cond on both columns. Its 0
+      scans were a symptom of the misestimate, not evidence of a useless index — with `register_address` estimated at
+      1 row the planner never needed it. **The real gap is that the symmetric index is missing on the other three
+      register-value tables** (`uinteger`, `short`, `ushort`), so those still fall back to a hash join or a filter.
+      Adding `(register_address, response_id)` there is the remaining structural fix.
+    - The index-usage evidence was **too short to justify dropping anything**. `stats_reset` is NULL but the
+      postmaster only started 2026-08-08, so the counters cover ~19 days — blind to monthly or annual reporting
+      paths. Two of the "0 scan" entries were primary keys, which are not droppable anyway. The genuine candidates
+      shrink to `modbus_response_data`'s three timestamp indexes (`date_created`, `request_time`, `response_time`,
+      398 MB each), and only after a full quarter of counters.
+
+    Follow-ups still open:
+
+    - **`job_id`'s selectivity is still underestimated 10x.** It is now used (as one half of a BitmapAnd) but the
+      planner still estimates 191 rows where the true figure is 1: `n_distinct` is 97 343 against 1 003 220 actual
+      distinct job_ids across 18.5 M rows — the classic ANALYZE underestimate for a high-cardinality `text` column,
+      which more frequent ANALYZE cannot fix. The wasted half of that BitmapAnd reads 16 704 index entries and costs
+      204 of the plan's 210 estimated units. `ALTER TABLE modbus_response_data ALTER COLUMN job_id SET STATISTICS
+      1000` should drop the dev_id half entirely. Worth doing for robustness as much as speed: `job_id` selectivity
+      comes from a scalar `n_distinct`, which degrades gracefully, whereas the predicates that caused this outage
+      (`logic_device_id`, `register_address`) are estimated from MCV lists that fail catastrophically the moment a
+      brand-new value appears. Steering the plan onto `job_id` makes it immune to the exact failure mode above, which
+      V10 only narrows to a 1-3 day window rather than closing.
+      A unique index on `(job_id, logic_device_id)` would pin the estimate at 1 row but is **not** available: the max
+      is 15 rows per pair and 1 956 540 of 1 981 639 groups have more than one, so the `ORDER BY response_time DESC
+      LIMIT 1` is load-bearing rather than defensive.
+    - ~~**The misleading error**: a transport failure was folded into item 35's aggregation-ordering message.~~
+      **Resolved 2026-08-26.** `GetJSON` now returns a wrapped `persistence.ErrNotFound` sentinel for a 404 — the
+      only status that can mean the row is genuinely absent — and `KpiAggregator.registerValue` keeps the ordering
+      hint for that case while reporting everything else as "could not read register N ... from the data accessor".
+      Regression-tested in both directions (`TestKpisFor_TransportFailureIsNotBlamedOnOrdering` reproduces the
+      original message against the pre-fix code and fails on it). Fast collector `0.13.1`, full collector `0.8.1` —
+      both link the shared aggregate path. The 30 s client timeout is deliberately left alone: the query is the thing
+      that was wrong, not the timeout.
+    - ~~**Nothing scraped the services**, so the slow layer was invisible.~~ **Resolved 2026-08-26** in the
+      infrastructure repo: `prometheus-servicemonitor-pvlogger.yaml` scrapes all three Ktor services' Micrometer
+      endpoints, plus `PvloggerServiceRequestSlow` (p95 > 5 s for 10 min) and `PvloggerServiceTargetDown`. Note
+      `ktor_http_server_requests_seconds` is a *summary* with client-side quantiles, not a histogram, so
+      `histogram_quantile()` does not apply. Supersedes the ServiceMonitor half of the role's `IMPROVEMENTS.md` 16.
     - **infrastructure repo:** the data-accessor's CPU limit is `100m` with `requests == limits`
       (`pvlogger-chart/values.yaml`). Not implicated here — the pod idles at 2 m and the wait was entirely in
       PostgreSQL — but tight for a JVM service.

@@ -3,12 +3,22 @@ package persistence
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"pv-logger/logging"
 	"time"
 )
+
+// ErrNotFound reports that the accessor answered normally and has no such
+// value. Callers must be able to tell this apart from every other failure
+// here: only a 404 can mean the run genuinely never stored the row, whereas a
+// timeout, a refused connection or a 5xx says nothing at all about what the
+// store contains. Conflating the two produced twelve days of misleading
+// "the run must store the dongle aggregate block" errors during the incident
+// in backlog 38, when the real cause was a 29.6 s query.
+var ErrNotFound = errors.New("no such value in the data accessor")
 
 type PersistingService struct {
 	baseURL    string
@@ -66,6 +76,9 @@ func (s *PersistingService) GetJSON(path string, result any) error {
 		return fmt.Errorf("failed to send GET request: %w", err)
 	}
 	defer CloseBody(resp)
+	if resp.StatusCode == http.StatusNotFound {
+		return fmt.Errorf("%w: GET %s", ErrNotFound, getURL.String())
+	}
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("unexpected status code %d", resp.StatusCode)
 	}

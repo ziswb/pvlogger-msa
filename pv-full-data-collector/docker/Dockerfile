@@ -9,7 +9,7 @@ FROM gcr.io/distroless/static-debian12
 
 LABEL author="Bruno Ziswiler"
 LABEL description="PV Full Data Collector - reads all dynamic Modbus register values on demand"
-LABEL version="0.8.0"
+LABEL version="0.8.1"
 
 COPY --from=golang /full-data-collector .
 

@@ -5,6 +5,7 @@
 package aggregate
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -143,8 +144,18 @@ func (a *KpiAggregator) registerValue(def model.RegisterDefinition, jobId model.
 		sharedconfig.ReadLatestRegisterValuePath, def.Type, a.dongleDeviceId, def.RegisterAddress.Value, jobId.Id)
 	var raw float64
 	if err := a.client.GetJSON(path, &raw); err != nil {
+		// Only a 404 means the row is genuinely absent, which is what the
+		// ordering invariant below is about. A timeout or a refused connection
+		// tells us nothing about the store's contents, so claiming an ordering
+		// violation there sends the reader hunting for the wrong bug — see
+		// backlog 38.
+		if errors.Is(err, persistence.ErrNotFound) {
+			return 0, fmt.Errorf(
+				"no value for register %d (%s) in run %s — the run must store the dongle aggregate block before aggregating (full collector: backlog 35): %w",
+				def.RegisterAddress.Value, def.Name, jobId.Id, err)
+		}
 		return 0, fmt.Errorf(
-			"no value for register %d (%s) in run %s — the run must store the dongle aggregate block before aggregating (full collector: backlog 35): %w",
+			"could not read register %d (%s) for run %s from the data accessor: %w",
 			def.RegisterAddress.Value, def.Name, jobId.Id, err)
 	}
 	result := raw / gainValue(def)

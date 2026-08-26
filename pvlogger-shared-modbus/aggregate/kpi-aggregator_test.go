@@ -2,6 +2,7 @@ package aggregate
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"net"
@@ -14,6 +15,7 @@ import (
 	"pvlogger-shared-modbus/persistence"
 	"pvlogger-shared-modbus/registers"
 	"strconv"
+	"strings"
 	"sync"
 	"testing"
 )
@@ -199,10 +201,52 @@ func TestKpisFor_FailsWithoutDongleBlockInRun(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for a run without the dongle block, got nil")
 	}
+	// A genuine 404 is the one case that IS an ordering violation, so the hint
+	// belongs here. Paired with TestKpisFor_TransportFailureIsNotBlamedOnOrdering
+	// below, which pins the opposite case (backlog 38).
+	if !strings.Contains(err.Error(), "must store the dongle aggregate block") {
+		t.Errorf("expected the ordering hint for a 404, got: %v", err)
+	}
+	if !errors.Is(err, persistence.ErrNotFound) {
+		t.Errorf("expected the error to wrap persistence.ErrNotFound, got: %v", err)
+	}
 	fake.mu.Lock()
 	defer fake.mu.Unlock()
 	if fake.storedKpi != nil {
 		t.Error("a KPI row was stored despite the missing dongle block")
+	}
+}
+
+func TestKpisFor_TransportFailureIsNotBlamedOnOrdering(t *testing.T) {
+	// Regression test for backlog 38. When the accessor never answers, the
+	// error must not claim the run failed to store the dongle aggregate block:
+	// that message sent twelve days of investigation at the collector while the
+	// real fault was a 29.6 s query in PostgreSQL. A transport failure says
+	// nothing about what the store contains.
+	fake := &fakeAccessor{
+		t:              t,
+		registerValues: map[string]string{},
+		energyToday:    `{"exportedEnergyToday": 8.0, "importedEnergyToday": 2.0, "producedEnergyToday": 14.0}`,
+	}
+	server := httptest.NewServer(fake.handler())
+	// Closing the server before the call makes every request fail at the
+	// transport layer, the same error class as the client timeout in the
+	// incident.
+	aggregator := testAggregator(t, server)
+	server.Close()
+
+	err := aggregator.KpisFor(model.NewJobId("job-unreachable"))
+	if err == nil {
+		t.Fatal("expected error when the accessor is unreachable, got nil")
+	}
+	if strings.Contains(err.Error(), "must store the dongle aggregate block") {
+		t.Errorf("transport failure was reported as an ordering violation: %v", err)
+	}
+	if errors.Is(err, persistence.ErrNotFound) {
+		t.Errorf("transport failure must not wrap ErrNotFound: %v", err)
+	}
+	if !strings.Contains(err.Error(), "could not read register") {
+		t.Errorf("expected a transport-flavoured message, got: %v", err)
 	}
 }
 
