@@ -1,0 +1,83 @@
+-- Give the read-latest-register-value lookups an access path that does not scan
+-- the dongle block's whole history to return one row (follow-up to V10 /
+-- backlog 38).
+--
+-- After V10 both lookups are correct and fast in absolute terms, but neither
+-- has an index that answers the full predicate, so both read ~16 700 rows and
+-- throw all but one away. Measured on prod 2026-08-26:
+--
+--   I32 37516: 0.99 ms, 38 buffers. Plan ANDs two bitmaps on
+--              modbus_response_data; the dev_id half reads 16 704 index
+--              entries and contributes nothing (204 of 210 estimated cost
+--              units), because no single index covers job_id AND
+--              logic_device_id together.
+--   U32 37500: 2.63 ms, 293 buffers. Worse — modbus_register_uinteger_values
+--              has no equivalent of V4's (register_address, response_id) index,
+--              so it bitmap-scans all 16 727 rows for register 37500 and
+--              join-filters them one by one.
+--
+-- The point is the growth curve, not today's milliseconds. Those scans are
+-- linear in the dongle block's accumulated history, which grows ~1 170 rows a
+-- day: ~16.7 k rows now, ~430 k in a year, on a query that runs three times a
+-- minute forever. Both indexes below turn that into a flat two-column equality
+-- lookup — the shape the I32 register side already has from V4, which the
+-- post-V10 plan does use (Index Cond on register_address AND response_id).
+--
+-- WHAT THIS DOES *NOT* DO — tested, because the first draft of this migration
+-- claimed otherwise. It does not make the plan robust against the misestimate
+-- that caused the outage. Reproduced on a scratch PG 18.6: 200 k rows for
+-- devices 1/16, ANALYZE, then 16 557 device-100 rows and register 37516 added
+-- WITHOUT re-analyzing, so logic_device_id's MCV list stays {1,16} and both
+-- predicates are estimated at 1 row against 16 557 actual:
+--
+--   without modbus_response_data_job_dev_idx : 15 648 ms
+--   with    modbus_response_data_job_dev_idx : 15 257 ms   <- same bad plan
+--
+-- The planner ignores the new index entirely, and it is right to by its own
+-- lights: when every predicate is estimated at 1 row, every join order costs
+-- ~16 units, the choice is an arbitrary tie-break, and no index can undercut a
+-- plan that already looks free. That tie-break is the whole story of the
+-- incident — I32 lost it and paid 29.6 s, U32 won it and paid 5 ms; the
+-- difference was never the indexes. Only current statistics prevent this
+-- (V10), and the residual 1-3 day exposure can only be closed by removing the
+-- join-order choice from the query itself, i.e. having the accessor resolve
+-- the response row and the register value in two statements. That is an
+-- application change, deliberately not smuggled in here.
+--
+-- Only these two tables need indexing: readLatestRegisterValue can also reach
+-- the short/ushort/string tables, but the aggregated dongle block is
+-- 37498/37500 (U32) and 37502/37504/37516 (I32), so those tables are never
+-- queried on this path. Indexing them speculatively would repeat V4's mistake,
+-- whose 732 MB sat unused until V10 made it reachable. If an I16/U16 register
+-- ever joins the block, they need the same (register_address, response_id).
+--
+-- OPERATIONAL NOTE — plain CREATE INDEX takes a SHARE lock, blocking writes to
+-- an 18.5 M-row and a 15.6 M-row table while it builds. Flyway runs at accessor
+-- startup while the OUTGOING pod still serves traffic (replicas: 1, so the new
+-- pod surges first), so the per-minute collectors would write straight into
+-- that lock and their jobs would fail. Build both by hand first, which makes
+-- the statements below no-ops:
+--
+--   CREATE INDEX CONCURRENTLY IF NOT EXISTS modbus_response_data_job_dev_idx
+--       ON modbus_response_data (job_id, logic_device_id);
+--   CREATE INDEX CONCURRENTLY IF NOT EXISTS modbus_register_uinteger_value_idx
+--       ON modbus_register_uinteger_values (register_address, response_id);
+--
+-- CONCURRENTLY cannot run inside a transaction, hence by hand rather than here
+-- (same reasoning as V7's manual step). A failed concurrent build leaves an
+-- INVALID index behind: drop it and retry before deploying.
+
+CREATE INDEX IF NOT EXISTS modbus_response_data_job_dev_idx
+    ON modbus_response_data (job_id, logic_device_id);
+
+CREATE INDEX IF NOT EXISTS modbus_register_uinteger_value_idx
+    ON modbus_register_uinteger_values (register_address, response_id);
+
+-- Deliberately NOT dropping the single-column indexes these make prefix-redundant
+-- (modbus_response_data_job_id_idx 180 MB,
+-- modbus_register_integer_values_reg_addr_idx 226 MB,
+-- modbus_register_uinteger_values_reg_adr_idx 103 MB). A btree on (a, b) serves
+-- everything a btree on (a) serves, so the redundancy needs no usage-statistics
+-- window to establish — but all three are load-bearing in the plans running
+-- right now, so the new composites should be observed winning in production
+-- first. Reclaiming those ~509 MB is a separate migration.

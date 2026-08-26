@@ -452,7 +452,8 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
       scans were a symptom of the misestimate, not evidence of a useless index — with `register_address` estimated at
       1 row the planner never needed it. **The real gap is that the symmetric index is missing on the other three
       register-value tables** (`uinteger`, `short`, `ushort`), so those still fall back to a hash join or a filter.
-      Adding `(register_address, response_id)` there is the remaining structural fix.
+      Adding `(register_address, response_id)` there is the remaining structural fix — shipped as V11, though see the
+      correction below about what it does and does not buy.
     - The index-usage evidence was **too short to justify dropping anything**. `stats_reset` is NULL but the
       postmaster only started 2026-08-08, so the counters cover ~19 days — blind to monthly or annual reporting
       paths. Two of the "0 scan" entries were primary keys, which are not droppable anyway. The genuine candidates
@@ -474,6 +475,25 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
       A unique index on `(job_id, logic_device_id)` would pin the estimate at 1 row but is **not** available: the max
       is 15 rows per pair and 1 956 540 of 1 981 639 groups have more than one, so the `ORDER BY response_time DESC
       LIMIT 1` is load-bearing rather than defensive.
+
+      **Correction (2026-08-26), and it matters for how this class of bug gets fixed.** The claim above that an index
+      makes the plan "robust by construction" is **false, and was tested**. Reproduced on a scratch PG 18.6 with the
+      MCV blind spot recreated deliberately (200 k rows for devices 1/16, ANALYZE, then 16 557 device-100 rows added
+      without re-analyzing): the catastrophic plan runs in 15 648 ms without `modbus_response_data_job_dev_idx` and
+      **15 257 ms with it** — the planner ignores the new index and keeps the same nested loop. It is right to, by its
+      own lights: when every predicate is estimated at 1 row, every join order costs ~16 units, the winner is an
+      arbitrary tie-break, and no index can undercut a plan that already looks free. **That tie-break is the entire
+      explanation of the I32-vs-U32 asymmetry** — I32 lost it and paid 29.6 s, U32 won it and paid 5 ms; indexes were
+      never the difference, and neither was the register type. So no index and no statistics target confers immunity
+      here. Only current statistics (V10) prevent it, and the residual 1-3 day exposure can only be closed by removing
+      the join-order choice from the query — having the accessor resolve the response row and then the register value
+      in two statements. That is the real remaining item, and it is an application change, not a migration.
+
+      V11 is therefore justified on ordinary efficiency grounds instead, which are real: both lookups currently scan
+      ~16 700 rows to return one, and that scan is linear in the dongle block's accumulated history (~1 170 rows/day
+      — ~16.7 k now, ~430 k in a year, three times a minute forever). Measured on prod: I32 0.99 ms / 38 buffers with
+      a useless 16 704-entry dev_id bitmap half; U32 2.63 ms / 293 buffers bitmap-scanning all 16 727 rows for
+      register 37500 and join-filtering them. V11 makes both flat two-column equality lookups.
     - ~~**The misleading error**: a transport failure was folded into item 35's aggregation-ordering message.~~
       **Resolved 2026-08-26.** `GetJSON` now returns a wrapped `persistence.ErrNotFound` sentinel for a 404 — the
       only status that can mean the row is genuinely absent — and `KpiAggregator.registerValue` keeps the ordering
