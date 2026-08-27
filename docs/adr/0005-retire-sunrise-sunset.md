@@ -30,6 +30,8 @@ database lingers in the db-backup job).
 ## Follow-through (2026-08-27)
 
 The module was deleted from this repo — see backlog item 28 for the inventory of
-what went and what was verified first. The `sunrisesunset` database and its
-`db-backup.yaml` entry outlive it: dropping a live database needs an explicit
-operator decision, so that half stays with infrastructure backlog item 32.
+what went and what was verified first. The operator dropped the `sunrisesunset`
+database and removed it from the chart's `db-backup.yaml` the same day, so this
+ADR is fully executed once that chart change is deployed (infrastructure backlog
+item 32). Nothing of sunrise-sunset remains except its mention in the finished
+PG18 migration runbook, which is a historical record.

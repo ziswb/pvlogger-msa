@@ -252,14 +252,16 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     `/metrics` registration (security item 18), and the repo's only `application-test.conf`. `./gradlew build` green
     afterwards.
 
-    **Two remnants, both outside this repo and both deliberate:**
-    - The `sunrisesunset` **database still exists** on the central server (7 937 kB, verified 2026-08-27) and is still
-      listed in the chart's `db-backup.yaml`. Both are deliberately left alone and stay in step: the chart entry is
-      correct while the database exists (`pg_dump` of a dropped database would fail the backup job), and dropping a
-      live database needs an explicit operator decision. Infrastructure backlog item 32 does both together.
-    - `pvlogger-database/migration/migrate_db_aio.sh:23` still names `sunrisesunset` in the PG18 migration's database
-      list. Left alone on purpose: it is the record of a migration that did include that database (item 26 covers
-      archiving that directory).
+    **Fully retired the same day.** The operator dropped the `sunrisesunset` database (no final dump — nothing read
+    those cached sun times) and removed it from `DB_NAMES` in the chart's `db-backup.yaml`; `pg_database` now lists
+    eight databases with no `sunrisesunset` among them. The chart still has to be **deployed** for the live
+    ConfigMap to lose the entry — until then the nightly job dumps a database that no longer exists and dies on it
+    under `set -e` (infrastructure item 32).
+
+    **One remnant left, deliberately:**
+    `pvlogger-database/migration/migrate_db_aio.sh:23` still names `sunrisesunset` in the PG18 migration's database
+    list. Left alone on purpose: it is the record of a migration that did include that database (item 26 covers
+    archiving that directory).
 29. **Introduce `fsdata` schema migrations** — a known gap since the Kotlin→Go rewrite of fusionsolar (rationale in
     ADR-0002, ex open question 4), not a decision.
 

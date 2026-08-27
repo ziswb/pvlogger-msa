@@ -152,18 +152,17 @@ backlog item 29.)
 
 ## Databases
 
-One PostgreSQL server (the homelab central server) hosts four databases. Each is
-owned by exactly one service, which also owns its Flyway migrations:
+One PostgreSQL server (the homelab central server) hosts three PVLogger databases.
+Each is owned by exactly one service, which also owns its Flyway migrations:
 
 | DB | Owner | Content |
 |---|---|---|
 | `pvdata` | modbus-data-accessor | register values, raw KPI registers, house KPIs |
 | `pvmasterdata` | masterdata-server | register definitions |
-| `sunrisesunset` | *nobody* | cached sun times — **orphaned**: the module was deleted 2026-08-27 (ADR-0005, backlog item 28), the 7.9 MB database still exists on the server pending a manual `DROP DATABASE` (infrastructure backlog item 32) |
 | `fsdata` | fusionsolar (no migrations — known gap, backlog item 29) | FusionSolar responses & KPIs |
 
-All of them are dumped nightly by the db-backup CronJob (infrastructure repo) — including the
-orphaned `sunrisesunset`, whose entry in `db-backup.yaml` goes when the database does.
+All three are dumped nightly by the db-backup CronJob (infrastructure repo). A fourth,
+`sunrisesunset`, was dropped on 2026-08-27 with the retirement of its module (ADR-0005).
 
 ## Build, versioning & deployment (summary)
 
