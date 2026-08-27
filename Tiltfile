@@ -158,8 +158,6 @@ k8s_yaml([
 k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_frontend_install/files/pvlogger-frontend-deployment.yaml')
 k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_frontend_install/files/pvlogger-frontend-service.yaml')
 
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_sunrise_sunset_install/files/pvlogger-crepuscular-deployment.yaml')
-
 k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_fusionsolar_install/files/pvlogger-fusionsolar-cm.yaml')
 k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_fusionsolar_install/files/pvlogger-fusionsolar-cm-1.yaml')
 k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_fusionsolar_install/files/pvlogger-fusionsolar-cm-2.yaml')

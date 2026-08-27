@@ -89,7 +89,6 @@ themselves pragmatically — default to a job/endpoint in an existing service
 | `pvlogger-modbus-data-accessor` | **The central data service.** Owns the `pvdata` DB (register values, raw KPI registers, house KPIs). All collectors write through it; frontend and exporter read from it. REST paths are defined in `pvlogger-shared-rest`. |
 | `pvlogger-masterdata-server` | Owns the `pvmasterdata` DB. Imports Huawei's register definitions from CSVs; project-curated definitions (the DONGLE unit-100 block) ship as Flyway data migrations instead (ADR-0017). Serves the catalog to collectors and the mock server. |
 | `pvlogger-frontend` | Serves the prebuilt Angular SPA, proxies the latest KPI as the `/livedata` WebSocket. History data goes **directly** SPA → data accessor (via ingress path `/v1`). |
-| `pvlogger-sunrise-sunset` | **Deprecated** (ADR-0005). Fetches and caches sunrise/sunset times for the site coordinates (own `sunrisesunset` DB). Historically gated FusionSolar collection to daylight hours; nothing calls it anymore — retirement is backlog item 28. |
 | `pvlogger-modbus-mock-server` | Emulates a Modbus TCP device (raw TCP, not HTTP) using real register definitions from the masterdata server. **Local development only — never deployed to production** (confirmed 2026-08-07); the Helm chart's mock-server template exists solely for local use. |
 
 ### Go CronJob collectors (short-lived batch runs)
@@ -160,10 +159,11 @@ owned by exactly one service, which also owns its Flyway migrations:
 |---|---|---|
 | `pvdata` | modbus-data-accessor | register values, raw KPI registers, house KPIs |
 | `pvmasterdata` | masterdata-server | register definitions |
-| `sunrisesunset` | sunrise-sunset | cached sun times — deprecated, drop with the module (ADR-0005) |
+| `sunrisesunset` | *nobody* | cached sun times — **orphaned**: the module was deleted 2026-08-27 (ADR-0005, backlog item 28), the 7.9 MB database still exists on the server pending a manual `DROP DATABASE` (infrastructure backlog item 32) |
 | `fsdata` | fusionsolar (no migrations — known gap, backlog item 29) | FusionSolar responses & KPIs |
 
-All four are dumped nightly by the db-backup CronJob (infrastructure repo).
+All of them are dumped nightly by the db-backup CronJob (infrastructure repo) — including the
+orphaned `sunrisesunset`, whose entry in `db-backup.yaml` goes when the database does.
 
 ## Build, versioning & deployment (summary)
 

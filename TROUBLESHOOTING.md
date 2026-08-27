@@ -27,7 +27,6 @@ tasks {
 **Affected Services:**
 - `pvlogger-modbus-data-accessor`
 - `pvlogger-masterdata-server`
-- `pvlogger-sunrise-sunset`
 - `pvlogger-frontend` (added 2026-08-15, backlog 21 — no Flyway symptom, but the same fat-JAR service-file handling applies)
 - `pvlogger-modbus-mock-server` (added 2026-08-15, backlog 21)
 

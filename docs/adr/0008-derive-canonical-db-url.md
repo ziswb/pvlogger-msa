@@ -27,4 +27,5 @@ schemes that don't compose this way (the H2 in-memory dev/test configs).
 - New services get the safe derived behavior by default.
 - The H2 override configs keep byte-identical URLs — no behavior change there.
 - The deprecated sunrise-sunset module was deliberately left on the override
-  path (it is scheduled for deletion, backlog item 28).
+  path rather than migrated; it was deleted on 2026-08-27 (backlog item 28), so
+  every remaining PostgreSQL profile now derives its URL.

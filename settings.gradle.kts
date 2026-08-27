@@ -7,7 +7,6 @@ include(
     "pvlogger-masterdata-server",
     "pvlogger-modbus-data-accessor",
     "pvlogger-modbus-mock-server",
-    "pvlogger-sunrise-sunset",
     "pvlogger-shared-database",
     "pvlogger-shared-ktor",
     "pvlogger-shared-model",

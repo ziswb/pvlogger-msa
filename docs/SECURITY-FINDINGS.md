@@ -34,10 +34,10 @@ depth / operational.
    `pvlogger-battery-simulator/internal/database/reader.go:20`. SSL is *unset* (the
    PostgreSQL JDBC driver then negotiates no TLS) in every Kotlin service:
    `application-prod.conf:17-19` of data-accessor and masterdata-server set
-   `dbUrlParams = "?reWriteBatchedInserts=true"` only, `pvlogger-sunrise-sunset`'s
-   line 17 likewise, and
+   `dbUrlParams = "?reWriteBatchedInserts=true"` only, and
    `pvlogger-shared-database/.../DatabaseFactory.kt:61-71` sets no SSL property on the
-   `HikariConfig`.
+   `HikariConfig`. (A third instance in `pvlogger-sunrise-sunset` went with the module
+   on 2026-08-27, backlog item 28.)
 
    The DB password itself crosses the wire in the clear on every connect, so a passive
    on-path observer harvests the credential, not just the measurements. Blocked on the
@@ -90,8 +90,8 @@ depth / operational.
 
     `pvlogger-shared-ktor/.../Monitoring.kt:24,51-55` serves `/metrics` with no auth or
     IP restriction, for data-accessor, masterdata-server and frontend (each
-    `Application.kt:32`); the deprecated sunrise-sunset keeps a duplicate copy at
-    `pvlogger-sunrise-sunset/.../configuration/Monitoring.kt:19,23` (dies with item 28).
+    `Application.kt:32`). The duplicate copy in the deprecated sunrise-sunset module is
+    gone — the module was deleted 2026-08-27 (backlog item 28).
 
     Low severity on inspection: only JVM, process and HTTP meters are registered
     (`Monitoring.kt:41-49`) — no PV or business data is exposed — and no Ingress routes
@@ -129,8 +129,8 @@ depth / operational.
 
 15. **Database connection pool likely too small.** *Unchanged; reclassified.*
 
-    `maxPoolSize = 3` in `application-prod.conf:22` of data-accessor,
-    masterdata-server and sunrise-sunset (deprecated, ignore). This is an
+    `maxPoolSize = 3` in `application-prod.conf:22` of data-accessor and
+    masterdata-server (a third copy went with sunrise-sunset on 2026-08-27). This is an
     availability/capacity concern rather than a security one — it was mis-filed as P2
     security in the original review. Raise to 10–15 if saturation is ever observed;
     there is no evidence of it today, so this is speculative and low priority.
@@ -142,8 +142,8 @@ depth / operational.
     (line 27) when swapping to the canonical URL. No service subscribes it to shutdown —
     `configuration/Databases.kt:7-10` in both data-accessor and masterdata-server just
     call `connect()`, and no `Application.kt` subscribes to `ApplicationStopping`. The
-    only lifecycle subscriptions in the repo are log-only, in the deprecated
-    sunrise-sunset (`Application.kt:45,48,51`).
+    only lifecycle subscriptions in the repo used to be log-only ones in sunrise-sunset,
+    which went with the module on 2026-08-27 — so there are now none at all.
 
     Fix: subscribe `DatabaseFactory.close()` to `ApplicationStopping` in the shared
     bootstrap (**ADR-0018**) so all services inherit it. The Go side already does this
@@ -198,13 +198,13 @@ depth / operational.
 7. ~~**HTTP client `LogLevel.ALL` in production**~~ — **still fixed**, re-verified
    2026-08-17. `pvlogger-shared-ktor/.../PvHttpClient.kt:14` sets `LogLevel.INFO`; the
    per-service copies were deduplicated into the shared library in commit `81b3aa5f`
-   (**ADR-0018**). The only remaining per-service `HttpClient(` is
-   `pvlogger-sunrise-sunset/.../SunriseSunsetService.kt:37`, also `INFO`. No
+   (**ADR-0018**). The last per-service `HttpClient(` was in sunrise-sunset and went with
+   that module on 2026-08-27, so the shared client is now the only one. No
    `LogLevel.ALL`/`BODY`/`HEADERS` anywhere.
 8. ~~**Trace-level root logger in production**~~ — **still fixed**, re-verified
-   2026-08-17. All five `logback.xml` files have `<root level="INFO">`;
-   `pvlogger-shared-ktor/.../Monitoring.kt:29` and sunrise-sunset `Application.kt:38` both
-   set `CallLogging { level = Level.INFO }`.
+   2026-08-17. All `logback.xml` files have `<root level="INFO">` (four since
+   sunrise-sunset was deleted on 2026-08-27) and
+   `pvlogger-shared-ktor/.../Monitoring.kt:29` sets `CallLogging { level = Level.INFO }`.
 9. ~~**HTTP client without timeout (fusionsolar-auth)**~~ — **still fixed**, re-verified
    2026-08-17: `pvlogger-fusionsolar-auth/internal/auth/auth.go:49` sets
    `Timeout: 30 * time.Second`. Note this fix was *not* applied repo-wide — see items 40
@@ -229,8 +229,8 @@ depth / operational.
 Also fixed before the 2026-03-13 review and still holding: **CORS lockdown** (commits
 `a581720`, `2cbd3f5`, `fc3dbd2` — see the note above) and **`development = false` in all
 `application-prod.conf` files** (commit `d7d34cf`; re-verified 2026-08-17 at line 2 of
-every prod config, with `true` only in dev configs and
-`pvlogger-sunrise-sunset/src/main/resources/application-test.conf:2`).
+every prod config, with `true` only in dev configs — the one test-config instance went
+with sunrise-sunset on 2026-08-27).
 
 ## Withdrawn
 

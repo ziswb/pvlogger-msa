@@ -238,11 +238,28 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
 
     **Superseded 2026-08-07**: the service turned out to be deprecated (ADR-0005), so the hard-coded coordinates (the
     operator's home — personal location data in repo and image) disappear with the module. Folded into item 28.
-28. **Retire `pvlogger-sunrise-sunset`** (deprecated per ADR-0005: it gated FusionSolar collection to daylight hours,
-    and that gating is no longer wanted). Delete the module (Gradle settings, CLAUDE.md service map, CONTEXT.md rows),
-    drop the `sunrisesunset` database, and remove its entry from the chart's db-backup job — the chart/database side is
-    infrastructure backlog item 32. Until deleted, the module still ships the operator's home coordinates in its HOCON
-    profiles (ex item 27).
+28. ~~**Retire `pvlogger-sunrise-sunset`**~~ (deprecated per ADR-0005: it gated FusionSolar collection to daylight
+    hours, and that gating is no longer wanted).
+
+    **Module deleted 2026-08-27.** 26 tracked files gone (`Application.kt`, the Koin/Ktor configuration, the
+    `SunriseSunsetDao`/`SolarTable` Exposed layer, the REST controller and paths, `SunriseSunsetService`, three HOCON
+    profiles, `V1__InitialSchema.sql`, the Dockerfile and the tests), plus its entry in `settings.gradle.kts`, its
+    `k8s_yaml(...)` line in the Tiltfile (which pointed at a path that no longer exists anyway — item 23), the
+    CLAUDE.md service-map row, the CONTEXT.md service row, and the TROUBLESHOOTING.md ShadowJar affected-services
+    entry. Verified before deleting: nothing in the repo referenced it (no Kotlin/Go/TypeScript imports, no REST path
+    constants in `pvlogger-shared-rest`) and `kubectl get deploy,svc,cronjob -A` showed nothing deployed. With it goes
+    the operator's home coordinates (ex item 27), the last per-service `HttpClient` (ADR-0018), the duplicate
+    `/metrics` registration (security item 18), and the repo's only `application-test.conf`. `./gradlew build` green
+    afterwards.
+
+    **Two remnants, both outside this repo and both deliberate:**
+    - The `sunrisesunset` **database still exists** on the central server (7 937 kB, verified 2026-08-27) and is still
+      listed in the chart's `db-backup.yaml`. Both are deliberately left alone and stay in step: the chart entry is
+      correct while the database exists (`pg_dump` of a dropped database would fail the backup job), and dropping a
+      live database needs an explicit operator decision. Infrastructure backlog item 32 does both together.
+    - `pvlogger-database/migration/migrate_db_aio.sh:23` still names `sunrisesunset` in the PG18 migration's database
+      list. Left alone on purpose: it is the record of a migration that did include that database (item 26 covers
+      archiving that directory).
 29. **Introduce `fsdata` schema migrations** — a known gap since the Kotlin→Go rewrite of fusionsolar (rationale in
     ADR-0002, ex open question 4), not a decision.
 

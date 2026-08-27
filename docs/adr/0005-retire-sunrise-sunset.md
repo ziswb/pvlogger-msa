@@ -26,3 +26,10 @@ database lingers in the db-backup job).
   infrastructure backlog item 32 for the chart/database side.
 - Consolidation backlog item 27 (externalize the hard-coded site coordinates)
   is superseded: the coordinates disappear with the module.
+
+## Follow-through (2026-08-27)
+
+The module was deleted from this repo — see backlog item 28 for the inventory of
+what went and what was verified first. The `sunrisesunset` database and its
+`db-backup.yaml` entry outlive it: dropping a live database needs an explicit
+operator decision, so that half stays with infrastructure backlog item 32.
