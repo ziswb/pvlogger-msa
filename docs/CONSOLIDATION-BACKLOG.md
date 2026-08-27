@@ -244,8 +244,17 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     infrastructure backlog item 32. Until deleted, the module still ships the operator's home coordinates in its HOCON
     profiles (ex item 27).
 29. **Introduce `fsdata` schema migrations** — a known gap since the Kotlin→Go rewrite of fusionsolar (rationale in
-    ADR-0002, ex open question 4), not a decision: the DDL exists only in the running DB and old dumps. Two steps:
-    (1) **baseline now** — `pg_dump --schema-only` the live `fsdata` and commit it as migration 0001; (2) **wire a
+    ADR-0002, ex open question 4), not a decision.
+
+    *Rationale corrected 2026-08-27:* this item used to read "the DDL exists only in the running DB and old dumps",
+    which is stale and made the item look like a data-recoverability risk. The full DDL **is** committed, as sqlc's
+    schema input: `pvlogger-fusionsolar/internal/database/schema.fsdata.sql` (209 lines — 9 `fs_*` tables with their
+    primary keys and indexes). What is missing is a *runner* and any *drift detection*: nothing applies that file to
+    a database, nothing verifies it still matches production, and it is maintained by hand alongside
+    `query.fsdata.sql`. So the risk is silent divergence between file and live schema, not an unrecoverable schema —
+    which puts this item well below where its old wording implied. Two steps:
+    (1) **baseline** — verify `schema.fsdata.sql` against a `pg_dump --schema-only` of the live `fsdata` (it, not a
+    fresh dump, should become migration 0001 if the two agree; reconcile first if they do not); (2) **wire a
     runner** — recommended: a `migrate` job inside `pvlogger-fusionsolar` itself (job-dispatch pattern; no new service,
     per ADR-0007) using tern (pgx ecosystem) with `go:embed`-ded SQL files, executed manually as a plain K8s Job. The
     operator's original plan — a dedicated manually-activated migration service — would work but fails the ADR-0007 bar;
@@ -410,11 +419,26 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     with no change to indexes, schema or code. U32 escaped only by luck: identical 1-row fantasy, but the cost tie put
     the materialised side on the outside, so each table is scanned once.
 
-    Why it never self-healed, and why this will recur: `autovacuum_analyze_scale_factor = 0.05` on a 34 M-row table
+    Why it never self-healed: `autovacuum_analyze_scale_factor = 0.05` on a 34 M-row table
     demands ~1.7 M modifications, while these tables grow a few thousand rows a day — the next autoanalyze was ~11
     months out. A scale-factor threshold assumes churn is proportional to table *size*; for append-only fact tables it
-    is proportional to *time*. Every large table in `pvdata` carries this trap, so **any** future new logic device,
-    register range or device type will silently produce catastrophic plans until someone runs `ANALYZE` by hand.
+    is proportional to *time*. Every large table in `pvdata` carries that trap.
+
+    **How likely is a recurrence? Narrower than first written (corrected 2026-08-27, operator input).** An earlier
+    draft of this item claimed "**any** future new logic device, register range or device type will silently produce
+    catastrophic plans" — which over-reads the trigger. The dongle logic device has existed since the start of the
+    project; what changed on 2026-08-14 was only that we *started reading it over Modbus* (its Modbus reachability
+    was unknown before), and the operator expects **no new devices in future**. So the remaining trigger is a single
+    one: a **`register_address` value that is new to the MCV list**. That is not hypothetical — the fast collector's
+    hard-coded KPI set changed twice in August (32080/37113 retired, 37498/37500/37502/37516 added, items 33/34) and
+    a masterdata CSV import can introduce addresses for the full sweep — but it is rare, operator-initiated, and V10
+    caps the exposure at 1-3 days rather than ~11 months.
+
+    **Runbook consequence, which is the cheap half of the remaining fix:** after changing a collector's register set
+    or importing masterdata, run `ANALYZE modbus_response_data, modbus_register_integer_values,
+    modbus_register_uinteger_values;` on `pvdata` instead of waiting out V10's 1-3 day window. That covers the same
+    ground as the two-statement application change discussed under the follow-ups below, which is therefore
+    downgraded to cheap insurance to fold in the next time `RegisterValueDao` is touched — not standalone work.
 
     **Fixed** by `pvlogger-modbus-data-accessor/src/main/resources/db/migration/V10__FixAutoanalyzeThresholds.sql`:
     flat `autovacuum_analyze_threshold = 5000` with `autovacuum_analyze_scale_factor = 0` on the seven large
