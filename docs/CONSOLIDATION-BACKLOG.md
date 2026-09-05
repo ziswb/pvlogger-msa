@@ -553,3 +553,28 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     - **infrastructure repo:** the data-accessor's CPU limit is `100m` with `requests == limits`
       (`pvlogger-chart/values.yaml`). Not implicated here — the pod idles at 2 m and the wait was entirely in
       PostgreSQL — but tight for a JVM service.
+39. ~~🔴 **`/livedata` goes silent for the sessions that stay connected** (observed 2026-09-05)~~
+
+    **Resolved 2026-09-05 (ADR-0019).** The frontend's hand-rolled WebSocket fan-out
+    (`plugins/WebSockets.kt`: `MutableSharedFlow` without replay + `NotificationProducer` +
+    `NotificationProducerScheduler` with an `AtomicInteger` behind a `synchronized` block) had three defects:
+    - **The shared polling job was launched in the first client's session scope**
+      (`scheduler.start(this)` inside the `webSocket { }` block). When that client disconnected while another was
+      still connected, `stop()` only decremented the counter — but the session scope was cancelled anyway, killing
+      the job. Every remaining browser then received nothing until the *last* one disconnected. Two tabs, or a
+      reload while a second device watches, were enough to trigger it.
+    - **60 s initial delay and no replay**: a fresh connection saw no live values for a minute, and a session
+      shorter than that received none at all.
+    - **A data-accessor exception ended the producer flow for good**, and a slow subscriber back-pressured the
+      shared `emit`, stalling all other sessions.
+
+    Replaced by `service/LiveKpiPublisher`: `shareIn(application, SharingStarted.WhileSubscribed(5 s, 60 s),
+    replay = 1)` over a `retryWhen`-guarded poll flow, collected `.conflate()`d per session. The
+    "no clients → no data-accessor traffic" property is kept (that is what `WhileSubscribed` *is*), the loop now
+    belongs to the application rather than to a client, and a joining browser gets the cached value at once.
+    `DataAccessorRestProxy` also caps the latest-KPI read at 15 s — the shared `PvHttpClient` default is 600 s,
+    sized for the collectors' bulk writes, which is well past the next poll.
+
+    Diagnosis note for the future: Ktor's CallLogging writes its `101 Switching Protocols: GET - /livedata in
+    <n>ms` line when the session *ends*, and `<n>` is the session's lifetime — an open WebSocket produces no log
+    line at all, so that entry is never evidence of a slow upgrade.

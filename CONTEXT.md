@@ -78,7 +78,9 @@ themselves pragmatically — default to a job/endpoint in an existing service
   Derivations (`pvlogger-shared-modbus/kpis/`): `consuming = producing − exporting
   + importing`; `selfConsuming = producing − exporting`.
 - **Live data** — the latest KPI row, pushed to the browser over the `/livedata`
-  WebSocket (refreshed every 60 s).
+  WebSocket. The frontend polls the data accessor once every 60 s and fans the
+  result out to all connected sessions; polling runs only while at least one
+  browser is connected (ADR-0019).
 
 ## Component map
 
@@ -88,7 +90,7 @@ themselves pragmatically — default to a job/endpoint in an existing service
 |---|---|
 | `pvlogger-modbus-data-accessor` | **The central data service.** Owns the `pvdata` DB (register values, raw KPI registers, house KPIs). All collectors write through it; frontend and exporter read from it. REST paths are defined in `pvlogger-shared-rest`. |
 | `pvlogger-masterdata-server` | Owns the `pvmasterdata` DB. Imports Huawei's register definitions from CSVs; project-curated definitions (the DONGLE unit-100 block) ship as Flyway data migrations instead (ADR-0017). Serves the catalog to collectors and the mock server. |
-| `pvlogger-frontend` | Serves the prebuilt Angular SPA, proxies the latest KPI as the `/livedata` WebSocket. History data goes **directly** SPA → data accessor (via ingress path `/v1`). |
+| `pvlogger-frontend` | Serves the prebuilt Angular SPA, proxies the latest KPI as the `/livedata` WebSocket (one shared 60 s poll for all sessions, ADR-0019). History data goes **directly** SPA → data accessor (via ingress path `/v1`). |
 | `pvlogger-modbus-mock-server` | Emulates a Modbus TCP device (raw TCP, not HTTP) using real register definitions from the masterdata server. **Local development only — never deployed to production** (confirmed 2026-08-07); the Helm chart's mock-server template exists solely for local use. |
 
 ### Go CronJob collectors (short-lived batch runs)

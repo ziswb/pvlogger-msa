@@ -25,6 +25,7 @@ old one. Half a page max; the point is the *why*. Template: see
 - [0016 — One KPI path: fast collects per-minute, full sweeps hourly in a uniform window](0016-one-kpi-path-fast-per-minute-full-hourly.md)
 - [0017 — Project-curated register definitions enter masterdata via Flyway migration; vendor CSVs stay import-only](0017-project-curated-registers-enter-masterdata-via-migration.md)
 - [0018 — Ktor service bootstrap lives in pvlogger-shared-ktor](0018-ktor-bootstrap-in-shared-ktor.md)
+- [0019 — Live KPI fan-out is a shared flow, not a hand-rolled scheduler](0019-live-kpi-fanout-via-sharein-whilesubscribed.md)
 
 ## Candidate ADRs (implicit decisions worth writing down)
 
