@@ -23,7 +23,8 @@ export class KpiFetchServiceService implements OnDestroy {
   private subject: WebSocketSubject<KpiValues> | undefined;
   private wsSubscription: Subscription | undefined;
   private fetchSubscription: Subscription | undefined;
-  private maxCreatedAtReceived = 0;
+  private seenCreatedAt = new Set<number>();
+  private latest: KpiValues | undefined;
 
   constructor(private http: HttpClient, private appBus: AppBus) {
   }
@@ -69,7 +70,13 @@ export class KpiFetchServiceService implements OnDestroy {
 
   private publishData(data: KpiValues) {
     this.sortData();
-    this.appBus.publishKpiValues(data);
+    // Always notify, so the charts redraw whichever source just delivered —
+    // but never let an older row move the current-value tiles backwards. The
+    // tail of the day's history can arrive after a newer live value.
+    if (!this.latest || data.createdAt >= this.latest.createdAt) {
+      this.latest = data;
+    }
+    this.appBus.publishKpiValues(this.latest);
   }
 
   public detachFromLiveData() {
@@ -82,7 +89,8 @@ export class KpiFetchServiceService implements OnDestroy {
   }
 
   public clearData() {
-    this.maxCreatedAtReceived = 0;
+    this.seenCreatedAt.clear();
+    this.latest = undefined;
     this.solarpowerdata = [[]];
     this.gridpowerdata = [[]];
     this.usedpowerdata = [[]];
@@ -95,10 +103,15 @@ export class KpiFetchServiceService implements OnDestroy {
   }
 
   private pushData(value: KpiValues) {
-    if (value.createdAt <= this.maxCreatedAtReceived) {
+    // Deduplicate by timestamp, not by a monotonic high-water mark: the day's
+    // history (GET /v1/daydata) and the live WebSocket are independent
+    // requests, and since the socket delivers its first value immediately
+    // (ADR-0019) it normally wins the race. A high-water mark would let that
+    // one live value reject the entire day that arrives right after it.
+    if (this.seenCreatedAt.has(value.createdAt)) {
       return;
     }
-    this.maxCreatedAtReceived = value.createdAt;
+    this.seenCreatedAt.add(value.createdAt);
     this.solarpowerdata.push([value.createdAt, value.solarPower]);
     this.gridpowerdata.push([value.createdAt, value.gridPower]);
     this.usedpowerdata.push([value.createdAt, value.ownConsumption]);

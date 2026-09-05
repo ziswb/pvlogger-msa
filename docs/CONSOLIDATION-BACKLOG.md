@@ -578,3 +578,14 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     Diagnosis note for the future: Ktor's CallLogging writes its `101 Switching Protocols: GET - /livedata in
     <n>ms` line when the session *ends*, and `<n>` is the session's lifetime — an open WebSocket produces no log
     line at all, so that entry is never evidence of a slow upgrade.
+
+    **Follow-up 2026-09-06 (frontend 3.11.1): the fix exposed a latent race in the SPA.** `pushData` in
+    `kpi-fetch-service.service.ts` deduplicated with a monotonic high-water mark (`createdAt <=
+    maxCreatedAtReceived` → drop). The day's history (`GET /v1/daydata`) and the live socket are two independent
+    requests; while the socket stayed silent for 60 s the history always won that race, so the mark was only ever
+    advanced by data already plotted. With the socket answering in milliseconds it now wins, sets the mark to the
+    newest timestamp of the day, and every history row arriving right after is older — the whole day was dropped
+    and the dashboard started empty, filling one live point per minute. Dedup is now by seen timestamp (a `Set`),
+    which is what the guard was actually for; `publishData` keeps a separate newest-published row so a history
+    tail arriving after a live value still redraws the charts without moving the current-value tiles backwards.
+    Covered by `kpi-fetch-service.service.spec.ts`.

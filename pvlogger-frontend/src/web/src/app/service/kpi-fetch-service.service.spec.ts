@@ -30,17 +30,25 @@ describe('KpiFetchServiceService', () => {
       expect(service.dailyproduceddata[1]).toEqual([1000, 0]); // dailyEnergyYield defaults to 0
     });
 
-    it('should drop data with timestamp <= last received', () => {
-      const kpi1 = createKpi(1000);
-      const kpi2 = createKpi(1000); // same timestamp
-      const kpi3 = createKpi(500);  // older timestamp
+    it('should drop a repeated timestamp', () => {
+      (service as any).pushData(createKpi(1000));
+      (service as any).pushData(createKpi(1000)); // the same row again
 
-      (service as any).pushData(kpi1);
-      (service as any).pushData(kpi2);
-      (service as any).pushData(kpi3);
-
-      // Only the first one should have been pushed
       expect(service.solarpowerdata.length).toBe(2); // initial [[]] + 1 push
+    });
+
+    it('should still accept the day history when a live value arrived first', () => {
+      // Regression: the live WebSocket delivers its first value immediately
+      // (ADR-0019), so it normally beats the /v1/daydata response. A monotonic
+      // high-water mark used to reject the whole day that arrived right after,
+      // leaving the dashboard with a single live point.
+      (service as any).pushData(createKpi(1800)); // live value for 'now'
+
+      [600, 1200, 1800].forEach((createdAt) => (service as any).pushData(createKpi(createdAt)));
+
+      // initial [[]] + the live point + the two history points not yet seen
+      expect(service.solarpowerdata.length).toBe(4);
+      expect(service.solarpowerdata.slice(1).map((entry) => entry[0])).toEqual([1800, 600, 1200]);
     });
 
     it('should accept data with increasing timestamps', () => {
@@ -57,18 +65,6 @@ describe('KpiFetchServiceService', () => {
       (service as any).pushData(kpi);
 
       expect(service.dailyexporteddata[1]).toEqual([1000, -7.5]);
-    });
-
-    it('should track maxCreatedAtReceived', () => {
-      (service as any).pushData(createKpi(100));
-      expect((service as any).maxCreatedAtReceived).toBe(100);
-
-      (service as any).pushData(createKpi(500));
-      expect((service as any).maxCreatedAtReceived).toBe(500);
-
-      // Old data doesn't update the tracker
-      (service as any).pushData(createKpi(200));
-      expect((service as any).maxCreatedAtReceived).toBe(500);
     });
   });
 
@@ -89,10 +85,12 @@ describe('KpiFetchServiceService', () => {
       expect(service.dailyproduceddata).toEqual([[]]);
     });
 
-    it('should reset maxCreatedAtReceived to 0', () => {
+    it('should forget which timestamps were already seen', () => {
       (service as any).pushData(createKpi(500));
       service.clearData();
-      expect((service as any).maxCreatedAtReceived).toBe(0);
+      (service as any).pushData(createKpi(500)); // same day, freshly loaded
+
+      expect(service.solarpowerdata.length).toBe(2);
     });
 
     it('should publish empty KpiValues via AppBus', (done) => {
@@ -108,9 +106,43 @@ describe('KpiFetchServiceService', () => {
     it('should allow new data after clearing', () => {
       (service as any).pushData(createKpi(100));
       service.clearData();
-      (service as any).pushData(createKpi(50)); // would have been rejected before clear
+      (service as any).pushData(createKpi(50)); // a different day, older timestamps
 
       expect(service.solarpowerdata.length).toBe(2);
+    });
+  });
+
+  describe('publishData', () => {
+    it('should publish the value it is given', (done) => {
+      appBus.kpiValues.subscribe((value) => {
+        if (value.createdAt === 0) { return; } // the clearData reset
+        expect(value.createdAt).toBe(300);
+        done();
+      });
+
+      (service as any).publishData(createKpi(300, 4.2));
+    });
+
+    it('should not let a late history row move the current values backwards', () => {
+      const published: KpiValues[] = [];
+      appBus.kpiValues.subscribe((value) => published.push(value));
+
+      (service as any).publishData(createKpi(1800, 4.2)); // live value for 'now'
+      (service as any).publishData(createKpi(1200, 1.1)); // last row of the history, arriving after
+
+      expect(published.length).toBe(2); // both still notify, so the charts redraw
+      expect(published[1].createdAt).toBe(1800);
+      expect(published[1].solarPower).toBe(4.2);
+    });
+
+    it('should follow a newer value', () => {
+      const published: KpiValues[] = [];
+      appBus.kpiValues.subscribe((value) => published.push(value));
+
+      (service as any).publishData(createKpi(1200, 1.1));
+      (service as any).publishData(createKpi(1800, 4.2));
+
+      expect(published[published.length - 1].createdAt).toBe(1800);
     });
   });
 
