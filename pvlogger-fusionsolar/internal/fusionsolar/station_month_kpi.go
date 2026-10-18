@@ -20,6 +20,9 @@ func (f *FusionSolarAccess) FetchMonthData() (*model.KpiStationMonthResponse, er
 	if err != nil {
 		return nil, err
 	}
+	if err := requireJSON200("KpiStationMonth", response.JSON200 != nil, response.HTTPResponse, response.Body); err != nil {
+		return nil, err
+	}
 	logging.Info("station month KPIs fetched successfully")
 	return response, nil
 }

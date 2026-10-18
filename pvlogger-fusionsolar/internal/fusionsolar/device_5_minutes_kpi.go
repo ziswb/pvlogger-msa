@@ -36,6 +36,9 @@ func (f *FusionSolarAccess) FetchDevFiveMinutesData() (*model.DeviceFiveMinutesK
 	if err != nil {
 		return nil, err
 	}
+	if err := requireJSON200("DeviceFiveMinutesKpi", response.JSON200 != nil, response.HTTPResponse, response.Body); err != nil {
+		return nil, err
+	}
 	logging.Info("device five minutes KPIs fetched successfully")
 	return response, nil
 }

@@ -20,6 +20,9 @@ func (f *FusionSolarAccess) FetchStationDayKpi() (*model.KpiStationDayResponse, 
 	if err != nil {
 		return nil, err
 	}
+	if err := requireJSON200("KpiStationDay", response.JSON200 != nil, response.HTTPResponse, response.Body); err != nil {
+		return nil, err
+	}
 	logging.Info("station day KPIs fetched successfully")
 	return response, nil
 }

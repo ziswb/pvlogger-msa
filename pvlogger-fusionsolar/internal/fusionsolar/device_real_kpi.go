@@ -24,6 +24,9 @@ func (f *FusionSolarAccess) FetchDeviceRealData() (*model.DeviceRealKpiResponse,
 	if err != nil {
 		return nil, err
 	}
+	if err := requireJSON200("DeviceRealKpi", response.JSON200 != nil, response.HTTPResponse, response.Body); err != nil {
+		return nil, err
+	}
 	logging.Info("device real data fetched successfully")
 	return response, nil
 }

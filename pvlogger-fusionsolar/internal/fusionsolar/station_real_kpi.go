@@ -22,6 +22,9 @@ func (f *FusionSolarAccess) FetchStationRealTimeData() (*model.StationRealKpiRes
 	if err != nil {
 		return nil, err
 	}
+	if err := requireJSON200("StationRealKpi", response.JSON200 != nil, response.HTTPResponse, response.Body); err != nil {
+		return nil, err
+	}
 	logging.Info("station real time data fetched successfully")
 	return response, nil
 }

@@ -20,6 +20,9 @@ func (f *FusionSolarAccess) FetchYearData() (*model.KpiStationYearResponse, erro
 	if err != nil {
 		return nil, err
 	}
+	if err := requireJSON200("KpiStationYear", response.JSON200 != nil, response.HTTPResponse, response.Body); err != nil {
+		return nil, err
+	}
 	logging.Info("station year KPIs fetched successfully")
 	return response, nil
 }
