@@ -18,8 +18,8 @@ server, and as the code stands the services cannot log in with the app role the 
 hard-coded, and the bootstrap assumes a superuser. The work has to ship in released images before the rehearsal
 import (phase 4), which waits only on the NVMe hardware (phase 3). It also closes security finding 3 (database
 traffic in plaintext) at no extra cost, since CloudNativePG brings the server-side TLS that finding was blocked on.
-*Code side done 2026-10-19* (role, bootstrap, TLS setting; see item 40). What remains is building and deploying
-the images and the role switch on .2, both driven from the infrastructure repo.
+*Code side done 2026-10-19* (role, bootstrap, TLS setting; see item 40), and the services run as the `pvlogger`
+role on .2 since the same day. What remains is the move itself (phase 4, after the NVMe hardware of phase 3).
 
 Runners-up, each under an hour: the first bullet of item 41 (confirm V11 works in production), and security
 findings 40 and 41 (HTTP clients without a timeout). Everything else open here is low priority hygiene.
@@ -107,7 +107,7 @@ findings 40 and 41 (HTTP clients without a timeout). Everything else open here i
     cutover night.
 
     **Progress 2026-10-19 — code done, released as data accessor 3.11.0, masterdata server 3.5.0, fusionsolar
-    3.4.0 (images not built yet).** Role and bootstrap:
+    3.4.0.** Role and bootstrap:
     - Both prod configs keep `user = "postgres"` as the default and take `${?DB_USER}` as override, so the current
       deployment is unaffected; the chart sets `DB_USER` once the app role exists.
     - `DatabaseFactory.connect()` now connects to the target database first. Only if PostgreSQL answers SQLSTATE
@@ -140,8 +140,10 @@ findings 40 and 41 (HTTP clients without a timeout). Everything else open here i
     3. At the cutover: `POSTGRESQL_SSLMODE=require` in the chart. `require` encrypts without checking the
        certificate; `verify-full` would need CloudNativePG's CA shipped to every client — possible later.
 
-    Still open: build and deploy the three images (`scripts/build.sh`, then the chart tags), and steps 1-3 above,
-    which all live in the infrastructure repo.
+    **Done on .2 2026-10-19** (reported by the infrastructure side): images deployed, steps 1 and 2 applied — the
+    services and `db-backup` run as `pvlogger`, which owns the three databases and their objects (runbook
+    `infrastructure/docs/runbooks/pvlogger-db-role.md`). Still open: step 3 at the cutover, i.e. phase 4 of the
+    resilience plan, which waits on the NVMe hardware (phase 3). Close this item after the cutover.
 41. 🟡 **Remaining follow-ups from item 38** (split out 2026-10-19 so that item 38 can sit under Done)
 
     Item 38's outage is fixed and verified. These are its leftovers, all small:
