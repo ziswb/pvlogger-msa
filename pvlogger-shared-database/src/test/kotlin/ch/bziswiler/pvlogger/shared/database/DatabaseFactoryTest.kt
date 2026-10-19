@@ -4,6 +4,7 @@ import ch.bziswiler.pvlogger.shared.configuration.DatabaseConfig
 import org.junit.jupiter.api.Test
 import org.testcontainers.containers.PostgreSQLContainer
 import java.sql.DriverManager
+import java.sql.SQLException
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -48,9 +49,22 @@ class DatabaseFactoryTest {
         assertTrue(System.nanoTime() - started < 10_000_000_000, "should fail without retrying")
     }
 
+    @Test
+    fun `the TLS mode reaches the driver - require is refused by a server without TLS`() {
+        // The test server, like today's central server, has no TLS. "prefer" (every other
+        // test here) falls back to plaintext; "require" must not.
+        val error =
+            assertFailsWith<SQLException> {
+                DriverManager.getConnection(config(postgres.username, "postgres", "require").maintenanceUrl, postgres.username, postgres.password)
+            }
+
+        assertContains(error.message!!, "SSL")
+    }
+
     private fun config(
         user: String,
         dbName: String,
+        sslMode: String = DatabaseConfig.DEFAULT_SSL_MODE,
     ) = DatabaseConfig(
         driverClass = "org.postgresql.Driver",
         dbServerUrl = serverUrl(),
@@ -58,6 +72,7 @@ class DatabaseFactoryTest {
         user = user,
         password = "pw",
         maxPoolSize = 1,
+        sslMode = sslMode,
     )
 
     private fun probeTableOwner(dbName: String): String =

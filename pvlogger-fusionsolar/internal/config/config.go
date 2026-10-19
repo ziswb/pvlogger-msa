@@ -40,6 +40,9 @@ type DatabaseConfig struct {
 	Host     string
 	Port     int
 	DbName   string
+	// TLS to PostgreSQL (security finding 3): "prefer" works with and without
+	// server TLS; the chart sets "require" once the server has it (backlog 40).
+	SslMode string
 }
 
 func Load() *Config {
@@ -63,6 +66,7 @@ func Load() *Config {
 			Host:     env.GetEnvChecked("POSTGRESQL_HOST"),
 			Port:     env.GetIntEnv("POSTGRESQL_PORT", "5434"),
 			DbName:   env.GetEnv("DB_NAME", "fsdata"),
+			SslMode:  env.GetEnv("POSTGRESQL_SSLMODE", "prefer"),
 		},
 		K8s: K8sConfig{
 			Namespace:       env.GetEnv("K8S_NAMESPACE", "pvlogger"),

@@ -59,6 +59,13 @@ depth / operational.
    The server-side blocker goes away with that move; the client switch is part of **backlog item 40**, which must
    ship before the cutover anyway.
 
+   *Client side done 2026-10-19 (backlog 40; data accessor 3.11.0, masterdata server 3.5.0, fusionsolar 3.4.0).*
+   No client hard-codes the TLS mode any more: the JVM services read `sslMode` (`POSTGRESQL_SSLMODE`), fusionsolar
+   reads `POSTGRESQL_SSLMODE`, the battery simulator takes `-db-sslmode`. All default to `prefer`, because the
+   central server refuses TLS today and `require` would break the release before the move. The finding closes when
+   the chart sets `POSTGRESQL_SSLMODE=require` at the cutover. Residual after that: `require` does not verify the
+   server certificate (`verify-full` would need CloudNativePG's CA on every client).
+
 42. **Unauthenticated mutating write endpoints on the data accessor** — *found
     2026-08-17.* 🔴
 

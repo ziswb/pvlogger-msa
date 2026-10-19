@@ -33,6 +33,7 @@ func main() {
 	dbPort := flag.Int("db-port", 5434, "PostgreSQL port")
 	dbName := flag.String("db-name", "pvdata", "database name")
 	dbUser := flag.String("db-user", "battery_sim_ro", "database user (password via PGPASSWORD)")
+	dbSslMode := flag.String("db-sslmode", "prefer", "TLS to PostgreSQL: prefer falls back to plaintext, require does not")
 	flag.Parse()
 
 	if len(batteries) == 0 {
@@ -61,7 +62,7 @@ func main() {
 		engines = append(engines, sim.NewEngine(b, *maxGap, loc))
 	}
 
-	db, err := database.NewDatabase(*dbHost, *dbPort, *dbName, *dbUser, password)
+	db, err := database.NewDatabase(*dbHost, *dbPort, *dbName, *dbUser, password, *dbSslMode)
 	if err != nil {
 		logging.Fatal("failed to connect to database", "error", err)
 	}

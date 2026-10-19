@@ -18,6 +18,8 @@ server, and as the code stands the services cannot log in with the app role the 
 hard-coded, and the bootstrap assumes a superuser. The work has to ship in released images before the rehearsal
 import (phase 4), which waits only on the NVMe hardware (phase 3). It also closes security finding 3 (database
 traffic in plaintext) at no extra cost, since CloudNativePG brings the server-side TLS that finding was blocked on.
+*Code side done 2026-10-19* (role, bootstrap, TLS setting; see item 40). What remains is building and deploying
+the images and the role switch on .2, both driven from the infrastructure repo.
 
 Runners-up, each under an hour: the first bullet of item 41 (confirm V11 works in production), and security
 findings 40 and 41 (HTTP clients without a timeout). Everything else open here is low priority hygiene.
@@ -104,7 +106,8 @@ findings 40 and 41 (HTTP clients without a timeout). Everything else open here i
     Test against the rehearsal import ADR-0022 plans (by day, while the old server is still live), not on the
     cutover night.
 
-    **Progress 2026-10-19 — role and bootstrap done (code, not yet released):**
+    **Progress 2026-10-19 — code done, released as data accessor 3.11.0, masterdata server 3.5.0, fusionsolar
+    3.4.0 (images not built yet).** Role and bootstrap:
     - Both prod configs keep `user = "postgres"` as the default and take `${?DB_USER}` as override, so the current
       deployment is unaffected; the chart sets `DB_USER` once the app role exists.
     - `DatabaseFactory.connect()` now connects to the target database first. Only if PostgreSQL answers SQLSTATE
@@ -115,9 +118,30 @@ findings 40 and 41 (HTTP clients without a timeout). Everything else open here i
       creates and migrates its database; a role without CREATEDB starts on a database it owns (the post-import
       shape), including an owner-only `ALTER TABLE` like V10; a role that can do neither fails fast.
 
-    Still open: TLS for the clients (`dbUrlParams`, fusionsolar's `sslmode=disable`), releasing data accessor,
-    masterdata server and fusionsolar, and the import requirements (table ownership, `battery_sim_ro`) in the
-    infrastructure repo's phase 4 checklist.
+    TLS is a **setting, not a fixed mode** — the central server (.2) refuses TLS (checked from the infrastructure
+    side 2026-10-19), so a hard `require` would break the release before the move:
+    - JVM: `sslMode` in `DatabaseConfig` (default `prefer`, validated at startup), appended to every URL the
+      bootstrap builds — target, maintenance database and Flyway. Prod configs take `${?POSTGRESQL_SSLMODE}`.
+    - fusionsolar: `POSTGRESQL_SSLMODE`, default `prefer`, replaces the hard `sslmode=disable`. pgx supports
+      `prefer` (verified 2026-10-19 against a server without TLS: `prefer` connects, `require` is refused).
+    - Battery simulator: `-db-sslmode` flag, default `prefer`.
+    - Tests: `DatabaseConfigTest` (URL building, unknown mode rejected); `DatabaseFactoryTest` shows `require` is
+      refused by the non-TLS test server while every other test there connects on `prefer`.
+
+    **Rollout, agreed with the infrastructure side 2026-10-19 — switch the role on .2 first, before the move:**
+    1. Create the `pvlogger` role on `central_db`, make it owner of `pvdata`, `pvmasterdata`, `fsdata` and every
+       object in them (including the Flyway history tables), and run the services with it on .2. The night cutover
+       then only changes the host, as ADR-0022 promises, and the ownership requirement above is met by
+       construction: three databases means CloudNativePG's monolith import, which keeps the owners it finds.
+       `battery_sim_ro` and its grants must still come across with the import.
+    2. Chart settings (infrastructure repo): `DB_USER=pvlogger` for data accessor and masterdata server,
+       `POSTGRESQL_USERNAME=pvlogger` for fusionsolar (the two languages already used different names), and the
+       `db-backup` CronJob's user in the same change — as owner, `pg_dump` works without superuser.
+    3. At the cutover: `POSTGRESQL_SSLMODE=require` in the chart. `require` encrypts without checking the
+       certificate; `verify-full` would need CloudNativePG's CA shipped to every client — possible later.
+
+    Still open: build and deploy the three images (`scripts/build.sh`, then the chart tags), and steps 1-3 above,
+    which all live in the infrastructure repo.
 41. 🟡 **Remaining follow-ups from item 38** (split out 2026-10-19 so that item 38 can sit under Done)
 
     Item 38's outage is fixed and verified. These are its leftovers, all small:

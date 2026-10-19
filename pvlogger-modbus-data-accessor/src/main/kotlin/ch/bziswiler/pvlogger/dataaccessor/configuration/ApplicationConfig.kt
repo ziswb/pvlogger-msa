@@ -32,5 +32,6 @@ private fun Application.readDbConfig(appConfig: AppConfig) = with(environment.co
         password = property("password").getString(),
         maxPoolSize = property("maxPoolSize").getString().toInt(),
         dbUrlParams = propertyOrNull("dbUrlParams")?.getString() ?: "",
+        sslMode = propertyOrNull("sslMode")?.getString() ?: DatabaseConfig.DEFAULT_SSL_MODE,
     )
 }

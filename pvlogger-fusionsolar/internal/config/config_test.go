@@ -63,6 +63,7 @@ func TestLoad_Defaults(t *testing.T) {
 	_ = os.Unsetenv("POSTGRESQL_USERNAME")
 	_ = os.Unsetenv("POSTGRESQL_PORT")
 	_ = os.Unsetenv("DB_NAME")
+	_ = os.Unsetenv("POSTGRESQL_SSLMODE")
 	_ = os.Unsetenv("K8S_NAMESPACE")
 	_ = os.Unsetenv("K8S_TOKEN_SECRET_NAME")
 	_ = os.Unsetenv("K8S_TOKEN_KEY")
@@ -91,6 +92,9 @@ func TestLoad_Defaults(t *testing.T) {
 	if cfg.Database.DbName != "fsdata" {
 		t.Errorf("expected default db name 'fsdata', got '%s'", cfg.Database.DbName)
 	}
+	if cfg.Database.SslMode != "prefer" {
+		t.Errorf("expected default sslmode 'prefer', got '%s'", cfg.Database.SslMode)
+	}
 	if cfg.K8s.Namespace != "pvlogger" {
 		t.Errorf("expected default namespace 'pvlogger', got '%s'", cfg.K8s.Namespace)
 	}
@@ -114,6 +118,7 @@ func TestLoad_CustomValues(t *testing.T) {
 	t.Setenv("JOB_NAME", "DEVICE_REAL_KPI")
 	t.Setenv("FS_HOST", "custom.host.com")
 	t.Setenv("POSTGRESQL_PORT", "5432")
+	t.Setenv("POSTGRESQL_SSLMODE", "require")
 	t.Setenv("USE_TOKEN_SECRET", "false")
 	t.Setenv("FUSIONSOLAR_PASSWORD", "fspass")
 
@@ -130,6 +135,9 @@ func TestLoad_CustomValues(t *testing.T) {
 	}
 	if cfg.Database.Port != 5432 {
 		t.Errorf("expected port 5432, got %d", cfg.Database.Port)
+	}
+	if cfg.Database.SslMode != "require" {
+		t.Errorf("expected sslmode 'require', got '%s'", cfg.Database.SslMode)
 	}
 	if cfg.K8s.UseTokenSecret {
 		t.Error("expected UseTokenSecret=false")

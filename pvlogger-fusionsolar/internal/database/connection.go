@@ -14,9 +14,9 @@ type Database struct {
 	Ctx  context.Context
 }
 
-func NewDatabase(host string, port int, dbname string, user string, password string) (*Database, error) {
+func NewDatabase(host string, port int, dbname string, user string, password string, sslmode string) (*Database, error) {
 	ctx := context.Background()
-	psqlInfo := fmt.Sprintf("host=%s port=%d dbname=%s user=%s password=%s sslmode=disable", host, port, dbname, user, password)
+	psqlInfo := fmt.Sprintf("host=%s port=%d dbname=%s user=%s password=%s sslmode=%s", host, port, dbname, user, password, sslmode)
 	conn, err := pgx.Connect(ctx, psqlInfo)
 	if err != nil {
 		return nil, err
