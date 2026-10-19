@@ -28,7 +28,8 @@ findings 40 and 41 (HTTP clients without a timeout). Everything else open here i
     tests. (The Angular SPA turned out to have 47 Karma specs — the "frontend has one" here matches the Ktor side,
     which has a single test class. Corrected 2026-08-16; since item 37 the Karma specs gate the frontend image build.)
 
-    *Re-verified 2026-10-19:* still no tests in any of the three modules.
+    *Re-verified 2026-10-19:* still no tests in any of the three modules. Later the same day `-database` got its
+    first (`DatabaseFactoryTest`, item 40); `pv-full-data-collector` and `-rest` remain.
 23. **Tiltfile rot**: references non-existent `pvlogger-infrastructure/` paths, no
     `docker_build` steps. Decision (2026-08-07, ex open question 8): **fix, don't remove** — Tilt is the intended dev
     loop for larger changes. Low priority; pairs with the mock-server refresh (item 30).
@@ -102,6 +103,21 @@ findings 40 and 41 (HTTP clients without a timeout). Everything else open here i
 
     Test against the rehearsal import ADR-0022 plans (by day, while the old server is still live), not on the
     cutover night.
+
+    **Progress 2026-10-19 — role and bootstrap done (code, not yet released):**
+    - Both prod configs keep `user = "postgres"` as the default and take `${?DB_USER}` as override, so the current
+      deployment is unaffected; the chart sets `DB_USER` once the app role exists.
+    - `DatabaseFactory.connect()` now connects to the target database first. Only if PostgreSQL answers SQLSTATE
+      `3D000` (database missing) does it connect to the explicit maintenance database `postgres`
+      (`DatabaseConfig.maintenanceUrl`) and run `CREATE DATABASE`. A missing database is no longer retried 30 × 15 s;
+      a role that cannot create it fails at once, naming the missing right.
+    - `pvlogger-shared-database` got its first tests (`DatabaseFactoryTest`, Testcontainers): a CREATEDB role
+      creates and migrates its database; a role without CREATEDB starts on a database it owns (the post-import
+      shape), including an owner-only `ALTER TABLE` like V10; a role that can do neither fails fast.
+
+    Still open: TLS for the clients (`dbUrlParams`, fusionsolar's `sslmode=disable`), releasing data accessor,
+    masterdata server and fusionsolar, and the import requirements (table ownership, `battery_sim_ro`) in the
+    infrastructure repo's phase 4 checklist.
 41. 🟡 **Remaining follow-ups from item 38** (split out 2026-10-19 so that item 38 can sit under Done)
 
     Item 38's outage is fixed and verified. These are its leftovers, all small:

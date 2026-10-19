@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+
 plugins {
     alias(libs.plugins.jvm)
     id("idea")
@@ -31,10 +33,26 @@ dependencies {
 
     // DB migrations
     implementation(libs.flywaydb)
+
+    // Testing
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.kotlin.test)
+    testImplementation(libs.testcontainers.postgresql)
 }
 
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+tasks.test {
+    useJUnitPlatform()
+    // Same Docker settings as the service modules (see pvlogger-modbus-data-accessor).
+    systemProperty("api.version", "1.44")
+    environment("TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE", "/var/run/docker.sock")
+    testLogging {
+        exceptionFormat = TestExceptionFormat.FULL
+        events("passed", "skipped", "failed")
     }
 }
