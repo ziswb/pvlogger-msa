@@ -3,12 +3,37 @@
 Things that could **not** be derived from the repository (2026-08-06 review). Answer
 inline, then promote stable answers to CONTEXT.md or an ADR and delete the question.
 
-**Status 2026-08-07: all questions answered** (Q1–10 from the initial review plus
-Q11, discovered along the way). Each entry is struck through with its answer and a
-pointer to where it was promoted (ADRs 0004–0007, CONTEXT.md, backlog items 27–30).
-Add new questions below as they arise.
+Open questions are under **Open**, answered ones under **Answered** (struck through,
+with the answer and a pointer to where it was promoted), each grouped by the original
+topics. Numbers are stable IDs — never reuse one.
 
-## Strategy
+**Status 2026-10-19:** Q1–11 answered (all on 2026-08-07, promoted to ADRs 0004–0007,
+CONTEXT.md and backlog items 27–30). Q12 is open, raised by the infrastructure repo.
+
+## Open
+
+12. **Where does the read-only KPI export endpoint live?** (Raised 2026-10-19 by
+    infrastructure ADR-0024, phase 5 of its `docs/RESILIENCE-PLAN.md`.) The KPI
+    export moves from OneDrive files to a pull: a container on the receiver's server
+    asks for "all KPI rows since my cursor" over a shared Tailscale node. Behind it
+    sits a narrow, read-only endpoint with a token — explicitly *not* the data
+    accessor, which can also write. The ADR leaves the home of that endpoint, and the
+    pull container's image, to this repo. Options:
+    (a) a route in the **frontend Ktor** service — already long-running, already
+    read-only, already reads KPIs from the data accessor for `/livedata`; the
+    smallest change by ADR-0007's bar, but the token check would be the first auth in
+    a service that is otherwise open to the LAN;
+    (b) the **KPI exporter** grows a long-running HTTP mode — it already owns the
+    export format, but it is a CronJob today and would become a Deployment;
+    (c) a **new small service** — cleanest separation, fails ADR-0007's default.
+    Also to decide: where the token lives and how it is rotated. Blocked on the
+    receiver agreeing to the pull (the ADR's fallback is a OneDrive client in the
+    cluster, which needs nothing from this repo). The answer is the system's first
+    authenticated interface — record it in an ADR together with security finding 45.
+
+## Answered
+
+### Strategy
 
 1. ~~**Collector end state** (most consequential): `pv-fast-data-collector` (0.x,
    5 hard-coded registers, currently the one running) and `pv-full-data-collector`
@@ -42,7 +67,7 @@ Add new questions below as they arise.
    capabilities default to a job/endpoint in an existing service. Promoted to
    **ADR-0007**.
 
-## Architecture details
+### Architecture details
 
 4. ~~**`fsdata` schema ownership**: fusionsolar writes it via sqlc but ships no
    migrations — the DDL lives only in the running DB and old dumps. Intentional
@@ -79,7 +104,7 @@ Add new questions below as they arise.
    outdated; refreshing it, possibly as the basis for e2e tests (none exist
    today), is a new low-prio todo (backlog 30).
 
-## Site / hardware (partially in the Batteriespeicher doc — confirm)
+### Site / hardware (partially in the Batteriespeicher doc — confirm)
 
 9. ~~Which physical device answers Modbus at `<dongle-ip>` (SmartDongle?), and
    which physical units are Modbus IDs meter `1`, inverters `1,16`?~~
@@ -94,7 +119,7 @@ Add new questions below as they arise.
     But hard-coding them is not intentional design: moving them to
     configuration is now CONSOLIDATION-BACKLOG item 27.
 
-## Added after the initial review
+### Added after the initial review
 
 11. ~~**Is `pvlogger-sunrise-sunset` deployed at all, and who calls it?**
     (Noticed 2026-08-07 while answering Q10.) The Helm chart in the

@@ -11,6 +11,10 @@ shared across both documents** — gaps in the sequence here mean the item belon
 other repo (or was withdrawn), never that a number is free for reuse. Items 40+ were
 added by the 2026-08-17 re-verification.
 
+**Status re-checked 2026-10-19** against HEAD `46a39ca0`: every open item still holds in the code. Open items sit
+under **Open** by severity; finished ones under **Resolved**, sorted by number. What to do next is decided in
+`CONSOLIDATION-BACKLOG.md` → *Next up* (currently backlog item 40, which also closes item 3 here).
+
 Legend: 🔴 exploitable or data-integrity risk · 🟡 hardening worth doing · ⚪ defence in
 depth / operational.
 
@@ -23,7 +27,9 @@ depth / operational.
 > deliberate for a homelab, but it should be a recorded decision rather than an
 > accident — see item 45.
 
-## 🔴 Exploitable / data-integrity
+## Open
+
+### 🔴 Exploitable / data-integrity
 
 3. **Database SSL disabled — plaintext credentials on the wire.** *Deferred: needs
    server-side SSL first.*
@@ -48,6 +54,11 @@ depth / operational.
    infrastructure task; the battery simulator's instance is the least urgent (operator-run
    CLI against the read-only `battery_sim_ro` role).
 
+   *Update 2026-10-19 — unblocked soon.* Infrastructure ADR-0022 (accepted 2026-10-19) moves `pvdata`,
+   `pvmasterdata` and `fsdata` to CloudNativePG, which generates server certificates and serves TLS by default.
+   The server-side blocker goes away with that move; the client switch is part of **backlog item 40**, which must
+   ship before the cutover anyway.
+
 42. **Unauthenticated mutating write endpoints on the data accessor** — *found
     2026-08-17.* 🔴
 
@@ -66,7 +77,7 @@ depth / operational.
     write paths to the collector service accounts, or by accepting and recording the
     trust boundary (item 45).
 
-## 🟡 Hardening
+### 🟡 Hardening
 
 33. **Unprotected CSV import endpoint.** *Severity revised down 2026-08-17.*
 
@@ -125,7 +136,7 @@ depth / operational.
     with items 33 and 42 (unauthenticated writes) there is nothing to bound abuse from
     inside the cluster.
 
-## ⚪ Defence in depth / operational
+### ⚪ Defence in depth / operational
 
 15. **Database connection pool likely too small.** *Unchanged; reclassified.*
 
@@ -159,6 +170,13 @@ depth / operational.
     need a policy rule*. Without it, the next reviewer re-derives these findings from
     scratch — as this re-verification just did.
 
+    *Update 2026-10-19 — now due.* Infrastructure ADR-0024 (accepted 2026-10-19) plans the first PVLogger interface
+    reachable from outside the home: a read-only KPI export endpoint with a token, pulled by the external receiver
+    over a shared Tailscale node (where it lives is open question 12). From then on "no auth anywhere" is no longer
+    true, so the ADR should state both rules: in-cluster traffic is trusted, and anything reachable from outside
+    needs a token. Also weaker than the posture note implies: infrastructure finding 54 records that the LAN is one
+    flat network with no filtering between devices.
+
 ## Noted 2026-08-17, not findings
 
 - **CORS protection is config-dependent.** `pvlogger-frontend/.../plugins/Cors.kt:8-9`
@@ -167,7 +185,7 @@ depth / operational.
   `application-prod.conf:12` sets `isProd = true`. Worth knowing that the guard is a
   config flag: a new environment missing it silently re-enables permissive CORS.
 - **The `/livedata` WebSocket is unauthenticated**
-  (`pvlogger-frontend/.../plugins/WebSockets.kt:54`). Read-only PV telemetry; consistent
+  (`pvlogger-frontend/.../plugins/WebSockets.kt:49`). Read-only PV telemetry; consistent
   with the posture note. Listed for completeness.
 - **Committed internal hostname in the battery simulator.**
   `pvlogger-battery-simulator/cmd/simulator/main.go:32-35` defaults `-db-host` to

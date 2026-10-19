@@ -3,9 +3,132 @@
 Verified divergences and defects from a full repo review (2026-08-06), with file references. When an item is resolved
 with a "from now on we always do X" outcome, record it as an ADR.
 
+**Re-verified 2026-10-19** against HEAD `46a39ca0`. Open items are under **Open**; resolved, superseded and moot
+items under **Done**. Both sections are sorted by item number. Item numbers are stable IDs — never renumber or reuse
+one. The old category headings (defects / Go / Kotlin / hygiene) were dropped: the legend marker on each item
+carries the same information.
+
 Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosmetic.
 
-## 🔴 Likely defects (verify, then fix)
+## Next up
+
+**Item 40 — make the services ready for the CloudNativePG move.** Decided 2026-10-19. It is the only open item
+with a date attached: infrastructure ADR-0022 (accepted 2026-10-19) moves the PVLogger databases off the central
+server, and as the code stands the services cannot log in with the app role the ADR prescribes — the role is
+hard-coded, and the bootstrap assumes a superuser. The work has to ship in released images before the rehearsal
+import (phase 4), which waits only on the NVMe hardware (phase 3). It also closes security finding 3 (database
+traffic in plaintext) at no extra cost, since CloudNativePG brings the server-side TLS that finding was blocked on.
+
+Runners-up, each under an hour: the first bullet of item 41 (confirm V11 works in production), and security
+findings 40 and 41 (HTTP clients without a timeout). Everything else open here is low priority hygiene.
+
+## Open
+
+22. **Test coverage very uneven**: `pv-full-data-collector` and the shared Kotlin `-rest`/`-database` libs have zero
+    tests. (The Angular SPA turned out to have 47 Karma specs — the "frontend has one" here matches the Ktor side,
+    which has a single test class. Corrected 2026-08-16; since item 37 the Karma specs gate the frontend image build.)
+
+    *Re-verified 2026-10-19:* still no tests in any of the three modules.
+23. **Tiltfile rot**: references non-existent `pvlogger-infrastructure/` paths, no
+    `docker_build` steps. Decision (2026-08-07, ex open question 8): **fix, don't remove** — Tilt is the intended dev
+    loop for larger changes. Low priority; pairs with the mock-server refresh (item 30).
+
+    *Re-verified 2026-10-19:* unchanged — the Tiltfile still loads `pvlogger-infrastructure/...` manifests and has
+    no `docker_build`.
+26. `pvlogger-database/migration/irrelevant/` — delete or archive; the PG18 migration guide is a finished runbook and
+    could move to a `docs/history/`.
+
+    *Re-verified 2026-10-19:* unchanged — `irrelevant/` is still there and `docs/history/` does not exist.
+29. **Introduce `fsdata` schema migrations** — a known gap since the Kotlin→Go rewrite of fusionsolar (rationale in
+    ADR-0002, ex open question 4), not a decision.
+
+    *Rationale corrected 2026-08-27:* this item used to read "the DDL exists only in the running DB and old dumps",
+    which is stale and made the item look like a data-recoverability risk. The full DDL **is** committed, as sqlc's
+    schema input: `pvlogger-fusionsolar/internal/database/schema.fsdata.sql` (209 lines — 9 `fs_*` tables with their
+    primary keys and indexes). What is missing is a *runner* and any *drift detection*: nothing applies that file to
+    a database, nothing verifies it still matches production, and it is maintained by hand alongside
+    `query.fsdata.sql`. So the risk is silent divergence between file and live schema, not an unrecoverable schema —
+    which puts this item well below where its old wording implied. Two steps:
+    (1) **baseline** — verify `schema.fsdata.sql` against a `pg_dump --schema-only` of the live `fsdata` (it, not a
+    fresh dump, should become migration 0001 if the two agree; reconcile first if they do not); (2) **wire a
+    runner** — recommended: a `migrate` job inside `pvlogger-fusionsolar` itself (job-dispatch pattern; no new service,
+    per ADR-0007) using tern (pgx ecosystem) with `go:embed`-ded SQL files, executed manually as a plain K8s Job. The
+    operator's original plan — a dedicated manually-activated migration service — would work but fails the ADR-0007 bar;
+    keeping migrations next to the sqlc queries they must match is the decisive argument for the in-module job.
+
+    *Note 2026-10-19:* infrastructure ADR-0022 copies `fsdata` into CloudNativePG with `initdb.import`. Do
+    step (1) before that cutover, against the database being copied — afterwards the live schema is whatever the
+    import produced, and the old server is the only reference left.
+30. **Refresh the outdated mock server** (low prio, ex open question 8): unused for a while and out of date. Update it
+    so the Tilt environment (item 23)
+    works again for larger changes, and consider building e2e tests around it — none exist today. It stays local-only,
+    never production (open question 6).
+32. **Repo-wide `gofmt -w`**: ~13 Go files fail `gofmt -l` (import ordering, struct-field alignment) — pre-existing,
+    surfaced when golangci-lint was first run locally (2026-08-09; its gofmt linter is not enabled, so lint stays green
+    regardless). One mechanical formatting commit, ideally with nothing else in it; consider enabling the gofmt/gofumpt
+    linter in the golangci-lint config afterwards to keep it that way.
+
+    *Re-verified 2026-10-19:* down to 7 files — `pv-device-data-collector/cmd/collector/main.go`, both
+    fusionsolar `internal/config/config.go`, `pvlogger-fusionsolar/internal/fusionsolar/device_5_minutes_kpi.go`,
+    `pvlogger-kpi-exporter/internal/kpi/export_test.go`, `pvlogger-shared-modbus/metrics/metrics-service.go`,
+    `pvlogger-shared-modbus/registers/masterdata_drift_test.go`.
+40. 🔴 **Make the services ready for the CloudNativePG move** (added 2026-10-19; infrastructure ADR-0022, phase 4
+    of its `docs/RESILIENCE-PLAN.md`)
+
+    ADR-0022 moves `pvdata`, `pvmasterdata` and `fsdata` to a three-instance CloudNativePG cluster, with a dedicated
+    application role instead of `postgres`, and says the services need "no change beyond a new host, port and
+    role". In this repo the role is not configuration, and the bootstrap assumes a superuser:
+
+    - `user = "postgres"` is a literal in `application-prod.conf:20` of both data-accessor and masterdata-server,
+      with no env override. Switching the role needs a config change (`${DB_USER}`, like the password) and a
+      release of both images before the cutover night.
+    - `DatabaseFactory.connect()` (`pvlogger-shared-database/.../DatabaseFactory.kt:23-31`) first connects to
+      `dbServerUrl`, which ends in `/` with no database name. The PostgreSQL JDBC driver then picks the database
+      named after the user: today `postgres`, which always exists; with an app role, a database of that role's
+      name, which may not exist. If the target database is missing it runs `CREATE DATABASE`, which needs
+      `CREATEDB`. Point the bootstrap at an explicit maintenance database (or skip it when the target exists) and
+      check the app role gets through both steps.
+    - Flyway runs as the new role against the imported databases. `V10` set reloptions with `ALTER TABLE`, which
+      needs table ownership, and later migrations will too. The import must leave the tables owned by the app
+      role.
+    - `V8` created the role `battery_sim_ro`. It will not run again (it is in the Flyway history), so the role and
+      its grants must come across with the import, or the battery simulator loses read access. The simulator's
+      `-db-host` default (`<central-host>`) changes with the move too.
+    - fusionsolar reads its user from `POSTGRESQL_USERNAME` (default `postgres`,
+      `pvlogger-fusionsolar/internal/config/config.go:61`), so only the chart changes there.
+    - CloudNativePG generates server certificates and serves TLS by default, which removes the server-side blocker
+      of **security finding 3**. Switching the clients to TLS in the same release closes that finding for every
+      deployed service.
+
+    Test against the rehearsal import ADR-0022 plans (by day, while the old server is still live), not on the
+    cutover night.
+41. 🟡 **Remaining follow-ups from item 38** (split out 2026-10-19 so that item 38 can sit under Done)
+
+    Item 38's outage is fixed and verified. These are its leftovers, all small:
+
+    - **Verify V11 in production.** V11 shipped as data accessor 3.10.3 (chart tag bumped 2026-08-26), but no
+      check after the deploy is recorded. Confirm both indexes exist and are valid
+      (`modbus_response_data_job_dev_idx`, `modbus_register_uinteger_value_idx`; `pg_index.indisvalid`), and that
+      the I32 and U32 plans for `read-latest-register-value` use them.
+    - **Then drop the single-column indexes the composites make redundant** (~509 MB:
+      `modbus_response_data_job_id_idx`, `modbus_register_integer_values_reg_addr_idx`,
+      `modbus_register_uinteger_values_reg_adr_idx`) in a new migration, once the composites are seen winning (see
+      V11's closing comment). Ship it before or after the CloudNativePG cutover (item 40), not with it.
+    - **`job_id` statistics target**: probably moot after V11. The `(job_id, logic_device_id)` index removes the
+      useless dev_id bitmap half that `SET STATISTICS 1000` was meant to avoid. Drop this line if the plan check
+      above confirms it.
+    - **Two-statement lookup in `RegisterValueDao.readLatestRegisterValue`**: the only change that removes the
+      join-order choice, and with it the remaining 1-3 day exposure. Downgraded 2026-08-27 to cheap insurance: do
+      it the next time `RegisterValueDao` is touched. Until then the runbook step in item 38 (manual `ANALYZE`
+      after a register-set change or a masterdata import) covers it.
+    - **`modbus_response_data` timestamp indexes** (`date_created`, `request_time`, `response_time`, 398 MB each):
+      candidates for dropping only after a full quarter of index-usage counters. The counters started 2026-08-08;
+      the CloudNativePG cluster starts its own from zero, so the quarter restarts at the cutover.
+    - If an I16/U16 register ever joins the dongle block, `short`/`ushort` need the same
+      `(register_address, response_id)` index. V11 left them out on purpose.
+    - *infrastructure repo:* the data accessor's `100m` CPU limit with `requests == limits` is tight for a JVM.
+
+## Done (resolved, superseded or moot)
 
 1. ~~**masterdata-server prod config DB-name mismatch**~~
 
@@ -49,11 +172,6 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
    kpi-exporter. `Fatal` remains only in `cmd/` mains, job-dispatch layers, and Must-style startup-config helpers (env
    helpers → item 6). Run-level behavior unchanged (error → exit 1), but defers now run on error paths (metrics push,
    item 11) and the packages are unit-testable.
-
-## 🟡 Duplication & divergence
-
-### Go
-
 6. ~~**Three env-config helpers**~~
 
    **Resolved 2026-08-09** (**ADR-0011**):
@@ -110,8 +228,8 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     from the inverter's self-resetting daily register 32114, whose reset lands *after* midnight; daily production now
     derives from the lifetime counter 32106 as a day-delta. (2) **ADR-0015**: a live dongle concurrency test showed the
     SmartDongle is **last-connect-wins** (a new client's connect kills the established connection; nothing is refused),
-    so the 00:
-    02–00:04 window protects the *device jobs from the fast collector* — it now lives in the CronJob schedules
+    so the 00:02–00:04
+    window protects the *device jobs from the fast collector* — it now lives in the CronJob schedules
     (`* 1-23 * * *` + `0-1,5-59 0 * * *` in the Helm chart), `main.go` has no time logic, and monitoring treats the pair
     as one logical job. Follow-ups since resolved by decision: the **full collector's** ADR-0014 violation (`Produced`
     from register 32114's latest value) dissolves under **ADR-0016** — its private KPI path gets deleted, not aligned
@@ -119,8 +237,8 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     `TcpHandler`
     reconnect-between-attempts hardening.
 
-### Kotlin
-
+    *Kept in Done 2026-10-19:* the `TcpHandler` hardening is optional and has no item of its own; open one if
+    reconnect failures ever show up.
 13. ~~**Bootstrap differs per service**~~
 
     **Resolved 2026-08-14.** The shape is the data accessor's: `install(Koin)` (Ktor plugin, application-scoped — not
@@ -138,7 +256,7 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     `DateTimeParseException` handler stays service-specific. Deprecated sunrise-sunset (ADR-0005, item 28) untouched,
     as with item 13. Notes: StatusPages doesn't cover WebSocket sessions, so `/livedata` keeps its own error handling;
     a SPA 404→index.html fallback was deliberately *not* added (single Angular route today — revisit when a second
-    client-side route appearzs). Extraction into a shared module remains item 15.
+    client-side route appears). Extraction into a shared module remains item 15.
 15. ~~**CallLogging** installed in two services, missing in sunrise-sunset (whose
     `Monitoring.kt` is otherwise a byte-copy). Metrics registry constructed four different ways. Extract a tiny shared
     "service bootstrap" into
@@ -208,15 +326,6 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     ShadowJar workaround (`mergeServiceFiles()` + `duplicatesStrategy = INCLUDE`) was added to the mock server **and
     the frontend**, which had the same gap (fat JAR in Docker, no Flyway so no visible symptom yet); TROUBLESHOOTING.md's
     affected-services list updated. Mock server 3.2.2, frontend 3.9.1.
-
-## ⚪ Hygiene
-
-22. **Test coverage very uneven**: `pv-full-data-collector` and the shared Kotlin `-rest`/`-database` libs have zero
-    tests. (The Angular SPA turned out to have 47 Karma specs — the "frontend has one" here matches the Ktor side,
-    which has a single test class. Corrected 2026-08-16; since item 37 the Karma specs gate the frontend image build.)
-23. **Tiltfile rot**: references non-existent `pvlogger-infrastructure/` paths, no
-    `docker_build` steps. Decision (2026-08-07, ex open question 8): **fix, don't remove** — Tilt is the intended dev
-    loop for larger changes. Low priority; pairs with the mock-server refresh (item 30).
 24. ~~Committed IDE files (`.ipr`, `.iws`, `.iml`), `.DS_Store`; simulator output files (`summary-2024.*`) committed at
     module root.~~
 
@@ -232,8 +341,6 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     (`ng build` emits into `src/main/resources/static/`, which is checked in; Gradle/Docker never runs npm, so SPA
     changes must be committed together with the regenerated static files). *That workflow was replaced the same day —
     see item 37; the README was updated again with it.*
-26. `pvlogger-database/migration/irrelevant/` — delete or archive; the PG18 migration guide is a finished runbook and
-    could move to a `docs/history/`.
 27. ~~**Site coordinates hard-coded in sunrise-sunset**~~
 
     **Superseded 2026-08-07**: the service turned out to be deprecated (ADR-0005), so the hard-coded coordinates (the
@@ -262,26 +369,6 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     `pvlogger-database/migration/migrate_db_aio.sh:23` still names `sunrisesunset` in the PG18 migration's database
     list. Left alone on purpose: it is the record of a migration that did include that database (item 26 covers
     archiving that directory).
-29. **Introduce `fsdata` schema migrations** — a known gap since the Kotlin→Go rewrite of fusionsolar (rationale in
-    ADR-0002, ex open question 4), not a decision.
-
-    *Rationale corrected 2026-08-27:* this item used to read "the DDL exists only in the running DB and old dumps",
-    which is stale and made the item look like a data-recoverability risk. The full DDL **is** committed, as sqlc's
-    schema input: `pvlogger-fusionsolar/internal/database/schema.fsdata.sql` (209 lines — 9 `fs_*` tables with their
-    primary keys and indexes). What is missing is a *runner* and any *drift detection*: nothing applies that file to
-    a database, nothing verifies it still matches production, and it is maintained by hand alongside
-    `query.fsdata.sql`. So the risk is silent divergence between file and live schema, not an unrecoverable schema —
-    which puts this item well below where its old wording implied. Two steps:
-    (1) **baseline** — verify `schema.fsdata.sql` against a `pg_dump --schema-only` of the live `fsdata` (it, not a
-    fresh dump, should become migration 0001 if the two agree; reconcile first if they do not); (2) **wire a
-    runner** — recommended: a `migrate` job inside `pvlogger-fusionsolar` itself (job-dispatch pattern; no new service,
-    per ADR-0007) using tern (pgx ecosystem) with `go:embed`-ded SQL files, executed manually as a plain K8s Job. The
-    operator's original plan — a dedicated manually-activated migration service — would work but fails the ADR-0007 bar;
-    keeping migrations next to the sqlc queries they must match is the decisive argument for the in-module job.
-30. **Refresh the outdated mock server** (low prio, ex open question 8): unused for a while and out of date. Update it
-    so the Tilt environment (item 23)
-    works again for larger changes, and consider building e2e tests around it — none exist today. It stays local-only,
-    never production (open question 6).
 31. ~~🔴 **All 22 data-accessor tests fail on H2**~~
 
     **Resolved 2026-08-07**
@@ -290,10 +377,6 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     that production (TIMESTAMPTZ, `TZ=Europe/Zurich`) never had. Extended same day: masterdata tests moved to
     Testcontainers too, the H2 dev profiles now point at the local compose PostgreSQL, and H2 is removed entirely — no
     migration needs H2 compatibility anymore. Tests require a running Docker daemon.
-32. **Repo-wide `gofmt -w`**: ~13 Go files fail `gofmt -l` (import ordering, struct-field alignment) — pre-existing,
-    surfaced when golangci-lint was first run locally (2026-08-09; its gofmt linter is not enabled, so lint stays green
-    regardless). One mechanical formatting commit, ideally with nothing else in it; consider enabling the gofmt/gofumpt
-    linter in the golangci-lint config afterwards to keep it that way.
 33. ~~**Negative live consumption under fast irradiance changes**~~ (observed 2026-08-13)
 
     **Resolved 2026-08-14** (fast collector 0.12.0, deployed): live KPIs now come from the dongle aggregate block in one
@@ -385,7 +468,7 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     full runs `2 1-23 * * *`
     with `activeDeadlineSeconds: 150` in the job template — an overrun dies
     ~30 s before fast's minute-5 reconnect instead of fighting it (last-connect-wins dongle). The chart-bug prerequisite
-  ffffnfrastructure backlog 2) was resolved **by removal**: ADR-0016 abolished the toggle, so both `suspend:` lines and
+    (infrastructure backlog 2) was resolved **by removal**: ADR-0016 abolished the toggle, so both `suspend:` lines and
     the `pvFullDataCollectionMode`/
     `pvCollectorDynamicMode` keys are simply gone. Alert/dashboard cleanup:
     `PvloggerFastCollectorStale` and the dashboard pair-merge retired; fast and full both sit in the generic frequent
@@ -407,8 +490,8 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     unsupported 25 (+ `engines` in package.json), `build:ci` npm script as single source of the CI command,
     `angular.json` outputPath → normal `dist/web`, and `.dockerignore` now excludes `.git`/`**/node_modules`/
     `**/.angular`/`**/build` etc. — the context every image build uploads shrank from ~3.5 GB to ~30 MB. Frontend 3.10.0.
-38. 🔴 **Planner statistics rot silently: `read-latest-register-value` takes 29.6 s and races the fast collector's
-    timeout** (observed 2026-08-26)
+38. ~~🔴 **Planner statistics rot silently: `read-latest-register-value` takes 29.6 s and races the fast collector's
+    timeout**~~ (observed 2026-08-26; resolved 2026-08-26 by V10, leftovers in item 41)
 
     `pv-fast-data-collector` jobs fail intermittently — several per hour — with
     `context deadline exceeded (Client.Timeout exceeded while awaiting headers)` on
@@ -496,14 +579,15 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
       1 row the planner never needed it. **The real gap is that the symmetric index is missing on the other three
       register-value tables** (`uinteger`, `short`, `ushort`), so those still fall back to a hash join or a filter.
       Adding `(register_address, response_id)` there is the remaining structural fix — shipped as V11, though see the
-      correction below about what it does and does not buy.
+      correction below about what it does and does not buy. *(2026-10-19: V11 indexed only `uinteger`; `short`/
+      `ushort` are never read on this path — see V11's header.)*
     - The index-usage evidence was **too short to justify dropping anything**. `stats_reset` is NULL but the
       postmaster only started 2026-08-08, so the counters cover ~19 days — blind to monthly or annual reporting
       paths. Two of the "0 scan" entries were primary keys, which are not droppable anyway. The genuine candidates
       shrink to `modbus_response_data`'s three timestamp indexes (`date_created`, `request_time`, `response_time`,
       398 MB each), and only after a full quarter of counters.
 
-    Follow-ups still open:
+    Follow-ups as recorded at the time (**the open ones now live in item 41**):
 
     - **`job_id`'s selectivity is still underestimated 10x.** It is now used (as one half of a BitmapAnd) but the
       planner still estimates 191 rows where the true figure is 1: `n_distinct` is 97 343 against 1 003 220 actual
@@ -553,6 +637,9 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
     - **infrastructure repo:** the data-accessor's CPU limit is `100m` with `requests == limits`
       (`pvlogger-chart/values.yaml`). Not implicated here — the pod idles at 2 m and the wait was entirely in
       PostgreSQL — but tight for a JVM service.
+
+    **Moved to Done 2026-10-19:** the outage is fixed and verified. The follow-ups above that are still open moved to
+    item 41.
 39. ~~🔴 **`/livedata` goes silent for the sessions that stay connected** (observed 2026-09-05)~~
 
     **Resolved 2026-09-05 (ADR-0019).** The frontend's hand-rolled WebSocket fan-out
