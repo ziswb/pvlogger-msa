@@ -26,6 +26,7 @@ old one. Half a page max; the point is the *why*. Template: see
 - [0017 — Project-curated register definitions enter masterdata via Flyway migration; vendor CSVs stay import-only](0017-project-curated-registers-enter-masterdata-via-migration.md)
 - [0018 — Ktor service bootstrap lives in pvlogger-shared-ktor](0018-ktor-bootstrap-in-shared-ktor.md)
 - [0019 — Live KPI fan-out is a shared flow, not a hand-rolled scheduler](0019-live-kpi-fanout-via-sharein-whilesubscribed.md)
+- [0020 — Trust boundary: in-cluster calls are trusted, the ingress exposes an allowlist, outside access needs a token](0020-trust-boundary-ingress-allowlist.md) *(proposed)*
 
 ## Candidate ADRs (implicit decisions worth writing down)
 

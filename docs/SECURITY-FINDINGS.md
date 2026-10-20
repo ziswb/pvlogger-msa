@@ -84,6 +84,21 @@ depth / operational.
     write paths to the collector service accounts, or by accepting and recording the
     trust boundary (item 45).
 
+    *Corrected 2026-10-20 — reachable from the whole LAN and the tailnet, not only
+    in-cluster.* The "mitigated by NetworkPolicies" above is wrong. The Traefik
+    IngressRoute (`PathPrefix(/v1)`) and the Tailscale Ingress (`path: /v1`) forward
+    every `/v1` path to the data accessor, and the NetworkPolicies admit both ingress
+    namespaces on purpose. All four write routes are under `/v1`. Probed with GET on
+    `<pvlogger-host>` and `pvlogger.<tailnet>.ts.net`: `store-kpi-values`,
+    `store-modbus-values`, `store-raw-kpi-register-values` answer 405 (route present,
+    so a POST would land), an unknown path 404. Given the flat LAN (infrastructure
+    finding 54), a guest or IoT device can write KPI rows. **Fix: narrow both ingress
+    rules to `/v1/daydata`**, the only data-accessor route the SPA calls — an
+    infrastructure chart change, handed over 2026-10-20. The rule behind it is
+    **ADR-0020** (proposed): in-cluster calls trusted, the ingress exposes an
+    allowlist. Close this item once the narrowed rules are deployed and the probe
+    answers 404.
+
 ### 🟡 Hardening
 
 33. **Unprotected CSV import endpoint.** *Severity revised down 2026-08-17.*
@@ -115,6 +130,17 @@ depth / operational.
     (`Monitoring.kt:41-49`) — no PV or business data is exposed — and no Ingress routes
     `/metrics`, so reachability is cluster-internal. Fix by scoping a NetworkPolicy to
     the monitoring namespace rather than by adding auth.
+
+    *Corrected 2026-10-20:* an Ingress does route it. The **frontend's** `/metrics`
+    falls under the `/` rule of both ingresses and answers 200 on `<pvlogger-host>`
+    and on the tailnet name (probed). The data accessor's and masterdata server's are not
+    exposed (`/metrics` is outside `/v1`; masterdata has no ingress). Severity stays low —
+    JVM and HTTP meters only. ADR-0020 (proposed) keeps `/metrics` off the ingress. On
+    Traefik that is one rule (`&& !PathPrefix(/metrics)`); the Tailscale Ingress matches
+    prefixes only, so there it needs either a separate management port in
+    `pvlogger-shared-ktor` — note the chart's liveness/readiness probes use `/metrics` on
+    the service port and would move with it — or Tailscale traffic routed through
+    Traefik.
 
 27. **No rate limiting on REST endpoints.** *Confirmed unchanged.*
 
@@ -163,6 +189,21 @@ depth / operational.
     true, so the ADR should state both rules: in-cluster traffic is trusted, and anything reachable from outside
     needs a token. Also weaker than the posture note implies: infrastructure finding 54 records that the LAN is one
     flat network with no filtering between devices.
+
+    *2026-10-20:* written as **ADR-0020** (proposed): in-cluster calls are trusted, the ingress exposes an allowlist
+    (SPA files, `/livedata`, `GET /v1/daydata`), browser-facing reads stay open, anything reachable from outside the
+    home needs a token. Writing it surfaced the ingress gap in item 42. Close this item when the ADR is accepted.
+
+59. **The `/livedata` WebSocket accepts frames of any size** — *found 2026-10-20.* ⚪
+
+    `pvlogger-frontend/.../plugins/WebSockets.kt` installs WebSockets with
+    `maxFrameSize = Long.MAX_VALUE`. The session reads and discards every incoming frame
+    (the client is not expected to send anything), but Ktor buffers each frame whole
+    before handing it over, so one client on the LAN or tailnet can send a single huge
+    frame and push the frontend out of memory. The SPA sends nothing, so a small limit
+    (a few KiB) costs nothing; Ktor then closes the session with "message too big". The
+    rest of the WebSocket was reviewed the same day: read-only, client input is never
+    used, no data beyond what `/v1/daydata` already serves.
 
 ## Noted 2026-08-17, not findings
 
