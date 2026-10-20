@@ -25,7 +25,8 @@ depth / operational.
 > is network isolation: K3S NetworkPolicies (default-deny ingress) plus a private
 > <lan-subnet> LAN. Anything that reaches a pod is trusted. That trade-off is
 > deliberate for a homelab, but it should be a recorded decision rather than an
-> accident — see item 45.
+> accident — see item 45, resolved 2026-10-20 by **ADR-0020** (in-cluster calls
+> trusted, the ingress exposes an allowlist, outside access needs a token).
 
 ## Open
 
@@ -66,58 +67,7 @@ depth / operational.
    the chart sets `POSTGRESQL_SSLMODE=require` at the cutover. Residual after that: `require` does not verify the
    server certificate (`verify-full` would need CloudNativePG's CA on every client).
 
-42. **Unauthenticated mutating write endpoints on the data accessor** — *found
-    2026-08-17.* 🔴
-
-    `pvlogger-modbus-data-accessor/.../rest/StoreModbusValueController.kt:21,27`,
-    `.../rest/StoreKpiValueController.kt:16` and
-    `.../rest/RawKpiRegisterValuesController.kt:18` accept measurement writes with no
-    auth. Any workload that can reach the pod can inject arbitrary register and KPI
-    rows.
-
-    This is the sharper edge of the same missing-auth root cause as item 33, and it
-    ranks **above** it: injected rows poison the lifetime-counter arithmetic in
-    `RawKpiRegisterValuesDao.computeEnergyDelta` (**ADR-0014**), so a single bogus
-    counter value corrupts a day's derived energy KPIs and silently propagates into the
-    exported JSON and the dashboard. Unlike item 33 this is a data-integrity risk, not
-    just wasted work. Mitigated today only by NetworkPolicies. Fix by restricting the
-    write paths to the collector service accounts, or by accepting and recording the
-    trust boundary (item 45).
-
-    *Corrected 2026-10-20 — reachable from the whole LAN and the tailnet, not only
-    in-cluster.* The "mitigated by NetworkPolicies" above is wrong. The Traefik
-    IngressRoute (`PathPrefix(/v1)`) and the Tailscale Ingress (`path: /v1`) forward
-    every `/v1` path to the data accessor, and the NetworkPolicies admit both ingress
-    namespaces on purpose. All four write routes are under `/v1`. Probed with GET on
-    `<pvlogger-host>` and `pvlogger.<tailnet>.ts.net`: `store-kpi-values`,
-    `store-modbus-values`, `store-raw-kpi-register-values` answer 405 (route present,
-    so a POST would land), an unknown path 404. Given the flat LAN (infrastructure
-    finding 54), a guest or IoT device can write KPI rows. **Fix: narrow both ingress
-    rules to `/v1/daydata`**, the only data-accessor route the SPA calls — an
-    infrastructure chart change, handed over 2026-10-20. The rule behind it is
-    **ADR-0020** (accepted 2026-10-20): in-cluster calls trusted, the ingress exposes an
-    allowlist. Close this item once the narrowed rules are deployed and the probe
-    answers 404.
-
 ### 🟡 Hardening
-
-33. **Unprotected CSV import endpoint.** *Severity revised down 2026-08-17.*
-
-    `pvlogger-masterdata-server/.../rest/MasterDataController.kt:71-83` exposes
-    `put("/$IMPORT_MASTER_DATA_PATH")` (registered unguarded at
-    `configuration/Routing.kt:11`), which runs `importInverterRegister()`,
-    `importDeviceIdentifiers()` and `importMeterRegister()`.
-
-    The original write-up called this "anyone can modify device register definitions".
-    Re-verification shows that overstated it: the importer reads **three fixed CSV paths
-    from config** (`application-prod.conf:31-35`), never from the request, so there is no
-    attacker-controlled payload or file path; and writes go through
-    `MasterDataDao.insertBatch(... ignore = true ...)` (`MasterDataDao.kt:22`) —
-    insert-ignore against the unique address index, hence idempotent with no delete or
-    overwrite. Residual risk is an unauthenticated repeated CSV parse + batch insert,
-    i.e. cost and lock churn, not tampering. Note also that **ADR-0017** demoted this
-    importer to "Huawei's own exports only" and nothing in the repo calls the route —
-    so deleting it is a legitimate fix, and probably the cheapest one.
 
 18. **`/metrics` unprotected.** *Still present, now centralized.*
 
@@ -142,12 +92,10 @@ depth / operational.
     the service port and would move with it — or Tailscale traffic routed through
     Traefik.
 
-27. **No rate limiting on REST endpoints.** *Confirmed unchanged.*
-
-    No `RateLimit` plugin or `ktor-server-rate-limit` dependency anywhere. Normally
-    mitigated by Traefik, but there is no application-level protection, and combined
-    with items 33 and 42 (unauthenticated writes) there is nothing to bound abuse from
-    inside the cluster.
+    *2026-10-20, 23:10:* the Traefik part is done — the frontend rule now excludes
+    `/metrics` (infrastructure `4fa290d`), and it answers 404 on `<pvlogger-host>`.
+    Still open: 200 with Prometheus text on `pvlogger.<tailnet>.ts.net`, i.e. to
+    anyone on the tailnet.
 
 ### ⚪ Defence in depth / operational
 
@@ -233,6 +181,13 @@ depth / operational.
     setup in `pvlogger-kpi-exporter/internal/datetime/format.go:19,23`), which
     `env.go:10-12` documents as deliberate: startup configuration only, per **ADR-0010**
     and **ADR-0011**. Nothing to do.
+27. ~~**No rate limiting on REST endpoints**~~ — **accepted 2026-10-20** under **ADR-0020**.
+    Still no `RateLimit` plugin anywhere, but the reason it mattered — unauthenticated
+    writes and the masterdata import reachable from the LAN (items 42, 33) — is gone: the
+    ingress now passes only the SPA's files, `/livedata` and `GET /v1/daydata`. Residual: a
+    LAN or tailnet client can call `/v1/daydata` in a loop, one SQL query each; the
+    `/livedata` fan-out is a shared flow, so more clients do not mean more data-accessor
+    load (ADR-0019). Revisit if the ADR-0024 export endpoint needs throttling.
 28. ~~**Hardcoded config defaults in Go services**~~ — **still fixed**, re-verified
     2026-08-17. `pvlogger-fusionsolar/internal/config/config.go:52,57,58,62,63` and
     `pvlogger-fusionsolar-auth/internal/config/config.go:31-32` use `GetEnvChecked` for
@@ -240,6 +195,11 @@ depth / operational.
     via `GetEnvOptional("FUSIONSOLAR_PASSWORD", useTokenSecret)` (line 53). No credential
     has a hardcoded default — the remaining defaulted values are non-secret (vendor host,
     `postgres` username, ports, K8s secret *names*).
+33. ~~**Unprotected CSV import endpoint**~~ — **accepted 2026-10-20** under **ADR-0020**
+    rule 1. The import route stays unauthenticated, but the masterdata server has no
+    ingress route (checked in the chart the same day), so only pods in the `pvlogger`
+    namespace can reach it. It reads three fixed CSV paths and inserts idempotently, and
+    ADR-0017 keeps it as the path for Huawei's own exports, so it stays.
 40. ~~**`http.Get` without a timeout in the KPI exporter**~~ — **fixed 2026-10-20** (KPI
     exporter 3.4.2). `pvlogger-kpi-exporter/internal/kpi/client.go` used `http.Get`, i.e.
     `http.DefaultClient` with no deadline, so an unresponsive data accessor would hang the
@@ -253,12 +213,22 @@ depth / operational.
     `WithTimeout()` (30 s, `model.RequestTimeout`), passed by both `auth.Authenticate` and
     `FusionSolarAccess.newClient`. A test per call site runs it against a server that never
     answers; without the option both tests hang.
+42. ~~**Unauthenticated mutating write endpoints on the data accessor**~~ — **fixed
+    2026-10-20** by narrowing the ingress (infrastructure `4fa290d`, deployed 23:10), under
+    **ADR-0020**. Both ingresses forwarded every `/v1` path, so the collectors' write
+    endpoints were reachable from the whole flat LAN and the tailnet, not just in-cluster as
+    first written. Traefik now matches `PathPrefix(/v1/daydata) && Method(GET)`, the
+    Tailscale Ingress `/v1/daydata`. Checked with GET on both hosts afterwards: daydata 200,
+    `store-kpi-values` and `read-latest-kpi` 404, `/` 200, `/livedata` upgrade 101. The
+    other `/v1` reads had only in-cluster callers (data accessor log), and Home Assistant
+    uses no PVLogger URL. The write routes themselves stay unauthenticated, as ADR-0020
+    rule 1 allows.
 45. ~~**The no-auth posture is undocumented**~~ — **resolved 2026-10-20** by **ADR-0020**
     (accepted the same day): in-cluster calls are trusted (default-deny NetworkPolicy), the
     ingress exposes an allowlist (SPA files, `/livedata`, `GET /v1/daydata`), browser-facing
     reads stay unauthenticated, and anything reachable from outside the home needs a token
     (the ADR-0024 export endpoint, open question 12). Writing it surfaced that the ingress
-    did not follow that rule — item 42 tracks the fix.
+    did not follow that rule — fixed the same day (item 42).
 59. ~~**The `/livedata` WebSocket accepts frames of any size**~~ — **fixed 2026-10-20**
     (frontend 3.11.2). *Found the same day.* `plugins/WebSockets.kt` set
     `maxFrameSize = Long.MAX_VALUE`; Ktor buffers a frame whole, so one LAN or tailnet client
