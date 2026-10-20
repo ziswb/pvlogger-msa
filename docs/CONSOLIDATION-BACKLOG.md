@@ -22,7 +22,8 @@ traffic in plaintext) at no extra cost, since CloudNativePG brings the server-si
 role on .2 since the same day. What remains is the move itself (phase 4, after the NVMe hardware of phase 3).
 
 Nothing else in this repo blocks the rehearsal import: V12 (item 41) is deployed and the `fsdata` baseline (item
-29, step 1) is taken, both 2026-10-20. Runners-up, each under an hour: security findings 40 and 41 (HTTP clients without a timeout). Everything else open here is low priority hygiene.
+29, step 1) is taken, both 2026-10-20. Security findings 40 and 41 (HTTP clients without a timeout) are fixed
+too. Everything else open here is low priority hygiene.
 
 ## Open
 

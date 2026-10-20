@@ -18,5 +18,5 @@ func WithBearerToken(token auth.Token) model.ClientOption {
 }
 
 func (f *FusionSolarAccess) newClient() (*model.ClientWithResponses, error) {
-	return model.NewClientWithResponses(f.cfg.FsUrl(), WithBearerToken(f.token))
+	return model.NewClientWithResponses(f.cfg.FsUrl(), model.WithTimeout(), WithBearerToken(f.token))
 }

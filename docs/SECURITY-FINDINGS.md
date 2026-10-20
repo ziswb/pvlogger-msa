@@ -116,17 +116,6 @@ depth / operational.
     `/metrics`, so reachability is cluster-internal. Fix by scoping a NetworkPolicy to
     the monitoring namespace rather than by adding auth.
 
-41. **Generated FusionSolar client defaults to an unbounded HTTP client** — *found
-    2026-08-17.* 🟡
-
-    `pvlogger-fusionsolar/internal/model/client.gen.go:65` sets
-    `client.Client = &http.Client{}` (no timeout) and neither call site overrides it:
-    `internal/auth/auth.go:20` uses `model.NewClient(cfg.FsUrl())` and
-    `internal/fusionsolar/client.go:21` `model.NewClientWithResponses(...)`, neither
-    passing `WithHTTPClient`. Same hang risk as item 40, against a **third-party** API
-    where a stalled connection is likelier. The generated file should not be edited; fix
-    at the two hand-written call sites.
-
 27. **No rate limiting on REST endpoints.** *Confirmed unchanged.*
 
     No `RateLimit` plugin or `ktor-server-rate-limit` dependency anywhere. Normally
@@ -247,6 +236,13 @@ depth / operational.
     CronJob. It now uses a package `httpClient` with a 30 s timeout, like the other Go
     clients. `client_test.go` runs `FetchKpis` against a server that never answers and
     expects it to give up.
+41. ~~**Generated FusionSolar client defaults to an unbounded HTTP client**~~ — **fixed
+    2026-10-20** (fusionsolar 3.4.1). The generated `NewClient` falls back to
+    `&http.Client{}` without a timeout, and neither hand-written call site overrode it. The
+    generated file stays untouched: a hand-written `internal/model/http_client.go` adds
+    `WithTimeout()` (30 s, `model.RequestTimeout`), passed by both `auth.Authenticate` and
+    `FusionSolarAccess.newClient`. A test per call site runs it against a server that never
+    answers; without the option both tests hang.
 
 Also fixed before the 2026-03-13 review and still holding: **CORS lockdown** (commits
 `a581720`, `2cbd3f5`, `fc3dbd2` — see the note above) and **`development = false` in all

@@ -17,7 +17,7 @@ type Token struct {
 
 func Authenticate(cfg *config.Config) (token *Token, err error) {
 	logging.Info("authenticating")
-	client, err := model.NewClient(cfg.FsUrl())
+	client, err := model.NewClient(cfg.FsUrl(), model.WithTimeout())
 	if err != nil {
 		return nil, err
 	}
