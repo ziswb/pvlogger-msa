@@ -23,4 +23,19 @@ class ApplicationTest : TestBase() {
             assertTrue(bodyAsText().isEmpty())
         }
     }
+
+    // Security finding 29: the pool is closed on shutdown, not left to the JVM exit.
+    @Test
+    fun `closes the database pool when the application stops`() {
+        withApp {
+            client.get("/$DATA_ACCESSOR_API_V1_PATH/$DATA_ACCESSOR_READ_LATEST_REGISTER_VALUE_PATH") {
+                url { appendPathSegments("I32", "16", "37113") }
+            }
+            assertTrue(openConnectionsToTestDb() > 0, "the running application holds a pooled connection")
+        }
+        // A closed backend can take a moment to leave pg_stat_activity.
+        val deadline = System.currentTimeMillis() + 5_000
+        while (openConnectionsToTestDb() > 0 && System.currentTimeMillis() < deadline) Thread.sleep(50)
+        assertEquals(0, openConnectionsToTestDb())
+    }
 }

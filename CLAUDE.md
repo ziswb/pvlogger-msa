@@ -63,7 +63,7 @@ Database runs via Docker Compose in `pvlogger-database/`.
 - `pvlogger-masterdata-server` — Modbus register master data CRUD/import service (port 8081)
 - `pvlogger-modbus-data-accessor` — Central data store/query service for register values and KPIs (port 8083)
 - `pvlogger-modbus-mock-server` — Mock Modbus TCP device for local testing (raw TCP port 8502)
-- `pvlogger-shared-model`, `pvlogger-shared-rest`, `pvlogger-shared-database`, `pvlogger-shared-ktor` — Shared Kotlin libraries (Modbus domain model; REST path constants + KPI DTO; Hikari/Flyway bootstrap; Ktor service bootstrap: CallLogging/CallId, Prometheus `/metrics`, StatusPages, shared `PvHttpClient` — ADR-0018)
+- `pvlogger-shared-model`, `pvlogger-shared-rest`, `pvlogger-shared-database`, `pvlogger-shared-ktor` — Shared Kotlin libraries (Modbus domain model; REST path constants + KPI DTO; Hikari/Flyway bootstrap; Ktor service bootstrap: CallLogging/CallId, Prometheus `/metrics`, StatusPages, shared `PvHttpClient`, `closeOnShutdown` — ADR-0018)
 
 **Go Services (CronJob-based):**
 - `pv-fast-data-collector` — Per-minute Modbus polling of the hard-coded KPI register set; KPIs are derived by the shared `aggregate(jobId)` path (ADR-0016)

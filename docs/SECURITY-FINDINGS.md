@@ -107,21 +107,6 @@ depth / operational.
     security in the original review. Raise to 10–15 if saturation is ever observed;
     there is no evidence of it today, so this is speculative and low priority.
 
-29. **No shutdown hooks / resource cleanup in JVM services.** *Partially present.*
-
-    The capability exists but is unwired: `pvlogger-shared-database/.../DatabaseFactory.kt:33-35`
-    defines `fun close() { datasource?.close() }`, yet it is only called mid-`connect()`
-    (line 27) when swapping to the canonical URL. No service subscribes it to shutdown —
-    `configuration/Databases.kt:7-10` in both data-accessor and masterdata-server just
-    call `connect()`, and no `Application.kt` subscribes to `ApplicationStopping`. The
-    only lifecycle subscriptions in the repo used to be log-only ones in sunrise-sunset,
-    which went with the module on 2026-08-27 — so there are now none at all.
-
-    Fix: subscribe `DatabaseFactory.close()` to `ApplicationStopping` in the shared
-    bootstrap (**ADR-0018**) so all services inherit it. The Go side already does this
-    correctly (`pvlogger-fusionsolar/internal/database/connection.go:29-39` plus
-    `defer`).
-
 ## Noted 2026-08-17, not findings
 
 - **CORS protection is config-dependent.** `pvlogger-frontend/.../plugins/Cors.kt:8-9`
@@ -195,6 +180,16 @@ depth / operational.
     via `GetEnvOptional("FUSIONSOLAR_PASSWORD", useTokenSecret)` (line 53). No credential
     has a hardcoded default — the remaining defaulted values are non-secret (vendor host,
     `postgres` username, ports, K8s secret *names*).
+29. ~~**No shutdown hooks / resource cleanup in JVM services**~~ — **fixed 2026-10-20**
+    (data accessor 3.12.1, masterdata server 3.5.1). `DatabaseFactory.close()` existed but
+    nothing called it on shutdown, so each stop left the Hikari pool to the JVM exit. Now
+    `DatabaseFactory` is `AutoCloseable`, and `closeOnShutdown(...)` in
+    `pvlogger-shared-ktor/.../Lifecycle.kt` closes it on `ApplicationStopped` (after
+    in-flight requests, unlike the `ApplicationStopping` first suggested here); both
+    services' `configureDatabases()` register it. The frontend has no database.
+    `LifecycleTest` covers the helper; the data accessor's `ApplicationTest` counts
+    connections in `pg_stat_activity` after the application stops — 0 with the hook, 2
+    left open without it.
 33. ~~**Unprotected CSV import endpoint**~~ — **accepted 2026-10-20** under **ADR-0020**
     rule 1. The import route stays unauthenticated, but the masterdata server has no
     ingress route (checked in the chart the same day), so only pods in the `pvlogger`

@@ -79,6 +79,17 @@ abstract class TestBase : KoinTest {
         private fun PostgreSQLContainer<*>.serverUrl() =
             "jdbc:postgresql://$host:${getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT)}/"
 
+        /** Connections to the test database other than the one asking. */
+        fun openConnectionsToTestDb(): Int =
+            DriverManager.getConnection("${postgres.serverUrl()}$TEST_DB", postgres.username, postgres.password).use {
+                it.createStatement().executeQuery(
+                    "SELECT count(*) FROM pg_stat_activity WHERE datname = '$TEST_DB' AND pid <> pg_backend_pid()",
+                ).use { rs ->
+                    rs.next()
+                    rs.getInt(1)
+                }
+            }
+
         // Restores the fresh-database semantics the previous per-test in-memory H2
         // instance provided. On the very first test the database does not exist yet
         // (DatabaseFactory creates it during application start) — nothing to clean.

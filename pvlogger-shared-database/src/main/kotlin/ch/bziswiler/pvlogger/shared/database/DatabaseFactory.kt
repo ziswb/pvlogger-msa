@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class DatabaseFactory(
     private val dbConfig: DatabaseConfig,
-) {
+) : AutoCloseable {
     private val logger = KotlinLogging.logger {}
     private val maxRetries = 30
     private val sleepMs: Long = 15000
@@ -36,7 +36,9 @@ class DatabaseFactory(
         migrateDatabase()
     }
 
-    fun close() {
+    // Closes the connection pool. Services register this for shutdown
+    // (closeOnShutdown in pvlogger-shared-ktor, security finding 29).
+    override fun close() {
         datasource?.close()
     }
 
