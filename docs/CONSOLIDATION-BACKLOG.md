@@ -21,8 +21,9 @@ traffic in plaintext) at no extra cost, since CloudNativePG brings the server-si
 *Code side done 2026-10-19* (role, bootstrap, TLS setting; see item 40), and the services run as the `pvlogger`
 role on .2 since the same day. What remains is the move itself (phase 4, after the NVMe hardware of phase 3).
 
-Runners-up, each under an hour: the first bullet of item 41 (confirm V11 works in production), and security
-findings 40 and 41 (HTTP clients without a timeout). Everything else open here is low priority hygiene.
+Before the rehearsal import: migration V12 dropping the three redundant indexes (item 41; V11 verified
+2026-10-20; written, ships as data accessor 3.12.0). Runners-up, each under an
+hour: security findings 40 and 41 (HTTP clients without a timeout). Everything else open here is low priority hygiene.
 
 ## Open
 
@@ -148,24 +149,31 @@ findings 40 and 41 (HTTP clients without a timeout). Everything else open here i
 
     Item 38's outage is fixed and verified. These are its leftovers, all small:
 
-    - **Verify V11 in production.** V11 shipped as data accessor 3.10.3 (chart tag bumped 2026-08-26), but no
-      check after the deploy is recorded. Confirm both indexes exist and are valid
-      (`modbus_response_data_job_dev_idx`, `modbus_register_uinteger_value_idx`; `pg_index.indisvalid`), and that
-      the I32 and U32 plans for `read-latest-register-value` use them.
-    - **Then drop the single-column indexes the composites make redundant** (~509 MB:
-      `modbus_response_data_job_id_idx`, `modbus_register_integer_values_reg_addr_idx`,
-      `modbus_register_uinteger_values_reg_adr_idx`) in a new migration, once the composites are seen winning (see
-      V11's closing comment). Ship it before or after the CloudNativePG cutover (item 40), not with it.
-    - **`job_id` statistics target**: probably moot after V11. The `(job_id, logic_device_id)` index removes the
-      useless dev_id bitmap half that `SET STATISTICS 1000` was meant to avoid. Drop this line if the plan check
-      above confirms it.
+    - ~~**Verify V11 in production.**~~ **Verified on .2 2026-10-20** (PostgreSQL 18.2, Flyway V11 applied
+      2026-08-26 22:57). Both indexes valid and in use: `modbus_response_data_job_dev_idx` 237 MB, 103 896 scans;
+      `modbus_register_uinteger_value_idx` 338 MB, 34 632 scans. Both `read-latest-register-value` plans are a
+      nested loop of two Index Conds on the composites: I32 37516 0.11 ms / 16 buffers, U32 37500 0.07 ms / 9
+      buffers (before V11: 0.99 ms / 38 and 2.63 ms / 293).
+    - **Next: drop the single-column indexes the composites make redundant** (~511 MB:
+      `modbus_response_data_job_id_idx` 180 MB, `modbus_register_integer_values_reg_addr_idx` 227 MB,
+      `modbus_register_uinteger_values_reg_adr_idx` 104 MB — all three at 0 scans, no `last_idx_scan`) in a new
+      migration V12. The composites are seen winning, so the condition from V11's closing comment is met. Ship it
+      before the CloudNativePG cutover (item 40), not with it — the import then copies ~511 MB less. *Written
+      2026-10-20* as V12, data accessor 3.12.0. No manual step, unlike V11: a drop only changes the catalog, so
+      its lock lasts milliseconds.
+    - `modbus_response_data_dev_id_idx` (124 MB) also shows 0 scans, but no composite leads with
+      `logic_device_id`, so it is not redundant by construction. Treat it like the timestamp indexes below.
+    - ~~**`job_id` statistics target**~~: moot, confirmed 2026-10-20 — `attstattarget` is unset (default) on
+      `job_id` and `logic_device_id`, and the plans above no longer touch the dev_id index.
     - **Two-statement lookup in `RegisterValueDao.readLatestRegisterValue`**: the only change that removes the
       join-order choice, and with it the remaining 1-3 day exposure. Downgraded 2026-08-27 to cheap insurance: do
       it the next time `RegisterValueDao` is touched. Until then the runbook step in item 38 (manual `ANALYZE`
       after a register-set change or a masterdata import) covers it.
     - **`modbus_response_data` timestamp indexes** (`date_created`, `request_time`, `response_time`, 398 MB each):
       candidates for dropping only after a full quarter of index-usage counters. The counters started 2026-08-08;
-      the CloudNativePG cluster starts its own from zero, so the quarter restarts at the cutover.
+      the CloudNativePG cluster starts its own from zero, so the quarter restarts at the cutover. *2026-10-20:* all
+      three at 0 scans on .2, but `stats_reset` is empty and the pre-V11 plans' indexes also read 0, so the counters
+      were reset some time after 2026-08-26 — how far back they reach is unknown.
     - If an I16/U16 register ever joins the dongle block, `short`/`ushort` need the same
       `(register_address, response_id)` index. V11 left them out on purpose.
     - *infrastructure repo:* the data accessor's `100m` CPU limit with `requests == limits` is tight for a JVM.
