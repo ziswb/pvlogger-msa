@@ -8,11 +8,17 @@ with the answer and a pointer to where it was promoted), each grouped by the ori
 topics. Numbers are stable IDs — never reuse one.
 
 **Status 2026-10-19:** Q1–11 answered (all on 2026-08-07, promoted to ADRs 0004–0007,
-CONTEXT.md and backlog items 27–30). Q12 is open, raised by the infrastructure repo.
+CONTEXT.md and backlog items 27–30). Q12 answered 2026-10-20 (ADR-0021). No open questions.
 
 ## Open
 
-12. **Where does the read-only KPI export endpoint live?** (Raised 2026-10-19 by
+_None._
+
+## Answered
+
+### Added 2026-10-19
+
+12. ~~**Where does the read-only KPI export endpoint live?** (Raised 2026-10-19 by
     infrastructure ADR-0024, phase 5 of its `docs/RESILIENCE-PLAN.md`.) The KPI
     export moves from OneDrive files to a pull: a container on the receiver's server
     asks for "all KPI rows since my cursor" over a shared Tailscale node. Behind it
@@ -29,9 +35,12 @@ CONTEXT.md and backlog items 27–30). Q12 is open, raised by the infrastructure
     Also to decide: where the token lives and how it is rotated. Blocked on the
     receiver agreeing to the pull (the ADR's fallback is a OneDrive client in the
     cluster, which needs nothing from this repo). The answer is the system's first
-    authenticated interface — record it in an ADR together with security finding 45.
+    authenticated interface — record it in an ADR together with security finding 45.~~
+    Answered 2026-10-20: in the **KPI exporter** — option (b) — as a `serve` mode, plus a
+    `relay` mode for the container on the receiver's server; the cluster sends the finished
+    file, the token is read from a mounted Secret file per request. Promoted to **ADR-0021**
+    (flow: infrastructure ADR-0024, amended the same day).
 
-## Answered
 
 ### Strategy
 

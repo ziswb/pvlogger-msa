@@ -1,7 +1,8 @@
 BINARY_NAME=exporter
 BIN_PATH := ./build
 CMD_PATH := ./cmd/exporter
-LINUX_BUILD_OPTIONS := CGO_ENABLED=0 GOARCH=arm64 GOOS=linux
+GOARCH ?= arm64
+LINUX_BUILD_OPTIONS := CGO_ENABLED=0 GOARCH=$(GOARCH) GOOS=linux
 MACOS_BUILD_OPTIONS := CGO_ENABLED=0 GOARCH=arm64 GOOS=darwin
 
 .PHONY: build clean lint prod test

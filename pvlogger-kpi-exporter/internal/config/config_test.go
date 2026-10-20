@@ -67,3 +67,48 @@ func TestLoad_CustomValues(t *testing.T) {
 }
 
 // The env helper functions themselves are covered in pv-logger/config.
+
+func TestMode_DefaultsToExport(t *testing.T) {
+	_ = os.Unsetenv("KPI_EXPORTER_MODE")
+	if m := Mode(); m != ModeExport {
+		t.Errorf("expected %q, got %q", ModeExport, m)
+	}
+}
+
+func TestLoadServe_Defaults(t *testing.T) {
+	t.Setenv("KPI_FILE_PREFIX", "site")
+	_ = os.Unsetenv("HTTP_PORT")
+	_ = os.Unsetenv("KPI_EXPORT_TOKEN_FILE")
+
+	cfg := LoadServe()
+
+	if cfg.HTTPPort != "8080" || cfg.TokenFile != "/etc/pvlogger-export/token" || cfg.FilePrefix != "site" {
+		t.Errorf("unexpected serve defaults: %+v", cfg)
+	}
+	if cfg.RestPath != "/v1/read-latest-kpi" {
+		t.Errorf("serve must read the data accessor like the CronJob, got %q", cfg.RestPath)
+	}
+}
+
+func TestLoadRelay_DefaultsAndRequired(t *testing.T) {
+	t.Setenv("KPI_EXPORT_PATH", "/export")
+	t.Setenv("UPSTREAM_URL", "https://pvlogger-export.example.ts.net/v1/export/latest")
+	t.Setenv("UPSTREAM_TOKEN", "t")
+	_ = os.Unsetenv("TS_AUTHKEY")
+	_ = os.Unsetenv("TS_HOSTNAME")
+	_ = os.Unsetenv("TS_STATE_DIR")
+
+	cfg := LoadRelay()
+
+	if cfg.TSAuthKey != "" || cfg.TSHostname != "pvlogger-relay" || cfg.TSStateDir != "/var/lib/pvlogger-relay" || cfg.HTTPPort != "8080" {
+		t.Errorf("unexpected relay defaults: %+v", cfg)
+	}
+
+	_ = os.Unsetenv("UPSTREAM_TOKEN")
+	defer func() {
+		if recover() == nil {
+			t.Error("expected a panic without UPSTREAM_TOKEN")
+		}
+	}()
+	LoadRelay()
+}

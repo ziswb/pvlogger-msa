@@ -36,16 +36,19 @@ func TestMapToExportRecord_PowerConversion(t *testing.T) {
 	}
 }
 
-func TestMapToExportRecord_ConsumptionCalculation(t *testing.T) {
+func TestMapToExportRecord_ConsumptionIsMeasuredConsumption(t *testing.T) {
 	kpis := &Values{
-		SolarToGridPower: 3.0,
-		GridToHousePower: 2.0,
+		SolarPower:        4.0,
+		SolarToGridPower:  0.0, // nothing exported ...
+		GridToHousePower:  0.0, // ... nothing imported: the house runs on solar
+		SolarToHousePower: 2.5,
+		OwnConsumption:    2.5,
 	}
 
 	record := MapToExportRecord(kpis)
 
-	// VerbAktW = SolarToGridPower*1000 + GridToHousePower*1000
-	expected := 5000.0
+	// Was export + import (= 0 W here); now the measured consumption.
+	expected := 2500.0
 	if record.CurrentData.VerbAktW != expected {
 		t.Errorf("VerbAktW: expected %f, got %f", expected, record.CurrentData.VerbAktW)
 	}
@@ -102,6 +105,7 @@ func TestMapToExportRecord_FractionalValues(t *testing.T) {
 		SolarPower:       0.123,
 		SolarToGridPower: 0.456,
 		GridToHousePower: 0.789,
+		OwnConsumption:   0.321,
 	}
 
 	record := MapToExportRecord(kpis)
@@ -115,7 +119,7 @@ func TestMapToExportRecord_FractionalValues(t *testing.T) {
 	if math.Abs(record.CurrentData.KaufAktW-789.0) > 0.001 {
 		t.Errorf("KaufAktW: expected 789.0, got %f", record.CurrentData.KaufAktW)
 	}
-	expectedVerb := 456.0 + 789.0
+	expectedVerb := 321.0
 	if math.Abs(record.CurrentData.VerbAktW-expectedVerb) > 0.001 {
 		t.Errorf("VerbAktW: expected %f, got %f", expectedVerb, record.CurrentData.VerbAktW)
 	}
