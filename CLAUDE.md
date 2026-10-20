@@ -122,7 +122,7 @@ Go services use a job dispatch pattern (switch on job name), read K8s secrets fo
 - **Exposed** for database access (not JPA/Hibernate)
 - **Kotlinx Serialization** (not Jackson/Gson)
 - **JVM 21** toolchain target
-- **Go 1.25** for CronJob services
+- **Go 1.27** for CronJob services
 - Docker images: JVM uses `eclipse-temurin:21-jre-ubi9-minimal`, Go uses `gcr.io/distroless/static-debian12`
 
 ### Dependency Versions
