@@ -21,9 +21,8 @@ traffic in plaintext) at no extra cost, since CloudNativePG brings the server-si
 *Code side done 2026-10-19* (role, bootstrap, TLS setting; see item 40), and the services run as the `pvlogger`
 role on .2 since the same day. What remains is the move itself (phase 4, after the NVMe hardware of phase 3).
 
-Before the rehearsal import: migration V12 dropping the three redundant indexes (item 41; V11 verified
-2026-10-20; written, ships as data accessor 3.12.0). Runners-up, each under an
-hour: security findings 40 and 41 (HTTP clients without a timeout). Everything else open here is low priority hygiene.
+Nothing else in this repo blocks the rehearsal import: V12 (item 41) is deployed and the `fsdata` baseline (item
+29, step 1) is taken, both 2026-10-20. Runners-up, each under an hour: security findings 40 and 41 (HTTP clients without a timeout). Everything else open here is low priority hygiene.
 
 ## Open
 
@@ -174,9 +173,9 @@ hour: security findings 40 and 41 (HTTP clients without a timeout). Everything e
       `modbus_response_data_job_id_idx` 180 MB, `modbus_register_integer_values_reg_addr_idx` 227 MB,
       `modbus_register_uinteger_values_reg_adr_idx` 104 MB — all three at 0 scans, no `last_idx_scan`) in a new
       migration V12. The composites are seen winning, so the condition from V11's closing comment is met. Ship it
-      before the CloudNativePG cutover (item 40), not with it — the import then copies ~511 MB less. *Written
-      2026-10-20* as V12, data accessor 3.12.0. No manual step, unlike V11: a drop only changes the catalog, so
-      its lock lasts milliseconds.
+      before the CloudNativePG cutover (item 40), not with it — the import then copies ~511 MB less. *Done
+      2026-10-20* as V12, data accessor 3.12.0, deployed the same evening: Flyway 11 → 12 in 151 ms on .2. No
+      manual step, unlike V11: a drop only changes the catalog, so its lock lasts milliseconds.
     - `modbus_response_data_dev_id_idx` (124 MB) also shows 0 scans, but no composite leads with
       `logic_device_id`, so it is not redundant by construction. Treat it like the timestamp indexes below.
     - ~~**`job_id` statistics target**~~: moot, confirmed 2026-10-20 — `attstattarget` is unset (default) on
