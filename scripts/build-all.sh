@@ -23,17 +23,19 @@ help()
 {
    echo "This script builds a docker image for pvlogger."
    echo
-   echo "Syntax: build-all.sh [-v VERSION] [-l] [-h]"
+   echo "Syntax: build-all.sh [-v VERSION] [-l] [-f] [-h]"
    echo "options:"
    echo "h     Print this Help."
    echo "v     Version to tag the docker image with."
    echo "l     Use local docker registry."
+   echo "f     Force: overwrite version tags that already exist in the registry."
    echo
 }
 
 declare -a pids=()           # Indexed array: list of background process PIDs
 declare -A pid_to_module     # Associative array: maps PID → module name for error reporting
 declare -a failed_modules=() # Indexed array: collects module names that failed
+declare -a skipped_modules=() # Indexed array: version already in the registry (build.sh exit 3)
 
 waitPids() {
     local timeout=2700  # 45 minutes timeout
@@ -54,8 +56,13 @@ waitPids() {
                     echo "Done (success) -- $module ($pid)"
                 else
                     local exit_code=$?
-                    echo "Done (FAILED with exit code $exit_code) -- $module ($pid)" >&2
-                    failed_modules+=("$module")
+                    if [ "$exit_code" -eq 3 ]; then
+                        echo "Skipped (version already in registry) -- $module ($pid)"
+                        skipped_modules+=("$module")
+                    else
+                        echo "Done (FAILED with exit code $exit_code) -- $module ($pid)" >&2
+                        failed_modules+=("$module")
+                    fi
                 fi
                 unset 'pids[$i]'
             fi
@@ -94,6 +101,14 @@ waitPids() {
         exit 124
     fi
     
+    if [ ${#skipped_modules[@]} -ne 0 ]; then
+        echo ""
+        echo "SKIPPED (version already in the registry; bump LABEL version or pass -f):"
+        for module in "${skipped_modules[@]}"; do
+            echo "  - $module"
+        done
+    fi
+
     # Report failures
     if [ ${#failed_modules[@]} -ne 0 ]; then
         echo "" >&2
@@ -115,7 +130,7 @@ addPid() {
     pid_to_module[$pid]="$module"
 }
 
-OPTSTRING=":v:lh"
+OPTSTRING=":v:lfh"
 declare -a passed_args=()
 
 while getopts $OPTSTRING option
@@ -124,6 +139,8 @@ do
     v) passed_args+=("-v" "${OPTARG}")
        ;;
     l) passed_args+=("-l")
+       ;;
+    f) passed_args+=("-f")
        ;;
     h) help
        exit 0
