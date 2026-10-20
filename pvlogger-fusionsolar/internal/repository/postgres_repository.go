@@ -41,7 +41,7 @@ func (r *PostgresRepository) InsertFsResponse(ctx context.Context, input FsRespo
 	params := database.InsertFsResponseParams{
 		FailCode:  input.FailCode,
 		Message:   input.Message,
-		Raw:       input.Raw,
+		Raw:       string(input.Raw),
 		Success:   input.Success,
 		Timestamp: input.Timestamp,
 	}

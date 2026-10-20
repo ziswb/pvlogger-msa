@@ -63,6 +63,22 @@ hour: security findings 40 and 41 (HTTP clients without a timeout). Everything e
     *Note 2026-10-19:* infrastructure ADR-0022 copies `fsdata` into CloudNativePG with `initdb.import`. Do
     step (1) before that cutover, against the database being copied — afterwards the live schema is whatever the
     import produced, and the old server is the only reference left.
+
+    *Step (1) done 2026-10-20* against `pg_dump --schema-only -d fsdata` on .2. Same 8 tables, same columns, keys,
+    foreign keys and indexes (`serial` vs. integer + sequence is the same thing). Three differences:
+    - **`fs_response.raw` is `text` live, `jsonb` in the file.** sqlc maps it to `[]byte` either way, so the code
+      works against both — but a database built from the file would reject a reply that is not valid JSON, and
+      live would not. *Reconciled 2026-10-20:* the file now says `text`, matching production (converting live
+      would rewrite the table and fail on any row that is not JSON). sqlc regenerated (`Raw` is now `string`); the
+      repository converts the JSON bytes at its one call site.
+    - **A `flyway_schema_history` table** in `fsdata`, left over from the Kotlin era (open question 4). Not in the
+      file, nothing reads it. Its rows are the only record of the old migrations; keep or drop when the runner is
+      wired, but don't let tern's own history table be confused with it.
+    - **A leftover publication `upgrade_pub` (FOR ALL TABLES)** from the PostgreSQL 18 upgrade by logical
+      replication — the same leftover infrastructure backlog 86 found and dropped in `immich`. Not schema, but the
+      CloudNativePG import carries it along (and the restore runbook shows it producing `wal_level` warnings).
+      *Dropped 2026-10-20* by the operator in `pvdata`, `pvmasterdata` and `fsdata` (it existed in all three) as
+      `postgres` on .2; `pg_replication_slots` was empty in each, so no WAL was being retained.
 30. **Refresh the outdated mock server** (low prio, ex open question 8): unused for a while and out of date. Update it
     so the Tilt environment (item 23)
     works again for larger changes, and consider building e2e tests around it — none exist today. It stays local-only,

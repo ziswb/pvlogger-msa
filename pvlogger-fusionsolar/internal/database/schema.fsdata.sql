@@ -6,7 +6,7 @@ create table fs_response
     success   boolean   not null,
     fail_code integer   not null,
     message   text,
-    raw       jsonb     not null
+    raw       text      not null
 );
 
 create table fs_station_extended_data
