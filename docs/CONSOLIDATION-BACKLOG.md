@@ -32,7 +32,11 @@ too. Everything else open here is low priority hygiene.
 3.4.1, device collector 3.7.1, fast collector 0.13.2, full collector 0.8.2. The operator builds them all with
 `scripts/build-all.sh` and redeploys `pvlogger.yaml`. Chart tags (infrastructure `values.yaml`) that must move with
 it: `fusionsolarAuth` 3.4.1, `pvDeviceDataCollector` 3.7.1, `pvFastDataCollector` 0.13.2, `pvFullDataCollector`
-0.8.2, `kpiExporter` 3.5.0. After the deploy, check the collectors and the CronJob exporter still run.
+0.8.2, `kpiExporter` 3.5.0. *Deployed 2026-10-21 00:26* — every Deployment and CronJob runs the versions above
+(checked with `kubectl`). Note: a build started before the version bumps overwrote the tags fusionsolar-auth 3.4.0,
+fast collector 0.13.1, device collector 3.7.0 and full collector 0.8.1 with Go 1.27.3 rebuilds of the same source;
+`build.sh` now refuses that without `-f` (`ebe4159d`). Still to check: that the collectors and the exporter CronJob
+run cleanly on the new images.
 
 **Receiver export (ADR-0021, infrastructure ADR-0024) — in progress.**
 - Done here: the exporter's `serve` and `relay` modes, consumption fix, multi-arch image, install guide
