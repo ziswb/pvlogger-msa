@@ -25,6 +25,29 @@ Nothing else in this repo blocks the rehearsal import: V12 (item 41) is deployed
 29, step 1) is taken, both 2026-10-20. Security findings 40 and 41 (HTTP clients without a timeout) are fixed
 too. Everything else open here is low priority hygiene.
 
+### Status 2026-10-21 (end of the 2026-10-20 session)
+
+**Released for build, all versions in the Dockerfiles:** data accessor 3.12.1, masterdata server 3.5.1, frontend
+3.11.2, fusionsolar 3.4.1, KPI exporter 3.5.0; and, rebuilt on Go 1.27.3 with no code change, fusionsolar-auth
+3.4.1, device collector 3.7.1, fast collector 0.13.2, full collector 0.8.2. The operator builds them all with
+`scripts/build-all.sh` and redeploys `pvlogger.yaml`. Chart tags (infrastructure `values.yaml`) that must move with
+it: `fusionsolarAuth` 3.4.1, `pvDeviceDataCollector` 3.7.1, `pvFastDataCollector` 0.13.2, `pvFullDataCollector`
+0.8.2, `kpiExporter` 3.5.0. After the deploy, check the collectors and the CronJob exporter still run.
+
+**Receiver export (ADR-0021, infrastructure ADR-0024) — in progress.**
+- Done here: the exporter's `serve` and `relay` modes, consumption fix, multi-arch image, install guide
+  (`pvlogger-kpi-exporter/README.md`). Brief with the contract (service/port 8080, `GET /v1/export/latest`,
+  Bearer token from `KPI_EXPORT_TOKEN_FILE`) handed to the infrastructure side.
+- Infrastructure side, not done: `serve` Deployment, Tailscale ingress `pvlogger-export` (`tag:pvlogger-export`),
+  tailnet policy for the relay's tag, token Secret, auth key for the relay.
+- Untested until then: the relay's tsnet join; the smoke test ran without Tailscale.
+- Operator: tell him `pv_verb_akt_w` changed (export + import → measured consumption; reaches his OneDrive files
+  with 3.5.0 already); ask whether Docker runs on his Ubuntu and what `uname -m` says; then install the relay and
+  run it in parallel with OneDrive until he switches. Afterwards the CronJob mode and the OneDrive volume go.
+
+**Security findings still open:** 3 (closes with `POSTGRESQL_SSLMODE=require` at the CloudNativePG cutover), 18
+(`/metrics` on the tailnet name only), 15 (pool size, speculative).
+
 ## Open
 
 22. **Test coverage very uneven**: `pv-full-data-collector` and the shared Kotlin `-rest`/`-database` libs have zero
