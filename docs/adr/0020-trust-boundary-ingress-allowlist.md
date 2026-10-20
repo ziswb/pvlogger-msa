@@ -1,6 +1,6 @@
 # 0020 — Trust boundary: in-cluster calls are trusted, the ingress exposes an allowlist, outside access needs a token
 
-- Status: proposed
+- Status: accepted (2026-10-20)
 - Date: 2026-10-20
 
 ## Context

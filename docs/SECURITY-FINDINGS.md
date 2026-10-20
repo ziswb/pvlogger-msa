@@ -95,7 +95,7 @@ depth / operational.
     finding 54), a guest or IoT device can write KPI rows. **Fix: narrow both ingress
     rules to `/v1/daydata`**, the only data-accessor route the SPA calls — an
     infrastructure chart change, handed over 2026-10-20. The rule behind it is
-    **ADR-0020** (proposed): in-cluster calls trusted, the ingress exposes an
+    **ADR-0020** (accepted 2026-10-20): in-cluster calls trusted, the ingress exposes an
     allowlist. Close this item once the narrowed rules are deployed and the probe
     answers 404.
 
@@ -135,7 +135,7 @@ depth / operational.
     falls under the `/` rule of both ingresses and answers 200 on `<pvlogger-host>`
     and on the tailnet name (probed). The data accessor's and masterdata server's are not
     exposed (`/metrics` is outside `/v1`; masterdata has no ingress). Severity stays low —
-    JVM and HTTP meters only. ADR-0020 (proposed) keeps `/metrics` off the ingress. On
+    JVM and HTTP meters only. ADR-0020 keeps `/metrics` off the ingress. On
     Traefik that is one rule (`&& !PathPrefix(/metrics)`); the Tailscale Ingress matches
     prefixes only, so there it needs either a separate management port in
     `pvlogger-shared-ktor` — note the chart's liveness/readiness probes use `/metrics` on
@@ -173,37 +173,6 @@ depth / operational.
     bootstrap (**ADR-0018**) so all services inherit it. The Go side already does this
     correctly (`pvlogger-fusionsolar/internal/database/connection.go:29-39` plus
     `defer`).
-
-45. **The no-auth posture is undocumented** — *raised 2026-08-17.* ⚪
-
-    Items 33, 42 and the notes below are all one decision wearing five hats, and that
-    decision is written down nowhere. Either add auth or record an ADR stating that
-    inter-service traffic is trusted, that NetworkPolicies plus the private LAN are the
-    enforcement boundary, and that new mutating endpoints therefore need no auth *but do
-    need a policy rule*. Without it, the next reviewer re-derives these findings from
-    scratch — as this re-verification just did.
-
-    *Update 2026-10-19 — now due.* Infrastructure ADR-0024 (accepted 2026-10-19) plans the first PVLogger interface
-    reachable from outside the home: a read-only KPI export endpoint with a token, pulled by the external receiver
-    over a shared Tailscale node (where it lives is open question 12). From then on "no auth anywhere" is no longer
-    true, so the ADR should state both rules: in-cluster traffic is trusted, and anything reachable from outside
-    needs a token. Also weaker than the posture note implies: infrastructure finding 54 records that the LAN is one
-    flat network with no filtering between devices.
-
-    *2026-10-20:* written as **ADR-0020** (proposed): in-cluster calls are trusted, the ingress exposes an allowlist
-    (SPA files, `/livedata`, `GET /v1/daydata`), browser-facing reads stay open, anything reachable from outside the
-    home needs a token. Writing it surfaced the ingress gap in item 42. Close this item when the ADR is accepted.
-
-59. **The `/livedata` WebSocket accepts frames of any size** — *found 2026-10-20.* ⚪
-
-    `pvlogger-frontend/.../plugins/WebSockets.kt` installs WebSockets with
-    `maxFrameSize = Long.MAX_VALUE`. The session reads and discards every incoming frame
-    (the client is not expected to send anything), but Ktor buffers each frame whole
-    before handing it over, so one client on the LAN or tailnet can send a single huge
-    frame and push the frontend out of memory. The SPA sends nothing, so a small limit
-    (a few KiB) costs nothing; Ktor then closes the session with "message too big". The
-    rest of the WebSocket was reviewed the same day: read-only, client input is never
-    used, no data beyond what `/v1/daydata` already serves.
 
 ## Noted 2026-08-17, not findings
 
@@ -284,6 +253,21 @@ depth / operational.
     `WithTimeout()` (30 s, `model.RequestTimeout`), passed by both `auth.Authenticate` and
     `FusionSolarAccess.newClient`. A test per call site runs it against a server that never
     answers; without the option both tests hang.
+45. ~~**The no-auth posture is undocumented**~~ — **resolved 2026-10-20** by **ADR-0020**
+    (accepted the same day): in-cluster calls are trusted (default-deny NetworkPolicy), the
+    ingress exposes an allowlist (SPA files, `/livedata`, `GET /v1/daydata`), browser-facing
+    reads stay unauthenticated, and anything reachable from outside the home needs a token
+    (the ADR-0024 export endpoint, open question 12). Writing it surfaced that the ingress
+    did not follow that rule — item 42 tracks the fix.
+59. ~~**The `/livedata` WebSocket accepts frames of any size**~~ — **fixed 2026-10-20**
+    (frontend 3.11.2). *Found the same day.* `plugins/WebSockets.kt` set
+    `maxFrameSize = Long.MAX_VALUE`; Ktor buffers a frame whole, so one LAN or tailnet client
+    could push the frontend out of memory with a single frame. The SPA sends nothing, so the
+    limit is now `MAX_INCOMING_FRAME_BYTES` = 4 KiB, and a bigger frame closes the session
+    with 1009. `WebSocketsLimitTest` covers both directions: an oversized incoming frame is
+    refused (the test fails with the old value), outgoing frames above 4 KiB still go out.
+    The rest of the WebSocket was reviewed the same day: read-only, client input is never
+    used, nothing beyond what `/v1/daydata` serves.
 
 Also fixed before the 2026-03-13 review and still holding: **CORS lockdown** (commits
 `a581720`, `2cbd3f5`, `fc3dbd2` — see the note above) and **`development = false` in all

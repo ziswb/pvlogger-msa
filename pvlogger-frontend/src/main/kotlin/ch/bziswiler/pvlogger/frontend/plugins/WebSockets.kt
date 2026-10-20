@@ -24,11 +24,21 @@ import kotlin.time.Duration.Companion.seconds
 
 private val logger = KotlinLogging.logger {}
 
-fun Application.configureWebSockets() {
+/**
+ * Largest frame a `/livedata` client may send. The SPA sends nothing; the limit
+ * only stops one client from pushing the frontend out of memory with a single
+ * huge frame (security finding 59). Ktor answers a bigger frame by closing the
+ * session with 1009 (message too big). Our own outgoing KPI frames are not
+ * affected: the limit applies to what we receive.
+ */
+const val MAX_INCOMING_FRAME_BYTES = 4096L
+
+/** The WebSockets plugin with its limits; separate from the route so tests can install it alone. */
+fun Application.installWebSockets() {
     install(WebSockets) {
         pingPeriod = 15.seconds
         timeout = 15.seconds
-        maxFrameSize = Long.MAX_VALUE
+        maxFrameSize = MAX_INCOMING_FRAME_BYTES
         masking = false
         contentConverter = KotlinxWebsocketSerializationConverter(
             Json {
@@ -39,6 +49,10 @@ fun Application.configureWebSockets() {
             }
         )
     }
+}
+
+fun Application.configureWebSockets() {
+    installWebSockets()
 
     val config by inject<AppConfig>()
     // Scoped to the application, not to a session: the polling loop must
