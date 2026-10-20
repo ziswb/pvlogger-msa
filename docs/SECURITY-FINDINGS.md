@@ -116,15 +116,6 @@ depth / operational.
     `/metrics`, so reachability is cluster-internal. Fix by scoping a NetworkPolicy to
     the monitoring namespace rather than by adding auth.
 
-40. **`http.Get` without a timeout in the KPI exporter** — *found 2026-08-17.* 🟡
-
-    `pvlogger-kpi-exporter/internal/kpi/client.go:23` calls `http.Get(targetURL)`, which
-    uses `http.DefaultClient` and therefore has no deadline. Every other Go HTTP client
-    in the repo sets 30s (`pvlogger-shared-modbus/persistence/service.go:23-24`,
-    `masterdata/service.go:33-34`, `pvlogger-fusionsolar-auth/.../auth.go:49`), so this
-    is an inconsistency as much as a defect: an unresponsive data accessor hangs the
-    CronJob indefinitely instead of failing it.
-
 41. **Generated FusionSolar client defaults to an unbounded HTTP client** — *found
     2026-08-17.* 🟡
 
@@ -250,6 +241,12 @@ depth / operational.
     via `GetEnvOptional("FUSIONSOLAR_PASSWORD", useTokenSecret)` (line 53). No credential
     has a hardcoded default — the remaining defaulted values are non-secret (vendor host,
     `postgres` username, ports, K8s secret *names*).
+40. ~~**`http.Get` without a timeout in the KPI exporter**~~ — **fixed 2026-10-20** (KPI
+    exporter 3.4.2). `pvlogger-kpi-exporter/internal/kpi/client.go` used `http.Get`, i.e.
+    `http.DefaultClient` with no deadline, so an unresponsive data accessor would hang the
+    CronJob. It now uses a package `httpClient` with a 30 s timeout, like the other Go
+    clients. `client_test.go` runs `FetchKpis` against a server that never answers and
+    expects it to give up.
 
 Also fixed before the 2026-03-13 review and still holding: **CORS lockdown** (commits
 `a581720`, `2cbd3f5`, `fc3dbd2` — see the note above) and **`development = false` in all
