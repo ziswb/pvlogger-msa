@@ -1,0 +1,7 @@
+# Shared by every Go module: golangci-lint looks for its config in the module
+# directory and then in the parent directories.
+version: "2"
+
+formatters:
+  enable:
+    - gofmt # backlog item 32: keep `gofmt -l` empty

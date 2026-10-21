@@ -83,15 +83,6 @@ pre-existing "modbus connection already closed" (a double close, also in the run
     so the Tilt environment (item 23)
     works again for larger changes, and consider building e2e tests around it — none exist today. It stays local-only,
     never production (open question 6).
-32. **Repo-wide `gofmt -w`**: ~13 Go files fail `gofmt -l` (import ordering, struct-field alignment) — pre-existing,
-    surfaced when golangci-lint was first run locally (2026-08-09; its gofmt linter is not enabled, so lint stays green
-    regardless). One mechanical formatting commit, ideally with nothing else in it; consider enabling the gofmt/gofumpt
-    linter in the golangci-lint config afterwards to keep it that way.
-
-    *Re-verified 2026-10-19:* down to 7 files — `pv-device-data-collector/cmd/collector/main.go`, both
-    fusionsolar `internal/config/config.go`, `pvlogger-fusionsolar/internal/fusionsolar/device_5_minutes_kpi.go`,
-    `pvlogger-kpi-exporter/internal/kpi/export_test.go`, `pvlogger-shared-modbus/metrics/metrics-service.go`,
-    `pvlogger-shared-modbus/registers/masterdata_drift_test.go`.
 40. 🔴 **Make the services ready for the CloudNativePG move** (added 2026-10-19; infrastructure ADR-0022, phase 4
     of its `docs/RESILIENCE-PLAN.md`)
 
@@ -495,6 +486,23 @@ pre-existing "modbus connection already closed" (a double close, also in the run
     that production (TIMESTAMPTZ, `TZ=Europe/Zurich`) never had. Extended same day: masterdata tests moved to
     Testcontainers too, the H2 dev profiles now point at the local compose PostgreSQL, and H2 is removed entirely — no
     migration needs H2 compatibility anymore. Tests require a running Docker daemon.
+32. ~~**Repo-wide `gofmt -w`**~~: ~13 Go files fail `gofmt -l` (import ordering, struct-field alignment) — pre-existing,
+    surfaced when golangci-lint was first run locally (2026-08-09; its gofmt linter is not enabled, so lint stays green
+    regardless). One mechanical formatting commit, ideally with nothing else in it; consider enabling the gofmt/gofumpt
+    linter in the golangci-lint config afterwards to keep it that way.
+
+    *Re-verified 2026-10-19:* down to 7 files — `pv-device-data-collector/cmd/collector/main.go`, both
+    fusionsolar `internal/config/config.go`, `pvlogger-fusionsolar/internal/fusionsolar/device_5_minutes_kpi.go`,
+    `pvlogger-kpi-exporter/internal/kpi/export_test.go`, `pvlogger-shared-modbus/metrics/metrics-service.go`,
+    `pvlogger-shared-modbus/registers/masterdata_drift_test.go`.
+
+    **Resolved 2026-10-21.** The 7 files formatted in a commit of their own (imports, field alignment; no code
+    change). A root `.golangci.yml` (golangci-lint v2) enables the `gofmt` formatter for every module, since
+    golangci-lint finds the config in the parent directory; checked that a misindented file fails lint. The
+    top-level `make lint` (and so `./gradlew makeGoLint`) now also covers `pvlogger-fusionsolar-auth` (left out of
+    `SUB_DIRS` since it was added) and the libraries `pv-logger` and `pvlogger-shared-modbus` (`LIB_DIRS`, lint
+    only, no Makefile of their own); the two `pvlogger-shared-modbus` files had slipped through for that reason.
+    All 9 modules: 0 issues.
 33. ~~**Negative live consumption under fast irradiance changes**~~ (observed 2026-08-13)
 
     **Resolved 2026-08-14** (fast collector 0.12.0, deployed): live KPIs now come from the dongle aggregate block in one
