@@ -48,7 +48,8 @@ pre-existing "modbus connection already closed" (a double close, also in the run
   `pvlogger-export` (`tag:pvlogger-export`), token Secret, tailnet policy granting `tag:pvlogger-relay` only
   `tag:pvlogger-export:443`. Checked from the Mac: no/wrong token 401, token 200. Left: the single-use auth key for
   `tag:pvlogger-relay`, created just before the install.
-- Untested until the install: the relay's tsnet join; the smoke test ran without Tailscale.
+- Relay tested 2026-10-21 as the systemd unit on an x86_64 Ubuntu laptop: tsnet join, `/export` 200, file written,
+  rejoin after restart without the key (README).
 - Operator: tell him `pv_verb_akt_w` changed (export + import → measured consumption; reaches his OneDrive files
   with 3.5.0 already); then install the relay and run it in parallel with OneDrive until he switches. His answer
   (2026-10-21): `x86_64`, no Docker or Podman, so the relay runs as a systemd service from an amd64 binary

@@ -58,7 +58,13 @@ journalctl -u pvlogger-relay -f             # "relay: joined the tailnet", then 
 
 Check: `curl -s http://localhost:8780/export` returns the JSON and a new file
 appears in `/srv/pvlogger/export` (world-readable, for his platform). A 502
-names the reason (upstream down, token wrong, …) and writes nothing.
+names the reason (upstream down, token wrong, …) and writes nothing. Each call
+also deletes export files older than 48 hours, as the CronJob does.
+
+Tested 2026-10-21 on an Ubuntu 26.04 `x86_64` laptop with this unit unchanged:
+tsnet joined in under a second inside the sandbox, `/export` 200 with the file
+written (0644), and a restart rejoined from the state directory without using
+the key ("Ignoring authkey"). `systemd-analyze security`: 3.1.
 
 - **Keep `TS_AUTHKEY` in `relay.env`.** The node identity lives in
   `/var/lib/pvlogger-relay` after the first start, but an empty `TS_AUTHKEY`
