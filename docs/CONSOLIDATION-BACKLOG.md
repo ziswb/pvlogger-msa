@@ -35,16 +35,20 @@ it: `fusionsolarAuth` 3.4.1, `pvDeviceDataCollector` 3.7.1, `pvFastDataCollector
 0.8.2, `kpiExporter` 3.5.0. *Deployed 2026-10-21 00:26* — every Deployment and CronJob runs the versions above
 (checked with `kubectl`). Note: a build started before the version bumps overwrote the tags fusionsolar-auth 3.4.0,
 fast collector 0.13.1, device collector 3.7.0 and full collector 0.8.1 with Go 1.27.3 rebuilds of the same source;
-`build.sh` now refuses that without `-f` (`ebe4159d`). Still to check: that the collectors and the exporter CronJob
-run cleanly on the new images.
+`build.sh` now refuses that without `-f` (`ebe4159d`). *Verified 2026-10-21 18:50:* every pvlogger Job since the
+deploy completed (no failed Jobs, no Warning events); fast and full collectors store KPIs and push metrics, the
+device collectors, fusionsolar-auth and the exporter CronJob run cleanly. The only WARN is the device collectors'
+pre-existing "modbus connection already closed" (a double close, also in the runs before the deploy).
 
 **Receiver export (ADR-0021, infrastructure ADR-0024) — in progress.**
 - Done here: the exporter's `serve` and `relay` modes, consumption fix, multi-arch image, install guide
   (`pvlogger-kpi-exporter/README.md`). Brief with the contract (service/port 8080, `GET /v1/export/latest`,
   Bearer token from `KPI_EXPORT_TOKEN_FILE`) handed to the infrastructure side.
-- Infrastructure side, not done: `serve` Deployment, Tailscale ingress `pvlogger-export` (`tag:pvlogger-export`),
-  tailnet policy for the relay's tag, token Secret, auth key for the relay.
-- Untested until then: the relay's tsnet join; the smoke test ran without Tailscale.
+- Infrastructure side done 2026-10-21 00:28 (infrastructure `c9330d4`): `serve` Deployment, Tailscale ingress
+  `pvlogger-export` (`tag:pvlogger-export`), token Secret, tailnet policy granting `tag:pvlogger-relay` only
+  `tag:pvlogger-export:443`. Checked from the Mac: no/wrong token 401, token 200. Left: the single-use auth key for
+  `tag:pvlogger-relay`, created just before the install.
+- Untested until the install: the relay's tsnet join; the smoke test ran without Tailscale.
 - Operator: tell him `pv_verb_akt_w` changed (export + import → measured consumption; reaches his OneDrive files
   with 3.5.0 already); ask whether Docker runs on his Ubuntu and what `uname -m` says; then install the relay and
   run it in parallel with OneDrive until he switches. Afterwards the CronJob mode and the OneDrive volume go.
