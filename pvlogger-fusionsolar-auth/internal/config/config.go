@@ -50,4 +50,3 @@ func (c *Config) FsUrl() string {
 	}
 	return u.String()
 }
-

@@ -1,8 +1,8 @@
 package metrics
 
 import (
-	"pvlogger-shared-modbus/kpis"
 	"pv-logger/logging"
+	"pvlogger-shared-modbus/kpis"
 )
 
 func (s *MetricsPushService) PushKpiMetrics(kpiValues *kpis.PvLoggerKpiData) {

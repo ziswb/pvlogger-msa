@@ -13,11 +13,11 @@ func TestMain(m *testing.M) {
 
 func TestMapToExportRecord_PowerConversion(t *testing.T) {
 	kpis := &Values{
-		CreatedAt:         1709208000000, // 2024-02-29 in millis
-		SolarPower:        5.5,
-		SolarToGridPower:  2.0,
-		GridToHousePower:  1.5,
-		DailyEnergyYield:  10.0,
+		CreatedAt:           1709208000000, // 2024-02-29 in millis
+		SolarPower:          5.5,
+		SolarToGridPower:    2.0,
+		GridToHousePower:    1.5,
+		DailyEnergyYield:    10.0,
 		DailyEnergyExported: 4.0,
 		DailyEnergyImported: 3.0,
 		DailyEnergyConsumed: 9.0,

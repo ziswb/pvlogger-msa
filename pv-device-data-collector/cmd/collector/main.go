@@ -1,9 +1,9 @@
 package main
 
 import (
-	"pv-logger/logging"
 	"pv-device-data-collector/internal/config"
 	"pv-device-data-collector/internal/services"
+	"pv-logger/logging"
 )
 
 type JobNameEnum = string

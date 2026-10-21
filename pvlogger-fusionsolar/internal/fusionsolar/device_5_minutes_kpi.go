@@ -3,9 +3,9 @@ package fusionsolar
 import (
 	"context"
 	"errors"
+	"pv-logger/logging"
 	"pvlogger-fusionsolar/internal/model"
 	"pvlogger-fusionsolar/internal/repository"
-	"pv-logger/logging"
 	sharedmodel "pvlogger-shared-modbus/model"
 	"time"
 

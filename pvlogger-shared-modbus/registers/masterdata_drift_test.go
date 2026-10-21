@@ -21,7 +21,7 @@ import (
 
 const dongleMigrationSQL = "../../pvlogger-masterdata-server/src/main/resources/db/migration/V2__DongleAggregateBlock.sql"
 
-// ('DONGLE', 2, 'Load power', 'RO', 'U32', 'W', 'ONE', 37500, 2, '', 'DYNAMIC')
+// ('DONGLE', 2, 'Load power', 'RO', 'U32', 'W', 'ONE', 37500, 2, ”, 'DYNAMIC')
 var dongleRowPattern = regexp.MustCompile(
 	`\('DONGLE',\s*\d+,\s*'([^']*)',\s*'([^']*)',\s*'([^']*)',\s*'([^']*)',\s*'([^']*)',\s*(\d+),\s*(\d+),\s*'[^']*',\s*'([^']*)'\)`)
 
