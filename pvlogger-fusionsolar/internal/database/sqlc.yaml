@@ -2,7 +2,7 @@ version: "2"
 sql:
   - engine: "postgresql"
     queries: "query.fsdata.sql"
-    schema: "schema.fsdata.sql"
+    schema: "migrations"
     gen:
       go:
         package: "database"

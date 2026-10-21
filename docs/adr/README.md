@@ -28,11 +28,12 @@ old one. Half a page max; the point is the *why*. Template: see
 - [0019 — Live KPI fan-out is a shared flow, not a hand-rolled scheduler](0019-live-kpi-fanout-via-sharein-whilesubscribed.md)
 - [0020 — Trust boundary: in-cluster calls are trusted, the ingress exposes an allowlist, outside access needs a token](0020-trust-boundary-ingress-allowlist.md)
 - [0021 — KPI export: the cluster serves the finished file, a relay on the receiver's server writes it](0021-kpi-export-api-contract.md)
+- [0022 — `fsdata` migrations: tern, embedded in fusionsolar, run as a manual `MIGRATE` job](0022-fsdata-migrations-tern-job-in-fusionsolar.md)
 
 ## Candidate ADRs (implicit decisions worth writing down)
 
 - **All Modbus data flows through the data accessor REST API** — and FusionSolar
-  deliberately doesn't (writes `fsdata` directly, no Flyway). Confirm as a rule +
+  deliberately doesn't (writes `fsdata` directly, migrations via tern per ADR-0022). Confirm as a rule +
   documented exception, or schedule consolidation.
 - **Hand-rolled Modbus TCP** in `pvlogger-shared-modbus` instead of a library
   (the vendored `simonvetter_modbus` / `go-modbus` checkouts were evaluated and

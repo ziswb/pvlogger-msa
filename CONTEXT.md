@@ -148,20 +148,19 @@ once the backlog-36 rollout is deployed).
 Rule: **all Modbus-derived data flows through the data accessor's REST API** —
 collectors never touch `pvdata` directly. The FusionSolar pipeline is the
 exception: it writes its own `fsdata` DB directly. ⚠️ GAP: deliberate exception
-or drift? (`fsdata`'s missing migrations, by contrast, are explained: knowingly
-dropped in the Kotlin→Go rewrite — see ADR-0002 — and to be reintroduced per
-backlog item 29.)
+or drift? (`fsdata`'s migrations, by contrast, are settled: dropped in the Kotlin→Go
+rewrite — see ADR-0002 — and reintroduced as tern migrations, ADR-0022.)
 
 ## Databases
 
 One PostgreSQL server (the homelab central server) hosts three PVLogger databases.
-Each is owned by exactly one service, which also owns its Flyway migrations:
+Each is owned by exactly one service, which also owns its migrations (Flyway; tern for `fsdata`):
 
 | DB | Owner | Content |
 |---|---|---|
 | `pvdata` | modbus-data-accessor | register values, raw KPI registers, house KPIs |
 | `pvmasterdata` | masterdata-server | register definitions |
-| `fsdata` | fusionsolar (no migrations — known gap, backlog item 29) | FusionSolar responses & KPIs |
+| `fsdata` | fusionsolar (tern migrations, manual `MIGRATE` job — ADR-0022) | FusionSolar responses & KPIs |
 
 All three are dumped nightly by the db-backup CronJob (infrastructure repo). A fourth,
 `sunrisesunset`, was dropped on 2026-08-27 with the retirement of its module (ADR-0005).

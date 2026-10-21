@@ -53,6 +53,9 @@ pre-existing "modbus connection already closed" (a double close, also in the run
   with 3.5.0 already); ask whether Docker runs on his Ubuntu and what `uname -m` says; then install the relay and
   run it in parallel with OneDrive until he switches. Afterwards the CronJob mode and the OneDrive volume go.
 
+**`fsdata` migrations (item 29) — code done 2026-10-21**, fusionsolar 3.5.0 (ADR-0022). Left: build/deploy,
+chart Job with `JOB_NAME=MIGRATE`, one run on .2 before the CloudNativePG import.
+
 **Security findings still open:** 3 (closes with `POSTGRESQL_SSLMODE=require` at the CloudNativePG cutover), 18
 (`/metrics` on the tailnet name only), 15 (pool size, speculative).
 
@@ -79,7 +82,7 @@ pre-existing "modbus connection already closed" (a double close, also in the run
 
     *Rationale corrected 2026-08-27:* this item used to read "the DDL exists only in the running DB and old dumps",
     which is stale and made the item look like a data-recoverability risk. The full DDL **is** committed, as sqlc's
-    schema input: `pvlogger-fusionsolar/internal/database/schema.fsdata.sql` (209 lines — 9 `fs_*` tables with their
+    schema input: `pvlogger-fusionsolar/internal/database/schema.fsdata.sql` (209 lines — 8 `fs_*` tables with their
     primary keys and indexes). What is missing is a *runner* and any *drift detection*: nothing applies that file to
     a database, nothing verifies it still matches production, and it is maintained by hand alongside
     `query.fsdata.sql`. So the risk is silent divergence between file and live schema, not an unrecoverable schema —
@@ -110,6 +113,17 @@ pre-existing "modbus connection already closed" (a double close, also in the run
       CloudNativePG import carries it along (and the restore runbook shows it producing `wal_level` warnings).
       *Dropped 2026-10-20* by the operator in `pvdata`, `pvmasterdata` and `fsdata` (it existed in all three) as
       `postgres` on .2; `pg_replication_slots` was empty in each, so no WAL was being retained.
+
+    *Step (2) done in code 2026-10-21* (ADR-0022), fusionsolar 3.5.0: tern with embedded SQL in
+    `internal/database/migrations/`, job `JOB_NAME=MIGRATE` (needs only the DB env, no token). `001_baseline.sql`
+    is the verified schema with `IF NOT EXISTS`, so on .2 it changes nothing and records version 1 in
+    `public.tern_schema_version`; `flyway_schema_history` stays untouched. sqlc now reads `migrations/` as its
+    schema and `schema.fsdata.sql` is gone (generated code unchanged). Tested on PostgreSQL 18: fresh database →
+    0 → 1, rerun "up to date"; a copy of the production schema with a non-JSON `raw` row and a Flyway table → 0 → 1,
+    data and Flyway rows untouched; both end with identical `pg_dump -s`. **Left (operator / infrastructure):**
+    build and deploy 3.5.0, add a manual Job to the chart (same image and env as the fusionsolar CronJobs,
+    `JOB_NAME=MIGRATE`), run it once on .2 before the CloudNativePG import, check `tern_schema_version` = 1. Then
+    close this item.
 30. **Refresh the outdated mock server** (low prio, ex open question 8): unused for a while and out of date. Update it
     so the Tilt environment (item 23)
     works again for larger changes, and consider building e2e tests around it — none exist today. It stays local-only,

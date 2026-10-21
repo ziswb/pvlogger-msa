@@ -91,7 +91,7 @@ Kubernetes DNS handles inter-service discovery. Traefik ingress routes `/v1` to 
 
 ### Data Storage
 
-PostgreSQL (18 in production, on the homelab central server) with Flyway migrations (in each service's `src/main/resources/db/migration/`; exception: `fsdata` has no migrations). Exposed ORM for Kotlin services, pgx/sqlc for Go services.
+PostgreSQL (18 in production, on the homelab central server) with Flyway migrations (in each service's `src/main/resources/db/migration/`; exception: `fsdata` uses tern migrations embedded in fusionsolar, run as the manual `MIGRATE` job — ADR-0022). Exposed ORM for Kotlin services, pgx/sqlc for Go services.
 
 ## Code Conventions
 

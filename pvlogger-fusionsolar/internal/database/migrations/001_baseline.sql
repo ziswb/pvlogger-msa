@@ -1,4 +1,11 @@
-create table fs_response
+-- Baseline: the fsdata schema as it ran in production before migrations existed.
+-- Verified 2026-10-20 against `pg_dump --schema-only -d fsdata` on .2 (backlog item 29).
+--
+-- Every statement is IF NOT EXISTS: on the existing database this migration changes
+-- nothing and only records version 1; on an empty database it builds the schema.
+-- Later migrations are plain DDL. The old `flyway_schema_history` table is not touched.
+
+create table if not exists fs_response
 (
     id        serial
         primary key,
@@ -9,7 +16,7 @@ create table fs_response
     raw       text      not null
 );
 
-create table fs_station_extended_data
+create table if not exists fs_station_extended_data
 (
     collect_time         bigint      not null,
     type                 varchar(17) not null,
@@ -30,13 +37,13 @@ create table fs_station_extended_data
         primary key (collect_time, type)
 );
 
-create index fs_station_extended_data_collect_time
+create index if not exists fs_station_extended_data_collect_time
     on fs_station_extended_data (collect_time);
 
-create index fs_station_extended_data_type
+create index if not exists fs_station_extended_data_type
     on fs_station_extended_data (type);
 
-create table fs_response_to_station_extended_data
+create table if not exists fs_response_to_station_extended_data
 (
     response_id  integer     not null
         constraint fk_fs_response_to_station_extended_data_response_id__id
@@ -50,7 +57,7 @@ create table fs_response_to_station_extended_data
         foreign key (collect_time, type) references fs_station_extended_data
 );
 
-create table fs_device_real_kpi
+create table if not exists fs_device_real_kpi
 (
     id             serial
         primary key,
@@ -152,7 +159,7 @@ create table fs_device_real_kpi
     collect_time   bigint
 );
 
-create table fs_response_params_basic
+create table if not exists fs_response_params_basic
 (
     id             serial
         primary key,
@@ -164,7 +171,7 @@ create table fs_response_params_basic
     "current_time" bigint
 );
 
-create table fs_response_params_device
+create table if not exists fs_response_params_device
 (
     id             serial
         primary key,
@@ -177,7 +184,7 @@ create table fs_response_params_device
     "current_time" bigint
 );
 
-create table fs_response_params_extended
+create table if not exists fs_response_params_extended
 (
     id             serial
         primary key,
@@ -190,7 +197,7 @@ create table fs_response_params_extended
     "current_time" bigint
 );
 
-create table fs_station_real_kpi
+create table if not exists fs_station_real_kpi
 (
     id                serial
         primary key,

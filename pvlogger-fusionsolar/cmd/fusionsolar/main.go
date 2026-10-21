@@ -14,6 +14,11 @@ import (
 
 func main() {
 	cfg := config.Load()
+	if cfg.Job.Name == jobs.Migrate {
+		// Schema migrations need only the database, not a FusionSolar token.
+		jobs.RunMigrate(cfg)
+		return
+	}
 	token, err := getToken(cfg)
 	if err != nil {
 		logging.Fatal("failed to get token", "error", err)
