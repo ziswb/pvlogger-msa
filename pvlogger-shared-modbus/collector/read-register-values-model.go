@@ -1,9 +1,7 @@
 package collector
 
 import (
-	"errors"
 	"fmt"
-	"net"
 	"pv-logger/logging"
 	modbus "pvlogger-shared-modbus"
 	sharedconfig "pvlogger-shared-modbus/config"
@@ -84,12 +82,7 @@ func (s *ReadRegisterValuesService) NewReadRegisterValuesRequest(deviceId model.
 
 func (s *ReadRegisterValuesService) Close() {
 	logging.Info("closing modbus connection")
-	err := s.tcpHandler.Close()
-	if errors.Is(err, net.ErrClosed) {
-		logging.Warn("modbus connection already closed")
-		return
-	}
-	if err != nil {
+	if err := s.tcpHandler.Close(); err != nil {
 		logging.Error("error closing modbus connection", "error", err)
 	}
 }

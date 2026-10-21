@@ -38,7 +38,11 @@ fast collector 0.13.1, device collector 3.7.0 and full collector 0.8.1 with Go 1
 `build.sh` now refuses that without `-f` (`ebe4159d`). *Verified 2026-10-21 18:50:* every pvlogger Job since the
 deploy completed (no failed Jobs, no Warning events); fast and full collectors store KPIs and push metrics, the
 device collectors, fusionsolar-auth and the exporter CronJob run cleanly. The only WARN is the device collectors'
-pre-existing "modbus connection already closed" (a double close, also in the runs before the deploy).
+pre-existing "modbus connection already closed" (a double close, also in the runs before the deploy). *Fixed
+2026-10-21*, device collector 3.7.2: `readDeviceIdentifiers` (device list + identifiers jobs) closed the connection
+explicitly and again by `defer`; the explicit close is gone and `TcpHandler.Close` is idempotent now (tests in
+`pvlogger-shared-modbus/tcp-handler_test.go`). Fast and full collectors pick up the idempotent `Close` with their
+next release; it changes nothing for them.
 
 **Receiver export (ADR-0021, infrastructure ADR-0024) — in progress.**
 - Done here: the exporter's `serve` and `relay` modes, consumption fix, multi-arch image, install guide

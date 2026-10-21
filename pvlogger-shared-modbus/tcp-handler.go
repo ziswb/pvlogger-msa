@@ -28,12 +28,16 @@ func NewTcpHandler(url string, timeout time.Duration, connectionSleep time.Durat
 	}
 }
 
+// Close closes the connection. It is idempotent: a second call, or one without
+// a connection, does nothing.
 func (h *TcpHandler) Close() error {
-	logging.Debug("closing modbus connection")
 	if h.conn == nil {
 		return nil
 	}
-	return h.conn.Close()
+	logging.Debug("closing modbus connection")
+	conn := h.conn
+	h.conn = nil
+	return conn.Close()
 }
 
 func (h *TcpHandler) Connect() error {

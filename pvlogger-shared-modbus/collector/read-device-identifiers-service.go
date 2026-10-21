@@ -32,7 +32,6 @@ func (s *ReadRegisterValuesService) readDeviceIdentifiers(deviceId model.UByte) 
 	}
 	defer s.Close()
 	mbapHeader, pduBytes, err := s.tcpHandler.ExecuteRequest(req.EncodeToBytes())
-	s.Close()
 	if err != nil {
 		return nil, fmt.Errorf("error executing read device identifiers request: %w", err)
 	}
