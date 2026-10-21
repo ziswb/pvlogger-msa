@@ -25,34 +25,53 @@ platform reads. One binary, three modes (`KPI_EXPORTER_MODE`, ADR-0021):
 
 ## Installing the relay on the receiver's server
 
-Build for his architecture (`uname -m`: `x86_64` → amd64) and carry it over —
-the registry is reachable only at home:
+The relay runs as a **plain systemd service** (infrastructure ADR-0024,
+amended 2026-10-21): his server (Ubuntu 22.04, `x86_64`) has no Docker, and the
+relay is one static binary, so there is nothing else to install. Files:
+`systemd/pvlogger-relay.service` and `systemd/relay.env.example`.
+
+Build for his architecture (`uname -m`: `x86_64` → amd64) and carry it over:
 
 ```
-docker build --platform linux/amd64 -f pvlogger-kpi-exporter/docker/Dockerfile -t pvlogger-kpi-exporter:<version> .
-docker save pvlogger-kpi-exporter:<version> | gzip > pvlogger-kpi-exporter-<version>-amd64.tar.gz
-# on his server:
-docker load < pvlogger-kpi-exporter-<version>-amd64.tar.gz
+cd pvlogger-kpi-exporter
+go test ./...
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -o build/pvlogger-kpi-exporter-<version>-amd64 ./cmd/exporter
+shasum -a 256 build/pvlogger-kpi-exporter-<version>-amd64
+scp build/pvlogger-kpi-exporter-<version>-amd64 systemd/* <user>@<his server>:/tmp/
 ```
 
-Run it (the export directory is where his platform reads the files):
+On his server (check the SHA-256 first; `ss -ltn` shows whether the port in
+`relay.env` is free — 8080 is Tomcat's default, the example uses 8780):
 
 ```
-docker run -d --name pvlogger-relay --restart unless-stopped \
-  -e TZ=Europe/Zurich \
-  -e KPI_EXPORTER_MODE=relay \
-  -e UPSTREAM_URL=https://pvlogger-export.<tailnet>.ts.net/v1/export/latest \
-  -e UPSTREAM_TOKEN=<token> \
-  -e TS_AUTHKEY=<tagged auth key> \
-  -e KPI_EXPORT_PATH=/export \
-  -v /srv/pvlogger/export:/export \
-  -v /srv/pvlogger/state:/var/lib/pvlogger-relay \
-  -p 8080:8080 \
-  pvlogger-kpi-exporter:<version>
+sudo install -m 0755 /tmp/pvlogger-kpi-exporter-<version>-amd64 /usr/local/bin/pvlogger-kpi-exporter
+sudo useradd --system --no-create-home --shell /usr/sbin/nologin pvlogger-relay
+sudo install -d -o pvlogger-relay -g pvlogger-relay -m 0755 /srv/pvlogger/export
+sudo install -d -m 0700 /etc/pvlogger-relay
+sudo install -m 0600 /tmp/relay.env.example /etc/pvlogger-relay/relay.env
+sudoedit /etc/pvlogger-relay/relay.env      # URL, token, auth key, port
+sudo install -m 0644 /tmp/pvlogger-relay.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now pvlogger-relay
+journalctl -u pvlogger-relay -f             # "relay: joined the tailnet", then "listening"
 ```
 
-Check: `curl -s http://localhost:8080/export` returns the JSON and a new file
-appears in `/srv/pvlogger/export`. A 502 names the reason (upstream down, token
-wrong, …) and writes nothing. The auth key is only needed on the first start;
-after that the node identity lives in the state volume. To bind the port to his
-machine only, use `-p 127.0.0.1:8080:8080`.
+Check: `curl -s http://localhost:8780/export` returns the JSON and a new file
+appears in `/srv/pvlogger/export` (world-readable, for his platform). A 502
+names the reason (upstream down, token wrong, …) and writes nothing.
+
+- **Keep `TS_AUTHKEY` in `relay.env`.** The node identity lives in
+  `/var/lib/pvlogger-relay` after the first start, but an empty `TS_AUTHKEY`
+  makes the relay skip Tailscale and use the host network, where the endpoint
+  is not reachable. A used single-use key cannot join anything else.
+- The port listens on all interfaces. If only his own machine calls it, close
+  it to the LAN with his firewall (`ufw`).
+- **Update:** copy the new binary over `/usr/local/bin/pvlogger-kpi-exporter`,
+  then `sudo systemctl restart pvlogger-relay`.
+- **Remove:** `sudo systemctl disable --now pvlogger-relay`, delete the unit,
+  `/etc/pvlogger-relay`, `/var/lib/pvlogger-relay`, `/usr/local/bin/pvlogger-kpi-exporter`
+  and the user; remove the device `pvlogger-relay` in the Tailscale console.
+
+The image (`docker/Dockerfile`, multi-arch) still runs relay mode the same way,
+with the environment variables above and volumes for `KPI_EXPORT_PATH` and
+`TS_STATE_DIR`, if a receiver ever has Docker.

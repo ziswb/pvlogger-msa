@@ -1,0 +1,51 @@
+# KPI exporter in relay mode on the receiver's server (pvlogger-msa ADR-0021,
+# infrastructure ADR-0024). Install steps: ../README.md.
+[Unit]
+Description=PVLogger KPI relay (latest export over Tailscale)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=pvlogger-relay
+Group=pvlogger-relay
+ExecStart=/usr/local/bin/pvlogger-kpi-exporter
+Restart=on-failure
+RestartSec=30
+
+Environment=KPI_EXPORTER_MODE=relay
+Environment=TZ=Europe/Zurich
+Environment=KPI_EXPORT_PATH=/srv/pvlogger/export
+# The node identity (tsnet state) lives here; systemd creates it, mode 0700.
+Environment=TS_STATE_DIR=/var/lib/pvlogger-relay
+StateDirectory=pvlogger-relay
+StateDirectoryMode=0700
+# UPSTREAM_URL, UPSTREAM_TOKEN, TS_AUTHKEY, HTTP_PORT (root:root, 0600).
+EnvironmentFile=/etc/pvlogger-relay/relay.env
+
+# Sandbox: writes only to the export and state directories, no privileges.
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/srv/pvlogger/export
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+CapabilityBoundingSet=
+# tsnet runs Tailscale in userspace (no TUN); it watches routes via netlink.
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
+UMask=0022
+
+[Install]
+WantedBy=multi-user.target

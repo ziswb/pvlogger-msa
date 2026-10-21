@@ -23,7 +23,8 @@ today, and returns the JSON. Only the latest state matters; no catch-up.
 1. **One binary, three modes** (`KPI_EXPORTER_MODE`) in `pvlogger-kpi-exporter`,
    the module that already owns the format — no new service (ADR-0007):
    `export` (default: today's CronJob), `serve` (cluster endpoint), `relay`
-   (container on his server).
+   (on his server — a systemd service since 2026-10-21, not a container, see
+   infrastructure ADR-0024).
 2. **The cluster serves the finished file.** `GET /v1/export/latest` returns the
    export JSON byte for byte as the CronJob writes it, and the file name in
    `Content-Disposition: attachment; filename="…"`. The relay writes body and

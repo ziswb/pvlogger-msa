@@ -50,8 +50,9 @@ pre-existing "modbus connection already closed" (a double close, also in the run
   `tag:pvlogger-relay`, created just before the install.
 - Untested until the install: the relay's tsnet join; the smoke test ran without Tailscale.
 - Operator: tell him `pv_verb_akt_w` changed (export + import → measured consumption; reaches his OneDrive files
-  with 3.5.0 already); ask whether Docker runs on his Ubuntu and what `uname -m` says; then install the relay and
-  run it in parallel with OneDrive until he switches. Afterwards the CronJob mode and the OneDrive volume go.
+  with 3.5.0 already); then install the relay and run it in parallel with OneDrive until he switches. His answer
+  (2026-10-21): `x86_64`, no Docker or Podman, so the relay runs as a systemd service from an amd64 binary
+  (`pvlogger-kpi-exporter/systemd/`, README; infrastructure ADR-0024 amendment 2026-10-21). Afterwards the CronJob mode and the OneDrive volume go.
 
 **`fsdata` migrations (item 29) — done 2026-10-21**, fusionsolar 3.5.0 (ADR-0022): deployed, baseline applied on
 .2 (`tern_schema_version` = 1). Rerun procedure: `infrastructure/docs/runbooks/pvlogger-fsdata-migrate.md`.
