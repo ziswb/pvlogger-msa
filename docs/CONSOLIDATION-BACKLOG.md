@@ -53,8 +53,8 @@ pre-existing "modbus connection already closed" (a double close, also in the run
   with 3.5.0 already); ask whether Docker runs on his Ubuntu and what `uname -m` says; then install the relay and
   run it in parallel with OneDrive until he switches. Afterwards the CronJob mode and the OneDrive volume go.
 
-**`fsdata` migrations (item 29) — code done 2026-10-21**, fusionsolar 3.5.0 (ADR-0022). Left: build/deploy,
-chart Job with `JOB_NAME=MIGRATE`, one run on .2 before the CloudNativePG import.
+**`fsdata` migrations (item 29) — done 2026-10-21**, fusionsolar 3.5.0 (ADR-0022): deployed, baseline applied on
+.2 (`tern_schema_version` = 1). Rerun procedure: `infrastructure/docs/runbooks/pvlogger-fsdata-migrate.md`.
 
 **Security findings still open:** 3 (closes with `POSTGRESQL_SSLMODE=require` at the CloudNativePG cutover), 18
 (`/metrics` on the tailnet name only), 15 (pool size, speculative).
@@ -77,53 +77,6 @@ chart Job with `JOB_NAME=MIGRATE`, one run on .2 before the CloudNativePG import
     could move to a `docs/history/`.
 
     *Re-verified 2026-10-19:* unchanged — `irrelevant/` is still there and `docs/history/` does not exist.
-29. **Introduce `fsdata` schema migrations** — a known gap since the Kotlin→Go rewrite of fusionsolar (rationale in
-    ADR-0002, ex open question 4), not a decision.
-
-    *Rationale corrected 2026-08-27:* this item used to read "the DDL exists only in the running DB and old dumps",
-    which is stale and made the item look like a data-recoverability risk. The full DDL **is** committed, as sqlc's
-    schema input: `pvlogger-fusionsolar/internal/database/schema.fsdata.sql` (209 lines — 8 `fs_*` tables with their
-    primary keys and indexes). What is missing is a *runner* and any *drift detection*: nothing applies that file to
-    a database, nothing verifies it still matches production, and it is maintained by hand alongside
-    `query.fsdata.sql`. So the risk is silent divergence between file and live schema, not an unrecoverable schema —
-    which puts this item well below where its old wording implied. Two steps:
-    (1) **baseline** — verify `schema.fsdata.sql` against a `pg_dump --schema-only` of the live `fsdata` (it, not a
-    fresh dump, should become migration 0001 if the two agree; reconcile first if they do not); (2) **wire a
-    runner** — recommended: a `migrate` job inside `pvlogger-fusionsolar` itself (job-dispatch pattern; no new service,
-    per ADR-0007) using tern (pgx ecosystem) with `go:embed`-ded SQL files, executed manually as a plain K8s Job. The
-    operator's original plan — a dedicated manually-activated migration service — would work but fails the ADR-0007 bar;
-    keeping migrations next to the sqlc queries they must match is the decisive argument for the in-module job.
-
-    *Note 2026-10-19:* infrastructure ADR-0022 copies `fsdata` into CloudNativePG with `initdb.import`. Do
-    step (1) before that cutover, against the database being copied — afterwards the live schema is whatever the
-    import produced, and the old server is the only reference left.
-
-    *Step (1) done 2026-10-20* against `pg_dump --schema-only -d fsdata` on .2. Same 8 tables, same columns, keys,
-    foreign keys and indexes (`serial` vs. integer + sequence is the same thing). Three differences:
-    - **`fs_response.raw` is `text` live, `jsonb` in the file.** sqlc maps it to `[]byte` either way, so the code
-      works against both — but a database built from the file would reject a reply that is not valid JSON, and
-      live would not. *Reconciled 2026-10-20:* the file now says `text`, matching production (converting live
-      would rewrite the table and fail on any row that is not JSON). sqlc regenerated (`Raw` is now `string`); the
-      repository converts the JSON bytes at its one call site.
-    - **A `flyway_schema_history` table** in `fsdata`, left over from the Kotlin era (open question 4). Not in the
-      file, nothing reads it. Its rows are the only record of the old migrations; keep or drop when the runner is
-      wired, but don't let tern's own history table be confused with it.
-    - **A leftover publication `upgrade_pub` (FOR ALL TABLES)** from the PostgreSQL 18 upgrade by logical
-      replication — the same leftover infrastructure backlog 86 found and dropped in `immich`. Not schema, but the
-      CloudNativePG import carries it along (and the restore runbook shows it producing `wal_level` warnings).
-      *Dropped 2026-10-20* by the operator in `pvdata`, `pvmasterdata` and `fsdata` (it existed in all three) as
-      `postgres` on .2; `pg_replication_slots` was empty in each, so no WAL was being retained.
-
-    *Step (2) done in code 2026-10-21* (ADR-0022), fusionsolar 3.5.0: tern with embedded SQL in
-    `internal/database/migrations/`, job `JOB_NAME=MIGRATE` (needs only the DB env, no token). `001_baseline.sql`
-    is the verified schema with `IF NOT EXISTS`, so on .2 it changes nothing and records version 1 in
-    `public.tern_schema_version`; `flyway_schema_history` stays untouched. sqlc now reads `migrations/` as its
-    schema and `schema.fsdata.sql` is gone (generated code unchanged). Tested on PostgreSQL 18: fresh database →
-    0 → 1, rerun "up to date"; a copy of the production schema with a non-JSON `raw` row and a Flyway table → 0 → 1,
-    data and Flyway rows untouched; both end with identical `pg_dump -s`. **Left (operator / infrastructure):**
-    build and deploy 3.5.0, add a manual Job to the chart (same image and env as the fusionsolar CronJobs,
-    `JOB_NAME=MIGRATE`), run it once on .2 before the CloudNativePG import, check `tern_schema_version` = 1. Then
-    close this item.
 30. **Refresh the outdated mock server** (low prio, ex open question 8): unused for a while and out of date. Update it
     so the Tilt environment (item 23)
     works again for larger changes, and consider building e2e tests around it — none exist today. It stays local-only,
@@ -480,6 +433,58 @@ chart Job with `JOB_NAME=MIGRATE`, one run on .2 before the CloudNativePG import
     `pvlogger-database/migration/migrate_db_aio.sh:23` still names `sunrisesunset` in the PG18 migration's database
     list. Left alone on purpose: it is the record of a migration that did include that database (item 26 covers
     archiving that directory).
+29. ~~**Introduce `fsdata` schema migrations**~~ — a known gap since the Kotlin→Go rewrite of fusionsolar (rationale in
+    ADR-0002, ex open question 4), not a decision.
+
+    *Rationale corrected 2026-08-27:* this item used to read "the DDL exists only in the running DB and old dumps",
+    which is stale and made the item look like a data-recoverability risk. The full DDL **is** committed, as sqlc's
+    schema input: `pvlogger-fusionsolar/internal/database/schema.fsdata.sql` (209 lines — 8 `fs_*` tables with their
+    primary keys and indexes). What is missing is a *runner* and any *drift detection*: nothing applies that file to
+    a database, nothing verifies it still matches production, and it is maintained by hand alongside
+    `query.fsdata.sql`. So the risk is silent divergence between file and live schema, not an unrecoverable schema —
+    which puts this item well below where its old wording implied. Two steps:
+    (1) **baseline** — verify `schema.fsdata.sql` against a `pg_dump --schema-only` of the live `fsdata` (it, not a
+    fresh dump, should become migration 0001 if the two agree; reconcile first if they do not); (2) **wire a
+    runner** — recommended: a `migrate` job inside `pvlogger-fusionsolar` itself (job-dispatch pattern; no new service,
+    per ADR-0007) using tern (pgx ecosystem) with `go:embed`-ded SQL files, executed manually as a plain K8s Job. The
+    operator's original plan — a dedicated manually-activated migration service — would work but fails the ADR-0007 bar;
+    keeping migrations next to the sqlc queries they must match is the decisive argument for the in-module job.
+
+    *Note 2026-10-19:* infrastructure ADR-0022 copies `fsdata` into CloudNativePG with `initdb.import`. Do
+    step (1) before that cutover, against the database being copied — afterwards the live schema is whatever the
+    import produced, and the old server is the only reference left.
+
+    *Step (1) done 2026-10-20* against `pg_dump --schema-only -d fsdata` on .2. Same 8 tables, same columns, keys,
+    foreign keys and indexes (`serial` vs. integer + sequence is the same thing). Three differences:
+    - **`fs_response.raw` is `text` live, `jsonb` in the file.** sqlc maps it to `[]byte` either way, so the code
+      works against both — but a database built from the file would reject a reply that is not valid JSON, and
+      live would not. *Reconciled 2026-10-20:* the file now says `text`, matching production (converting live
+      would rewrite the table and fail on any row that is not JSON). sqlc regenerated (`Raw` is now `string`); the
+      repository converts the JSON bytes at its one call site.
+    - **A `flyway_schema_history` table** in `fsdata`, left over from the Kotlin era (open question 4). Not in the
+      file, nothing reads it. Its rows are the only record of the old migrations; keep or drop when the runner is
+      wired, but don't let tern's own history table be confused with it.
+    - **A leftover publication `upgrade_pub` (FOR ALL TABLES)** from the PostgreSQL 18 upgrade by logical
+      replication — the same leftover infrastructure backlog 86 found and dropped in `immich`. Not schema, but the
+      CloudNativePG import carries it along (and the restore runbook shows it producing `wal_level` warnings).
+      *Dropped 2026-10-20* by the operator in `pvdata`, `pvmasterdata` and `fsdata` (it existed in all three) as
+      `postgres` on .2; `pg_replication_slots` was empty in each, so no WAL was being retained.
+
+    *Step (2) done in code 2026-10-21* (ADR-0022), fusionsolar 3.5.0: tern with embedded SQL in
+    `internal/database/migrations/`, job `JOB_NAME=MIGRATE` (needs only the DB env, no token). `001_baseline.sql`
+    is the verified schema with `IF NOT EXISTS`, so on .2 it changes nothing and records version 1 in
+    `public.tern_schema_version`; `flyway_schema_history` stays untouched. sqlc now reads `migrations/` as its
+    schema and `schema.fsdata.sql` is gone (generated code unchanged). Tested on PostgreSQL 18: fresh database →
+    0 → 1, rerun "up to date"; a copy of the production schema with a non-JSON `raw` row and a Flyway table → 0 → 1,
+    data and Flyway rows untouched; both end with identical `pg_dump -s`. **Left (operator / infrastructure):**
+    build and deploy 3.5.0, add a manual Job to the chart (same image and env as the fusionsolar CronJobs,
+    `JOB_NAME=MIGRATE`), run it once on .2 before the CloudNativePG import, check `tern_schema_version` = 1.
+
+    **Resolved 2026-10-21.** fusionsolar 3.5.0 deployed 22:19; the baseline ran 22:27 as a one-off Job built from the
+    `devkpi` CronJob: `0 → 1`, `tern_schema_version` owned by `pvlogger`, Flyway row and data untouched, the
+    following collection runs complete. Repeatable procedure (also for later migrations, and as a check after the
+    CloudNativePG import): `infrastructure/docs/runbooks/pvlogger-fsdata-migrate.md`. No chart template — the runbook
+    builds the Job from the CronJob, so it cannot drift from the CronJobs' env.
 31. ~~🔴 **All 22 data-accessor tests fail on H2**~~
 
     **Resolved 2026-08-07**
