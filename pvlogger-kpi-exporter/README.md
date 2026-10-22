@@ -28,38 +28,53 @@ platform reads. One binary, three modes (`KPI_EXPORTER_MODE`, ADR-0021):
 The relay runs as a **plain systemd service** (infrastructure ADR-0024,
 amended 2026-10-21): his server (Ubuntu 22.04, `x86_64`) has no Docker, and the
 relay is one static binary, so there is nothing else to install. Files:
-`systemd/pvlogger-relay.service` and `systemd/relay.env.example`.
+`systemd/pvlogger-relay.service`, `systemd/relay.env.example` and
+`systemd/install.sh`.
 
-Build for his architecture (`uname -m`: `x86_64` → amd64) and carry it over:
+Build the bundle on the Mac (binary, unit, `relay.env` template, `install.sh`,
+`SHA256SUMS`) and carry it over:
 
 ```
 cd pvlogger-kpi-exporter
-go test ./...
-CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -o build/pvlogger-kpi-exporter-<version>-amd64 ./cmd/exporter
-shasum -a 256 build/pvlogger-kpi-exporter-<version>-amd64
-scp build/pvlogger-kpi-exporter-<version>-amd64 systemd/* <user>@<his server>:/tmp/
+make relay-bundle VERSION=<version>          # RELAY_ARCH=arm64 for an ARM host
+scp build/pvlogger-relay-<version>-amd64.tar.gz <user>@<his server>:
 ```
 
-On his server (check the SHA-256 first; `ss -ltn` shows whether the port in
-`relay.env` is free — 8080 is Tomcat's default, the example uses 8780):
+On his server: unpack, fill in `UPSTREAM_TOKEN` and a single-use, pre-approved
+`TS_AUTHKEY` for `tag:pvlogger-relay` (made just before) in `relay.env`, run
+the script with the export directory and port:
 
 ```
-sudo install -m 0755 /tmp/pvlogger-kpi-exporter-<version>-amd64 /usr/local/bin/pvlogger-kpi-exporter
-sudo useradd --system --no-create-home --shell /usr/sbin/nologin pvlogger-relay
-sudo install -d -o pvlogger-relay -g pvlogger-relay -m 0755 /srv/pvlogger/export
-sudo install -d -m 0700 /etc/pvlogger-relay
-sudo install -m 0600 /tmp/relay.env.example /etc/pvlogger-relay/relay.env
-sudoedit /etc/pvlogger-relay/relay.env      # URL, token, auth key, port
-sudo install -m 0644 /tmp/pvlogger-relay.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now pvlogger-relay
-journalctl -u pvlogger-relay -f             # "relay: joined the tailnet", then "listening"
+tar -xzf pvlogger-relay-<version>-amd64.tar.gz && cd pvlogger-relay-<version>-amd64
+nano relay.env
+sudo ./install.sh -d /srv/pvlogger/export -p 8780
 ```
 
-Check: `curl -s http://localhost:8780/export` returns the JSON and a new file
-appears in `/srv/pvlogger/export` (world-readable, for his platform). A 502
-names the reason (upstream down, token wrong, …) and writes nothing. Each call
-also deletes export files older than 48 hours, as the CronJob does.
+`install.sh` checks the checksums, architecture, env file and that the port is
+free (8080 is Tomcat's default), creates the system user `pvlogger-relay`
+(UID picked by the system), the export directory, `/etc/pvlogger-relay/relay.env`
+(root, 0600) and a drop-in `pvlogger-relay.service.d/site.conf` with the
+directory and port, starts the unit, waits for "listening", calls `/export`
+once and then deletes the filled-in `relay.env` from the bundle.
+
+- **The export directory must be the relay's own.** Each call deletes *every*
+  regular file older than 48 hours in it (as the CronJob does), so the script
+  refuses a non-empty directory that belongs to someone else, and paths the
+  sandbox hides (`/home`, `/tmp`, …).
+- **`-g GROUP`** (optional, an existing group such as his platform's): the
+  directory becomes `pvlogger-relay:GROUP` 2775 and files 0664, so his side can
+  also delete or move files. Without it, files are 0644 (readable by all).
+- **Update:** run the new bundle's `install.sh` with the same `-d`/`-p`; with
+  the untouched `relay.env` template it keeps the installed secrets.
+- **Remove:** `sudo ./install.sh -u` (keeps the export directory), then remove
+  the device `pvlogger-relay` in the Tailscale console.
+
+Check by hand: `curl -s http://localhost:8780/export` returns the JSON and a new
+file appears in the export directory. A 502 names the reason (upstream down,
+token wrong, …) and writes nothing.
+
+`install.sh` with bundle 3.5.0 tested 2026-10-22 on the same laptop: ran
+through (operator).
 
 Tested 2026-10-21 on an Ubuntu 26.04 `x86_64` laptop with this unit unchanged:
 tsnet joined in under a second inside the sandbox, `/export` 200 with the file
@@ -72,11 +87,6 @@ the key ("Ignoring authkey"). `systemd-analyze security`: 3.1.
   is not reachable. A used single-use key cannot join anything else.
 - The port listens on all interfaces. If only his own machine calls it, close
   it to the LAN with his firewall (`ufw`).
-- **Update:** copy the new binary over `/usr/local/bin/pvlogger-kpi-exporter`,
-  then `sudo systemctl restart pvlogger-relay`.
-- **Remove:** `sudo systemctl disable --now pvlogger-relay`, delete the unit,
-  `/etc/pvlogger-relay`, `/var/lib/pvlogger-relay`, `/usr/local/bin/pvlogger-kpi-exporter`
-  and the user; remove the device `pvlogger-relay` in the Tailscale console.
 
 The image (`docker/Dockerfile`, multi-arch) still runs relay mode the same way,
 with the environment variables above and volumes for `KPI_EXPORT_PATH` and
