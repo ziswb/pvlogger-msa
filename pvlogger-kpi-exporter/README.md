@@ -91,3 +91,62 @@ the key ("Ignoring authkey"). `systemd-analyze security`: 3.1.
 The image (`docker/Dockerfile`, multi-arch) still runs relay mode the same way,
 with the environment variables above and volumes for `KPI_EXPORT_PATH` and
 `TS_STATE_DIR`, if a receiver ever has Docker.
+
+### Testing a bundle on a spare Ubuntu machine
+
+Before a visit, run the new bundle once on a spare `x86_64` Ubuntu machine (the
+operator's laptop).
+
+- **Use a separate test auth key**, not the single-use key meant for his site.
+  An **ephemeral** key is fine: Tailscale removes that device by itself afterwards.
+- **Clear an earlier install first.** If the test machine's `pvlogger-relay`
+  device is still in the tailnet, remove it in the Tailscale console, or his
+  relay comes up as `pvlogger-relay-1`.
+- On success the script deletes the filled-in `relay.env`. That's intended.
+
+Install:
+
+```
+scp build/pvlogger-relay-<version>-amd64.tar.gz <test machine>:
+tar -xzf pvlogger-relay-<version>-amd64.tar.gz && cd pvlogger-relay-<version>-amd64
+
+sudo ./install.sh -u                                # removes an earlier install (tests removal too)
+nano relay.env                                      # token + test auth key
+sudo ./install.sh -d /srv/pvlogger/export -p 8780   # expect "200 OK, newest file: …"
+```
+
+Cases that must keep the secrets or refuse:
+
+```
+tar -xzf ../pvlogger-relay-<version>-amd64.tar.gz -C /tmp && cd /tmp/pvlogger-relay-<version>-amd64
+sudo ./install.sh -d /srv/pvlogger/export -p 8780   # untouched template → "keeping the installed …", 200 again
+
+python3 -m http.server 8781 &                       # occupy a port
+sudo ./install.sh -d /srv/pvlogger/export -p 8781   # → "port 8781 is already in use"; then: kill %1
+
+sudo mkdir -p /srv/foreign && sudo touch /srv/foreign/x
+sudo ./install.sh -d /srv/foreign -p 8780           # → "not empty and belongs to root"
+sudo ./install.sh -d /home/$USER/x -p 8780          # → "sandbox hides"
+```
+
+Optional: run with `-g <some group>` and check that `ls -l /srv/pvlogger/export`
+shows that group and that new files are `-rw-rw-r--`.
+
+Clean up:
+
+```bash
+cd ~/pvlogger-relay-<version>-amd64   # if gone: tar -xzf ~/pvlogger-relay-<version>-amd64.tar.gz -C ~ first
+sudo ./install.sh -u                  # service, unit, drop-in, /etc/pvlogger-relay, state, binary, user
+cd ~
+sudo rm -rf /srv/pvlogger /srv/foreign   # -u keeps the export directory on purpose
+rm -rf ~/pvlogger-relay-<version>-amd64 /tmp/pvlogger-relay-<version>-amd64
+
+systemctl status pvlogger-relay       # "could not be found"
+id pvlogger-relay                     # "no such user"
+ls /etc/pvlogger-relay /var/lib/pvlogger-relay /usr/local/bin/pvlogger-kpi-exporter /srv/pvlogger 2>&1   # all "No such file"
+```
+
+If the test key wasn't ephemeral, remove the test machine's `pvlogger-relay`
+device in the Tailscale console. Note the bundle's checksum
+(`sha256sum pvlogger-relay-<version>-amd64.tar.gz`) so you can confirm that the
+copy you take to his site is the one you tested.
