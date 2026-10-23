@@ -171,7 +171,7 @@ next release; it changes nothing for them.
       `modbus_register_uinteger_value_idx` 338 MB, 34 632 scans. Both `read-latest-register-value` plans are a
       nested loop of two Index Conds on the composites: I32 37516 0.11 ms / 16 buffers, U32 37500 0.07 ms / 9
       buffers (before V11: 0.99 ms / 38 and 2.63 ms / 293).
-    - **Next: drop the single-column indexes the composites make redundant** (~511 MB:
+    - ~~**Drop the single-column indexes the composites make redundant**~~ (~511 MB:
       `modbus_response_data_job_id_idx` 180 MB, `modbus_register_integer_values_reg_addr_idx` 227 MB,
       `modbus_register_uinteger_values_reg_adr_idx` 104 MB — all three at 0 scans, no `last_idx_scan`) in a new
       migration V12. The composites are seen winning, so the condition from V11's closing comment is met. Ship it
@@ -197,11 +197,14 @@ next release; it changes nothing for them.
       the CloudNativePG cluster starts its own from zero, so the quarter restarts at the cutover. *2026-10-20:* all
       three at 0 scans on .2, but `stats_reset` is empty and the pre-V11 plans' indexes also read 0, so the counters
       were reset some time after 2026-08-26 — how far back they reach is unknown.
-    - If an I16/U16 register ever joins the dongle block, `short`/`ushort` need the same
-      `(register_address, response_id)` index. V11 left them out on purpose.
     - ~~*infrastructure repo:* the data accessor's `100m` CPU limit with `requests == limits` is tight for a
       JVM.~~ Already done 2026-08-26 on the infrastructure side: request `100m`, limit `1000m` (memory stays
       equal), see `infrastructure/ansible/roles/pvlogger_helm_deploy/defaults/main.yml`. Noted here 2026-10-23.
+
+    *Watch (not a task):* if an I16/U16 register ever joins the dongle block, `modbus_register_short_values` and
+    `modbus_register_ushort_values` need the same `(register_address, response_id)` index first. V11 left them out
+    on purpose, and they have no index besides the primary key, so since 3.12.2 the second lookup statement would
+    read the whole table. Today the KPI lookup reads only the I32/U32 registers 37498–37516.
 
 ## Done (resolved, superseded or moot)
 
