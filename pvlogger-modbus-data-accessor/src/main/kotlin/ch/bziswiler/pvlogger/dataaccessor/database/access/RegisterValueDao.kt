@@ -12,9 +12,10 @@ import ch.bziswiler.pvlogger.shared.masterdata.modbus.Type
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.SortOrder.DESC
+import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.and
-import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
@@ -23,6 +24,7 @@ object RegisterValueDao {
 
     private val logger = KotlinLogging.logger {}
     private val responseTimeDescending = ResponseTable.response_time to DESC
+    private val idDescending = ResponseTable.id to DESC
 
     fun readLatestRegisterValue(
         type: Type,
@@ -36,6 +38,7 @@ object RegisterValueDao {
                     UShortValueTable,
                     UShortValueTable.register_value,
                     UShortValueTable.register_address,
+                    UShortValueTable.response_id,
                     registerAddress,
                     deviceId,
                     jobId,
@@ -47,6 +50,7 @@ object RegisterValueDao {
                     UIntegerValueTable,
                     UIntegerValueTable.register_value,
                     UIntegerValueTable.register_address,
+                    UIntegerValueTable.response_id,
                     registerAddress,
                     deviceId,
                     jobId,
@@ -58,6 +62,7 @@ object RegisterValueDao {
                     ShortValueTable,
                     ShortValueTable.register_value,
                     ShortValueTable.register_address,
+                    ShortValueTable.response_id,
                     registerAddress,
                     deviceId,
                     jobId,
@@ -69,6 +74,7 @@ object RegisterValueDao {
                     IntegerValueTable,
                     IntegerValueTable.register_value,
                     IntegerValueTable.register_address,
+                    IntegerValueTable.response_id,
                     registerAddress,
                     deviceId,
                     jobId,
@@ -80,6 +86,7 @@ object RegisterValueDao {
                     StringValuesTable,
                     StringValuesTable.register_value,
                     StringValuesTable.register_address,
+                    StringValuesTable.response_id,
                     registerAddress,
                     deviceId,
                     jobId,
@@ -91,27 +98,53 @@ object RegisterValueDao {
             }
         }
 
+    /**
+     * The value of [registerAddress] in the newest response of run [jobId] for device [deviceId] that carries it.
+     *
+     * Two statements on purpose, never a join (backlog 38/41). With stale planner statistics the joined query
+     * could pick a nested loop that ran 29.6 s; here each statement reads one table through its own composite index
+     * (V11 `(job_id, logic_device_id)`, V4/V11 `(register_address, response_id)`), so no join order is left to get
+     * wrong. A run has only a few responses per device, so the id list stays short.
+     */
     private fun <T> readLatestRegisterValue(
-        valueTable: IdTable<Int>,
+        valueTable: Table,
         valueColumn: Column<T?>,
         registerAddressColumn: Column<Int>,
+        responseIdColumn: Column<Int>,
         registerAddress: RegisterAddress,
         deviceId: Int,
         jobId: JobId,
     ): T? =
         transaction {
-            (valueTable innerJoin ResponseTable)
-                .select(valueColumn)
-                .where(
-                    registerAddressColumn
-                        .eq(registerAddress.value)
-                        .and(ResponseTable.logic_device_id.eq(deviceId.toUByte()))
-                        .and(ResponseTable.job_id.eq(jobId.id)),
-                ).orderBy(responseTimeDescending)
-                .limit(ONE)
-                .firstOrNull()
-                ?.let { row -> row[valueColumn] } ?: null
-                .also { logger.info { "No register value found for device ID '$deviceId' and register address '$registerAddress'." } }
-        }
+            val responseIdsNewestFirst =
+                ResponseTable
+                    .select(ResponseTable.id)
+                    .where(
+                        ResponseTable.job_id
+                            .eq(jobId.id)
+                            .and(ResponseTable.logic_device_id.eq(deviceId.toUByte())),
+                    ).orderBy(responseTimeDescending, idDescending)
+                    .map { row -> row[ResponseTable.id].value }
 
+            val valuesByResponseId =
+                if (responseIdsNewestFirst.isEmpty()) {
+                    emptyMap()
+                } else {
+                    valueTable
+                        .select(responseIdColumn, valueColumn)
+                        .where(
+                            registerAddressColumn
+                                .eq(registerAddress.value)
+                                .and(responseIdColumn.inList(responseIdsNewestFirst)),
+                        ).associate { row -> row[responseIdColumn] to row[valueColumn] }
+                }
+
+            val latestResponseId = responseIdsNewestFirst.firstOrNull { it in valuesByResponseId }
+            if (latestResponseId == null) {
+                logger.info { "No register value found for device ID '$deviceId' and register address '$registerAddress'." }
+                null
+            } else {
+                valuesByResponseId[latestResponseId]
+            }
+        }
 }

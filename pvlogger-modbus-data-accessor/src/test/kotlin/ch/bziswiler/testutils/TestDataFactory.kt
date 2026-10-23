@@ -4,6 +4,7 @@ import ch.bziswiler.pvlogger.dataaccessor.database.schema.HousePowerKpiTable
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.IntegerValueTable
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.RawKpiRegisterValuesTable
 import ch.bziswiler.pvlogger.dataaccessor.database.schema.ResponseTable
+import ch.bziswiler.pvlogger.dataaccessor.database.schema.UIntegerValueTable
 import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -45,6 +46,16 @@ object TestDataFactory {
     fun seedIntegerValue(responseId: Int, registerAddress: Int, value: Int) {
         transaction {
             IntegerValueTable.insert {
+                it[response_id] = responseId
+                it[register_address] = registerAddress
+                it[register_value] = value
+            }
+        }
+    }
+
+    fun seedUIntegerValue(responseId: Int, registerAddress: Int, value: ULong) {
+        transaction {
+            UIntegerValueTable.insert {
                 it[response_id] = responseId
                 it[register_address] = registerAddress
                 it[register_value] = value

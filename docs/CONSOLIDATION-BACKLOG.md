@@ -65,6 +65,13 @@ next release; it changes nothing for them.
 **Security findings still open:** 3 (closes with `POSTGRESQL_SSLMODE=require` at the CloudNativePG cutover), 18
 (`/metrics` on the tailnet name only), 15 (pool size, speculative).
 
+### Status 2026-10-23
+
+- **Data accessor 3.12.2** (item 41): `read-latest-register-value` runs as two single-table statements, no
+  join. For build and deploy; the chart bump and the accessor's CPU limit (infrastructure side of item 41) are
+  with the infrastructure side.
+- **`build.sh` pushes only the version tag** (infrastructure backlog 58, ADR-0003): no more `:latest`.
+
 ## Open
 
 22. **Test coverage very uneven**: `pv-full-data-collector` and the shared Kotlin `-rest`/`-database` libs have zero
@@ -176,10 +183,16 @@ next release; it changes nothing for them.
       `logic_device_id`, so it is not redundant by construction. Treat it like the timestamp indexes below.
     - ~~**`job_id` statistics target**~~: moot, confirmed 2026-10-20 — `attstattarget` is unset (default) on
       `job_id` and `logic_device_id`, and the plans above no longer touch the dev_id index.
-    - **Two-statement lookup in `RegisterValueDao.readLatestRegisterValue`**: the only change that removes the
-      join-order choice, and with it the remaining 1-3 day exposure. Downgraded 2026-08-27 to cheap insurance: do
-      it the next time `RegisterValueDao` is touched. Until then the runbook step in item 38 (manual `ANALYZE`
-      after a register-set change or a masterdata import) covers it.
+    - ~~**Two-statement lookup in `RegisterValueDao.readLatestRegisterValue`**~~ — **done 2026-10-23**, data
+      accessor 3.12.2. The only change that removes the join-order choice, and with it the remaining 1-3 day
+      exposure. Statement 1 reads the run's response ids for the device, newest first (`response_time`, then
+      `id`), through `modbus_response_data_job_dev_idx`; statement 2 reads the register's values for those ids
+      through `(register_address, response_id)`; the newest response that carries the register wins, as before.
+      Neither statement joins, so stale statistics can at worst make one single-table scan slower, never
+      quadratic. Done before the CloudNativePG cutover on purpose: the imported cluster starts with fresh
+      statistics. `RegisterValueDaoTest` pins the result (newest carrying response, other run/device ignored,
+      missing gives null) and that the lookup is two statements without `JOIN`; the latter fails on 3.12.1's
+      query. The manual `ANALYZE` runbook step in item 38 is no longer needed for this route.
     - **`modbus_response_data` timestamp indexes** (`date_created`, `request_time`, `response_time`, 398 MB each):
       candidates for dropping only after a full quarter of index-usage counters. The counters started 2026-08-08;
       the CloudNativePG cluster starts its own from zero, so the quarter restarts at the cutover. *2026-10-20:* all
