@@ -20,10 +20,18 @@ repositories {
 
 dependencies {
     implementation(libs.kotlinx.serialization.json)
+
+    // Testing
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.kotlin.test)
 }
 
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
     }
+}
+
+tasks.test {
+    useJUnitPlatform()
 }

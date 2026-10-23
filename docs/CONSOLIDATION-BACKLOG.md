@@ -79,6 +79,11 @@ next release; it changes nothing for them.
 
     *Re-verified 2026-10-19:* still no tests in any of the three modules. Later the same day `-database` got its
     first (`DatabaseFactoryTest`, item 40); `pv-full-data-collector` and `-rest` remain.
+
+    *2026-10-23:* `-rest` got `KpiValuesDtoTest`: JSON round trip, the 12 field names as the wire contract (the
+    frontend's client ignores unknown keys, so a renamed field would silently read 0.0; the KPI exporter's Go
+    struct carries the same names), strict decoding of the wire form, zero defaults. `pv-full-data-collector`
+    remains.
 23. **Tiltfile rot**: references non-existent `pvlogger-infrastructure/` paths, no
     `docker_build` steps. Decision (2026-08-07, ex open question 8): **fix, don't remove** — Tilt is the intended dev
     loop for larger changes. Low priority; pairs with the mock-server refresh (item 30).
