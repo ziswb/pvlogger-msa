@@ -73,17 +73,6 @@ next release; it changes nothing for them.
 
 ## Open
 
-22. **Test coverage very uneven**: `pv-full-data-collector` and the shared Kotlin `-rest`/`-database` libs have zero
-    tests. (The Angular SPA turned out to have 47 Karma specs — the "frontend has one" here matches the Ktor side,
-    which has a single test class. Corrected 2026-08-16; since item 37 the Karma specs gate the frontend image build.)
-
-    *Re-verified 2026-10-19:* still no tests in any of the three modules. Later the same day `-database` got its
-    first (`DatabaseFactoryTest`, item 40); `pv-full-data-collector` and `-rest` remain.
-
-    *2026-10-23:* `-rest` got `KpiValuesDtoTest`: JSON round trip, the 12 field names as the wire contract (the
-    frontend's client ignores unknown keys, so a renamed field would silently read 0.0; the KPI exporter's Go
-    struct carries the same names), strict decoding of the wire form, zero defaults. `pv-full-data-collector`
-    remains.
 23. **Tiltfile rot**: references non-existent `pvlogger-infrastructure/` paths, no
     `docker_build` steps. Decision (2026-08-07, ex open question 8): **fix, don't remove** — Tilt is the intended dev
     loop for larger changes. Low priority; pairs with the mock-server refresh (item 30).
@@ -405,6 +394,23 @@ next release; it changes nothing for them.
     ShadowJar workaround (`mergeServiceFiles()` + `duplicatesStrategy = INCLUDE`) was added to the mock server **and
     the frontend**, which had the same gap (fat JAR in Docker, no Flyway so no visible symptom yet); TROUBLESHOOTING.md's
     affected-services list updated. Mock server 3.2.2, frontend 3.9.1.
+22. ~~**Test coverage very uneven**~~: `pv-full-data-collector` and the shared Kotlin `-rest`/`-database` libs have zero
+    tests. (The Angular SPA turned out to have 47 Karma specs — the "frontend has one" here matches the Ktor side,
+    which has a single test class. Corrected 2026-08-16; since item 37 the Karma specs gate the frontend image build.)
+
+    *Re-verified 2026-10-19:* still no tests in any of the three modules. Later the same day `-database` got its
+    first (`DatabaseFactoryTest`, item 40); `pv-full-data-collector` and `-rest` remain.
+
+    *2026-10-23:* `-rest` got `KpiValuesDtoTest`: JSON round trip, the 12 field names as the wire contract (the
+    frontend's client ignores unknown keys, so a renamed field would silently read 0.0; the KPI exporter's Go
+    struct carries the same names), strict decoding of the wire form, zero defaults. `pv-full-data-collector`
+    remains.
+
+    **Resolved 2026-10-23.** `pv-full-data-collector` got `dynamic-data-collector_test.go`. Its own code is only the
+    flow "read the sweep, then aggregate that run" (no job switch); the reading and the KPI math live in
+    `pvlogger-shared-modbus`, which has tests. The flow now takes its two steps as functions (`runSweep`, no behaviour
+    change, no release needed), and the tests pin: the aggregator gets the run that was read, a failed read never
+    aggregates, an aggregation error is returned (non-zero exit), and the sweep reads DYNAMIC + ALARM.
 24. ~~Committed IDE files (`.ipr`, `.iws`, `.iml`), `.DS_Store`; simulator output files (`summary-2024.*`) committed at
     module root.~~
 
