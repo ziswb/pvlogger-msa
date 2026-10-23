@@ -68,8 +68,7 @@ next release; it changes nothing for them.
 ### Status 2026-10-23
 
 - **Data accessor 3.12.2** (item 41): `read-latest-register-value` runs as two single-table statements, no
-  join. For build and deploy; the chart bump and the accessor's CPU limit (infrastructure side of item 41) are
-  with the infrastructure side.
+  join. Built and pushed; the chart is bumped in the infrastructure repo, the deploy waits on the operator.
 - **`build.sh` pushes only the version tag** (infrastructure backlog 58, ADR-0003): no more `:latest`.
 
 ## Open
@@ -200,7 +199,9 @@ next release; it changes nothing for them.
       were reset some time after 2026-08-26 — how far back they reach is unknown.
     - If an I16/U16 register ever joins the dongle block, `short`/`ushort` need the same
       `(register_address, response_id)` index. V11 left them out on purpose.
-    - *infrastructure repo:* the data accessor's `100m` CPU limit with `requests == limits` is tight for a JVM.
+    - ~~*infrastructure repo:* the data accessor's `100m` CPU limit with `requests == limits` is tight for a
+      JVM.~~ Already done 2026-08-26 on the infrastructure side: request `100m`, limit `1000m` (memory stays
+      equal), see `infrastructure/ansible/roles/pvlogger_helm_deploy/defaults/main.yml`. Noted here 2026-10-23.
 
 ## Done (resolved, superseded or moot)
 
@@ -779,7 +780,8 @@ next release; it changes nothing for them.
       `histogram_quantile()` does not apply. Supersedes the ServiceMonitor half of the role's `IMPROVEMENTS.md` 16.
     - **infrastructure repo:** the data-accessor's CPU limit is `100m` with `requests == limits`
       (`pvlogger-chart/values.yaml`). Not implicated here — the pod idles at 2 m and the wait was entirely in
-      PostgreSQL — but tight for a JVM service.
+      PostgreSQL — but tight for a JVM service. *(Split the same day on the infrastructure side: request `100m`,
+      limit `1000m`.)*
 
     **Moved to Done 2026-10-19:** the outage is fixed and verified. The follow-ups above that are still open moved to
     item 41.
