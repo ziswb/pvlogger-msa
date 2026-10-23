@@ -62,14 +62,17 @@ next release; it changes nothing for them.
 **`fsdata` migrations (item 29) — done 2026-10-21**, fusionsolar 3.5.0 (ADR-0022): deployed, baseline applied on
 .2 (`tern_schema_version` = 1). Rerun procedure: `infrastructure/docs/runbooks/pvlogger-fsdata-migrate.md`.
 
-**Security findings still open:** 3 (closes with `POSTGRESQL_SSLMODE=require` at the CloudNativePG cutover), 18
-(`/metrics` on the tailnet name only), 15 (pool size, speculative).
+**Security findings still open:** 3 (closes with `POSTGRESQL_SSLMODE=require` at the CloudNativePG cutover), 15
+(pool size, speculative). 18 closed 2026-10-23.
 
 ### Status 2026-10-23
 
 - **Data accessor 3.12.2** (item 41): `read-latest-register-value` runs as two single-table statements, no
   join. Built and pushed; the chart is bumped in the infrastructure repo, the deploy waits on the operator.
 - **`build.sh` pushes only the version tag** (infrastructure backlog 58, ADR-0003): no more `:latest`.
+- **Security finding 18 closed:** the Tailscale Ingress no longer reaches the frontend's `/metrics` (infrastructure
+  `6882012`, live 14:17). The same deploy runs the three JVM pods hardened (UID 1000, no capabilities, no privilege
+  escalation, RuntimeDefault seccomp); the images already ran as UID 1000 and write nothing outside `/tmp`.
 
 ## Open
 

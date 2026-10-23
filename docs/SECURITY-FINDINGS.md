@@ -67,36 +67,6 @@ depth / operational.
    the chart sets `POSTGRESQL_SSLMODE=require` at the cutover. Residual after that: `require` does not verify the
    server certificate (`verify-full` would need CloudNativePG's CA on every client).
 
-### 🟡 Hardening
-
-18. **`/metrics` unprotected.** *Still present, now centralized.*
-
-    `pvlogger-shared-ktor/.../Monitoring.kt:24,51-55` serves `/metrics` with no auth or
-    IP restriction, for data-accessor, masterdata-server and frontend (each
-    `Application.kt:32`). The duplicate copy in the deprecated sunrise-sunset module is
-    gone — the module was deleted 2026-08-27 (backlog item 28).
-
-    Low severity on inspection: only JVM, process and HTTP meters are registered
-    (`Monitoring.kt:41-49`) — no PV or business data is exposed — and no Ingress routes
-    `/metrics`, so reachability is cluster-internal. Fix by scoping a NetworkPolicy to
-    the monitoring namespace rather than by adding auth.
-
-    *Corrected 2026-10-20:* an Ingress does route it. The **frontend's** `/metrics`
-    falls under the `/` rule of both ingresses and answers 200 on `<pvlogger-host>`
-    and on the tailnet name (probed). The data accessor's and masterdata server's are not
-    exposed (`/metrics` is outside `/v1`; masterdata has no ingress). Severity stays low —
-    JVM and HTTP meters only. ADR-0020 keeps `/metrics` off the ingress. On
-    Traefik that is one rule (`&& !PathPrefix(/metrics)`); the Tailscale Ingress matches
-    prefixes only, so there it needs either a separate management port in
-    `pvlogger-shared-ktor` — note the chart's liveness/readiness probes use `/metrics` on
-    the service port and would move with it — or Tailscale traffic routed through
-    Traefik.
-
-    *2026-10-20, 23:10:* the Traefik part is done — the frontend rule now excludes
-    `/metrics` (infrastructure `4fa290d`), and it answers 404 on `<pvlogger-host>`.
-    Still open: 200 with Prometheus text on `pvlogger.<tailnet>.ts.net`, i.e. to
-    anyone on the tailnet.
-
 ### ⚪ Defence in depth / operational
 
 15. **Database connection pool likely too small.** *Unchanged; reclassified.*
@@ -166,6 +136,15 @@ depth / operational.
     setup in `pvlogger-kpi-exporter/internal/datetime/format.go:19,23`), which
     `env.go:10-12` documents as deliberate: startup configuration only, per **ADR-0010**
     and **ADR-0011**. Nothing to do.
+18. ~~**`/metrics` unprotected**~~ — **fixed 2026-10-23** on the infrastructure side, under **ADR-0020** (`/metrics`
+    stays off the ingress). Served by `pvlogger-shared-ktor/.../Monitoring.kt` for data accessor, masterdata server
+    and frontend with no auth (JVM, process and HTTP meters only, no PV data). Only the frontend's was reachable from
+    outside the cluster, through the `/` rule of both ingresses. Traefik excludes `/metrics` since 2026-10-20
+    (infrastructure `4fa290d`). The Tailscale Ingress matches prefixes only, so it now routes `/metrics` to a Service
+    without endpoints (`pvlogger-blackhole`, infrastructure `6882012`, deployed 2026-10-23 14:17). No app change was
+    needed: the probes keep using `/metrics` on the service port inside the cluster. Probed 2026-10-23 from the
+    tailnet: `/metrics` 502 on `pvlogger.<tailnet>.ts.net`, `/` and `/v1/daydata` 200; `/metrics` 404 on
+    `<pvlogger-host>`.
 27. ~~**No rate limiting on REST endpoints**~~ — **accepted 2026-10-20** under **ADR-0020**.
     Still no `RateLimit` plugin anywhere, but the reason it mattered — unauthenticated
     writes and the masterdata import reachable from the LAN (items 42, 33) — is gone: the
