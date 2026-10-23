@@ -68,11 +68,19 @@ next release; it changes nothing for them.
 ### Status 2026-10-23
 
 - **Data accessor 3.12.2** (item 41): `read-latest-register-value` runs as two single-table statements, no
-  join. Built and pushed; the chart is bumped in the infrastructure repo, the deploy waits on the operator.
+  join. *Deployed 2026-10-23 12:07* (confirmed by the infrastructure side at 15:35): the route answers 200 and the
+  fast collector completes every minute. Median latency ~5 ms against ~2 ms on 3.12.1 (two round trips instead of
+  one), accepted by the operator.
 - **`build.sh` pushes only the version tag** (infrastructure backlog 58, ADR-0003): no more `:latest`.
 - **Security finding 18 closed:** the Tailscale Ingress no longer reaches the frontend's `/metrics` (infrastructure
   `6882012`, live 14:17). The same deploy runs the three JVM pods hardened (UID 1000, no capabilities, no privilege
   escalation, RuntimeDefault seccomp); the images already ran as UID 1000 and write nothing outside `/tmp`.
+- **Hardening round 2 live 15:12** (infrastructure `3108ad3`, security finding 25 there): the Go jobs run as UID
+  3010, the KPI exporter (CronJob and `serve`) as 3011 with `fsGroup` 3011 for its 0440 token, the mock server as
+  1000; no capabilities, no privilege escalation, RuntimeDefault seccomp. First runs succeeded (fast collector,
+  FusionSolar devkpi/stnkpi/auth, exporter write and prune, export endpoint 200). Not yet run under the new
+  settings: the nightly device collectors, `db-backup`, the full collector, dev5minkpi and FusionSolar
+  stnday/month/year — the operator checks them.
 
 ## Open
 
