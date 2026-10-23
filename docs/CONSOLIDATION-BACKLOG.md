@@ -152,44 +152,20 @@ next release; it changes nothing for them.
     services and `db-backup` run as `pvlogger`, which owns the three databases and their objects (runbook
     `infrastructure/docs/runbooks/pvlogger-db-role.md`). Still open: step 3 at the cutover, i.e. phase 4 of the
     resilience plan, which waits on the NVMe hardware (phase 3). Close this item after the cutover.
-41. 🟡 **Remaining follow-ups from item 38** (split out 2026-10-19 so that item 38 can sit under Done)
+42. ⚪ **Drop the unused `modbus_response_data` indexes — a quarter after the CloudNativePG cutover** (split out of
+    item 41 on 2026-10-23; waits on item 40's cutover, phase 4)
 
-    Item 38's outage is fixed and verified. These are its leftovers, all small:
+    Candidates, all at 0 scans on .2 (2026-10-20), ~1.3 GB together:
+    - The timestamp indexes `date_created`, `request_time`, `response_time` (398 MB each).
+    - `modbus_response_data_dev_id_idx` (124 MB). No composite leads with `logic_device_id`, so it is not redundant
+      by construction; like the timestamp indexes, only usage counters can show it is unused.
 
-    - ~~**Verify V11 in production.**~~ **Verified on .2 2026-10-20** (PostgreSQL 18.2, Flyway V11 applied
-      2026-08-26 22:57). Both indexes valid and in use: `modbus_response_data_job_dev_idx` 237 MB, 103 896 scans;
-      `modbus_register_uinteger_value_idx` 338 MB, 34 632 scans. Both `read-latest-register-value` plans are a
-      nested loop of two Index Conds on the composites: I32 37516 0.11 ms / 16 buffers, U32 37500 0.07 ms / 9
-      buffers (before V11: 0.99 ms / 38 and 2.63 ms / 293).
-    - ~~**Drop the single-column indexes the composites make redundant**~~ (~511 MB:
-      `modbus_response_data_job_id_idx` 180 MB, `modbus_register_integer_values_reg_addr_idx` 227 MB,
-      `modbus_register_uinteger_values_reg_adr_idx` 104 MB — all three at 0 scans, no `last_idx_scan`) in a new
-      migration V12. The composites are seen winning, so the condition from V11's closing comment is met. Ship it
-      before the CloudNativePG cutover (item 40), not with it — the import then copies ~511 MB less. *Done
-      2026-10-20* as V12, data accessor 3.12.0, deployed the same evening: Flyway 11 → 12 in 151 ms on .2. No
-      manual step, unlike V11: a drop only changes the catalog, so its lock lasts milliseconds.
-    - `modbus_response_data_dev_id_idx` (124 MB) also shows 0 scans, but no composite leads with
-      `logic_device_id`, so it is not redundant by construction. Treat it like the timestamp indexes below.
-    - ~~**`job_id` statistics target**~~: moot, confirmed 2026-10-20 — `attstattarget` is unset (default) on
-      `job_id` and `logic_device_id`, and the plans above no longer touch the dev_id index.
-    - ~~**Two-statement lookup in `RegisterValueDao.readLatestRegisterValue`**~~ — **done 2026-10-23**, data
-      accessor 3.12.2. The only change that removes the join-order choice, and with it the remaining 1-3 day
-      exposure. Statement 1 reads the run's response ids for the device, newest first (`response_time`, then
-      `id`), through `modbus_response_data_job_dev_idx`; statement 2 reads the register's values for those ids
-      through `(register_address, response_id)`; the newest response that carries the register wins, as before.
-      Neither statement joins, so stale statistics can at worst make one single-table scan slower, never
-      quadratic. Done before the CloudNativePG cutover on purpose: the imported cluster starts with fresh
-      statistics. `RegisterValueDaoTest` pins the result (newest carrying response, other run/device ignored,
-      missing gives null) and that the lookup is two statements without `JOIN`; the latter fails on 3.12.1's
-      query. The manual `ANALYZE` runbook step in item 38 is no longer needed for this route.
-    - **`modbus_response_data` timestamp indexes** (`date_created`, `request_time`, `response_time`, 398 MB each):
-      candidates for dropping only after a full quarter of index-usage counters. The counters started 2026-08-08;
-      the CloudNativePG cluster starts its own from zero, so the quarter restarts at the cutover. *2026-10-20:* all
-      three at 0 scans on .2, but `stats_reset` is empty and the pre-V11 plans' indexes also read 0, so the counters
-      were reset some time after 2026-08-26 — how far back they reach is unknown.
-    - ~~*infrastructure repo:* the data accessor's `100m` CPU limit with `requests == limits` is tight for a
-      JVM.~~ Already done 2026-08-26 on the infrastructure side: request `100m`, limit `1000m` (memory stays
-      equal), see `infrastructure/ansible/roles/pvlogger_helm_deploy/defaults/main.yml`. Noted here 2026-10-23.
+    Why wait: dropping rests on usage counters alone, so they must cover a full quarter, long enough to see monthly or
+    quarterly reporting paths. The counters on .2 started 2026-08-08, but `stats_reset` is empty and the pre-V11
+    plans' indexes also read 0, so they were reset some time after 2026-08-26 — how far back they reach is unknown.
+    The CloudNativePG cluster starts its own from zero, so the quarter starts at the cutover. Then: read `idx_scan`
+    and `last_idx_scan` for the four indexes on the new cluster, drop those still at 0 in a new Flyway migration
+    (`DROP INDEX` is a catalog change, no manual step, like V12).
 
     *Watch (not a task):* if an I16/U16 register ever joins the dongle block, `modbus_register_short_values` and
     `modbus_register_ushort_values` need the same `(register_address, response_id)` index first. V11 left them out
@@ -747,7 +723,7 @@ next release; it changes nothing for them.
       shrink to `modbus_response_data`'s three timestamp indexes (`date_created`, `request_time`, `response_time`,
       398 MB each), and only after a full quarter of counters.
 
-    Follow-ups as recorded at the time (**the open ones now live in item 41**):
+    Follow-ups as recorded at the time (**the open ones moved to item 41, and on 2026-10-23 to item 42**):
 
     - **`job_id`'s selectivity is still underestimated 10x.** It is now used (as one half of a BitmapAnd) but the
       planner still estimates 191 rows where the true figure is 1: `n_distinct` is 97 343 against 1 003 220 actual
@@ -837,3 +813,38 @@ next release; it changes nothing for them.
     which is what the guard was actually for; `publishData` keeps a separate newest-published row so a history
     tail arriving after a live value still redraws the charts without moving the current-value tiles backwards.
     Covered by `kpi-fetch-service.service.spec.ts`.
+41. ~~🟡 **Remaining follow-ups from item 38**~~ (split out 2026-10-19 so that item 38 can sit under Done)
+
+    Item 38's outage is fixed and verified. These are its leftovers, all small:
+
+    - ~~**Verify V11 in production.**~~ **Verified on .2 2026-10-20** (PostgreSQL 18.2, Flyway V11 applied
+      2026-08-26 22:57). Both indexes valid and in use: `modbus_response_data_job_dev_idx` 237 MB, 103 896 scans;
+      `modbus_register_uinteger_value_idx` 338 MB, 34 632 scans. Both `read-latest-register-value` plans are a
+      nested loop of two Index Conds on the composites: I32 37516 0.11 ms / 16 buffers, U32 37500 0.07 ms / 9
+      buffers (before V11: 0.99 ms / 38 and 2.63 ms / 293).
+    - ~~**Drop the single-column indexes the composites make redundant**~~ (~511 MB:
+      `modbus_response_data_job_id_idx` 180 MB, `modbus_register_integer_values_reg_addr_idx` 227 MB,
+      `modbus_register_uinteger_values_reg_adr_idx` 104 MB — all three at 0 scans, no `last_idx_scan`) in a new
+      migration V12. The composites are seen winning, so the condition from V11's closing comment is met. Ship it
+      before the CloudNativePG cutover (item 40), not with it — the import then copies ~511 MB less. *Done
+      2026-10-20* as V12, data accessor 3.12.0, deployed the same evening: Flyway 11 → 12 in 151 ms on .2. No
+      manual step, unlike V11: a drop only changes the catalog, so its lock lasts milliseconds.
+    - ~~**`job_id` statistics target**~~: moot, confirmed 2026-10-20 — `attstattarget` is unset (default) on
+      `job_id` and `logic_device_id`, and the plans above no longer touch the dev_id index.
+    - ~~**Two-statement lookup in `RegisterValueDao.readLatestRegisterValue`**~~ — **done 2026-10-23**, data
+      accessor 3.12.2. The only change that removes the join-order choice, and with it the remaining 1-3 day
+      exposure. Statement 1 reads the run's response ids for the device, newest first (`response_time`, then
+      `id`), through `modbus_response_data_job_dev_idx`; statement 2 reads the register's values for those ids
+      through `(register_address, response_id)`; the newest response that carries the register wins, as before.
+      Neither statement joins, so stale statistics can at worst make one single-table scan slower, never
+      quadratic. Done before the CloudNativePG cutover on purpose: the imported cluster starts with fresh
+      statistics. `RegisterValueDaoTest` pins the result (newest carrying response, other run/device ignored,
+      missing gives null) and that the lookup is two statements without `JOIN`; the latter fails on 3.12.1's
+      query. The manual `ANALYZE` runbook step in item 38 is no longer needed for this route.
+    - ~~*infrastructure repo:* the data accessor's `100m` CPU limit with `requests == limits` is tight for a
+      JVM.~~ Already done 2026-08-26 on the infrastructure side: request `100m`, limit `1000m` (memory stays
+      equal), see `infrastructure/ansible/roles/pvlogger_helm_deploy/defaults/main.yml`. Noted here 2026-10-23.
+
+    **Closed 2026-10-23.** Everything here is done or moot. What is left can only be decided a quarter after the
+    CloudNativePG cutover and moved to **item 42**: the timestamp indexes, `modbus_response_data_dev_id_idx`, and the
+    I16/U16 watch note.
