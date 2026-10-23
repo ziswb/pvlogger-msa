@@ -85,10 +85,6 @@ next release; it changes nothing for them.
 
     *Re-verified 2026-10-19:* unchanged — the Tiltfile still loads `pvlogger-infrastructure/...` manifests and has
     no `docker_build`.
-26. `pvlogger-database/migration/irrelevant/` — delete or archive; the PG18 migration guide is a finished runbook and
-    could move to a `docs/history/`.
-
-    *Re-verified 2026-10-19:* unchanged — `irrelevant/` is still there and `docs/history/` does not exist.
 30. **Refresh the outdated mock server** (low prio, ex open question 8): unused for a while and out of date. Update it
     so the Tilt environment (item 23)
     works again for larger changes, and consider building e2e tests around it — none exist today. It stays local-only,
@@ -419,6 +415,12 @@ next release; it changes nothing for them.
     (`ng build` emits into `src/main/resources/static/`, which is checked in; Gradle/Docker never runs npm, so SPA
     changes must be committed together with the regenerated static files). *That workflow was replaced the same day —
     see item 37; the README was updated again with it.*
+26. ~~`pvlogger-database/migration/irrelevant/` — delete or archive; the PG18 migration guide is a finished runbook and
+    could move to a `docs/history/`.~~
+
+    **Resolved 2026-10-23.** `irrelevant/` deleted (19 one-off scripts from the classic → msa migration; they stay
+    in git history). The PG14 → PG18 guide moved to `docs/history/postgres-migration-guide.md`. Nothing referenced
+    either.
 27. ~~**Site coordinates hard-coded in sunrise-sunset**~~
 
     **Superseded 2026-08-07**: the service turned out to be deprecated (ADR-0005), so the hard-coded coordinates (the
