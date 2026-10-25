@@ -2,10 +2,9 @@ package ch.bziswiler.pvlogger.dataaccessor.database.schema
 
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
-import org.jetbrains.exposed.v1.javatime.timestamp
 
 object HousePowerKpiTable : IntIdTable("house_power_kpi_values") {
-    val dateCreated = timestamp("date_created").defaultExpression(CurrentTimestamp)
+    val dateCreated = timestampTz("date_created").defaultExpression(CurrentTimestamp)
     val jobId = text("job_id").default("NO-JOB-ID-GIVEN")
     val solarPower = double("solar_power").default(0.0)
     val solarToHousePower = double("solar_to_house_power").default(0.0)

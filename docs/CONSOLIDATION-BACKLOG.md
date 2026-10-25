@@ -182,6 +182,26 @@ next release; it changes nothing for them.
     `modbus_register_ushort_values` need the same `(register_address, response_id)` index first. V11 left them out
     on purpose, and they have no index besides the primary key, so since 3.12.2 the second lookup statement would
     read the whole table. Today the KPI lookup reads only the I32/U32 registers 37498–37516.
+43. 🔴 **Timestamps written in the repeated DST hour are stored one hour early** (added 2026-10-25, reported by the
+    infrastructure side: false healthchecks.io freshness alarm 02:10–03:00 CET on 2026-10-25)
+
+    Cause: Exposed 1.0's `timestamp()` column (`InstantColumnType.notNullValueToDB`) binds an `Instant` as a
+    wall-clock `java.sql.Timestamp` in the JVM zone (Europe/Zurich), dropping the offset. In the second pass of the
+    02:00–03:00 hour that wall-clock time is ambiguous and resolves to CEST, so those rows land one hour early, before
+    the 02:59 CEST row of the first pass. `latestKpi()` (`ORDER BY date_created DESC`) was correct; it sorted wrong
+    data. The collectors send correct epoch ms (`time.Now().UnixMilli()`), and the columns are TIMESTAMPTZ since V6.
+    Affects every timestamp written through Exposed: `house_power_kpi_values.date_created`,
+    `raw_kpi_register_values.date_created`, `modbus_response_data.{date_created,request_time,response_time}`.
+
+    *Code fix done 2026-10-25, not yet released:* new `timestampTz()` column (`database/schema/TimestampTz.kt`)
+    binds the `Instant` as a UTC `OffsetDateTime`; the three tables use it. No migration needed. Repro test
+    `DstFallBackKpiTest` is red on the old binding (latest = 00:59Z instead of 01:30Z, the prod symptom) and green on
+    the new one; the full data accessor suite passes. Next: release the data accessor.
+
+    *Data repair (operator, prod):* the second-pass rows of 2026-10-25 sit in `[00:00Z, 01:00Z)` next to the
+    first-pass rows. They are the ones with an `id` above the point where `date_created` jumps back from ~00:59Z to
+    ~00:00Z. Shift those by `+ interval '1 hour'` in each affected table. Optional: affects only the day view and
+    history for that one hour.
 
 ## Done (resolved, superseded or moot)
 
