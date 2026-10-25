@@ -182,27 +182,6 @@ next release; it changes nothing for them.
     `modbus_register_ushort_values` need the same `(register_address, response_id)` index first. V11 left them out
     on purpose, and they have no index besides the primary key, so since 3.12.2 the second lookup statement would
     read the whole table. Today the KPI lookup reads only the I32/U32 registers 37498–37516.
-43. 🔴 **Timestamps written in the repeated DST hour are stored one hour early** (added 2026-10-25, reported by the
-    infrastructure side: false healthchecks.io freshness alarm 02:10–03:00 CET on 2026-10-25)
-
-    Cause: Exposed 1.0's `timestamp()` column (`InstantColumnType.notNullValueToDB`) binds an `Instant` as a
-    wall-clock `java.sql.Timestamp` in the JVM zone (Europe/Zurich), dropping the offset. In the second pass of the
-    02:00–03:00 hour that wall-clock time is ambiguous and resolves to CEST, so those rows land one hour early, before
-    the 02:59 CEST row of the first pass. `latestKpi()` (`ORDER BY date_created DESC`) was correct; it sorted wrong
-    data. The collectors send correct epoch ms (`time.Now().UnixMilli()`), and the columns are TIMESTAMPTZ since V6.
-    Affects every timestamp written through Exposed: `house_power_kpi_values.date_created`,
-    `raw_kpi_register_values.date_created`, `modbus_response_data.{date_created,request_time,response_time}`.
-
-    *Code fix done 2026-10-25, released as data accessor 3.12.3 and live the same day:* new `timestampTz()` column
-    (`database/schema/TimestampTz.kt`) binds the `Instant` as a UTC `OffsetDateTime`; the three tables use it. No migration needed. Repro test
-    `DstFallBackKpiTest` is red on the old binding (latest = 00:59Z instead of 01:30Z, the prod symptom) and green on
-    the new one; the full data accessor suite passes. Only the optional data repair below is left; close the item
-    once it is done or declined.
-
-    *Data repair (operator, prod):* the second-pass rows of 2026-10-25 sit in `[00:00Z, 01:00Z)` next to the
-    first-pass rows. They are the ones with an `id` above the point where `date_created` jumps back from ~00:59Z to
-    ~00:00Z. Shift those by `+ interval '1 hour'` in each affected table. Optional: affects only the day view and
-    history for that one hour.
 
 ## Done (resolved, superseded or moot)
 
@@ -880,3 +859,34 @@ next release; it changes nothing for them.
     **Closed 2026-10-23.** Everything here is done or moot. What is left can only be decided a quarter after the
     CloudNativePG cutover and moved to **item 42**: the timestamp indexes, `modbus_response_data_dev_id_idx`, and the
     I16/U16 watch note.
+43. ~~🔴 **Timestamps written in the repeated DST hour are stored one hour early**~~ (added 2026-10-25, reported by the
+    infrastructure side: false healthchecks.io freshness alarm 02:10–03:00 CET on 2026-10-25)
+
+    Cause: Exposed 1.0's `timestamp()` column (`InstantColumnType.notNullValueToDB`) binds an `Instant` as a
+    wall-clock `java.sql.Timestamp` in the JVM zone (Europe/Zurich), dropping the offset. In the second pass of the
+    02:00–03:00 hour that wall-clock time is ambiguous and resolves to CEST, so those rows land one hour early, before
+    the 02:59 CEST row of the first pass. `latestKpi()` (`ORDER BY date_created DESC`) was correct; it sorted wrong
+    data. The collectors send correct epoch ms (`time.Now().UnixMilli()`), and the columns are TIMESTAMPTZ since V6.
+    Affects every timestamp the JVM writes through Exposed: `house_power_kpi_values.date_created` and
+    `modbus_response_data.{request_time,response_time}`. Columns filled by their `CurrentTimestamp` default are safe.
+
+    *Code fix done 2026-10-25, released as data accessor 3.12.3 and live the same day:* new `timestampTz()` column
+    (`database/schema/TimestampTz.kt`) binds the `Instant` as a UTC `OffsetDateTime`; the three tables use it. No
+    migration needed. Repro test `DstFallBackKpiTest` is red on the old binding (latest = 00:59Z instead of 01:30Z,
+    the prod symptom) and green on the new one; the full data accessor suite passes.
+
+    *Data repair done 2026-10-25 on .2:* only `house_power_kpi_values.date_created` was affected: ids
+    1290499–1290556 (58 rows) shifted `+ interval '1 hour'` in one guarded transaction; 00Z, 01Z and 02Z now hold 58
+    rows each with no ordering break. Undo: the same ids `- interval '1 hour'`. The `date_created` of
+    `raw_kpi_register_values` and `modbus_response_data` was fine, since it comes from the database default, not
+    from the JVM.
+
+    *Left as is (found during the repair):* `modbus_response_data.request_time`/`response_time` hold the collector's
+    local wall-clock time stored as if it were UTC (`ModbusDao`: `toInstant(ZoneOffset.UTC)`), so they run 1–2 h
+    ahead of `date_created`. Through the same Exposed bug, the 77 rows of 2026-10-24 23:00–00:00Z (local 01:xx CEST,
+    read as UTC = 02:xx CET, ambiguous) landed one more hour early. The only reader is `readLatestRegisterValue`,
+    which orders the responses *of one run* by `response_time`; they are seconds apart, so neither the constant
+    offset nor that past hour changes its result. Worth its own item if anything starts comparing these columns
+    across runs or with `date_created`.
+
+    **Closed 2026-10-25.** Fix live as data accessor 3.12.3, the affected rows repaired.
