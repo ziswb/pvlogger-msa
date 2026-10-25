@@ -89,9 +89,9 @@ depth / operational.
   with the posture note. Listed for completeness.
 - **Committed internal hostname in the battery simulator.**
   `pvlogger-battery-simulator/cmd/simulator/main.go:32-35` defaults `-db-host` to
-  `<central-host>` and `-db-user` to `battery_sim_ro`. No password is committed
-  (it is required from `PGPASSWORD` at `:41-44`). Information disclosure only, and the
-  repo is private.
+  `<db-host>` (until 2026-10-25: `<central-host>`) and `-db-user`
+  to `battery_sim_ro`. No password is committed (it is required from `PGPASSWORD` at
+  `:41-44`). Information disclosure only, and the repo is private.
 
 ## Resolved
 

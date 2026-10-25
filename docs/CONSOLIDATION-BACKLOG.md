@@ -116,9 +116,8 @@ next release; it changes nothing for them.
     - `V8` created the role `battery_sim_ro`. It will not run again (it is in the Flyway history), so the role and
       its grants must come across with the import, or the battery simulator loses read access. The simulator's
       `-db-host` default (`<central-host>`) changes with the move too.
-      *2026-10-25:* the new values (`<db-host>:5432`, `-db-sslmode require`, standby, no
-      port-forward) are documented in the simulator README as flag overrides; flip the flag defaults after the
-      cutover.
+      *2026-10-25:* cutover done (21:07–21:31); the simulator's flag defaults now point at the new cluster
+      (`<db-host>:5432`, `-db-sslmode require`), README updated.
     - fusionsolar reads its user from `POSTGRESQL_USERNAME` (default `postgres`,
       `pvlogger-fusionsolar/internal/config/config.go:61`), so only the chart changes there.
     - CloudNativePG generates server certificates and serves TLS by default, which removes the server-side blocker

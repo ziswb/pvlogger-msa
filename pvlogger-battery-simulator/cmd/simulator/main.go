@@ -29,11 +29,11 @@ func main() {
 	feedInPrice := flag.Float64("feedin-price", 0.06, "feed-in remuneration per kWh")
 	csvPath := flag.String("csv", "", "optional path for a per-month CSV export")
 	summaryCSVPath := flag.String("summary-csv", "", "optional path for a whole-period summary CSV (one row per battery)")
-	dbHost := flag.String("db-host", "<central-host>", "PostgreSQL host")
-	dbPort := flag.Int("db-port", 5434, "PostgreSQL port")
+	dbHost := flag.String("db-host", "<db-host>", "PostgreSQL host")
+	dbPort := flag.Int("db-port", 5432, "PostgreSQL port")
 	dbName := flag.String("db-name", "pvdata", "database name")
 	dbUser := flag.String("db-user", "battery_sim_ro", "database user (password via PGPASSWORD)")
-	dbSslMode := flag.String("db-sslmode", "prefer", "TLS to PostgreSQL: prefer falls back to plaintext, require does not")
+	dbSslMode := flag.String("db-sslmode", "require", "TLS to PostgreSQL: require encrypts (no certificate check); the server refuses plaintext")
 	flag.Parse()
 
 	if len(batteries) == 0 {
