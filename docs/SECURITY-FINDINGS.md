@@ -13,7 +13,7 @@ added by the 2026-08-17 re-verification.
 
 **Status re-checked 2026-10-19** against HEAD `46a39ca0`: every open item still holds in the code. Open items sit
 under **Open** by severity; finished ones under **Resolved**, sorted by number. What to do next is decided in
-`CONSOLIDATION-BACKLOG.md` → *Next up* (currently backlog item 40, which also closes item 3 here).
+`CONSOLIDATION-BACKLOG.md` → *Next up*. (Item 3 closed 2026-10-25 with backlog item 40.)
 
 Legend: 🔴 exploitable or data-integrity risk · 🟡 hardening worth doing · ⚪ defence in
 depth / operational.
@@ -32,40 +32,7 @@ depth / operational.
 
 ### 🔴 Exploitable / data-integrity
 
-3. **Database SSL disabled — plaintext credentials on the wire.** *Deferred: needs
-   server-side SSL first.*
-
-   `sslmode=disable` is explicit in
-   `pvlogger-fusionsolar/internal/database/connection.go:19` and — **found 2026-08-17,
-   not in the original review** — in
-   `pvlogger-battery-simulator/internal/database/reader.go:20`. SSL is *unset* (the
-   PostgreSQL JDBC driver then negotiates no TLS) in every Kotlin service:
-   `application-prod.conf:17-19` of data-accessor and masterdata-server set
-   `dbUrlParams = "?reWriteBatchedInserts=true"` only, and
-   `pvlogger-shared-database/.../DatabaseFactory.kt:61-71` sets no SSL property on the
-   `HikariConfig`. (A third instance in `pvlogger-sunrise-sunset` went with the module
-   on 2026-08-27, backlog item 28.)
-
-   The DB password itself crosses the wire in the clear on every connect, so a passive
-   on-path observer harvests the credential, not just the measurements. Blocked on the
-   server: PostgreSQL on the central server has no SSL configured, so the fix is
-   generate certs → mount → `ssl = on` → then flip all clients (the JDBC side is a
-   one-line `dbUrlParams` change per service thanks to **ADR-0008**). Practical risk is
-   held low by the private LAN plus NetworkPolicies. Tackle as a standalone
-   infrastructure task; the battery simulator's instance is the least urgent (operator-run
-   CLI against the read-only `battery_sim_ro` role).
-
-   *Update 2026-10-19 — unblocked soon.* Infrastructure ADR-0022 (accepted 2026-10-19) moves `pvdata`,
-   `pvmasterdata` and `fsdata` to CloudNativePG, which generates server certificates and serves TLS by default.
-   The server-side blocker goes away with that move; the client switch is part of **backlog item 40**, which must
-   ship before the cutover anyway.
-
-   *Client side done 2026-10-19 (backlog 40; data accessor 3.11.0, masterdata server 3.5.0, fusionsolar 3.4.0).*
-   No client hard-codes the TLS mode any more: the JVM services read `sslMode` (`POSTGRESQL_SSLMODE`), fusionsolar
-   reads `POSTGRESQL_SSLMODE`, the battery simulator takes `-db-sslmode`. All default to `prefer`, because the
-   central server refuses TLS today and `require` would break the release before the move. The finding closes when
-   the chart sets `POSTGRESQL_SSLMODE=require` at the cutover. Residual after that: `require` does not verify the
-   server certificate (`verify-full` would need CloudNativePG's CA on every client).
+None.
 
 ### ⚪ Defence in depth / operational
 
@@ -104,6 +71,16 @@ depth / operational.
    raw query (lines 60-82) interpolates only `$valueExpr`, sourced exclusively from that
    private enum. Repo-wide: the sole raw `exec(` in production Kotlin is that line; all Go
    SQL is sqlc-generated with `$n` placeholders or otherwise parameterized.
+3. ~~**Database SSL disabled — plaintext credentials on the wire**~~ — **fixed 2026-10-25** with the move to
+   CloudNativePG (infrastructure ADR-0022, cutover 21:07–21:31, infrastructure `901df73`). Clients: no client
+   hard-codes the TLS mode since 2026-10-19 (backlog 40; data accessor 3.11.0, masterdata server 3.5.0, fusionsolar
+   3.4.0), and the chart now sets `POSTGRESQL_SSLMODE=require` (`PGSSLMODE` for `db-backup`). Server: CloudNativePG
+   serves TLS, and pg_hba rejects every plaintext login (`hostnossl … reject`, tested). Checked live 2026-10-25
+   ~22:16 by the infrastructure side: data accessor, masterdata server and a fusionsolar run connect with TLS 1.3
+   (`pg_stat_ssl`). The battery simulator defaults to `-db-sslmode require` (`38401a00`). The old plaintext server
+   `<central-host>:5434` gets no PVLogger sessions; its databases go in runbook part D (around 2026-11-01).
+   Residual: `require` does not verify the server certificate; `verify-full` would need CloudNativePG's CA on every
+   client.
 6. ~~**Missing error handling in REST controllers**~~ · 23. ~~**Missing input validation
    on date parameters**~~ · 37. ~~**Exception handling leaking HTTP response bodies**~~ —
    **still fixed**, re-verified 2026-08-17. All three were one fix. StatusPages now lives

@@ -20,6 +20,8 @@ import (phase 4), which waits only on the NVMe hardware (phase 3). It also close
 traffic in plaintext) at no extra cost, since CloudNativePG brings the server-side TLS that finding was blocked on.
 *Code side done 2026-10-19* (role, bootstrap, TLS setting; see item 40), and the services run as the `pvlogger`
 role on .2 since the same day. What remains is the move itself (phase 4, after the NVMe hardware of phase 3).
+*Closed 2026-10-25:* the cutover ran that night, all services connect to the new cluster with required TLS, and
+security finding 3 is closed (see item 40 under Done).
 
 Nothing else in this repo blocks the rehearsal import: V12 (item 41) is deployed and the `fsdata` baseline (item
 29, step 1) is taken, both 2026-10-20. Security findings 40 and 41 (HTTP clients without a timeout) are fixed
@@ -94,79 +96,8 @@ next release; it changes nothing for them.
     so the Tilt environment (item 23)
     works again for larger changes, and consider building e2e tests around it — none exist today. It stays local-only,
     never production (open question 6).
-40. 🔴 **Make the services ready for the CloudNativePG move** (added 2026-10-19; infrastructure ADR-0022, phase 4
-    of its `docs/RESILIENCE-PLAN.md`)
-
-    ADR-0022 moves `pvdata`, `pvmasterdata` and `fsdata` to a three-instance CloudNativePG cluster, with a dedicated
-    application role instead of `postgres`, and says the services need "no change beyond a new host, port and
-    role". In this repo the role is not configuration, and the bootstrap assumes a superuser:
-
-    - `user = "postgres"` is a literal in `application-prod.conf:20` of both data-accessor and masterdata-server,
-      with no env override. Switching the role needs a config change (`${DB_USER}`, like the password) and a
-      release of both images before the cutover night.
-    - `DatabaseFactory.connect()` (`pvlogger-shared-database/.../DatabaseFactory.kt:23-31`) first connects to
-      `dbServerUrl`, which ends in `/` with no database name. The PostgreSQL JDBC driver then picks the database
-      named after the user: today `postgres`, which always exists; with an app role, a database of that role's
-      name, which may not exist. If the target database is missing it runs `CREATE DATABASE`, which needs
-      `CREATEDB`. Point the bootstrap at an explicit maintenance database (or skip it when the target exists) and
-      check the app role gets through both steps.
-    - Flyway runs as the new role against the imported databases. `V10` set reloptions with `ALTER TABLE`, which
-      needs table ownership, and later migrations will too. The import must leave the tables owned by the app
-      role.
-    - `V8` created the role `battery_sim_ro`. It will not run again (it is in the Flyway history), so the role and
-      its grants must come across with the import, or the battery simulator loses read access. The simulator's
-      `-db-host` default (`<central-host>`) changes with the move too.
-      *2026-10-25:* cutover done (21:07–21:31); the simulator's flag defaults now point at the new cluster
-      (`<db-host>:5432`, `-db-sslmode require`), README updated.
-    - fusionsolar reads its user from `POSTGRESQL_USERNAME` (default `postgres`,
-      `pvlogger-fusionsolar/internal/config/config.go:61`), so only the chart changes there.
-    - CloudNativePG generates server certificates and serves TLS by default, which removes the server-side blocker
-      of **security finding 3**. Switching the clients to TLS in the same release closes that finding for every
-      deployed service.
-
-    Test against the rehearsal import ADR-0022 plans (by day, while the old server is still live), not on the
-    cutover night.
-
-    **Progress 2026-10-19 — code done, released as data accessor 3.11.0, masterdata server 3.5.0, fusionsolar
-    3.4.0.** Role and bootstrap:
-    - Both prod configs keep `user = "postgres"` as the default and take `${?DB_USER}` as override, so the current
-      deployment is unaffected; the chart sets `DB_USER` once the app role exists.
-    - `DatabaseFactory.connect()` now connects to the target database first. Only if PostgreSQL answers SQLSTATE
-      `3D000` (database missing) does it connect to the explicit maintenance database `postgres`
-      (`DatabaseConfig.maintenanceUrl`) and run `CREATE DATABASE`. A missing database is no longer retried 30 × 15 s;
-      a role that cannot create it fails at once, naming the missing right.
-    - `pvlogger-shared-database` got its first tests (`DatabaseFactoryTest`, Testcontainers): a CREATEDB role
-      creates and migrates its database; a role without CREATEDB starts on a database it owns (the post-import
-      shape), including an owner-only `ALTER TABLE` like V10; a role that can do neither fails fast.
-
-    TLS is a **setting, not a fixed mode** — the central server (.2) refuses TLS (checked from the infrastructure
-    side 2026-10-19), so a hard `require` would break the release before the move:
-    - JVM: `sslMode` in `DatabaseConfig` (default `prefer`, validated at startup), appended to every URL the
-      bootstrap builds — target, maintenance database and Flyway. Prod configs take `${?POSTGRESQL_SSLMODE}`.
-    - fusionsolar: `POSTGRESQL_SSLMODE`, default `prefer`, replaces the hard `sslmode=disable`. pgx supports
-      `prefer` (verified 2026-10-19 against a server without TLS: `prefer` connects, `require` is refused).
-    - Battery simulator: `-db-sslmode` flag, default `prefer`.
-    - Tests: `DatabaseConfigTest` (URL building, unknown mode rejected); `DatabaseFactoryTest` shows `require` is
-      refused by the non-TLS test server while every other test there connects on `prefer`.
-
-    **Rollout, agreed with the infrastructure side 2026-10-19 — switch the role on .2 first, before the move:**
-    1. Create the `pvlogger` role on `central_db`, make it owner of `pvdata`, `pvmasterdata`, `fsdata` and every
-       object in them (including the Flyway history tables), and run the services with it on .2. The night cutover
-       then only changes the host, as ADR-0022 promises, and the ownership requirement above is met by
-       construction: three databases means CloudNativePG's monolith import, which keeps the owners it finds.
-       `battery_sim_ro` and its grants must still come across with the import.
-    2. Chart settings (infrastructure repo): `DB_USER=pvlogger` for data accessor and masterdata server,
-       `POSTGRESQL_USERNAME=pvlogger` for fusionsolar (the two languages already used different names), and the
-       `db-backup` CronJob's user in the same change — as owner, `pg_dump` works without superuser.
-    3. At the cutover: `POSTGRESQL_SSLMODE=require` in the chart. `require` encrypts without checking the
-       certificate; `verify-full` would need CloudNativePG's CA shipped to every client — possible later.
-
-    **Done on .2 2026-10-19** (reported by the infrastructure side): images deployed, steps 1 and 2 applied — the
-    services and `db-backup` run as `pvlogger`, which owns the three databases and their objects (runbook
-    `infrastructure/docs/runbooks/pvlogger-db-role.md`). Still open: step 3 at the cutover, i.e. phase 4 of the
-    resilience plan, which waits on the NVMe hardware (phase 3). Close this item after the cutover.
 42. ⚪ **Drop the unused `modbus_response_data` indexes — a quarter after the CloudNativePG cutover** (split out of
-    item 41 on 2026-10-23; waits on item 40's cutover, phase 4)
+    item 41 on 2026-10-23; the cutover it waited on ran 2026-10-25)
 
     Candidates, all at 0 scans on .2 (2026-10-20), ~1.3 GB together:
     - The timestamp indexes `date_created`, `request_time`, `response_time` (398 MB each).
@@ -176,7 +107,8 @@ next release; it changes nothing for them.
     Why wait: dropping rests on usage counters alone, so they must cover a full quarter, long enough to see monthly or
     quarterly reporting paths. The counters on .2 started 2026-08-08, but `stats_reset` is empty and the pre-V11
     plans' indexes also read 0, so they were reset some time after 2026-08-26 — how far back they reach is unknown.
-    The CloudNativePG cluster starts its own from zero, so the quarter starts at the cutover. Then: read `idx_scan`
+    The CloudNativePG cluster starts its own from zero, so the quarter starts at the cutover (2026-10-25: due
+    from about 2027-01-25). Then: read `idx_scan`
     and `last_idx_scan` for the four indexes on the new cluster, drop those still at 0 in a new Flyway migration
     (`DROP INDEX` is a catalog change, no manual step, like V12).
 
@@ -826,6 +758,85 @@ next release; it changes nothing for them.
     which is what the guard was actually for; `publishData` keeps a separate newest-published row so a history
     tail arriving after a live value still redraws the charts without moving the current-value tiles backwards.
     Covered by `kpi-fetch-service.service.spec.ts`.
+40. ~~🔴 **Make the services ready for the CloudNativePG move**~~ (added 2026-10-19; infrastructure ADR-0022, phase 4
+    of its `docs/RESILIENCE-PLAN.md`)
+
+    ADR-0022 moves `pvdata`, `pvmasterdata` and `fsdata` to a three-instance CloudNativePG cluster, with a dedicated
+    application role instead of `postgres`, and says the services need "no change beyond a new host, port and
+    role". In this repo the role is not configuration, and the bootstrap assumes a superuser:
+
+    - `user = "postgres"` is a literal in `application-prod.conf:20` of both data-accessor and masterdata-server,
+      with no env override. Switching the role needs a config change (`${DB_USER}`, like the password) and a
+      release of both images before the cutover night.
+    - `DatabaseFactory.connect()` (`pvlogger-shared-database/.../DatabaseFactory.kt:23-31`) first connects to
+      `dbServerUrl`, which ends in `/` with no database name. The PostgreSQL JDBC driver then picks the database
+      named after the user: today `postgres`, which always exists; with an app role, a database of that role's
+      name, which may not exist. If the target database is missing it runs `CREATE DATABASE`, which needs
+      `CREATEDB`. Point the bootstrap at an explicit maintenance database (or skip it when the target exists) and
+      check the app role gets through both steps.
+    - Flyway runs as the new role against the imported databases. `V10` set reloptions with `ALTER TABLE`, which
+      needs table ownership, and later migrations will too. The import must leave the tables owned by the app
+      role.
+    - `V8` created the role `battery_sim_ro`. It will not run again (it is in the Flyway history), so the role and
+      its grants must come across with the import, or the battery simulator loses read access. The simulator's
+      `-db-host` default (`<central-host>`) changes with the move too.
+      *2026-10-25:* cutover done (21:07–21:31); the simulator's flag defaults now point at the new cluster
+      (`<db-host>:5432`, `-db-sslmode require`), README updated.
+    - fusionsolar reads its user from `POSTGRESQL_USERNAME` (default `postgres`,
+      `pvlogger-fusionsolar/internal/config/config.go:61`), so only the chart changes there.
+    - CloudNativePG generates server certificates and serves TLS by default, which removes the server-side blocker
+      of **security finding 3**. Switching the clients to TLS in the same release closes that finding for every
+      deployed service.
+
+    Test against the rehearsal import ADR-0022 plans (by day, while the old server is still live), not on the
+    cutover night.
+
+    **Progress 2026-10-19 — code done, released as data accessor 3.11.0, masterdata server 3.5.0, fusionsolar
+    3.4.0.** Role and bootstrap:
+    - Both prod configs keep `user = "postgres"` as the default and take `${?DB_USER}` as override, so the current
+      deployment is unaffected; the chart sets `DB_USER` once the app role exists.
+    - `DatabaseFactory.connect()` now connects to the target database first. Only if PostgreSQL answers SQLSTATE
+      `3D000` (database missing) does it connect to the explicit maintenance database `postgres`
+      (`DatabaseConfig.maintenanceUrl`) and run `CREATE DATABASE`. A missing database is no longer retried 30 × 15 s;
+      a role that cannot create it fails at once, naming the missing right.
+    - `pvlogger-shared-database` got its first tests (`DatabaseFactoryTest`, Testcontainers): a CREATEDB role
+      creates and migrates its database; a role without CREATEDB starts on a database it owns (the post-import
+      shape), including an owner-only `ALTER TABLE` like V10; a role that can do neither fails fast.
+
+    TLS is a **setting, not a fixed mode** — the central server (.2) refuses TLS (checked from the infrastructure
+    side 2026-10-19), so a hard `require` would break the release before the move:
+    - JVM: `sslMode` in `DatabaseConfig` (default `prefer`, validated at startup), appended to every URL the
+      bootstrap builds — target, maintenance database and Flyway. Prod configs take `${?POSTGRESQL_SSLMODE}`.
+    - fusionsolar: `POSTGRESQL_SSLMODE`, default `prefer`, replaces the hard `sslmode=disable`. pgx supports
+      `prefer` (verified 2026-10-19 against a server without TLS: `prefer` connects, `require` is refused).
+    - Battery simulator: `-db-sslmode` flag, default `prefer`.
+    - Tests: `DatabaseConfigTest` (URL building, unknown mode rejected); `DatabaseFactoryTest` shows `require` is
+      refused by the non-TLS test server while every other test there connects on `prefer`.
+
+    **Rollout, agreed with the infrastructure side 2026-10-19 — switch the role on .2 first, before the move:**
+    1. Create the `pvlogger` role on `central_db`, make it owner of `pvdata`, `pvmasterdata`, `fsdata` and every
+       object in them (including the Flyway history tables), and run the services with it on .2. The night cutover
+       then only changes the host, as ADR-0022 promises, and the ownership requirement above is met by
+       construction: three databases means CloudNativePG's monolith import, which keeps the owners it finds.
+       `battery_sim_ro` and its grants must still come across with the import.
+    2. Chart settings (infrastructure repo): `DB_USER=pvlogger` for data accessor and masterdata server,
+       `POSTGRESQL_USERNAME=pvlogger` for fusionsolar (the two languages already used different names), and the
+       `db-backup` CronJob's user in the same change — as owner, `pg_dump` works without superuser.
+    3. At the cutover: `POSTGRESQL_SSLMODE=require` in the chart. `require` encrypts without checking the
+       certificate; `verify-full` would need CloudNativePG's CA shipped to every client — possible later.
+
+    **Done on .2 2026-10-19** (reported by the infrastructure side): images deployed, steps 1 and 2 applied — the
+    services and `db-backup` run as `pvlogger`, which owns the three databases and their objects (runbook
+    `infrastructure/docs/runbooks/pvlogger-db-role.md`). Still open: step 3 at the cutover, i.e. phase 4 of the
+    resilience plan, which waits on the NVMe hardware (phase 3). Close this item after the cutover.
+
+    **Cutover done 2026-10-25, 21:07–21:31** (infrastructure `901df73`). Step 3 is live: the chart sets
+    `POSTGRESQL_SSLMODE=require` (and `PGSSLMODE` for `db-backup`) through the `db-config` ConfigMap, and pg_hba
+    rejects every plaintext login (`hostnossl … reject`). Checked live by the infrastructure side at ~22:16: data
+    accessor, masterdata server and a fusionsolar run all connect with TLS 1.3 (`pg_stat_ssl`), and the test backup
+    succeeded. The old server `<central-host>:5434` gets no PVLogger sessions any more; its databases are dropped in
+    runbook part D (around 2026-11-01). The battery simulator's defaults point at the new cluster (`38401a00`).
+    Security finding 3 closed with it. **Closed 2026-10-25.**
 41. ~~🟡 **Remaining follow-ups from item 38**~~ (split out 2026-10-19 so that item 38 can sit under Done)
 
     Item 38's outage is fixed and verified. These are its leftovers, all small:
