@@ -69,7 +69,8 @@ default self-consumption mode behaves.
 ### Prerequisites
 
 - Go (see `go.work` for the toolchain version); run from this directory.
-- Network access to the PostgreSQL server (LAN/Tailscale).
+- Network access to the PostgreSQL server (LAN/Tailscale) — which server depends on
+  the database move, see [Database connection](#database-connection).
 - The password for the `battery_sim_ro` role in `PGPASSWORD`. It lives in 1Password
   (personal account — note the `OP_ACCOUNT` pitfall if your shell defaults to the
   work account):
@@ -108,6 +109,34 @@ Or build a binary with `make build` (output in `./build/`).
 | `-db-port` | `5434` | PostgreSQL port |
 | `-db-name` | `pvdata` | Database name |
 | `-db-user` | `battery_sim_ro` | Database user; password **only** via `PGPASSWORD` |
+| `-db-sslmode` | `prefer` | TLS to PostgreSQL: `prefer` falls back to plaintext, `require` does not |
+
+### Database connection
+
+The defaults point at the current server: `<central-host>:5434`, no TLS (the
+server refuses it, so `prefer` falls back to plaintext). Keep them until the
+database moves to CloudNativePG (infrastructure resilience phase 4; date not set yet).
+
+From the cutover night on, override three flags:
+
+```bash
+go run ./cmd/simulator -from 2024-01-01 -to 2025-01-01 \
+  -db-host <db-host> -db-port 5432 -db-sslmode require
+```
+
+- `<db-host>` (<db-ip>), port 5432.
+- `-db-sslmode require` is mandatory: plaintext logins are refused. `require` encrypts
+  but does not verify the server certificate.
+- Same role `battery_sim_ro` and password; from the LAN it is the only role allowed
+  to log in. Read grants are unchanged.
+- The connection lands on a read-only standby, which may lag the primary by a few
+  milliseconds. Irrelevant for historical replays.
+- There is no `kubectl port-forward` path to the new cluster; connect directly from
+  the LAN.
+
+The flag defaults switch to the new values in a follow-up change after the cutover.
+Details: infrastructure runbook `docs/runbooks/pvlogger-db-to-cnpg.md` (section C,
+battery simulator).
 
 ### Battery presets
 
