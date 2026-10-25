@@ -193,10 +193,11 @@ next release; it changes nothing for them.
     Affects every timestamp written through Exposed: `house_power_kpi_values.date_created`,
     `raw_kpi_register_values.date_created`, `modbus_response_data.{date_created,request_time,response_time}`.
 
-    *Code fix done 2026-10-25, not yet released:* new `timestampTz()` column (`database/schema/TimestampTz.kt`)
-    binds the `Instant` as a UTC `OffsetDateTime`; the three tables use it. No migration needed. Repro test
+    *Code fix done 2026-10-25, released as data accessor 3.12.3 and live the same day:* new `timestampTz()` column
+    (`database/schema/TimestampTz.kt`) binds the `Instant` as a UTC `OffsetDateTime`; the three tables use it. No migration needed. Repro test
     `DstFallBackKpiTest` is red on the old binding (latest = 00:59Z instead of 01:30Z, the prod symptom) and green on
-    the new one; the full data accessor suite passes. Next: release the data accessor.
+    the new one; the full data accessor suite passes. Only the optional data repair below is left; close the item
+    once it is done or declined.
 
     *Data repair (operator, prod):* the second-pass rows of 2026-10-25 sit in `[00:00Z, 01:00Z)` next to the
     first-pass rows. They are the ones with an `id` above the point where `date_created` jumps back from ~00:59Z to
