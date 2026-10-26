@@ -29,6 +29,7 @@ old one. Half a page max; the point is the *why*. Template: see
 - [0020 — Trust boundary: in-cluster calls are trusted, the ingress exposes an allowlist, outside access needs a token](0020-trust-boundary-ingress-allowlist.md)
 - [0021 — KPI export: the cluster serves the finished file, a relay on the receiver's server writes it](0021-kpi-export-api-contract.md)
 - [0022 — `fsdata` migrations: tern, embedded in fusionsolar, run as a manual `MIGRATE` job](0022-fsdata-migrations-tern-job-in-fusionsolar.md)
+- [0023 — Database roles live in CloudNativePG; migrations only GRANT](0023-db-roles-in-cnpg-migrations-only-grant.md)
 
 ## Candidate ADRs (implicit decisions worth writing down)
 

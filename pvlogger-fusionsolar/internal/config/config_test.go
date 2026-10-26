@@ -86,8 +86,8 @@ func TestLoad_Defaults(t *testing.T) {
 	if cfg.Database.Username != "postgres" {
 		t.Errorf("expected default db username 'postgres', got '%s'", cfg.Database.Username)
 	}
-	if cfg.Database.Port != 5434 {
-		t.Errorf("expected default port 5434, got %d", cfg.Database.Port)
+	if cfg.Database.Port != 5432 {
+		t.Errorf("expected default port 5432, got %d", cfg.Database.Port)
 	}
 	if cfg.Database.DbName != "fsdata" {
 		t.Errorf("expected default db name 'fsdata', got '%s'", cfg.Database.DbName)

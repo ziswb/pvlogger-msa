@@ -64,7 +64,7 @@ func Load() *Config {
 			Username: env.GetEnv("POSTGRESQL_USERNAME", "postgres"),
 			Password: env.GetEnvChecked("POSTGRES_PASSWORD"),
 			Host:     env.GetEnvChecked("POSTGRESQL_HOST"),
-			Port:     env.GetIntEnv("POSTGRESQL_PORT", "5434"),
+			Port:     env.GetIntEnv("POSTGRESQL_PORT", "5432"),
 			DbName:   env.GetEnv("DB_NAME", "fsdata"),
 			SslMode:  env.GetEnv("POSTGRESQL_SSLMODE", "prefer"),
 		},
