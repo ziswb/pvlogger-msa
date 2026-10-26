@@ -56,7 +56,9 @@ _None._
    toggle, because the Modbus endpoint allows only one client; the device
    collector runs nightly, scheduled around the dynamic polling. Full's
    duplicated code should be extracted, not deleted (backlog 6–7). Promoted
-   to **ADR-0004** and the CONTEXT.md component table.
+   to **ADR-0004** and the CONTEXT.md component table. *Superseded 2026-08-14 by
+   ADR-0016:* no toggle any more; fast collects every minute and full sweeps hourly
+   in a reserved window, both feeding one KPI path.
 2. ~~**Battery decision**: the battery simulator (newest module, active until
    2026-07) exists to evaluate a LUNA2000 purchase. Has the decision been made?
    If yes, does the simulator stay (e.g. for tariff studies per the

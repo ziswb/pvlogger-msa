@@ -18,10 +18,12 @@ under **Open** by severity; finished ones under **Resolved**, sorted by number. 
 Legend: 🔴 exploitable or data-integrity risk · 🟡 hardening worth doing · ⚪ defence in
 depth / operational.
 
-> **Posture note.** This system has **no authentication anywhere** — zero
+> **Posture note.** This system has **no authentication** apart from one endpoint — zero
 > `install(Authentication)` / `authenticate {}` usages and no `ktor-server-auth`
-> dependency in any module. Every finding below that reads "unauthenticated" is a
-> symptom of that one decision, not an independent oversight. The compensating control
+> dependency in any module. The one exception is the KPI exporter's `serve` mode
+> (`GET /v1/export/latest`, bearer token, since 2026-10-21, ADR-0021). Every finding below
+> that reads "unauthenticated" is a symptom of that one decision, not an independent
+> oversight. The compensating control
 > is network isolation: K3S NetworkPolicies (default-deny ingress) plus a private
 > <lan-subnet> LAN. Anything that reaches a pod is trusted. That trade-off is
 > deliberate for a homelab, but it should be a recorded decision rather than an
@@ -38,7 +40,7 @@ None.
 
 15. **Database connection pool likely too small.** *Unchanged; reclassified.*
 
-    `maxPoolSize = 3` in `application-prod.conf:22` of data-accessor and
+    `maxPoolSize = 3` in `application-prod.conf:28` of data-accessor and
     masterdata-server (a third copy went with sunrise-sunset on 2026-08-27). This is an
     availability/capacity concern rather than a security one — it was mis-filed as P2
     security in the original review. Raise to 10–15 if saturation is ever observed;
@@ -58,7 +60,7 @@ None.
   `pvlogger-battery-simulator/cmd/simulator/main.go:32-35` defaults `-db-host` to
   `<db-host>` (until 2026-10-25: `<central-host>`) and `-db-user`
   to `battery_sim_ro`. No password is committed (it is required from `PGPASSWORD` at
-  `:41-44`). Information disclosure only, and the repo is private.
+  `:42-44`). Information disclosure only, and the repo is private.
 
 ## Resolved
 
@@ -78,7 +80,8 @@ None.
    serves TLS, and pg_hba rejects every plaintext login (`hostnossl … reject`, tested). Checked live 2026-10-25
    ~22:16 by the infrastructure side: data accessor, masterdata server and a fusionsolar run connect with TLS 1.3
    (`pg_stat_ssl`). The battery simulator defaults to `-db-sslmode require` (`38401a00`). The old plaintext server
-   `<central-host>:5434` gets no PVLogger sessions; its databases go in runbook part D (around 2026-11-01).
+   `<central-host>:5434` gets no PVLogger sessions; its PVLogger databases go in runbook part D (around 2026-11-01).
+   The server itself keeps running for other homelab apps.
    Residual: `require` does not verify the server certificate; `verify-full` would need CloudNativePG's CA on every
    client.
 6. ~~**Missing error handling in REST controllers**~~ · 23. ~~**Missing input validation

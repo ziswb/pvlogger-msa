@@ -12,20 +12,23 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
 
 ## Next up
 
-**Item 40 — make the services ready for the CloudNativePG move.** Decided 2026-10-19. It is the only open item
-with a date attached: infrastructure ADR-0022 (accepted 2026-10-19) moves the PVLogger databases off the central
-server, and as the code stands the services cannot log in with the app role the ADR prescribes — the role is
-hard-coded, and the bootstrap assumes a superuser. The work has to ship in released images before the rehearsal
-import (phase 4), which waits only on the NVMe hardware (phase 3). It also closes security finding 3 (database
-traffic in plaintext) at no extra cost, since CloudNativePG brings the server-side TLS that finding was blocked on.
-*Code side done 2026-10-19* (role, bootstrap, TLS setting; see item 40), and the services run as the `pvlogger`
-role on .2 since the same day. What remains is the move itself (phase 4, after the NVMe hardware of phase 3).
-*Closed 2026-10-25:* the cutover ran that night, all services connect to the new cluster with required TLS, and
-security finding 3 is closed (see item 40 under Done).
+**Status 2026-10-26.** The CloudNativePG move (item 40) is done: since the cutover on 2026-10-25 (21:07–21:31) every
+service connects to the in-cluster cluster `pvlogger-db` with TLS required, and security finding 3 is closed. Every
+deployed image matches its Dockerfile LABEL (checked live 2026-10-26: data accessor 3.12.3, masterdata server
+3.5.1, frontend 3.11.2, fusionsolar 3.5.0, fusionsolar-auth 3.4.1, device collector 3.7.2, fast collector 0.13.2,
+full collector 0.8.2, KPI exporter 3.5.0), so no release is waiting. Since the same day, database roles are created
+by CloudNativePG and migrations only GRANT (ADR-0023).
 
-Nothing else in this repo blocks the rehearsal import: V12 (item 41) is deployed and the `fsdata` baseline (item
-29, step 1) is taken, both 2026-10-20. Security findings 40 and 41 (HTTP clients without a timeout) are fixed
-too. Everything else open here is low priority hygiene.
+Dated items, in order:
+
+- **About 2026-11-01, infrastructure side:** runbook part D drops the three PVLogger databases on the old server
+  (`<central-host>:5434`) and its ExternalName service. The server itself stays for other homelab apps.
+  Nothing here still points at it; afterwards, trim the "old server" note in the battery simulator README.
+- **After about 2026-11-06:** item 44, retire the KPI exporter's `export` mode once the receiver has removed his
+  OneDrive side.
+- **From about 2027-01-25:** item 42, drop the unused `modbus_response_data` indexes.
+
+Everything else open here is low priority hygiene (items 23, 30).
 
 ### Status 2026-10-21 (end of the 2026-10-20 session)
 
@@ -46,7 +49,7 @@ explicitly and again by `defer`; the explicit close is gone and `TcpHandler.Clos
 `pvlogger-shared-modbus/tcp-handler_test.go`). Fast and full collectors pick up the idempotent `Close` with their
 next release; it changes nothing for them.
 
-**Receiver export (ADR-0021, infrastructure ADR-0024) — in progress.**
+**Receiver export (ADR-0021, infrastructure ADR-0024) — switched 2026-10-23.**
 - Done here: the exporter's `serve` and `relay` modes, consumption fix, multi-arch image, install guide
   (`pvlogger-kpi-exporter/README.md`). Brief with the contract (service/port 8080, `GET /v1/export/latest`,
   Bearer token from `KPI_EXPORT_TOKEN_FILE`) handed to the infrastructure side.
@@ -60,12 +63,15 @@ next release; it changes nothing for them.
   with 3.5.0 already); then install the relay and run it in parallel with OneDrive until he switches. His answer
   (2026-10-21): `x86_64`, no Docker or Podman, so the relay runs as a systemd service from an amd64 binary
   (`pvlogger-kpi-exporter/systemd/`, README; infrastructure ADR-0024 amendment 2026-10-21). Afterwards the CronJob mode and the OneDrive volume go.
+- *Done 2026-10-23* (infrastructure `docs/RESILIENCE-PLAN.md`, phase 5): he installed the relay himself and reads
+  from it; his OneDrive client is off, ours is paused. Left: item 44 once he removes his OneDrive side (about
+  2026-11-06).
 
 **`fsdata` migrations (item 29) — done 2026-10-21**, fusionsolar 3.5.0 (ADR-0022): deployed, baseline applied on
 .2 (`tern_schema_version` = 1). Rerun procedure: `infrastructure/docs/runbooks/pvlogger-fsdata-migrate.md`.
 
 **Security findings still open:** 3 (closes with `POSTGRESQL_SSLMODE=require` at the CloudNativePG cutover), 15
-(pool size, speculative). 18 closed 2026-10-23.
+(pool size, speculative). 18 closed 2026-10-23, 3 closed 2026-10-25.
 
 ### Status 2026-10-23
 
@@ -82,7 +88,9 @@ next release; it changes nothing for them.
   1000; no capabilities, no privilege escalation, RuntimeDefault seccomp. First runs succeeded (fast collector,
   FusionSolar devkpi/stnkpi/auth, exporter write and prune, export endpoint 200). Not yet run under the new
   settings: the nightly device collectors, `db-backup`, the full collector, dev5minkpi and FusionSolar
-  stnday/month/year — the operator checks them.
+  stnday/month/year — the operator checks them. *Checked 2026-10-26:* the device collectors, the full collector,
+  dev5minkpi and `db-backup` (after two fixes, infrastructure backlog 89) have succeeded since. FusionSolar
+  stnday/month/year last ran before the change; their next runs are 2026-11-05, -06 and -07.
 
 ## Open
 
@@ -116,6 +124,17 @@ next release; it changes nothing for them.
     `modbus_register_ushort_values` need the same `(register_address, response_id)` index first. V11 left them out
     on purpose, and they have no index besides the primary key, so since 3.12.2 the second lookup statement would
     read the whole table. Today the KPI lookup reads only the I32/U32 registers 37498–37516.
+
+44. ⚪ **Retire the KPI exporter's `export` mode** (added 2026-10-26; ADR-0021, infrastructure ADR-0024)
+
+    Since 2026-10-23 the receiver reads from the relay (`serve` → `relay`), and the OneDrive sync that carried the
+    `export` CronJob's files is paused. The CronJob still writes into its NFS volume, and nothing reads those files.
+    **Due once he has removed his OneDrive side** (announced for about 2026-11-06; the infrastructure side or the
+    operator says when). Then:
+    - Here: drop `config.ModeExport` and its branch in `cmd/exporter/main.go`, plus whatever only it uses. Keep the
+      file writing and 48-hour cleanup that `relay` mode needs on the receiver's server. Decide the new default for
+      `KPI_EXPORTER_MODE` (today `export`), update the README mode table, CONTEXT.md and CLAUDE.md, and release.
+    - Infrastructure side: remove the CronJob, the NFS volume `kpi-export-data-claim` and the OneDrive client on .2.
 
 ## Done (resolved, superseded or moot)
 
@@ -888,9 +907,9 @@ next release; it changes nothing for them.
     migration needed. Repro test `DstFallBackKpiTest` is red on the old binding (latest = 00:59Z instead of 01:30Z,
     the prod symptom) and green on the new one; the full data accessor suite passes.
 
-    *Data repair done 2026-10-25 on .2:* only `house_power_kpi_values.date_created` was affected: ids
-    1290499–1290556 (58 rows) shifted `+ interval '1 hour'` in one guarded transaction; 00Z, 01Z and 02Z now hold 58
-    rows each with no ordering break. Undo: the same ids `- interval '1 hour'`. The `date_created` of
+    *Data repair done 2026-10-25 on .2*, before the 21:07 cutover, so the CloudNativePG import carried it over.
+    Only `house_power_kpi_values.date_created` was affected: ids 1290499–1290556 (58 rows) shifted
+    `+ interval '1 hour'` in one guarded transaction; 00Z, 01Z and 02Z now hold 58 rows each with no ordering break. Undo: the same ids `- interval '1 hour'`. The `date_created` of
     `raw_kpi_register_values` and `modbus_response_data` was fine, since it comes from the database default, not
     from the JVM.
 

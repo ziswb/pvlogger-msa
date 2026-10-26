@@ -125,8 +125,9 @@ Since the move to CloudNativePG (2026-10-25) the defaults connect to
 - LAN only: the server is not reachable from the tailnet, and there is no
   `kubectl port-forward` path. Connect directly from the LAN.
 
-The old server (`<central-host>:5434`) holds data only up to the cutover
-(2026-10-25 21:07) and is no longer written to. Details: infrastructure runbook
+The old server (`<central-host>:5434`) holds PVLogger data only up to the
+cutover (2026-10-25 21:07) and is no longer written to. Its PVLogger databases are
+dropped around 2026-11-01; the server itself stays for other homelab apps. Details: infrastructure runbook
 `docs/runbooks/pvlogger-db-to-cnpg.md` (section C, battery simulator).
 
 ### Battery presets

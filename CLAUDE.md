@@ -7,7 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 [docs/CONSOLIDATION-BACKLOG.md](docs/CONSOLIDATION-BACKLOG.md) (known divergences — don't imitate them),
 [docs/OPEN-QUESTIONS.md](docs/OPEN-QUESTIONS.md) (undocumented knowledge),
 [docs/SECURITY-FINDINGS.md](docs/SECURITY-FINDINGS.md) (open security findings — note this
-system has no authentication anywhere; network isolation is the only boundary).
+system has no authentication except the KPI export endpoint's bearer token (ADR-0021);
+everywhere else network isolation is the only boundary, ADR-0020).
 Deployment lives in the sibling `infrastructure` repo (see `infrastructure/docs/LANDSCAPE.md`).
 
 ## Project Overview
@@ -71,7 +72,7 @@ Database runs via Docker Compose in `pvlogger-database/`.
 - `pv-device-data-collector` — Nightly static/config register + device identifier collection
 - `pvlogger-fusionsolar` — FusionSolar API data integration (writes its own `fsdata` DB directly)
 - `pvlogger-fusionsolar-auth` — Refreshes the FusionSolar token into a K8s secret
-- `pvlogger-kpi-exporter` — Exports latest KPIs as JSON files (OneDrive-synced volume)
+- `pvlogger-kpi-exporter` — Exports the latest KPIs as `pv_*` JSON: `serve` mode (token-protected endpoint) feeds the `relay` on the receiver's server; the old file-writing `export` CronJob still runs, but nothing syncs its files any more and it goes after about 2026-11-06 (ADR-0021, backlog 44)
 - `pv-logger`, `pvlogger-shared-modbus` — Shared Go libraries (logging/env config; Modbus TCP client, KPI math + single KPI aggregation path, hard-coded KPI register set, REST clients, collector jobs, Pushgateway metrics)
 
 **Tools (not deployed):** `pvlogger-battery-simulator` (local CLI, see its README), `pvlogger-database` (local compose DB + migration history).
@@ -85,13 +86,14 @@ Modbus device → fast/full/device collectors (Go CronJobs) → modbus-data-acce
 FusionSolar API → fusionsolar (Go CronJob) → fsdata DB (direct SQL, not via data accessor)
 Angular SPA → /v1/daydata via ingress → modbus-data-accessor (history)
 Angular SPA → /livedata WebSocket → frontend Ktor → modbus-data-accessor (latest KPI, 60s poll)
+relay (receiver's server) → Tailscale, bearer token → kpi-exporter serve → modbus-data-accessor (latest KPI)
 ```
 
-Kubernetes DNS handles inter-service discovery. Traefik ingress routes `/v1` to Data Accessor and `/`, `/livedata` to Frontend.
+Kubernetes DNS handles inter-service discovery. The ingress (Traefik on the LAN, Tailscale Ingress on the tailnet) passes only an allowlist (ADR-0020): `/v1/daydata` to the Data Accessor (Traefik also requires GET), `/` and `/livedata` to the Frontend (`/metrics` excluded). The KPI export has its own Tailscale ingress `pvlogger-export`.
 
 ### Data Storage
 
-PostgreSQL (18 in production, on the homelab central server) with Flyway migrations (in each service's `src/main/resources/db/migration/`; exception: `fsdata` uses tern migrations embedded in fusionsolar, run as the manual `MIGRATE` job — ADR-0022). Exposed ORM for Kotlin services, pgx/sqlc for Go services.
+PostgreSQL 18 (in production since 2026-10-25: the in-cluster CloudNativePG cluster `pvlogger-db`, TLS required; database roles are managed there and migrations only GRANT to them — ADR-0023) with Flyway migrations (in each service's `src/main/resources/db/migration/`; exception: `fsdata` uses tern migrations embedded in fusionsolar, run as the manual `MIGRATE` job — ADR-0022). Exposed ORM for Kotlin services, pgx/sqlc for Go services.
 
 ## Code Conventions
 

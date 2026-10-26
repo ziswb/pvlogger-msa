@@ -25,7 +25,8 @@ description, in German). It:
 - stores everything in PostgreSQL,
 - computes household energy **KPIs**,
 - serves a **dashboard** (live via WebSocket + per-day history),
-- exports KPI snapshots as JSON files (OneDrive-synced),
+- exports the latest KPI snapshot as JSON to an external family PV-comparison
+  platform (pulled over Tailscale by a relay on the receiver's server, ADR-0021),
 - and feeds a **battery simulator** used to evaluate a LUNA2000 battery purchase
   (2026 verdict: not economical yet — purchase deferred, simulator kept for
   re-evaluation when prices change; ADR-0006).
@@ -90,7 +91,7 @@ themselves pragmatically — default to a job/endpoint in an existing service
 |---|---|
 | `pvlogger-modbus-data-accessor` | **The central data service.** Owns the `pvdata` DB (register values, raw KPI registers, house KPIs). All collectors write through it; frontend and exporter read from it. REST paths are defined in `pvlogger-shared-rest`. |
 | `pvlogger-masterdata-server` | Owns the `pvmasterdata` DB. Imports Huawei's register definitions from CSVs; project-curated definitions (the DONGLE unit-100 block) ship as Flyway data migrations instead (ADR-0017). Serves the catalog to collectors and the mock server. |
-| `pvlogger-frontend` | Serves the prebuilt Angular SPA, proxies the latest KPI as the `/livedata` WebSocket (one shared 60 s poll for all sessions, ADR-0019). History data goes **directly** SPA → data accessor (via ingress path `/v1`). |
+| `pvlogger-frontend` | Serves the prebuilt Angular SPA, proxies the latest KPI as the `/livedata` WebSocket (one shared 60 s poll for all sessions, ADR-0019). History data goes **directly** SPA → data accessor (via the ingress, which passes only `/v1/daydata` of the data accessor — ADR-0020). |
 | `pvlogger-modbus-mock-server` | Emulates a Modbus TCP device (raw TCP, not HTTP) using real register definitions from the masterdata server. **Local development only — never deployed to production** (confirmed 2026-08-07); the Helm chart's mock-server template exists solely for local use. |
 
 ### Go CronJob collectors (short-lived batch runs)
@@ -98,11 +99,11 @@ themselves pragmatically — default to a job/endpoint in an existing service
 | Service | Responsibility |
 |---|---|
 | `pv-fast-data-collector` | **Single CronJob, `0-1,5-59 * * * *`** — minutes 02–04 of every hour are the reserved non-fast Modbus window (ADR-0016/backlog 36: hour 0 for the nightly device collectors, hours 1–23 for full's hourly sweep). Reads the dongle's aggregate live-power block (unit 100, one coherent request — backlog 33) plus the energy counters, stores the block in the generic register store and the raw KPI row, then invokes the **shared `aggregate(jobId)` path** (`pvlogger-shared-modbus/aggregate`, ADR-0016/backlog 34) which derives and stores the KPIs (daily production as a lifetime-counter delta, ADR-0014). **The sole per-minute KPI collector** — registers are hard-coded *deliberately* for maximum speed (no masterdata dependency/API call; the set lives in `pvlogger-shared-modbus/registers`). |
-| `pv-full-data-collector` | The masterdata-driven **extended sweep**: reads *all* DYNAMIC+ALARM registers — including the dongle's unit-100 block as one consecutive Modbus request (backlog 35, migration V2 + DONGLE device type) — then invokes the same shared `aggregate(jobId)` path as fast; its private aggregator was deleted (ADR-0016/backlog 34). Runs **hourly at minute 2 of hours 1–23** inside the reserved 02–04 window, `activeDeadlineSeconds: 150` so an overrun dies before fast's minute-5 reconnect (backlog 36; the old suspend toggle and its chart bug were removed with it). No KPI role of its own — its KPI rows just fill fast's window gap. Deployment note until rolled out: masterdata-server (V2) must deploy in the same rollout, or the aggregation step fails for lack of the block. |
+| `pv-full-data-collector` | The masterdata-driven **extended sweep**: reads *all* DYNAMIC+ALARM registers — including the dongle's unit-100 block as one consecutive Modbus request (backlog 35, migration V2 + DONGLE device type) — then invokes the same shared `aggregate(jobId)` path as fast; its private aggregator was deleted (ADR-0016/backlog 34). Runs **hourly at minute 2 of hours 1–23** inside the reserved 02–04 window, `activeDeadlineSeconds: 150` so an overrun dies before fast's minute-5 reconnect (backlog 36; the old suspend toggle and its chart bug were removed with it). No KPI role of its own — its KPI rows just fill fast's window gap. Needs masterdata migration V2 (the DONGLE block); live together since 2026-08-14. |
 | `pv-device-data-collector` | Nightly: reads STATIC/CONFIG registers, device identifiers and device list. Stays permanently; scheduled at night to avoid the per-minute dynamic polling (one-Modbus-client constraint, ADR-0004). |
 | `pvlogger-fusionsolar` | Six scheduled jobs pulling FusionSolar OpenAPI KPIs (station/device, real-time/day/month/year) — writes **directly** to the `fsdata` DB (not via the data accessor). |
 | `pvlogger-fusionsolar-auth` | Refreshes the FusionSolar API token into a K8s secret every 20 min; the collector jobs read it. |
-| `pvlogger-kpi-exporter` | Every 5 min: reads the latest KPI and writes a German-keyed (`pv_*`) JSON file to an NFS/OneDrive-synced volume. Moving off OneDrive (ADR-0021, infrastructure ADR-0024): the same binary also runs as `serve` (token-protected `GET /v1/export/latest` in the cluster) and as `relay` on the receiver's server, which writes the same files there; the CronJob stays until he has switched. Consumed by the operator's receiver: he runs a small platform comparing the energy/PV data of three family households (operator, another household, his own). This is an **external consumer** — treat the file naming, keys, and 5-min cadence as a de-facto contract. |
+| `pvlogger-kpi-exporter` | Builds a German-keyed (`pv_*`) JSON file from the latest KPI. One binary, three modes (ADR-0021, infrastructure ADR-0024): `serve` (Deployment, token-protected `GET /v1/export/latest`, reached over Tailscale) and `relay` (a systemd service on the receiver's server that fetches from `serve` and writes the files there) carry the export since 2026-10-23. `export` (CronJob, every 5 min) is the old path: it still writes files to an NFS volume, but the OneDrive sync that carried them is paused, and the mode goes once the receiver removes his OneDrive side (about 2026-11-06, backlog 44). Consumed by the operator's receiver: he runs a small platform comparing the energy/PV data of three family households (operator, another household, his own). This is an **external consumer** — treat the file naming, keys, and 5-min cadence as a de-facto contract. |
 
 ### Shared libraries
 
@@ -139,11 +140,10 @@ flowchart LR
     MD --> MDDB[(pvmasterdata)]
     DA -->|read-latest-kpi| FE[frontend Ktor] -->|WebSocket /livedata| SPA[Angular SPA]
     DA -->|/v1/daydata via ingress| SPA
-    DA -->|read-latest-kpi| EXP[kpi-exporter] --> ONE[OneDrive files\nfamily PV-comparison platform]
+    DA -->|read-latest-kpi| EXP[kpi-exporter serve] -->|Tailscale, token| REL[relay on receiver's server] --> ONE[JSON files\nfamily PV-comparison platform]
 ```
 
-\* full collector: hourly sweep at minute 2 of hours 1–23 (ADR-0016; runs
-once the backlog-36 rollout is deployed).
+\* full collector: hourly sweep at minute 2 of hours 1–23 (ADR-0016).
 
 Rule: **all Modbus-derived data flows through the data accessor's REST API** —
 collectors never touch `pvdata` directly. The FusionSolar pipeline is the
@@ -153,8 +153,14 @@ rewrite — see ADR-0002 — and reintroduced as tern migrations, ADR-0022.)
 
 ## Databases
 
-One PostgreSQL server (the homelab central server) hosts three PVLogger databases.
-Each is owned by exactly one service, which also owns its migrations (Flyway; tern for `fsdata`):
+Since 2026-10-25 the three PVLogger databases live in the in-cluster CloudNativePG
+cluster `pvlogger-db` (namespace `pvlogger`, three instances; infrastructure ADR-0022).
+Services connect to `pvlogger-db-rw` with TLS required (`sslmode=require`); the
+battery simulator reads from the standbys at `<db-host>:5432` (LAN only).
+Before that they were on the central server (`<central-host>:5434`), which
+still serves other homelab apps; its PVLogger copies are dropped around 2026-11-01.
+Database roles are managed by CloudNativePG; migrations only GRANT to them (ADR-0023).
+Each database is owned by exactly one service, which also owns its migrations (Flyway; tern for `fsdata`):
 
 | DB | Owner | Content |
 |---|---|---|

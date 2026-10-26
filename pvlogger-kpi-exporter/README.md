@@ -9,6 +9,10 @@ platform reads. One binary, three modes (`KPI_EXPORTER_MODE`, ADR-0021):
 | `serve` | cluster Deployment | `GET /v1/export/latest` with `Authorization: Bearer <token>` → the same JSON, file name in `Content-Disposition` |
 | `relay` | receiver's server | `GET /export` → fetch from `serve` over Tailscale, write the file, clean up, return the JSON |
 
+**Status:** `serve` → `relay` carries the export since 2026-10-23, when the receiver installed the relay
+and switched off his OneDrive client. `export` is the old OneDrive path. Its CronJob still runs, but
+nothing syncs its files any more, and it is retired after about 2026-11-06 (backlog 44).
+
 ## Configuration
 
 | Variable | Modes | Default |
