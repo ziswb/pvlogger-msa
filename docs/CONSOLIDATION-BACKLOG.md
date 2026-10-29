@@ -735,7 +735,7 @@ next release; it changes nothing for them.
       `ktor_http_server_requests_seconds` is a *summary* with client-side quantiles, not a histogram, so
       `histogram_quantile()` does not apply. Supersedes the ServiceMonitor half of the role's `IMPROVEMENTS.md` 16.
     - **infrastructure repo:** the data-accessor's CPU limit is `100m` with `requests == limits`
-      (`pvlogger-chart/values.yaml`). Not implicated here — the pod idles at 2 m and the wait was entirely in
+      (`pvlogger_helm_deploy/chart/values.yaml`). Not implicated here — the pod idles at 2 m and the wait was entirely in
       PostgreSQL — but tight for a JVM service. *(Split the same day on the infrastructure side: request `100m`,
       limit `1000m`.)*
 

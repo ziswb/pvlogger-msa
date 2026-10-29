@@ -17,7 +17,7 @@ placeholders.
   registry with `-l`). It refuses a version that is already in the registry
   unless forced with `-f`.
 - What actually **runs** is pinned in the Helm chart's `values.yaml` in the
-  infrastructure repo (`ansible/roles/pvlogger_helm_deploy/files/pvlogger-chart/`),
+  infrastructure repo (`ansible/roles/pvlogger_helm_deploy/chart/`),
   declared there as the single source of truth for deployed versions. Deployment
   is `ansible-playbook playbooks/pvlogger.yml`.
 - Release = bump the Dockerfile LABEL → `build.sh` → bump the chart tag → run the
