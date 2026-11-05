@@ -16,7 +16,10 @@ type Database struct {
 
 func NewDatabase(host string, port int, dbname string, user string, password string, sslmode string) (*Database, error) {
 	ctx := context.Background()
-	psqlInfo := fmt.Sprintf("host=%s port=%d dbname=%s user=%s password=%s sslmode=%s", host, port, dbname, user, password, sslmode)
+	// connect_timeout: an unreachable server fails the run in seconds instead of
+	// hanging on the TCP connect (backlog 45). Each run opens its own connection,
+	// so stale pooled connections, the data accessor's problem, cannot happen here.
+	psqlInfo := fmt.Sprintf("host=%s port=%d dbname=%s user=%s password=%s sslmode=%s connect_timeout=10", host, port, dbname, user, password, sslmode)
 	conn, err := pgx.Connect(ctx, psqlInfo)
 	if err != nil {
 		return nil, err

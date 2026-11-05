@@ -144,6 +144,14 @@ next release; it changes nothing for them.
     `connectionTimeout`, so a dead connection fails within seconds and the pool replaces it. Then verify with a
     planned switchover (`kubectl cnpg promote` or a drain) while the fast collector runs: at most one failed run.
 
+    *Status 2026-11-05:* fix released, switchover test pending. Data accessor 3.12.4 and masterdata server 3.5.2:
+    pgjdbc `connectTimeout=5` and `tcpKeepAlive=true` on every URL; `socketTimeout=60` on pooled connections only
+    (Flyway keeps no read limit, so a long migration is not cut off); Hikari `connectionTimeout` 10 s,
+    `validationTimeout` 3 s, `keepaliveTime` 30 s. Fusionsolar 3.5.1 (and the battery simulator) add pgx
+    `connect_timeout=10`; they open a fresh connection per run, so they never had the stale-pool problem.
+    `tcpKeepAlive` uses the kernel defaults (first probe after 2 h), so in practice the socket timeout and
+    Hikari's keepalive do the work.
+
 ## Done (resolved, superseded or moot)
 
 1. ~~**masterdata-server prod config DB-name mismatch**~~

@@ -72,6 +72,15 @@ class DatabaseFactory(
                 maximumPoolSize = dbConfig.maxPoolSize
                 isAutoCommit = false
                 transactionIsolation = "TRANSACTION_REPEATABLE_READ"
+                // Fail fast on dead connections so the pool replaces them (backlog 45):
+                // a read on one ends after socketTimeout, a borrowed idle one is checked
+                // within validationTimeout, idle ones are probed every keepaliveTime, and
+                // a caller waits at most connectionTimeout for a connection.
+                // As a String: pgjdbc reads it with Properties.getProperty, which ignores other types.
+                addDataSourceProperty("socketTimeout", dbConfig.socketTimeoutSeconds.toString())
+                connectionTimeout = 10_000
+                validationTimeout = 3_000
+                keepaliveTime = 30_000
                 validate()
             }
         return tryConnectingToDatabase(config)

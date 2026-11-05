@@ -12,6 +12,12 @@ data class DatabaseConfig(
     // plaintext, so it works against a server without TLS; set "require" once the
     // server has it (backlog 40).
     val sslMode: String = DEFAULT_SSL_MODE,
+    // Read timeout on pooled connections only (backlog 45). A connection to a
+    // vanished server (CNPG switchover, node gone, no RST) otherwise blocks a
+    // read for ~15 min. Must stay above the longest legitimate query; callers
+    // (the collectors) give up after 30 s anyway. Flyway does not get it, so a
+    // long migration (ANALYZE, an index build) is not cut off.
+    val socketTimeoutSeconds: Int = DEFAULT_SOCKET_TIMEOUT_SECONDS,
 ) {
     init {
         require(sslMode in SSL_MODES) { "sslMode must be one of $SSL_MODES, was '$sslMode'" }
@@ -27,13 +33,18 @@ data class DatabaseConfig(
     val maintenanceUrl: String = urlFor(MAINTENANCE_DB)
 
     private fun urlFor(database: String): String {
-        val params = listOf(dbUrlParams.removePrefix("?"), "sslmode=$sslMode").filter { it.isNotEmpty() }
+        // connectTimeout and tcpKeepAlive hold for every connection, Flyway's too (backlog 45).
+        val params =
+            listOf(dbUrlParams.removePrefix("?"), "sslmode=$sslMode", "connectTimeout=$CONNECT_TIMEOUT_SECONDS", "tcpKeepAlive=true")
+                .filter { it.isNotEmpty() }
         return dbServerUrl + database + params.joinToString("&", prefix = "?")
     }
 
     companion object {
         const val MAINTENANCE_DB = "postgres"
         const val DEFAULT_SSL_MODE = "prefer"
+        const val CONNECT_TIMEOUT_SECONDS = 5
+        const val DEFAULT_SOCKET_TIMEOUT_SECONDS = 60
         val SSL_MODES = setOf("disable", "allow", "prefer", "require", "verify-ca", "verify-full")
     }
 }

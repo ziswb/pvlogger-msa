@@ -23,13 +23,13 @@ class DatabaseConfigTest {
     fun `every URL carries the TLS mode, prefer by default`() {
         val config = config()
 
-        assertEquals("jdbc:postgresql://db:5432/pvdata?reWriteBatchedInserts=true&sslmode=prefer", config.dbServerCanonicalUrl)
-        assertEquals("jdbc:postgresql://db:5432/postgres?reWriteBatchedInserts=true&sslmode=prefer", config.maintenanceUrl)
+        assertEquals("jdbc:postgresql://db:5432/pvdata?reWriteBatchedInserts=true&sslmode=prefer&connectTimeout=5&tcpKeepAlive=true", config.dbServerCanonicalUrl)
+        assertEquals("jdbc:postgresql://db:5432/postgres?reWriteBatchedInserts=true&sslmode=prefer&connectTimeout=5&tcpKeepAlive=true", config.maintenanceUrl)
     }
 
     @Test
-    fun `the TLS mode stands alone when there are no other parameters`() {
-        assertEquals("jdbc:postgresql://db:5432/pvdata?sslmode=require", config(dbUrlParams = "", sslMode = "require").dbServerCanonicalUrl)
+    fun `without extra parameters the URL carries only TLS mode, connect timeout and keepalive`() {
+        assertEquals("jdbc:postgresql://db:5432/pvdata?sslmode=require&connectTimeout=5&tcpKeepAlive=true", config(dbUrlParams = "", sslMode = "require").dbServerCanonicalUrl)
     }
 
     @Test

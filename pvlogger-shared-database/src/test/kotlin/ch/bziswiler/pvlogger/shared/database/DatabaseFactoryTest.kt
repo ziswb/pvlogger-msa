@@ -1,6 +1,7 @@
 package ch.bziswiler.pvlogger.shared.database
 
 import ch.bziswiler.pvlogger.shared.configuration.DatabaseConfig
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.Test
 import org.testcontainers.containers.PostgreSQLContainer
 import java.sql.DriverManager
@@ -61,10 +62,28 @@ class DatabaseFactoryTest {
         assertContains(error.message!!, "SSL")
     }
 
+    @Test
+    fun `a pooled connection gives up on a read that outlasts the socket timeout`() {
+        // Stands in for a connection to a vanished primary (backlog 45): the server
+        // stays silent, and the call must fail instead of blocking for ~15 min.
+        superuser("CREATE ROLE sleeper LOGIN CREATEDB PASSWORD 'pw'")
+
+        DatabaseFactory(config(user = "sleeper", dbName = "sleeper_db", socketTimeoutSeconds = 1)).use {
+            it.connect()
+            val started = System.nanoTime()
+
+            val error = assertFailsWith<Exception> { transaction { exec("SELECT pg_sleep(10)") } }
+
+            assertTrue(System.nanoTime() - started < 5_000_000_000, "should fail at the socket timeout, not after the sleep")
+            assertContains(generateSequence<Throwable>(error) { it.cause }.joinToString { it.message.orEmpty() }, "I/O error")
+        }
+    }
+
     private fun config(
         user: String,
         dbName: String,
         sslMode: String = DatabaseConfig.DEFAULT_SSL_MODE,
+        socketTimeoutSeconds: Int = DatabaseConfig.DEFAULT_SOCKET_TIMEOUT_SECONDS,
     ) = DatabaseConfig(
         driverClass = "org.postgresql.Driver",
         dbServerUrl = serverUrl(),
@@ -73,6 +92,7 @@ class DatabaseFactoryTest {
         password = "pw",
         maxPoolSize = 1,
         sslMode = sslMode,
+        socketTimeoutSeconds = socketTimeoutSeconds,
     )
 
     private fun probeTableOwner(dbName: String): String =
