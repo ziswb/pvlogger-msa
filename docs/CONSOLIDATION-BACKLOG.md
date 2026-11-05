@@ -24,8 +24,6 @@ Dated items, in order:
 - **About 2026-11-01, infrastructure side:** runbook part D drops the three PVLogger databases on the old server
   (`<central-host>:5434`) and its ExternalName service. The server itself stays for other homelab apps.
   Nothing here still points at it; afterwards, trim the "old server" note in the battery simulator README.
-- **After about 2026-11-06:** item 44, retire the KPI exporter's `export` mode once the receiver has removed his
-  OneDrive side.
 - **From about 2027-01-25:** item 42, drop the unused `modbus_response_data` indexes.
 
 Everything else open here is low priority hygiene (items 23, 30).
@@ -64,8 +62,7 @@ next release; it changes nothing for them.
   (2026-10-21): `x86_64`, no Docker or Podman, so the relay runs as a systemd service from an amd64 binary
   (`pvlogger-kpi-exporter/systemd/`, README; infrastructure ADR-0024 amendment 2026-10-21). Afterwards the CronJob mode and the OneDrive volume go.
 - *Done 2026-10-23* (infrastructure `docs/RESILIENCE-PLAN.md`, phase 5): he installed the relay himself and reads
-  from it; his OneDrive client is off, ours is paused. Left: item 44 once he removes his OneDrive side (about
-  2026-11-06).
+  from it; his OneDrive client is off, ours is paused. *2026-11-05:* our client and the CronJob removed; item 44 not pursued (agreed with him).
 
 **`fsdata` migrations (item 29) — done 2026-10-21**, fusionsolar 3.5.0 (ADR-0022): deployed, baseline applied on
 .2 (`tern_schema_version` = 1). Rerun procedure: `infrastructure/docs/runbooks/pvlogger-fsdata-migrate.md`.
@@ -124,17 +121,6 @@ next release; it changes nothing for them.
     `modbus_register_ushort_values` need the same `(register_address, response_id)` index first. V11 left them out
     on purpose, and they have no index besides the primary key, so since 3.12.2 the second lookup statement would
     read the whole table. Today the KPI lookup reads only the I32/U32 registers 37498–37516.
-
-44. ⚪ **Retire the KPI exporter's `export` mode** (added 2026-10-26; ADR-0021, infrastructure ADR-0024)
-
-    Since 2026-10-23 the receiver reads from the relay (`serve` → `relay`), and the OneDrive sync that carried the
-    `export` CronJob's files is paused. The CronJob still writes into its NFS volume, and nothing reads those files.
-    **Due once he has removed his OneDrive side** (announced for about 2026-11-06; the infrastructure side or the
-    operator says when). Then:
-    - Here: drop `config.ModeExport` and its branch in `cmd/exporter/main.go`, plus whatever only it uses. Keep the
-      file writing and 48-hour cleanup that `relay` mode needs on the receiver's server. Decide the new default for
-      `KPI_EXPORTER_MODE` (today `export`), update the README mode table, CONTEXT.md and CLAUDE.md, and release.
-    - Infrastructure side: remove the CronJob, the NFS volume `kpi-export-data-claim` and the OneDrive client on .2.
 
 ## Done (resolved, superseded or moot)
 
@@ -922,3 +908,19 @@ next release; it changes nothing for them.
     across runs or with `date_created`.
 
     **Closed 2026-10-25.** Fix live as data accessor 3.12.3, the affected rows repaired.
+
+44. ~~⚪ **Retire the KPI exporter's `export` mode**~~ (added 2026-10-26; ADR-0021, infrastructure ADR-0024)
+
+    Since 2026-10-23 the receiver reads from the relay (`serve` → `relay`), and the OneDrive sync that carried the
+    `export` CronJob's files is paused. The CronJob still writes into its NFS volume, and nothing reads those files.
+    **Due once he has removed his OneDrive side** (announced for about 2026-11-06; the infrastructure side or the
+    operator says when). Then:
+    - Here: drop `config.ModeExport` and its branch in `cmd/exporter/main.go`, plus whatever only it uses. Keep the
+      file writing and 48-hour cleanup that `relay` mode needs on the receiver's server. Decide the new default for
+      `KPI_EXPORTER_MODE` (today `export`), update the README mode table, CONTEXT.md and CLAUDE.md, and release.
+    - Infrastructure side: remove the CronJob, the NFS volume `kpi-export-data-claim` and the OneDrive client on .2.
+
+    **Won't do for now (2026-11-05).** The infrastructure side is done: he removed his OneDrive side, and the
+    CronJob, its NFS volume and the OneDrive client on .2 went on 2026-11-05 (infrastructure commit 2e5da96). The
+    code stays: the operator and the receiver agreed that dropping `export` mode is not worth a release while
+    everything works. Reopen only if one of them asks; until then the exporter is not changed for this.
