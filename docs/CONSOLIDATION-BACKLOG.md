@@ -24,6 +24,7 @@ Dated items, in order:
 - **About 2026-11-01, infrastructure side:** runbook part D drops the three PVLogger databases on the old server
   (`<central-host>:5434`) and its ExternalName service. The server itself stays for other homelab apps.
   Nothing here still points at it; afterwards, trim the "old server" note in the battery simulator README.
+- **Next:** item 45, connection timeouts so a CNPG switchover does not hang the services (2026-11-05).
 - **From about 2027-01-25:** item 42, drop the unused `modbus_response_data` indexes.
 
 Everything else open here is low priority hygiene (items 23, 30).
@@ -121,6 +122,27 @@ next release; it changes nothing for them.
     `modbus_register_ushort_values` need the same `(register_address, response_id)` index first. V11 left them out
     on purpose, and they have no index besides the primary key, so since 3.12.2 the second lookup statement would
     read the whole table. Today the KPI lookup reads only the I32/U32 registers 37498–37516.
+
+45. 🟠 **Services hang on dead database connections after a CNPG switchover** (added 2026-11-05, reported by the
+    infrastructure side; its backlog 96, "Draining a server")
+
+    On 2026-11-05 the operator drained node05 for maintenance. CloudNativePG switched the primary from
+    `pvlogger-db-2` (node05) to `pvlogger-db-1` (node06) at ~10:28 and the node was powered off. The data accessor
+    (moved off node05 by the same drain) then answered requests only by timing out: the KPI endpoint got `no route
+    to host` and `context deadline exceeded` from it, every fast collector run failed from 10:24 to 10:41, and its
+    `/metrics` liveness probe failed until the kubelet restarted it twice (the second at 10:40). After the second restart it
+    worked at once. The masterdata server restarted once as well.
+
+    Likely cause (not reproduced): the pooled connections pointed at the old primary's pod IP, which vanished with
+    the node, so no RST came back. `DatabaseFactory` sets no `socketTimeout`, `connectTimeout` or `tcpKeepAlive` on
+    the pgjdbc URL and no Hikari `keepaliveTime`/`validationTimeout`; with pgjdbc's default `socketTimeout=0` a read
+    on such a connection blocks until the kernel gives up on TCP retransmits (~15 min), and every pool slot fills
+    with blocked calls.
+
+    To do: in `pvlogger-shared-database`, set pgjdbc `connectTimeout`, `socketTimeout` (above the longest legitimate
+    query, e.g. the full collector's batch) and `tcpKeepAlive=true`, and Hikari `keepaliveTime` and
+    `connectionTimeout`, so a dead connection fails within seconds and the pool replaces it. Then verify with a
+    planned switchover (`kubectl cnpg promote` or a drain) while the fast collector runs: at most one failed run.
 
 ## Done (resolved, superseded or moot)
 
