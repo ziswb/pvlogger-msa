@@ -144,13 +144,20 @@ next release; it changes nothing for them.
     `connectionTimeout`, so a dead connection fails within seconds and the pool replaces it. Then verify with a
     planned switchover (`kubectl cnpg promote` or a drain) while the fast collector runs: at most one failed run.
 
-    *Status 2026-11-05:* fix released, switchover test pending. Data accessor 3.12.4 and masterdata server 3.5.2:
+    *Status 2026-11-05:* fix live (Helm revision 63 at 10:59, infrastructure commit f42f646). Data accessor 3.12.4 and masterdata server 3.5.2:
     pgjdbc `connectTimeout=5` and `tcpKeepAlive=true` on every URL; `socketTimeout=60` on pooled connections only
     (Flyway keeps no read limit, so a long migration is not cut off); Hikari `connectionTimeout` 10 s,
     `validationTimeout` 3 s, `keepaliveTime` 30 s. Fusionsolar 3.5.1 (and the battery simulator) add pgx
     `connect_timeout=10`; they open a fresh connection per run, so they never had the stale-pool problem.
     `tcpKeepAlive` uses the kernel defaults (first probe after 2 h), so in practice the socket timeout and
     Hikari's keepalive do the work.
+
+    *Clean promote passed 2026-11-05 11:06:31* (`kubectl cnpg promote`, pvlogger-db-1/node06 → pvlogger-db-2/node05):
+    the next data accessor request found its 3 pooled connections closed, Hikari dropped them and answered 200 in
+    5.3 s on a new connection; masterdata's housekeeper dropped its 3 in the background; no restarts, no failed
+    fast collector run. A clean promote closes the sockets, so this did not exercise `socketTimeout`. **Open until
+    the next drain + power-off of the primary's node** (the case from 10:23): pass = no kubelet restart of the data
+    accessor, at most one failed fast run, DB errors (`An I/O error occurred`, SQLState 08006) for at most ~60 s.
 
 ## Done (resolved, superseded or moot)
 
