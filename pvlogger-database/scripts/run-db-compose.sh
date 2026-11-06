@@ -27,7 +27,8 @@ fi
 # determine script location
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 DB_DATA_PATH="${SCRIPT_DIR}/../docker"
-DB_PASSWORD=$(${OP_CMD} read "op://Personal/PV Logger Postgres DB/password")
+# Personal account by title, any vault (OP_ACCOUNT in the shell is the work one).
+DB_PASSWORD=$(${OP_CMD} item get "PV Logger Postgres DB" --account my.1password.com --fields label=password --reveal --format json | jq -r .value)
 
 DB_PASSWORD="${DB_PASSWORD}" \
 DB_DATA_PATH="${DB_DATA_PATH}" \

@@ -20,11 +20,12 @@ REQUIRE_COMMAND="${SCRIPT_DIR}/require-command.sh"
 
 # Configuration - can be overridden via environment variables
 ONEPASSWORD_ACCOUNT="${ONEPASSWORD_ACCOUNT:-my.1password.com}"
-POSTGRES_VAULT="${POSTGRES_VAULT:-Private}"
 POSTGRES_ITEM="${POSTGRES_ITEM:-PV Logger Postgres DB}"
 
 OP_CMD=$(${REQUIRE_COMMAND} op)
+JQ_CMD=$(${REQUIRE_COMMAND} jq)
 
 echo "Retrieving PostgreSQL password from 1Password..." >&2
-POSTGRES_PASSWORD=$(${OP_CMD} read --account "${ONEPASSWORD_ACCOUNT}" "op://${POSTGRES_VAULT}/${POSTGRES_ITEM}/password")
+# By title in any vault of the account (items move between vaults).
+POSTGRES_PASSWORD=$(${OP_CMD} item get "${POSTGRES_ITEM}" --account "${ONEPASSWORD_ACCOUNT}" --fields label=password --reveal --format json | ${JQ_CMD} -r .value)
 echo -n "${POSTGRES_PASSWORD}" | base64

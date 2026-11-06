@@ -20,11 +20,12 @@ REQUIRE_COMMAND="${SCRIPT_DIR}/require-command.sh"
 
 # Configuration - can be overridden via environment variables
 ONEPASSWORD_ACCOUNT="${ONEPASSWORD_ACCOUNT:-my.1password.com}"
-FUSION_SOLAR_VAULT="${FUSION_SOLAR_VAULT:-Private}"
 FUSION_SOLAR_ITEM="${FUSION_SOLAR_ITEM:-Huawei FusionSolar openAPI Account}"
 
 OP_CMD=$(${REQUIRE_COMMAND} op)
+JQ_CMD=$(${REQUIRE_COMMAND} jq)
 
 echo "Retrieving FusionSolar password from 1Password..." >&2
-FUSION_SOLAR_PASSWORD=$(${OP_CMD} read --account "${ONEPASSWORD_ACCOUNT}" "op://${FUSION_SOLAR_VAULT}/${FUSION_SOLAR_ITEM}/password")
+# By title in any vault of the account (items move between vaults).
+FUSION_SOLAR_PASSWORD=$(${OP_CMD} item get "${FUSION_SOLAR_ITEM}" --account "${ONEPASSWORD_ACCOUNT}" --fields label=password --reveal --format json | ${JQ_CMD} -r .value)
 echo -n "${FUSION_SOLAR_PASSWORD}" | base64

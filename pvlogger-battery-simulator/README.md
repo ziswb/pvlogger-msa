@@ -76,7 +76,7 @@ default self-consumption mode behaves.
   work account):
 
 ```bash
-export PGPASSWORD="$(op read --account my.1password.com "op://Private/PVLogger battery_sim_ro/password")"
+export PGPASSWORD="$(op item get "PVLogger battery_sim_ro" --account my.1password.com --fields label=password --reveal --format json | jq -r .value)"
 ```
 
 ### Quick start
