@@ -25,7 +25,7 @@ bootstrapApplication(AppComponent, {
         { provide: MAT_DATE_LOCALE, useValue: 'de-CH' },
         provideHttpClient(withXhr(), withInterceptorsFromDi()),
         provideAnimations(),
-        ...provideHighcharts({
+        provideHighcharts({
             options: {
                 time: {
                     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,

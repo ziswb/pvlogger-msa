@@ -12,7 +12,7 @@ describe('ImportOwnuseChartComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
     imports: [ImportOwnuseChartComponent],
-    providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), ...provideHighcharts()]
+    providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), provideHighcharts()]
 })
     .compileComponents();
 

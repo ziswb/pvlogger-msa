@@ -12,7 +12,7 @@ describe('KpichartComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
     imports: [KpiChartComponent],
-    providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), ...provideHighcharts()]
+    providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), provideHighcharts()]
 })
     .compileComponents();
 

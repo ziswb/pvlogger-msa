@@ -27,7 +27,7 @@ describe('DashboardComponent', () => {
         MatIconModule,
         DashboardComponent,
     ],
-    providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), provideNativeDateAdapter(), ...provideHighcharts()]
+    providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), provideNativeDateAdapter(), provideHighcharts()]
 }).compileComponents();
   }));
 

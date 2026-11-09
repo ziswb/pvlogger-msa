@@ -12,7 +12,7 @@ describe('ConsumedImportedChart', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ConsumedImportedChart],
-      providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), ...provideHighcharts()]
+      providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), provideHighcharts()]
     })
     .compileComponents();
 
