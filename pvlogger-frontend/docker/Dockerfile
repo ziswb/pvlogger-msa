@@ -14,7 +14,7 @@ COPY pvlogger-frontend/src/web/ ./
 RUN npm run build:ci
 
 # Stage 2: fat JAR, with the SPA placed into the Ktor static resources
-FROM gradle:8-jdk21-alpine AS build
+FROM gradle:9-jdk21-alpine AS build
 
 ENV GRADLE_USER_HOME="/workspace/gradle_home"
 ADD . /workspace
