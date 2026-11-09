@@ -23,8 +23,12 @@ describe('createTimeXAxis', () => {
       series: [{ type: 'line', data: [[day + 6 * 3600_000, 1], [day + 20 * 3600_000, 2]] }],
     });
 
-    const labels = [...container.querySelectorAll('.highcharts-xaxis-labels text')].map(t => t.textContent);
-    expect(labels[0]).toBe('9 Nov 26');
+    // Read the tick labels from the axis, not the DOM: jsdom has no text
+    // measurement, so Highcharts leaves a probe <text> among the labels there.
+    const axis = chart.xAxis[0] as Highcharts.Axis & { ticks: Record<number, { label?: { textStr?: string } }> };
+    const first = axis.tickPositions![0];
+    expect(first).toBe(day);
+    expect(axis.ticks[first].label?.textStr?.trim()).toBe('9 Nov 26');
     chart.destroy();
   });
 });

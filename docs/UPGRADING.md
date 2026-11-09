@@ -94,7 +94,11 @@ the commit predates them) and copy its `build/upgrade-check/<name>` over.
   caught it; a unit test now guards it.
 - `ng update` for several Angular packages at once can mix majors; update core + CLI first, then Material + CDK.
   Keep the migrations that preserve behaviour (explicit zone change detection, `Eager`, `withXhr()`).
-- `karma-jasmine` 5.1 (last release) pins Jasmine 4. Newer Jasmine only comes with leaving Karma (Vitest).
+- `karma-jasmine` 5.1 (last release) pinned Jasmine 4, so the frontend moved to Vitest (jsdom).
+  - Angular's `refactor-jasmine-vitest` schematic only deleted the `done()` calls, so those tests could no longer fail.
+    Rewrite them by hand with `firstValueFrom`.
+  - Under Vitest, highcharts-angular's default loader fails in Node, and "should create" chart specs still pass.
+    The chart specs now assert that a chart was drawn (see the frontend README).
 - The version bumps were first forgotten and `build-all.sh` skipped every image, hence step 7.
 - `JAVA_HOME` matters for Gradle 8 (runs only on ≤ 21); Gradle 9 runs on the default JDK.
 
