@@ -1,7 +1,7 @@
 [versions]
 commonsCsvVersion = "1.14.1"
 exposedVersion = "1.6.1"
-flyway = "11.20.3"
+flyway = "13.12.1"
 hikaricpVersion = "7.1.0"
 koinVersion = "4.2.2"
 kotlinVersion = "2.4.21"
