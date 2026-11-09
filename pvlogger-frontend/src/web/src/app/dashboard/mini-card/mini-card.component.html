@@ -3,11 +3,11 @@
     <mat-card-title>{{title}}</mat-card-title>
   </mat-card-header>
   <mat-card-content class="dashboard-mini-card-content">
-    <mat-list class="list-horizontal">
-      <mat-list-item>{{ kWhValue.toString() | number: '1.2-2' }} kWh</mat-list-item>
-      <mat-list-item>|</mat-list-item>
-      <mat-list-item>{{ kwValue.toString() | number: '1.2-2' }} kW</mat-list-item>
-    </mat-list>
+    <div class="kpi-values">
+      <span class="kpi-value">{{ kWhValue.toString() | number: '1.2-2' }} kWh</span>
+      <span class="kpi-separator" aria-hidden="true">|</span>
+      <span class="kpi-value">{{ kwValue.toString() | number: '1.2-2' }} kW</span>
+    </div>
   </mat-card-content>
   <mat-card-footer>
     <mat-card-subtitle>{{ lastUpdated | date: 'E. dd. MMM yyyy HH:mm:ss' }}</mat-card-subtitle>

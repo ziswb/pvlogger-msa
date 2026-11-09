@@ -16,6 +16,9 @@
   align-items: center;
   max-height: 100%;
   justify-content: center;
+  // The values size themselves to the tile, not to the screen: the dashboard's
+  // breakpoints don't know how wide a tile is.
+  container-type: inline-size;
 }
 
 mat-card {
@@ -36,26 +39,34 @@ mat-card-subtitle {
   margin-bottom: 0.2em;
 }
 
-mat-list.list-horizontal {
-  padding: 0;
+.kpi-values {
   display: flex;
   flex-direction: row;
   justify-content: center;
-  align-items: center;
+  align-items: baseline;
+  column-gap: 0.35em;
+  color: #424242;
+  font-family: var(--mat-sys-body-large-font);
+  font-weight: bold;
+  line-height: 1.2;
+  // Shrinks with the tile, but never below 24px so it stays easy to read.
+  font-size: clamp(24px, 8cqi, 28px);
+}
 
-  .mat-mdc-list-item {
-    height: auto;
-    width: auto;
+.kpi-value {
+  white-space: nowrap;
+}
 
-    ::ng-deep .mdc-list-item__content {
-      display: inline;
-    }
+// Too narrow for one line: one value per line, no separator.
+@container (max-width: 330px) {
+  .kpi-values {
+    flex-direction: column;
+    align-items: center;
+    font-size: 28px;
+  }
 
-    ::ng-deep .mdc-list-item__primary-text {
-      font-size: 28px;
-      color: #424242;
-      font-weight: bold;
-    }
+  .kpi-separator {
+    display: none;
   }
 }
 

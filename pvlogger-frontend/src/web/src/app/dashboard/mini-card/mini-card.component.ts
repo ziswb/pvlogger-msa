@@ -3,7 +3,6 @@ import { Subscription } from 'rxjs';
 import { AppBus } from '../../service/app-bus.service';
 import { KpiValues } from '../../model/kpi-values.model';
 import { DecimalPipe, DatePipe } from '@angular/common';
-import { MatList, MatListItem } from '@angular/material/list';
 import { MatCard, MatCardHeader, MatCardTitle, MatCardContent, MatCardFooter, MatCardSubtitle } from '@angular/material/card';
 
 @Component({
@@ -11,7 +10,7 @@ import { MatCard, MatCardHeader, MatCardTitle, MatCardContent, MatCardFooter, Ma
     templateUrl: './mini-card.component.html',
     styleUrls: ['./mini-card.component.scss'],
     changeDetection: ChangeDetectionStrategy.Eager,
-    imports: [MatCard, MatCardHeader, MatCardTitle, MatCardContent, MatList, MatListItem, MatCardFooter, MatCardSubtitle, DecimalPipe, DatePipe]
+    imports: [MatCard, MatCardHeader, MatCardTitle, MatCardContent, MatCardFooter, MatCardSubtitle, DecimalPipe, DatePipe]
 })
 export class MiniCardComponent implements OnInit, OnDestroy {
   @Input() title = 'PV Produktion';
