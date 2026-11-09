@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHighcharts } from 'highcharts-angular';
 
@@ -12,7 +12,7 @@ describe('ConsumedImportedChart', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ConsumedImportedChart],
-      providers: [provideHttpClient(), provideHttpClientTesting(), ...provideHighcharts()]
+      providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), ...provideHighcharts()]
     })
     .compileComponents();
 

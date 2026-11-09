@@ -1,5 +1,5 @@
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { map } from 'rxjs/operators';
 import { KpiValues } from '../model/kpi-values.model';
 import { ConsumedImportedChart } from './charts/consumed-imported-chart/consumed-imported-chart';
@@ -17,6 +17,7 @@ import { DatepickerComponent } from '../datepicker/datepicker.component';
     selector: 'app-dashboard',
     templateUrl: './dashboard.component.html',
     styleUrls: ['./dashboard.component.sass'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     imports: [DatepickerComponent, MatGridList, MatGridTile, MiniCardComponent, CardComponent, KpiChartComponent, ImportOwnuseChartComponent, ProducedConsumedChartComponent, ImportExportChartComponent, ConsumedImportedChart, AsyncPipe]
 })
 export class DashboardComponent {

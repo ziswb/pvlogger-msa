@@ -61,7 +61,7 @@ Database runs via Docker Compose in `pvlogger-database/`.
 ### Service Map
 
 **JVM Services (Kotlin/Ktor):**
-- `pvlogger-frontend` — Angular 19 SPA (Angular Material + Highcharts) served by Ktor (port 8085); also serves the `/livedata` WebSocket
+- `pvlogger-frontend` — Angular 22 SPA (Angular Material + Highcharts) served by Ktor (port 8085); also serves the `/livedata` WebSocket
 - `pvlogger-masterdata-server` — Modbus register master data CRUD/import service (port 8081)
 - `pvlogger-modbus-data-accessor` — Central data store/query service for register values and KPIs (port 8083)
 - `pvlogger-modbus-mock-server` — Mock Modbus TCP device for local testing (raw TCP port 8502)

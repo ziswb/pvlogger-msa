@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { KpiDataSourceService } from './kpi-data-source.service';
 import { KpiFetchServiceService } from './kpi-fetch-service.service';
@@ -10,7 +10,7 @@ describe('KpiDataSourceService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()]
+      providers: [provideHttpClient(withXhr()), provideHttpClientTesting()]
     });
     fetchService = TestBed.inject(KpiFetchServiceService);
     service = TestBed.inject(KpiDataSourceService);

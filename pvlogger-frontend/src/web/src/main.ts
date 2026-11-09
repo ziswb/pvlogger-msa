@@ -2,7 +2,7 @@ import { enableProdMode, importProvidersFrom, provideZoneChangeDetection } from 
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { provideHttpClient, withInterceptorsFromDi, withXhr } from '@angular/common/http';
 import { MAT_DATE_LOCALE, MatNativeDateModule } from '@angular/material/core';
 import { provideHighcharts } from 'highcharts-angular';
 
@@ -23,7 +23,7 @@ bootstrapApplication(AppComponent, {
         ]),
         importProvidersFrom(MatNativeDateModule),
         { provide: MAT_DATE_LOCALE, useValue: 'de-CH' },
-        provideHttpClient(withInterceptorsFromDi()),
+        provideHttpClient(withXhr(), withInterceptorsFromDi()),
         provideAnimations(),
         ...provideHighcharts({
             options: {
