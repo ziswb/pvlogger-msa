@@ -1,4 +1,5 @@
 import { Component, ViewChild, ChangeDetectionStrategy } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule } from '@angular/forms';
 import { MatDatepicker, MatDatepickerInputEvent, MatDatepickerInput, MatDatepickerToggle } from '@angular/material/datepicker';
 import { AppBus } from '../service/app-bus.service';
@@ -27,6 +28,14 @@ export class DatepickerComponent {
     this.selectedDate = new FormControl(this.startDate);
     this.minDate = new Date(2022, 9, 25);
     this.maxDate = this.startDate;
+    // Follow date changes made elsewhere, e.g. an open tab moving on past midnight.
+    this.appBus.dateChanged.pipe(takeUntilDestroyed()).subscribe((date) => {
+      if (date > this.maxDate) {
+        this.maxDate = date;
+      }
+      this.startDate = date;
+      this.selectedDate.setValue(date);
+    });
   }
 
   addEvent(type: string, event: MatDatepickerInputEvent<unknown, unknown | null>) {

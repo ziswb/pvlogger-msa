@@ -1,4 +1,4 @@
-import { filter, firstValueFrom } from 'rxjs';
+import { filter, firstValueFrom, of } from 'rxjs';
 import { KpiFetchServiceService } from './kpi-fetch-service.service';
 import { AppBus } from './app-bus.service';
 import { KpiValues, emptyKpiValues } from '../model/kpi-values.model';
@@ -140,6 +140,44 @@ describe('KpiFetchServiceService', () => {
       (service as any).publishData(createKpi(1800, 4.2));
 
       expect(published[published.length - 1].createdAt).toBe(1800);
+    });
+  });
+
+  describe('live values', () => {
+    const shownDay = new Date(2026, 10, 8);
+
+    beforeEach(() => {
+      // An HttpClient whose day request returns no rows.
+      service = new KpiFetchServiceService({ get: () => of([]) } as any, appBus);
+      service.fetchDataFor(shownDay);
+    });
+
+    it('should add a value of the shown day to the charts', () => {
+      (service as any).onLiveValue(createKpi(new Date(2026, 10, 8, 23, 58).getTime()));
+
+      expect(service.solarpowerdata.length).toBe(2);
+    });
+
+    it('should move on to the next day instead of adding to the shown one', async () => {
+      // Regression: a tab left open kept every day's points and redrew them all
+      // on each live value, freezing longer every day.
+      const nextDay = firstValueFrom(appBus.dateChanged);
+      const afterMidnight = new Date(2026, 10, 9, 0, 1).getTime();
+
+      (service as any).onLiveValue(createKpi(afterMidnight));
+
+      expect((await nextDay).getTime()).toBe(afterMidnight);
+      expect(service.solarpowerdata.length).toBe(1); // nothing added to the 8th
+    });
+
+    it('should not go back a day for a replayed value from before midnight', () => {
+      const changes: Date[] = [];
+      service.fetchDataFor(new Date(2026, 10, 9));
+      appBus.dateChanged.subscribe((date) => changes.push(date));
+
+      (service as any).onLiveValue(createKpi(new Date(2026, 10, 8, 23, 59).getTime()));
+
+      expect(changes).toEqual([]);
     });
   });
 

@@ -5,6 +5,7 @@ import {webSocket, WebSocketSubject} from 'rxjs/webSocket';
 import {environment} from '../../environments/environment';
 import {emptyKpiValues, KpiValues} from '../model/kpi-values.model';
 import {AppBus} from './app-bus.service';
+import {DateUtil} from './date.util';
 
 @Injectable({
   providedIn: 'root'
@@ -25,6 +26,7 @@ export class KpiFetchServiceService implements OnDestroy {
   private fetchSubscription: Subscription | undefined;
   private seenCreatedAt = new Set<number>();
   private latest: KpiValues | undefined;
+  private shownUntil = Number.MAX_SAFE_INTEGER;
 
   constructor(private http: HttpClient, private appBus: AppBus) {
   }
@@ -37,6 +39,7 @@ export class KpiFetchServiceService implements OnDestroy {
   public fetchDataFor(date: Date) {
     this.clearData();
     const requestedDate = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+    this.shownUntil = new DateUtil(date.getTime()).maxDate();
     this.fetchSubscription?.unsubscribe();
     this.fetchSubscription = this.http
       .get<KpiValues[]>(`${KpiFetchServiceService.SERVER_URL}/v1/daydata/${requestedDate}`)
@@ -61,11 +64,20 @@ export class KpiFetchServiceService implements OnDestroy {
       concatMap(item => of(item)),
       retry({ delay: 3000 })
     ).subscribe({
-      next: (data) => {
-        this.pushData(data);
-        this.publishData(data);
-      }
+      next: (data) => this.onLiveValue(data)
     });
+  }
+
+  private onLiveValue(data: KpiValues) {
+    // A tab left open past midnight moves on to the new day, as if the user had
+    // picked it. Otherwise it keeps every day's points, and redrawing them all on
+    // each live value freezes the page longer every day.
+    if (data.createdAt > this.shownUntil) {
+      this.appBus.publishDateChanged(new Date(data.createdAt));
+      return;
+    }
+    this.pushData(data);
+    this.publishData(data);
   }
 
   private publishData(data: KpiValues) {
