@@ -134,7 +134,7 @@ Centralized in `gradle/libs.versions.toml`. Key versions are managed there — a
 
 ### Testing
 
-JVM tests use Ktor test host, Koin test, and JUnit 5. Test utilities live in `testutils` packages.
+JVM tests use Ktor test host, Koin test, and JUnit 6 (Jupiter). Test utilities live in `testutils` packages.
 
 - DB-touching tests (modbus-data-accessor, masterdata-server) run against a real PostgreSQL 18 via Testcontainers (ADR-0009) — a Docker daemon (Rancher Desktop) must be running. **There is no H2 anywhere; migrations never need H2 compatibility.**
 - The dev profiles (`application-dev.conf`) point at the local `pvlogger-database` Docker Compose PostgreSQL (`localhost:5432`).
