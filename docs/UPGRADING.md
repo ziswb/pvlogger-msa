@@ -64,4 +64,3 @@ The test and dev Postgres versions should match production's major version.
 - There's no end-to-end local environment: Tilt and the mock server are broken (backlog 23, 30).
   Either repair them first as a separate step, or accept that the collector → data accessor path is only checked
   by unit tests and the first production run.
-- The local dev DB versions (compose 17.2, script 16.2) are behind production's 18. Align them as part of the next upgrade.

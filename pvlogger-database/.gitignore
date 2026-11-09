@@ -1,2 +1,3 @@
 /docker/dumps
 /docker/postgres-data
+/docker/postgres18-data

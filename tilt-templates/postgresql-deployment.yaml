@@ -19,7 +19,7 @@ spec:
     spec:
       terminationGracePeriodSeconds: 30
       containers:
-        - image: postgres:17.2
+        - image: postgres:18
           imagePullPolicy: IfNotPresent
           name: postgresql
           securityContext:
