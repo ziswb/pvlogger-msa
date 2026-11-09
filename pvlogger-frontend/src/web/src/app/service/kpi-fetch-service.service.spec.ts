@@ -120,24 +120,25 @@ describe('KpiFetchServiceService', () => {
       expect((await next).createdAt).toBe(300);
     });
 
-    it('should not let a late history row move the current values backwards', () => {
+    it('should not let a late history row move the current values backwards', async () => {
       const published: KpiValues[] = [];
       appBus.kpiValues.subscribe((value) => published.push(value));
 
       (service as any).publishData(createKpi(1800, 4.2)); // live value for 'now'
       (service as any).publishData(createKpi(1200, 1.1)); // last row of the history, arriving after
+      await nextFrame();
 
-      expect(published.length).toBe(2); // both still notify, so the charts redraw
-      expect(published[1].createdAt).toBe(1800);
-      expect(published[1].solarPower).toBe(4.2);
+      expect(published[published.length - 1].createdAt).toBe(1800);
+      expect(published[published.length - 1].solarPower).toBe(4.2);
     });
 
-    it('should follow a newer value', () => {
+    it('should follow a newer value', async () => {
       const published: KpiValues[] = [];
       appBus.kpiValues.subscribe((value) => published.push(value));
 
       (service as any).publishData(createKpi(1200, 1.1));
       (service as any).publishData(createKpi(1800, 4.2));
+      await nextFrame();
 
       expect(published[published.length - 1].createdAt).toBe(1800);
     });
@@ -220,4 +221,8 @@ function createKpi(
     dailyEnergySelfCovered,
     dailyEnergyConsumed,
   };
+}
+
+function nextFrame(): Promise<void> {
+  return new Promise((resolve) => requestAnimationFrame(() => resolve()));
 }

@@ -34,7 +34,9 @@ describe('AppBus', () => {
       expect((await firstValueFrom(appBus.kpiValues)).solarPower).toBe(3000);
     });
 
-    it('should emit multiple values in order', () => {
+    it('should deliver only the latest of the values published within one frame', async () => {
+      // Regression: each queued live value used to redraw all charts at once,
+      // which froze a tab the browser had paused in the background.
       const received: number[] = [];
 
       appBus.kpiValues.subscribe((value) => {
@@ -51,8 +53,9 @@ describe('AppBus', () => {
       appBus.publishKpiValues(kpi1);
       appBus.publishKpiValues(kpi2);
       appBus.publishKpiValues(kpi3);
+      await nextFrame();
 
-      expect(received).toEqual([100, 200, 300]);
+      expect(received).toEqual([300]);
     });
 
     it('should replay only the last value (buffer size 1)', async () => {
@@ -93,3 +96,7 @@ describe('AppBus', () => {
     });
   });
 });
+
+function nextFrame(): Promise<void> {
+  return new Promise((resolve) => requestAnimationFrame(() => resolve()));
+}

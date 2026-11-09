@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ReplaySubject } from "rxjs";
+import { animationFrameScheduler, auditTime, ReplaySubject } from "rxjs";
 import { KpiValues } from '../model/kpi-values.model';
 
 @Injectable({
@@ -8,7 +8,10 @@ import { KpiValues } from '../model/kpi-values.model';
 export class AppBus {
   private kpiValuesSubject = new ReplaySubject<KpiValues>(1);
   private dateSubject = new ReplaySubject<Date>(1);
-  public readonly kpiValues = this.kpiValuesSubject.asObservable();
+  // At most one update per rendered frame: a hidden tab renders no frames, so it
+  // stops redrawing the charts, and values queued while the browser paused it
+  // are drawn once, not one full redraw each (which froze the page).
+  public readonly kpiValues = this.kpiValuesSubject.pipe(auditTime(0, animationFrameScheduler));
   public readonly dateChanged = this.dateSubject.asObservable();
 
   publishDateChanged(date: Date) {
