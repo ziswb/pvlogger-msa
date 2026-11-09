@@ -27,6 +27,8 @@ bootstrapApplication(AppComponent, {
         provideAnimations(),
         provideHighcharts({
             options: {
+                // Let the card behind each chart show through, in light and dark mode.
+                chart: { backgroundColor: 'transparent' },
                 time: {
                     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                 },

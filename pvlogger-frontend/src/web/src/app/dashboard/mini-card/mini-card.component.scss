@@ -4,6 +4,8 @@
   left: 15px;
   right: 15px;
   bottom: 15px;
+  // The tiles stay bright in dark mode, so their text keeps the light scheme.
+  color-scheme: light;
 }
 
 .dashboard-mini-card-content {
