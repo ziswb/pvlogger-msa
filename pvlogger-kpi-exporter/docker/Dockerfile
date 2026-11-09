@@ -8,7 +8,7 @@ WORKDIR /pvlogger-kpi-exporter
 
 RUN make prod GOARCH=${TARGETARCH}
 
-FROM gcr.io/distroless/static-debian12
+FROM gcr.io/distroless/static-debian13
 
 LABEL author="Bruno Ziswiler"
 LABEL description="PV Logger KPI Exporter"

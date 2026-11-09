@@ -26,7 +26,7 @@ It covers libraries, major versions and tooling (JDK, Go, Gradle, Node/Angular, 
 | Go libraries | every `*/go.mod` (and `go.work.sum`) |
 | Go toolchain | `go.work`, each `go.mod` `go` line, `FROM golang:*` in Dockerfiles, `.golangci.yml` / golangci-lint version |
 | Frontend | `pvlogger-frontend/src/web/package.json` (+ lockfile) |
-| Runtime images | `distroless/static-debian12`, `eclipse-temurin:*-ubi9-minimal` |
+| Runtime images | `distroless/static-debian*`, `eclipse-temurin:*-ubi*-minimal`, `node:*-alpine` (frontend build stage) |
 | Test/dev DB | Testcontainers `postgres:18` (3 test bases), `pvlogger-database/docker/docker-compose.yaml`, `pvlogger-database/scripts/run-db-container.sh` |
 
 Not in scope here: the CNPG/PostgreSQL server version and the cluster setup. Those belong to the `infrastructure` repo.

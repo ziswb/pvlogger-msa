@@ -1,7 +1,7 @@
 # Stage 1: Angular SPA. Layered so unchanged web sources are a full cache hit:
 # the npm ci layer only invalidates on lockfile changes, test+build only on
 # changes under src/web/.
-FROM node:22-alpine AS web
+FROM node:24-alpine AS web
 
 RUN apk add --no-cache chromium
 ENV CHROME_BIN=/usr/bin/chromium-browser
