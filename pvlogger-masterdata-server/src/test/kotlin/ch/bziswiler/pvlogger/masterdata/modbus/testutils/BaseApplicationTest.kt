@@ -9,7 +9,7 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.koin.test.KoinTest
 import org.koin.test.junit5.KoinTestExtension
-import org.testcontainers.containers.PostgreSQLContainer
+import org.testcontainers.postgresql.PostgreSQLContainer
 import java.sql.DriverManager
 import java.sql.SQLException
 
@@ -50,9 +50,9 @@ abstract class BaseApplicationTest : KoinTest {
         // One PostgreSQL per test JVM (matching the version run in production);
         // DatabaseFactory self-provisions the database on first connect and Flyway
         // migrates it once (see ADR-0009).
-        private val postgres: PostgreSQLContainer<*> = PostgreSQLContainer("postgres:18").apply { start() }
+        private val postgres: PostgreSQLContainer = PostgreSQLContainer("postgres:18").apply { start() }
 
-        private fun PostgreSQLContainer<*>.serverUrl() =
+        private fun PostgreSQLContainer.serverUrl() =
             "jdbc:postgresql://$host:${getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT)}/"
 
         // Restores fresh-database semantics between tests. On the very first test

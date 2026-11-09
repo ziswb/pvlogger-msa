@@ -33,7 +33,8 @@ asserted UTC day-bucketing in the daily-delta SQL while production
 - Running DB-touching tests requires a running Docker daemon (Rancher
   Desktop). Machine-side plumbing lives in `~/.testcontainers.properties`
   (`docker.host` → Rancher Desktop's socket); repo-side in the test tasks
-  (`api.version` pin for Docker ≥ 29, in-VM socket override for Ryuk).
+  (in-VM socket override for Ryuk; the `api.version` pin for Docker ≥ 29
+  was dropped with Testcontainers 2, which negotiates the API version itself).
 
 ## Consequences
 

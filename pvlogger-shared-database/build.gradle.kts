@@ -50,8 +50,7 @@ java {
 
 tasks.test {
     useJUnitPlatform()
-    // Same Docker settings as the service modules (see pvlogger-modbus-data-accessor).
-    systemProperty("api.version", "1.44")
+    // Same Docker setting as the service modules (see pvlogger-modbus-data-accessor).
     environment("TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE", "/var/run/docker.sock")
     testLogging {
         exceptionFormat = TestExceptionFormat.FULL

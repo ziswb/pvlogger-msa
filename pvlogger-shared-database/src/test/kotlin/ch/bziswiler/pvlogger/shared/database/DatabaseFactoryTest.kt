@@ -3,7 +3,7 @@ package ch.bziswiler.pvlogger.shared.database
 import ch.bziswiler.pvlogger.shared.configuration.DatabaseConfig
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.Test
-import org.testcontainers.containers.PostgreSQLContainer
+import org.testcontainers.postgresql.PostgreSQLContainer
 import java.sql.DriverManager
 import java.sql.SQLException
 import kotlin.test.assertContains
@@ -111,7 +111,7 @@ class DatabaseFactoryTest {
         }
 
     companion object {
-        private val postgres: PostgreSQLContainer<*> = PostgreSQLContainer("postgres:18").apply { start() }
+        private val postgres: PostgreSQLContainer = PostgreSQLContainer("postgres:18").apply { start() }
 
         private fun serverUrl() = "jdbc:postgresql://${postgres.host}:${postgres.getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT)}/"
 

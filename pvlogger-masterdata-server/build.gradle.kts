@@ -81,9 +81,6 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
-    // Docker >= 29 (Rancher Desktop) rejects docker-java's fallback API version
-    // 1.32; pin a modern one so Testcontainers can talk to the daemon.
-    systemProperty("api.version", "1.44")
     // Socket path *inside* the Docker VM, mounted into Ryuk. The host-side path
     // (~/.rd/docker.sock for Rancher Desktop) is configured machine-wide in
     // ~/.testcontainers.properties; this in-VM path is the same everywhere.
