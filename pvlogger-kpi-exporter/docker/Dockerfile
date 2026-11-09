@@ -12,7 +12,7 @@ FROM gcr.io/distroless/static-debian13
 
 LABEL author="Bruno Ziswiler"
 LABEL description="PV Logger KPI Exporter"
-LABEL version="3.5.0"
+LABEL version="3.5.1"
 
 COPY --from=golang /exporter .
 

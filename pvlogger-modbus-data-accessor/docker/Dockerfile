@@ -10,7 +10,7 @@ FROM eclipse-temurin:25-jre-ubi10-minimal
 
 LABEL author="Bruno Ziswiler"
 LABEL description="PV Logger Data Accessor"
-LABEL version="3.12.4"
+LABEL version="3.13.0"
 
 RUN mkdir -p "/opt/pvlogger/"
 COPY --from=build "/workspace/pvlogger-modbus-data-accessor/build/libs/pvlogger-modbus-data-accessor-all.jar" "/opt/pvlogger/data-accessor.jar"
