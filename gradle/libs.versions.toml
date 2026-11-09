@@ -1,19 +1,20 @@
 [versions]
 commonsCsvVersion = "1.14.1"
-exposedVersion = "1.0.0"
-flyway = "11.20.3"
-hikaricpVersion = "7.0.2"
-koinVersion = "4.1.1"
-kotlinVersion = "2.2.20"
-kotlinxVersion = "1.9.0"
-kotlinxCoroutinesVersion = "1.10.2"
-ktorVersion = "3.4.0"
-logbackVersion = "1.5.29"
-loggingVersion = "7.0.3"
-postgresVersion = "42.7.9"
-prometheusVersion = "1.16.0"
-testcontainersVersion = "1.21.3"
+exposedVersion = "1.6.1"
+flyway = "13.12.1"
+hikaricpVersion = "7.1.0"
+koinVersion = "4.2.2"
+kotlinVersion = "2.4.21"
+kotlinxVersion = "1.12.0"
+kotlinxCoroutinesVersion = "1.11.0"
+ktorVersion = "3.6.1"
+logbackVersion = "1.6.6"
+loggingVersion = "8.0.6"
+postgresVersion = "42.7.14"
+prometheusVersion = "1.17.2"
+testcontainersVersion = "2.0.5"
 cacheVersion = "0.14.0"
+junitVersion = "6.1.3"
 
 [libraries]
 commons-csv = { module = "org.apache.commons:commons-csv", version.ref = "commonsCsvVersion" }
@@ -65,7 +66,10 @@ logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "lo
 micrometer-registry-prometheus = { module = "io.micrometer:micrometer-registry-prometheus", version.ref = "prometheusVersion" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresVersion" }
 
-junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version = "5.11.2" }
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junitVersion" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junitVersion" }
+# Version from junit-bom: the launcher must match the engine (Gradle bundles an older one).
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 koin-test = { module = "io.insert-koin:koin-test", version.ref = "koinVersion" }
 koin-test-junit5 = { module = "io.insert-koin:koin-test-junit5", version.ref = "koinVersion" }
 
@@ -73,7 +77,7 @@ kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotl
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlinVersion" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesVersion" }
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktorVersion" }
-testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainersVersion" }
+testcontainers-postgresql = { module = "org.testcontainers:testcontainers-postgresql", version.ref = "testcontainersVersion" }
 
 [plugins]
 jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlinVersion" }

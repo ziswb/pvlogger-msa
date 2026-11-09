@@ -19,14 +19,19 @@ fun main(args: Array<String>) {
     EngineMain.main(args)
 }
 
+// No parameters: Koin pulls in Ktor's DI plugin, which tries to inject every
+// parameter of a configured module function (a `testing: Boolean` default breaks startup).
 @Suppress("unused") // application.conf references the main function. This annotation prevents the IDE from marking it as unused.
-fun Application.module(testing: Boolean = false) {
-    if (!testing) {
-        install(Koin) {
-            slf4jLogger()
-            modules(appModule)
-        }
+fun Application.module() {
+    install(Koin) {
+        slf4jLogger()
+        modules(appModule)
     }
+    configureApplication()
+}
+
+/** Everything except Koin, which tests install themselves. */
+fun Application.configureApplication() {
     readConfiguration()
     configureStatusPages()
     configureMonitoring()

@@ -35,6 +35,8 @@ dependencies {
     implementation(libs.flywaydb)
 
     // Testing
+    testImplementation(platform(libs.junit.bom))
+    testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.kotlin.test)
     testImplementation(libs.testcontainers.postgresql)
@@ -42,14 +44,13 @@ dependencies {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
 tasks.test {
     useJUnitPlatform()
-    // Same Docker settings as the service modules (see pvlogger-modbus-data-accessor).
-    systemProperty("api.version", "1.44")
+    // Same Docker setting as the service modules (see pvlogger-modbus-data-accessor).
     environment("TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE", "/var/run/docker.sock")
     testLogging {
         exceptionFormat = TestExceptionFormat.FULL

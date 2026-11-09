@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { AppBus } from '../../service/app-bus.service';
 import { KpiValues } from '../../model/kpi-values.model';
@@ -10,6 +10,7 @@ import { MatCard, MatCardHeader, MatCardTitle, MatCardContent, MatCardFooter, Ma
     selector: 'app-mini-card',
     templateUrl: './mini-card.component.html',
     styleUrls: ['./mini-card.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     imports: [MatCard, MatCardHeader, MatCardTitle, MatCardContent, MatList, MatListItem, MatCardFooter, MatCardSubtitle, DecimalPipe, DatePipe]
 })
 export class MiniCardComponent implements OnInit, OnDestroy {

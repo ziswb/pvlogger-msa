@@ -1,4 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { FormControl, FormsModule } from '@angular/forms';
 import { MatDatepicker, MatDatepickerInputEvent, MatDatepickerInput, MatDatepickerToggle } from '@angular/material/datepicker';
 import { AppBus } from '../service/app-bus.service';
@@ -11,6 +11,7 @@ import { MatIconButton } from '@angular/material/button';
     selector: 'app-datepicker',
     templateUrl: './datepicker.component.html',
     styleUrls: ['./datepicker.component.sass'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     imports: [MatIconButton, MatIcon, MatFormField, MatInput, FormsModule, MatDatepickerInput, MatDatepickerToggle, MatSuffix, MatDatepicker]
 })
 export class DatepickerComponent {

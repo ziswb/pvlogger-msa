@@ -2,7 +2,7 @@ package ch.bziswiler.testutils
 
 import ch.bziswiler.pvlogger.dataaccessor.configuration.AppConfig
 import ch.bziswiler.pvlogger.dataaccessor.configuration.appModule
-import ch.bziswiler.pvlogger.dataaccessor.module
+import ch.bziswiler.pvlogger.dataaccessor.configureApplication
 import ch.bziswiler.pvlogger.shared.database.DatabaseFactory
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.ApplicationTestBuilder
@@ -11,7 +11,7 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.koin.test.KoinTest
 import org.koin.test.junit5.KoinTestExtension
-import org.testcontainers.containers.PostgreSQLContainer
+import org.testcontainers.postgresql.PostgreSQLContainer
 import java.sql.DriverManager
 import java.sql.SQLException
 
@@ -26,7 +26,7 @@ abstract class TestBase : KoinTest {
         testApplication {
             truncateAllTables()
             application {
-                module(testing = true)
+                configureApplication()
                 org.koin.dsl.module {
                     single<AppConfig> { AppConfig() }
                     single<DatabaseFactory> { DatabaseFactory(get<AppConfig>().databaseConfig) }
@@ -61,7 +61,7 @@ abstract class TestBase : KoinTest {
         // DatabaseFactory self-provisions the pvdata database on first connect and
         // Flyway migrates it exactly once — V8 creates a cluster-wide role and must
         // not run twice, so tests share the database instead of getting one each.
-        private val postgres: PostgreSQLContainer<*> = PostgreSQLContainer("postgres:18").apply { start() }
+        private val postgres: PostgreSQLContainer = PostgreSQLContainer("postgres:18").apply { start() }
 
         private val tables =
             listOf(
@@ -76,7 +76,7 @@ abstract class TestBase : KoinTest {
                 "raw_kpi_register_values",
             )
 
-        private fun PostgreSQLContainer<*>.serverUrl() =
+        private fun PostgreSQLContainer.serverUrl() =
             "jdbc:postgresql://$host:${getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT)}/"
 
         /** Connections to the test database other than the one asking. */

@@ -43,7 +43,7 @@ class DatabaseFactory(
     }
 
     private fun createDatabase() {
-        logger.info("Database {} does not exist, creating it", dbConfig.dbName)
+        logger.info { "Database ${dbConfig.dbName} does not exist, creating it" }
         try {
             DriverManager.getConnection(dbConfig.maintenanceUrl, dbConfig.user, dbConfig.password).use { connection ->
                 connection.autoCommit = true
@@ -90,13 +90,13 @@ class DatabaseFactory(
         retryCounter.set(0)
         while (retryCounter.incrementAndGet() <= maxRetries) {
             try {
-                logger.info("Connecting to database, attempt number: {}", retryCounter.get())
+                logger.info { "Connecting to database, attempt number: ${retryCounter.get()}" }
                 val dataSource = HikariDataSource(config)
                 return dataSource
             } catch (th: Throwable) {
                 // A missing database will not appear by waiting — let connect() create it.
                 if (th.sqlStates().contains(INVALID_CATALOG_NAME)) throw DatabaseMissingException(th)
-                logger.info("Connection to database failed: {}", th.message)
+                logger.info { "Connection to database failed: ${th.message}" }
                 sleep(sleepMs)
             }
         }

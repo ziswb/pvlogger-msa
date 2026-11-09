@@ -26,7 +26,7 @@ application {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
@@ -70,6 +70,8 @@ dependencies {
     implementation(libs.commons.csv)
 
     // Testing
+    testImplementation(platform(libs.junit.bom))
+    testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.koin.test)
     testImplementation(libs.koin.test.junit5)
@@ -79,9 +81,6 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
-    // Docker >= 29 (Rancher Desktop) rejects docker-java's fallback API version
-    // 1.32; pin a modern one so Testcontainers can talk to the daemon.
-    systemProperty("api.version", "1.44")
     // Socket path *inside* the Docker VM, mounted into Ryuk. The host-side path
     // (~/.rd/docker.sock for Rancher Desktop) is configured machine-wide in
     // ~/.testcontainers.properties; this in-VM path is the same everywhere.
@@ -97,4 +96,7 @@ tasks.test {
 tasks.withType<ShadowJar>() {
     mergeServiceFiles()
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    // Ktor CallLogging loads Jansi, which uses native access; JDK 24+ warns about it
+    // and a future JDK blocks it unless the executable JAR allows it.
+    manifest { attributes("Enable-Native-Access" to "ALL-UNNAMED") }
 }

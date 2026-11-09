@@ -1,7 +1,7 @@
 import { LayoutModule } from '@angular/cdk/layout';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { provideHighcharts } from 'highcharts-angular';
@@ -27,7 +27,7 @@ describe('DashboardComponent', () => {
         MatIconModule,
         DashboardComponent,
     ],
-    providers: [provideHttpClient(), provideHttpClientTesting(), provideNativeDateAdapter(), ...provideHighcharts()]
+    providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), provideNativeDateAdapter(), provideHighcharts()]
 }).compileComponents();
   }));
 

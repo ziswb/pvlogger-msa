@@ -26,7 +26,7 @@ application {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
@@ -64,6 +64,8 @@ dependencies {
     implementation(libs.koin.logger.slf4j)
 
     // Testing
+    testImplementation(platform(libs.junit.bom))
+    testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.ktor.client.websockets)
     testImplementation(libs.koin.test)
@@ -85,4 +87,7 @@ tasks.test {
 tasks.withType<ShadowJar>() {
     mergeServiceFiles()
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    // Ktor CallLogging loads Jansi, which uses native access; JDK 24+ warns about it
+    // and a future JDK blocks it unless the executable JAR allows it.
+    manifest { attributes("Enable-Native-Access" to "ALL-UNNAMED") }
 }

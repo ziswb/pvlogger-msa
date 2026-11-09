@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import * as Highcharts from 'highcharts';
 import { Subscription } from 'rxjs';
 import { AppBus } from '../../../service/app-bus.service';
@@ -11,6 +11,7 @@ import { HighchartsChartComponent } from 'highcharts-angular';
     selector: 'app-consumed-imported-chart',
     templateUrl: './consumed-imported-chart.html',
     styleUrls: ['./consumed-imported-chart.sass'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     imports: [HighchartsChartComponent]
 })
 export class ConsumedImportedChart implements OnInit, OnDestroy {

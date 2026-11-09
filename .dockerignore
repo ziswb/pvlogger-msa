@@ -8,5 +8,5 @@ gradle_home
 **/node_modules
 **/.angular
 **/.DS_Store
-/docker/dumps
-/docker/postgres-data
+pvlogger-database/docker/dumps
+pvlogger-database/docker/postgres*-data

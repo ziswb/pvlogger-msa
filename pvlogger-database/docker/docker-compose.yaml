@@ -1,7 +1,7 @@
 version: '3.9'
 services:
   database:
-    image: postgres:17.2
+    image: postgres:18
     container_name: 'pvlogger_db'
     restart: unless-stopped
     shm_size: 2gb
@@ -14,7 +14,9 @@ services:
       TZ: 'Europe/Zurich'
     volumes:
       - ${DB_DATA_PATH}/dumps:/dumps
-      - ${DB_DATA_PATH}/postgres-data:/var/lib/postgresql/data
+      # PG 18+ keeps its data under /var/lib/postgresql/<major>/, so mount the parent.
+      # postgres18-data starts empty: the old 16/17 postgres-data is not compatible.
+      - ${DB_DATA_PATH}/postgres18-data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "sh -c 'pg_isready -U postgres -d heartbeat'"]
       interval: 5s

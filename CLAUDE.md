@@ -61,7 +61,7 @@ Database runs via Docker Compose in `pvlogger-database/`.
 ### Service Map
 
 **JVM Services (Kotlin/Ktor):**
-- `pvlogger-frontend` — Angular 19 SPA (Angular Material + Highcharts) served by Ktor (port 8085); also serves the `/livedata` WebSocket
+- `pvlogger-frontend` — Angular 22 SPA (Angular Material + Highcharts) served by Ktor (port 8085); also serves the `/livedata` WebSocket
 - `pvlogger-masterdata-server` — Modbus register master data CRUD/import service (port 8081)
 - `pvlogger-modbus-data-accessor` — Central data store/query service for register values and KPIs (port 8083)
 - `pvlogger-modbus-mock-server` — Mock Modbus TCP device for local testing (raw TCP port 8502)
@@ -124,9 +124,9 @@ Go services use a job dispatch pattern (switch on job name), read K8s secrets fo
 - **Koin** for DI (not Dagger/Hilt)
 - **Exposed** for database access (not JPA/Hibernate)
 - **Kotlinx Serialization** (not Jackson/Gson)
-- **JVM 21** toolchain target
+- **JVM 25** (LTS) toolchain target
 - **Go 1.27** for CronJob services
-- Docker images: JVM uses `eclipse-temurin:21-jre-ubi9-minimal`, Go uses `gcr.io/distroless/static-debian12`
+- Docker images: JVM uses `eclipse-temurin:25-jre-ubi10-minimal`, Go uses `gcr.io/distroless/static-debian13`
 
 ### Dependency Versions
 
@@ -134,7 +134,7 @@ Centralized in `gradle/libs.versions.toml`. Key versions are managed there — a
 
 ### Testing
 
-JVM tests use Ktor test host, Koin test, and JUnit 5. Test utilities live in `testutils` packages.
+JVM tests use Ktor test host, Koin test, and JUnit 6 (Jupiter). Test utilities live in `testutils` packages.
 
 - DB-touching tests (modbus-data-accessor, masterdata-server) run against a real PostgreSQL 18 via Testcontainers (ADR-0009) — a Docker daemon (Rancher Desktop) must be running. **There is no H2 anywhere; migrations never need H2 compatibility.**
 - The dev profiles (`application-dev.conf`) point at the local `pvlogger-database` Docker Compose PostgreSQL (`localhost:5432`).

@@ -9,7 +9,7 @@ set -o pipefail
 
 OP_CMD=""
 DOCKER_CMD=""
-POSTGRES_IMAGE="postgres:16.2"
+POSTGRES_IMAGE="postgres:18"
 
 if hash op 2>/dev/null; then
   OP_CMD=$(command -v op)
@@ -31,7 +31,7 @@ DB_PASSWORD=$(${OP_CMD} item get "PV Logger Postgres DB" --account my.1password.
 # determine script location
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 DB_DUMPS_PATH="${SCRIPT_DIR}/../docker/dumps:/dumps"
-DB_PGSQL_PATH="${SCRIPT_DIR}/../docker/postgres-data:/var/lib/postgresql/data"
+DB_PGSQL_PATH="${SCRIPT_DIR}/../docker/postgres18-data:/var/lib/postgresql"
 
 if [ $# -eq 1 ] && [ "${1}" == "prod" ]; then
   echo "Running in prod mode";
