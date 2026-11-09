@@ -8,7 +8,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 [docs/OPEN-QUESTIONS.md](docs/OPEN-QUESTIONS.md) (undocumented knowledge),
 [docs/SECURITY-FINDINGS.md](docs/SECURITY-FINDINGS.md) (open security findings — note this
 system has no authentication except the KPI export endpoint's bearer token (ADR-0021);
-everywhere else network isolation is the only boundary, ADR-0020).
+everywhere else network isolation is the only boundary, ADR-0020),
+[docs/UPGRADING.md](docs/UPGRADING.md) (standing procedure for dependency/tooling upgrades).
 Deployment lives in the sibling `infrastructure` repo (see `infrastructure/docs/LANDSCAPE.md`).
 
 ## Project Overview
