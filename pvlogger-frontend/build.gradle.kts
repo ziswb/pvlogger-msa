@@ -26,7 +26,7 @@ application {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
@@ -87,4 +87,7 @@ tasks.test {
 tasks.withType<ShadowJar>() {
     mergeServiceFiles()
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    // Ktor CallLogging loads Jansi, which uses native access; JDK 24+ warns about it
+    // and a future JDK blocks it unless the executable JAR allows it.
+    manifest { attributes("Enable-Native-Access" to "ALL-UNNAMED") }
 }

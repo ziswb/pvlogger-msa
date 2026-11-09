@@ -1,4 +1,4 @@
-FROM gradle:9-jdk21-alpine AS build
+FROM gradle:9-jdk25-alpine AS build
 
 ENV GRADLE_USER_HOME="/workspace/gradle_home"
 ADD . /workspace
@@ -6,7 +6,7 @@ ADD . /workspace
 WORKDIR /workspace
 RUN gradle :pvlogger-modbus-mock-server:clean :pvlogger-modbus-mock-server:buildFatJar
 
-FROM eclipse-temurin:21-jre-ubi9-minimal
+FROM eclipse-temurin:25-jre-ubi10-minimal
 
 LABEL author="Bruno Ziswiler"
 LABEL description="PV Logger Modbus Mock Data"
