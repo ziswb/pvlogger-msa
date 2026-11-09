@@ -1,3 +1,4 @@
+import { filter, firstValueFrom } from 'rxjs';
 import { KpiFetchServiceService } from './kpi-fetch-service.service';
 import { AppBus } from './app-bus.service';
 import { KpiValues, emptyKpiValues } from '../model/kpi-values.model';
@@ -93,14 +94,13 @@ describe('KpiFetchServiceService', () => {
       expect(service.solarpowerdata.length).toBe(2);
     });
 
-    it('should publish empty KpiValues via AppBus', (done) => {
-      appBus.kpiValues.subscribe((value) => {
-        expect(value.solarPower).toBe(0);
-        expect(value.createdAt).toBe(0);
-        done();
-      });
-
+    it('should publish empty KpiValues via AppBus', async () => {
+      const next = firstValueFrom(appBus.kpiValues);
       service.clearData();
+      const value = await next;
+
+      expect(value.solarPower).toBe(0);
+      expect(value.createdAt).toBe(0);
     });
 
     it('should allow new data after clearing', () => {
@@ -113,14 +113,11 @@ describe('KpiFetchServiceService', () => {
   });
 
   describe('publishData', () => {
-    it('should publish the value it is given', (done) => {
-      appBus.kpiValues.subscribe((value) => {
-        if (value.createdAt === 0) { return; } // the clearData reset
-        expect(value.createdAt).toBe(300);
-        done();
-      });
-
+    it('should publish the value it is given', async () => {
+      const next = firstValueFrom(appBus.kpiValues.pipe(filter((value) => value.createdAt !== 0))); // skip the clearData reset
       (service as any).publishData(createKpi(300, 4.2));
+
+      expect((await next).createdAt).toBe(300);
     });
 
     it('should not let a late history row move the current values backwards', () => {

@@ -3,9 +3,6 @@
 # changes under src/web/.
 FROM node:24-alpine AS web
 
-RUN apk add --no-cache chromium
-ENV CHROME_BIN=/usr/bin/chromium-browser
-
 WORKDIR /app
 COPY pvlogger-frontend/src/web/package.json pvlogger-frontend/src/web/package-lock.json ./
 RUN npm ci

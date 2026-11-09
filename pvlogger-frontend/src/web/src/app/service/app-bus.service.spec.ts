@@ -1,3 +1,4 @@
+import { firstValueFrom } from 'rxjs';
 import { AppBus } from './app-bus.service';
 import { KpiValues, emptyKpiValues } from '../model/kpi-values.model';
 
@@ -9,21 +10,20 @@ describe('AppBus', () => {
   });
 
   describe('kpiValues', () => {
-    it('should emit published KPI values', (done) => {
+    it('should emit published KPI values', async () => {
       const kpi = emptyKpiValues();
       kpi.solarPower = 5000;
       kpi.gridPower = -200;
 
-      appBus.kpiValues.subscribe((value) => {
-        expect(value.solarPower).toBe(5000);
-        expect(value.gridPower).toBe(-200);
-        done();
-      });
-
+      const next = firstValueFrom(appBus.kpiValues);
       appBus.publishKpiValues(kpi);
+      const value = await next;
+
+      expect(value.solarPower).toBe(5000);
+      expect(value.gridPower).toBe(-200);
     });
 
-    it('should replay the last value to late subscribers', (done) => {
+    it('should replay the last value to late subscribers', async () => {
       const kpi = emptyKpiValues();
       kpi.solarPower = 3000;
 
@@ -31,10 +31,7 @@ describe('AppBus', () => {
       appBus.publishKpiValues(kpi);
 
       // Late subscriber should still get the value
-      appBus.kpiValues.subscribe((value) => {
-        expect(value.solarPower).toBe(3000);
-        done();
-      });
+      expect((await firstValueFrom(appBus.kpiValues)).solarPower).toBe(3000);
     });
 
     it('should emit multiple values in order', () => {
@@ -58,7 +55,7 @@ describe('AppBus', () => {
       expect(received).toEqual([100, 200, 300]);
     });
 
-    it('should replay only the last value (buffer size 1)', (done) => {
+    it('should replay only the last value (buffer size 1)', async () => {
       const kpi1 = emptyKpiValues();
       kpi1.solarPower = 100;
       const kpi2 = emptyKpiValues();
@@ -68,37 +65,31 @@ describe('AppBus', () => {
       appBus.publishKpiValues(kpi2);
 
       // Late subscriber should only get kpi2
-      appBus.kpiValues.subscribe((value) => {
-        expect(value.solarPower).toBe(200);
-        done();
-      });
+      expect((await firstValueFrom(appBus.kpiValues)).solarPower).toBe(200);
     });
   });
 
   describe('dateChanged', () => {
-    it('should emit published date', (done) => {
+    it('should emit published date', async () => {
       const date = new Date(2024, 5, 15);
 
-      appBus.dateChanged.subscribe((value) => {
-        expect(value.getFullYear()).toBe(2024);
-        expect(value.getMonth()).toBe(5);
-        expect(value.getDate()).toBe(15);
-        done();
-      });
-
+      const next = firstValueFrom(appBus.dateChanged);
       appBus.publishDateChanged(date);
+      const value = await next;
+
+      expect(value.getFullYear()).toBe(2024);
+      expect(value.getMonth()).toBe(5);
+      expect(value.getDate()).toBe(15);
     });
 
-    it('should replay the last date to late subscribers', (done) => {
+    it('should replay the last date to late subscribers', async () => {
       const date = new Date(2024, 0, 1);
 
       appBus.publishDateChanged(date);
 
-      appBus.dateChanged.subscribe((value) => {
-        expect(value.getFullYear()).toBe(2024);
-        expect(value.getMonth()).toBe(0);
-        done();
-      });
+      const value = await firstValueFrom(appBus.dateChanged);
+      expect(value.getFullYear()).toBe(2024);
+      expect(value.getMonth()).toBe(0);
     });
   });
 });

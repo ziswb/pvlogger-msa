@@ -1,23 +1,23 @@
 import { LayoutModule } from '@angular/cdk/layout';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideNativeDateAdapter } from '@angular/material/core';
-import { provideHighcharts } from 'highcharts-angular';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatIconModule } from '@angular/material/icon';
 
 import { DashboardComponent } from './dashboard.component';
+import { provideTestHighcharts } from './charts/testing';
 
 describe('DashboardComponent', () => {
   let component: DashboardComponent;
   let fixture: ComponentFixture<DashboardComponent>;
 
-  beforeEach(waitForAsync(() => {
-    TestBed.configureTestingModule({
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
     imports: [
         NoopAnimationsModule,
         LayoutModule,
@@ -27,9 +27,9 @@ describe('DashboardComponent', () => {
         MatIconModule,
         DashboardComponent,
     ],
-    providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), provideNativeDateAdapter(), provideHighcharts()]
+    providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), provideNativeDateAdapter(), provideTestHighcharts()]
 }).compileComponents();
-  }));
+  });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(DashboardComponent);

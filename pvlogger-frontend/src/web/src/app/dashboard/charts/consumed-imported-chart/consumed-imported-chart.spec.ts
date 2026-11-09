@@ -1,9 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideHighcharts } from 'highcharts-angular';
 
 import { ConsumedImportedChart } from './consumed-imported-chart';
+import { expectChartRendered, provideTestHighcharts } from '../testing';
 
 describe('ConsumedImportedChart', () => {
   let component: ConsumedImportedChart;
@@ -12,7 +12,7 @@ describe('ConsumedImportedChart', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ConsumedImportedChart],
-      providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), provideHighcharts()]
+      providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), provideTestHighcharts()]
     })
     .compileComponents();
 
@@ -23,5 +23,9 @@ describe('ConsumedImportedChart', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should render a chart', async () => {
+    await expectChartRendered(fixture);
   });
 });
