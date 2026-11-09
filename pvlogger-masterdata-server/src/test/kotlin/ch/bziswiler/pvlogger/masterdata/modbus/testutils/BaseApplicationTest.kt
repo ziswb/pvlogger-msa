@@ -1,7 +1,7 @@
 package ch.bziswiler.pvlogger.masterdata.modbus.testutils
 
 import ch.bziswiler.pvlogger.masterdata.server.configuration.appModule
-import ch.bziswiler.pvlogger.masterdata.server.module
+import ch.bziswiler.pvlogger.masterdata.server.configureApplication
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
@@ -24,7 +24,7 @@ abstract class BaseApplicationTest : KoinTest {
         testApplication {
             truncateAllTables()
             application {
-                module(testing = true)
+                configureApplication()
             }
             environment {
                 config =

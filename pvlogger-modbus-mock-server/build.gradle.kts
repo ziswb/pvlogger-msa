@@ -48,6 +48,8 @@ dependencies {
     implementation(libs.reactivecircus.cache)
 
     // Testing
+    testImplementation(platform(libs.junit.bom))
+    testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test)
 }

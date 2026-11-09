@@ -29,7 +29,7 @@ class ApplicationTest {
                 )
         }
         application {
-            module(testing = true)
+            configureMockServer(testing = true)
         }
         startApplication()
         Thread.sleep(1000)

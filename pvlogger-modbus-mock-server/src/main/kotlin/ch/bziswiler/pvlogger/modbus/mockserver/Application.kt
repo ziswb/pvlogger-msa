@@ -22,7 +22,11 @@ fun main(args: Array<String>) {
     io.ktor.server.netty.EngineMain.main(args)
 }
 
-fun Application.module(testing: Boolean = false) {
+// No parameters: Ktor's DI plugin would try to inject them (see the other services).
+fun Application.module() = configureMockServer(testing = false)
+
+/** With [testing], the socket server answers with fixed data instead of master-data-driven values. */
+fun Application.configureMockServer(testing: Boolean) {
     configureMasterDataCache()
     launch { startSocketServer(testing) }
 }

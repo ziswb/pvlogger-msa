@@ -22,6 +22,8 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     // Testing
+    testImplementation(platform(libs.junit.bom))
+    testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.kotlin.test)
 }
 

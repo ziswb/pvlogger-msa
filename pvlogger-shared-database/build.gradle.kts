@@ -35,6 +35,8 @@ dependencies {
     implementation(libs.flywaydb)
 
     // Testing
+    testImplementation(platform(libs.junit.bom))
+    testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.kotlin.test)
     testImplementation(libs.testcontainers.postgresql)

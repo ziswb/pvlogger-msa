@@ -64,6 +64,8 @@ dependencies {
     implementation(libs.koin.logger.slf4j)
 
     // Testing
+    testImplementation(platform(libs.junit.bom))
+    testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.ktor.client.websockets)
     testImplementation(libs.koin.test)

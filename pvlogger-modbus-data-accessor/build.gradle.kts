@@ -67,6 +67,8 @@ dependencies {
     implementation(libs.flywaydb)
 
     // Testing
+    testImplementation(platform(libs.junit.bom))
+    testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.koin.test)
     testImplementation(libs.koin.test.junit5)
