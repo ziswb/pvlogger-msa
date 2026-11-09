@@ -1,4 +1,4 @@
-import { enableProdMode, importProvidersFrom } from '@angular/core';
+import { enableProdMode, importProvidersFrom, provideZoneChangeDetection } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { provideAnimations } from '@angular/platform-browser/animations';
@@ -16,6 +16,8 @@ if (environment.production) {
 
 bootstrapApplication(AppComponent, {
     providers: [
+        // Angular 21 defaults to zoneless; the app still relies on zone.js change detection.
+        provideZoneChangeDetection(),
         provideRouter([
             { path: '', component: DashboardComponent },
         ]),
