@@ -159,40 +159,6 @@ next release; it changes nothing for them.
     the next drain + power-off of the primary's node** (the case from 10:23): pass = no kubelet restart of the data
     accessor, at most one failed fast run, DB errors (`An I/O error occurred`, SQLState 08006) for at most ~60 s.
 
-46. 🔴 **Dashboard in a background tab shows stale, gappy or empty charts when brought back** (added 2026-11-11,
-    reported by the operator)
-
-    Observed: the dashboard sits in a background tab most of the time. When switched to, it usually shows current
-    data, but sometimes the data is stale, some points are missing (a straight line from one point to the next more
-    than 5 minutes later), or the charts stay empty.
-
-    Why: the day's history (`GET /v1/daydata`) is fetched only on page load and date change; after that the charts
-    grow only from the `/livedata` WebSocket, one value a minute. A background tab gets paused (Mac sleep, Chrome
-    Memory/Energy Saver freezing, network change), and:
-    - a reconnect gets only the server's single cached value (ADR-0019), so the missed minutes are never fetched →
-      straight lines across the gap;
-    - after sleep or a network change the socket can be dead without a close event, so `retry` never fires → stale;
-    - a failed history fetch gives up after two retries and stays empty; and the midnight day switch (`525a3013`)
-      waits for a live value, so a dead socket leaves the tab on yesterday → empty or stale.
-
-    To do (frontend, `KpiDataSourceService`): on `visibilitychange` to visible, after the tab was hidden for at least
-    ~1 minute, resync:
-    - the shown day is in the past and today has moved on since → switch to today (same path as the datepicker);
-    - the shown day is today → re-fetch `/v1/daydata` and merge it into the charts without clearing them (`pushData`
-      dedupes by timestamp, so no flicker), and reconnect the WebSocket (cheap: the server sends its cached value at
-      once);
-    - a past date the user picked → nothing.
-
-    Optional, only if needed: a watchdog for a visible tab that resyncs when no live value arrived for ~2.5 min.
-
-    Not covered: minutes missing in the database itself (a failed collector run) still draw a straight line;
-    showing those as breaks (Highcharts `gapSize`) is a separate decision.
-
-    *Status 2026-11-11:* implemented as described, without the watchdog: `KpiDataSourceService` listens for
-    `visibilitychange` (resync after 60 s hidden), `KpiFetchServiceService.refreshDataFor` merges the day without
-    clearing. Unit tests cover the merge, the short-flick skip, the missed midnight and a picked past day. Not yet
-    released or checked in a real browser.
-
 ## Done (resolved, superseded or moot)
 
 1. ~~**masterdata-server prod config DB-name mismatch**~~
@@ -995,3 +961,40 @@ next release; it changes nothing for them.
     CronJob, its NFS volume and the OneDrive client on .2 went on 2026-11-05 (infrastructure commit 2e5da96). The
     code stays: the operator and the receiver agreed that dropping `export` mode is not worth a release while
     everything works. Reopen only if one of them asks; until then the exporter is not changed for this.
+
+46. ~~🔴 **Dashboard in a background tab shows stale, gappy or empty charts when brought back**~~ (added 2026-11-11,
+    reported by the operator)
+
+    Observed: the dashboard sits in a background tab most of the time. When switched to, it usually shows current
+    data, but sometimes the data is stale, some points are missing (a straight line from one point to the next more
+    than 5 minutes later), or the charts stay empty.
+
+    Why: the day's history (`GET /v1/daydata`) is fetched only on page load and date change; after that the charts
+    grow only from the `/livedata` WebSocket, one value a minute. A background tab gets paused (Mac sleep, Chrome
+    Memory/Energy Saver freezing, network change), and:
+    - a reconnect gets only the server's single cached value (ADR-0019), so the missed minutes are never fetched →
+      straight lines across the gap;
+    - after sleep or a network change the socket can be dead without a close event, so `retry` never fires → stale;
+    - a failed history fetch gives up after two retries and stays empty; and the midnight day switch (`525a3013`)
+      waits for a live value, so a dead socket leaves the tab on yesterday → empty or stale.
+
+    To do (frontend, `KpiDataSourceService`): on `visibilitychange` to visible, after the tab was hidden for at least
+    ~1 minute, resync:
+    - the shown day is in the past and today has moved on since → switch to today (same path as the datepicker);
+    - the shown day is today → re-fetch `/v1/daydata` and merge it into the charts without clearing them (`pushData`
+      dedupes by timestamp, so no flicker), and reconnect the WebSocket (cheap: the server sends its cached value at
+      once);
+    - a past date the user picked → nothing.
+
+    Optional, only if needed: a watchdog for a visible tab that resyncs when no live value arrived for ~2.5 min.
+
+    Not covered: minutes missing in the database itself (a failed collector run) still draw a straight line;
+    showing those as breaks (Highcharts `gapSize`) is a separate decision.
+
+    *Status 2026-11-11:* implemented as described, without the watchdog: `KpiDataSourceService` listens for
+    `visibilitychange` (resync after 60 s hidden), `KpiFetchServiceService.refreshDataFor` merges the day without
+    clearing. Unit tests cover the merge, the short-flick skip, the missed midnight and a picked past day.
+
+    **Resolved 2026-11-11** with frontend 3.13.4 (`3d55016e`, `26230352`; infrastructure `3ba22f0`). Deployed and
+    checked by the operator in the browser: back from a background tab, the dashboard fetches the day again and
+    reconnects the live data.
