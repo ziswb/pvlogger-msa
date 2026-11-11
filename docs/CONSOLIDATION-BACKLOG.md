@@ -1020,5 +1020,6 @@ next release; it changes nothing for them.
 
     **Resolved 2026-11-11** with frontend 3.13.5 (`6bf2967b`, `a8141253`; infrastructure `10ee324`). Checked live with
     GET: `/` → `no-cache` + `ETag`, `/main-BHBFA2FT.js` → `public, max-age=31536000, immutable`, `/` with
-    `If-None-Match` → `304`. Use GET to check (`curl -s -D - -o /dev/null`): `curl -I` sends HEAD, which the static
-    route does not answer (404, not enabled before 3.13.5 either).
+    `If-None-Match` → `304`. `curl -I` sent HEAD, which the static route did not answer (404, never enabled):
+    fixed the same day in frontend 3.13.6 (`enableAutoHeadResponse()` in `spaResources`, regression test in
+    `SpaCachingTest`), so `curl -sI https://<pvlogger-host>/` shows the headers too.

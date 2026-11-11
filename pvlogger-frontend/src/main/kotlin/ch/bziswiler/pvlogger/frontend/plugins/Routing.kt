@@ -23,6 +23,8 @@ fun Application.configureRouting() {
 fun Route.spaResources(basePackage: String) {
     staticResources("/", basePackage) {
         etag(ETagProvider.StrongSha256)
+        // HEAD as well as GET, so `curl -I` and uptime checks see the real status and headers.
+        enableAutoHeadResponse()
         modify { resource, call ->
             val fileName = resource.path.substringAfterLast('/')
             call.response.header(HttpHeaders.CacheControl, cacheControlFor(fileName))

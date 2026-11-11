@@ -1,7 +1,9 @@
 package ch.bziswiler.pvlogger.frontend.plugins
 
 import io.ktor.client.request.get
+import io.ktor.client.request.head
 import io.ktor.client.request.header
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.routing.routing
@@ -9,6 +11,7 @@ import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 /** Backlog item 47: hashed bundles are cached for good, everything else is revalidated. */
@@ -67,5 +70,18 @@ class SpaCachingTest {
         assertEquals("no-cache", cacheControlFor("index.html"))
         assertEquals("no-cache", cacheControlFor("3rdpartylicenses.txt"))
         assertEquals("no-cache", cacheControlFor("my-component.js")) // a word, not a hash
+    }
+
+    @Test
+    fun `HEAD answers like GET without a body`() = spaTest {
+        // Regression: the static route answered only GET, so `curl -I` got a 404.
+        for (path in listOf("/", "/main-BHBFA2FT.js")) {
+            val get = client.get(path)
+            val head = client.head(path)
+            assertEquals(HttpStatusCode.OK, head.status, path)
+            assertEquals(get.headers[HttpHeaders.CacheControl], head.headers[HttpHeaders.CacheControl], path)
+            assertEquals(get.headers[HttpHeaders.ETag], head.headers[HttpHeaders.ETag], path)
+            assertTrue(head.bodyAsText().isEmpty(), path)
+        }
     }
 }
