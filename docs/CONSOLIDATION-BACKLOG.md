@@ -169,10 +169,10 @@ next release; it changes nothing for them.
 
     Fix: drop the date, the ETag is the only validator worth sending.
 
-    *Status 2026-11-11:* implemented, **not released on purpose**: it goes out with the next relevant frontend
-    change (version not bumped). `plugins/HTTP.kt` `DropLastModified` removes the `LastModifiedVersion` before
+    *Status 2026-11-11:* implemented in frontend 3.13.7 (first planned to wait for the next frontend change,
+    then released on its own). `plugins/HTTP.kt` `DropLastModified` removes the `LastModifiedVersion` before
     `ConditionalHeaders` turns versions into headers; `SpaCachingTest` checks there is no `Last-Modified` and that
-    a date-only check gets `200`. After that release: `curl -sI https://<pvlogger-host>/` shows no
+    a date-only check gets `200`. After the deploy: `curl -sI https://<pvlogger-host>/` shows no
     `last-modified`, then move this item to Done.
 
 ## Done (resolved, superseded or moot)
