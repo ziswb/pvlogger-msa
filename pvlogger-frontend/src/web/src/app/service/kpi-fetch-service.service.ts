@@ -38,6 +38,18 @@ export class KpiFetchServiceService implements OnDestroy {
 
   public fetchDataFor(date: Date) {
     this.clearData();
+    this.loadDay(date);
+  }
+
+  /**
+   * Fetches the day again and merges it into what is shown, without clearing
+   * first: points already shown are skipped (pushData), missing ones filled in.
+   */
+  public refreshDataFor(date: Date) {
+    this.loadDay(date);
+  }
+
+  private loadDay(date: Date) {
     const requestedDate = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
     this.shownUntil = new DateUtil(date.getTime()).maxDate();
     this.fetchSubscription?.unsubscribe();

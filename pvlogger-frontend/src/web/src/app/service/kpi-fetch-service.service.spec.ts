@@ -182,6 +182,23 @@ describe('KpiFetchServiceService', () => {
     });
   });
 
+  describe('refreshDataFor', () => {
+    it('should fill in missed points without dropping the ones shown', () => {
+      // A tab paused in the background missed live values; the day fetched
+      // again fills the gap instead of drawing a straight line across it.
+      let rows: KpiValues[] = [createKpi(600), createKpi(1800)];
+      service = new KpiFetchServiceService({ get: () => of(rows) } as any, appBus);
+      const day = new Date(2026, 10, 8);
+      service.fetchDataFor(day);
+      (service as any).onLiveValue(createKpi(2400)); // live, not yet in the history
+
+      rows = [createKpi(600), createKpi(1200), createKpi(1800)]; // 1200 was missed
+      service.refreshDataFor(day);
+
+      expect(service.solarpowerdata.slice(1).map((entry) => entry[0])).toEqual([600, 1200, 1800, 2400]);
+    });
+  });
+
   describe('sortData', () => {
     it('should sort all arrays by timestamp (first element)', () => {
       (service as any).pushData(createKpi(300));
