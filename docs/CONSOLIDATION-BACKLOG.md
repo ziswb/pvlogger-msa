@@ -159,26 +159,6 @@ next release; it changes nothing for them.
     the next drain + power-off of the primary's node** (the case from 10:23): pass = no kubelet restart of the data
     accessor, at most one failed fast run, DB errors (`An I/O error occurred`, SQLState 08006) for at most ~60 s.
 
-47. 🟡 **Frontend static files have no deliberate cache headers** (added 2026-11-11)
-
-    `pvlogger-frontend` serves the Angular build from the fat JAR (`staticResources("/", "static")`). The only
-    caching rule (`plugins/HTTP.kt`, `CachingHeaders`) gives CSS a 1-day `Expires`; `index.html`, the JS bundles and
-    the favicon get no `Cache-Control`, no `ETag` and no `Last-Modified`. So whether a browser picks up a new release
-    on a normal reload is left to its heuristics, and nothing can be revalidated cheaply.
-
-    Serving the SPA from the same unit as its backend-for-frontend (`/livedata`) stays as it is: one versioned unit,
-    same origin, no CORS in prod, simple ingress allowlist (ADR-0020). Only the headers change.
-
-    To do: the standard SPA split. Files with a content hash in their name (Angular `outputHashing: all`, e.g.
-    `main-BHBFA2FT.js`) get `Cache-Control: public, max-age=31536000, immutable`; everything else (`index.html`,
-    `favicon.ico`, `3rdpartylicenses.txt`) gets `no-cache` with a strong `ETag`, so a reload revalidates with a
-    `304`. Drop the CSS-only `CachingHeaders` rule.
-
-    *Status 2026-11-11:* implemented in frontend 3.13.5. `Routing.kt` `spaResources` sets the headers per file name
-    and a SHA-256 `ETag`; `ConditionalHeaders` replaces `CachingHeaders` and answers the `304`. `SpaCachingTest`
-    covers both rules and the `304` through the real plugin chain with gzip. Not yet deployed; to check after the
-    deploy: `curl -sI` on `/` shows `no-cache` and an `ETag`, on a `main-*.js` the one-year `immutable`.
-
 ## Done (resolved, superseded or moot)
 
 1. ~~**masterdata-server prod config DB-name mismatch**~~
@@ -1018,3 +998,27 @@ next release; it changes nothing for them.
     **Resolved 2026-11-11** with frontend 3.13.4 (`3d55016e`, `26230352`; infrastructure `3ba22f0`). Deployed and
     checked by the operator in the browser: back from a background tab, the dashboard fetches the day again and
     reconnects the live data.
+
+47. ~~🟡 **Frontend static files have no deliberate cache headers**~~ (added 2026-11-11)
+
+    `pvlogger-frontend` serves the Angular build from the fat JAR (`staticResources("/", "static")`). The only
+    caching rule (`plugins/HTTP.kt`, `CachingHeaders`) gives CSS a 1-day `Expires`; `index.html`, the JS bundles and
+    the favicon get no `Cache-Control`, no `ETag` and no `Last-Modified`. So whether a browser picks up a new release
+    on a normal reload is left to its heuristics, and nothing can be revalidated cheaply.
+
+    Serving the SPA from the same unit as its backend-for-frontend (`/livedata`) stays as it is: one versioned unit,
+    same origin, no CORS in prod, simple ingress allowlist (ADR-0020). Only the headers change.
+
+    To do: the standard SPA split. Files with a content hash in their name (Angular `outputHashing: all`, e.g.
+    `main-BHBFA2FT.js`) get `Cache-Control: public, max-age=31536000, immutable`; everything else (`index.html`,
+    `favicon.ico`, `3rdpartylicenses.txt`) gets `no-cache` with a strong `ETag`, so a reload revalidates with a
+    `304`. Drop the CSS-only `CachingHeaders` rule.
+
+    *Status 2026-11-11:* implemented in frontend 3.13.5. `Routing.kt` `spaResources` sets the headers per file name
+    and a SHA-256 `ETag`; `ConditionalHeaders` replaces `CachingHeaders` and answers the `304`. `SpaCachingTest`
+    covers both rules and the `304` through the real plugin chain with gzip.
+
+    **Resolved 2026-11-11** with frontend 3.13.5 (`6bf2967b`, `a8141253`; infrastructure `10ee324`). Checked live with
+    GET: `/` → `no-cache` + `ETag`, `/main-BHBFA2FT.js` → `public, max-age=31536000, immutable`, `/` with
+    `If-None-Match` → `304`. Use GET to check (`curl -s -D - -o /dev/null`): `curl -I` sends HEAD, which the static
+    route does not answer (404, not enabled before 3.13.5 either).
