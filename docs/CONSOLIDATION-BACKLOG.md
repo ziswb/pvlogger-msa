@@ -159,6 +159,22 @@ next release; it changes nothing for them.
     the next drain + power-off of the primary's node** (the case from 10:23): pass = no kubelet restart of the data
     accessor, at most one failed fast run, DB errors (`An I/O error occurred`, SQLState 08006) for at most ~60 s.
 
+48. ⚪ **Frontend sends a meaningless `Last-Modified` on its static files** (added 2026-11-11, found while checking
+    item 47)
+
+    The fat JAR stores every entry with the same fixed date (1980-02-01, reproducible archives), and Ktor sends it as
+    `Last-Modified`. Browsers send `If-None-Match` along with it and the ETag wins, so they are fine. But a client
+    that revalidates by date alone gets `304` for a changed `index.html` and keeps the old release. Checked live on
+    3.13.6: date only → `304`; outdated ETag + date → `200`.
+
+    Fix: drop the date, the ETag is the only validator worth sending.
+
+    *Status 2026-11-11:* implemented, **not released on purpose**: it goes out with the next relevant frontend
+    change (version not bumped). `plugins/HTTP.kt` `DropLastModified` removes the `LastModifiedVersion` before
+    `ConditionalHeaders` turns versions into headers; `SpaCachingTest` checks there is no `Last-Modified` and that
+    a date-only check gets `200`. After that release: `curl -sI https://<pvlogger-host>/` shows no
+    `last-modified`, then move this item to Done.
+
 ## Done (resolved, superseded or moot)
 
 1. ~~**masterdata-server prod config DB-name mismatch**~~

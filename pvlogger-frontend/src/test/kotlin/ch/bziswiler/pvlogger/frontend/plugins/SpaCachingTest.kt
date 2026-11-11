@@ -11,6 +11,7 @@ import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -83,5 +84,17 @@ class SpaCachingTest {
             assertEquals(get.headers[HttpHeaders.ETag], head.headers[HttpHeaders.ETag], path)
             assertTrue(head.bodyAsText().isEmpty(), path)
         }
+    }
+
+    @Test
+    fun `no Last-Modified, so a date-only check cannot keep an old release`() = spaTest {
+        // The fat JAR dates every file 1980-02-01: a client revalidating by date
+        // alone got 304 for a changed index.html.
+        val response = client.get("/") { header(HttpHeaders.AcceptEncoding, "gzip") }
+        assertNull(response.headers[HttpHeaders.LastModified])
+        assertNotNull(response.headers[HttpHeaders.ETag])
+
+        val dateOnly = client.get("/") { header(HttpHeaders.IfModifiedSince, "Wed, 11 Nov 2099 08:00:00 GMT") }
+        assertEquals(HttpStatusCode.OK, dateOnly.status)
     }
 }
