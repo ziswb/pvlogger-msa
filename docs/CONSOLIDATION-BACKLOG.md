@@ -169,8 +169,19 @@ next release; it changes nothing for them.
     | TypeScript | 6.0.3 → 7.0.2 | — | **Blocked**: Angular 22.2.6 requires `>=6.0 <6.1`. Wait for an Angular release that supports 7 | — | — |
 
     Also seen: `@angular/animations` and `@angular/platform-browser-dynamic` are deprecated (npm "latest" points at
-    20.x). Neither is imported in `src/` or `angular.json`, only listed in `package.json`; removing them is a
-    cleanup, not an upgrade (check build, tests and the Material components afterwards).
+    20.x). Removing them is a cleanup, not an upgrade. (The first note here said neither was imported — wrong:
+    `@angular/animations` is reached through `@angular/platform-browser/animations`.)
+
+    *Status 2026-11-12:* the 2026-11-12 patch upgrades are live (infrastructure `4b12174`). The owner approved
+    Node 26, foojay 1.0.0 and the package removal; implemented on branch `upgrade/2026-11-12-majors`, frontend 3.13.9:
+    - foojay 1.0.0: `./gradlew cleanTest build` green, no image change.
+    - Packages removed: `provideAnimations()` dropped from `main.ts` (Material 22 animates with CSS and treats no
+      animation module like `BrowserAnimations`); the dashboard spec disables animations with Material's
+      `MATERIAL_ANIMATIONS` token instead of `NoopAnimationsModule`. JS bundle 1.36 → 1.30 MB. `capture.sh` vs
+      the 3.13.8 code: snapshot, screenshots (pixels) and live check identical.
+    - Node 26: the Docker `web` stage's `dist` is byte-identical between `node:24-alpine` and `node:26-alpine`;
+      `engines` raised to `>=26`. The image starts and serves `/`.
+    TypeScript 7 stays blocked by Angular 22. **Open until 3.13.9 is checked live.**
 
 ## Done (resolved, superseded or moot)
 
