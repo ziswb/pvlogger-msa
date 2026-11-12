@@ -1,9 +1,8 @@
 import { LayoutModule } from '@angular/cdk/layout';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideNativeDateAdapter } from '@angular/material/core';
+import { MATERIAL_ANIMATIONS, provideNativeDateAdapter } from '@angular/material/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatGridListModule } from '@angular/material/grid-list';
@@ -19,7 +18,6 @@ describe('DashboardComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
     imports: [
-        NoopAnimationsModule,
         LayoutModule,
         MatButtonModule,
         MatCardModule,
@@ -27,7 +25,9 @@ describe('DashboardComponent', () => {
         MatIconModule,
         DashboardComponent,
     ],
-    providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), provideNativeDateAdapter(), provideTestHighcharts()]
+    providers: [provideHttpClient(withXhr()), provideHttpClientTesting(), provideNativeDateAdapter(), provideTestHighcharts(),
+        // Replaces NoopAnimationsModule: Material 22 no longer uses @angular/animations.
+        { provide: MATERIAL_ANIMATIONS, useValue: { animationsDisabled: true } }]
 }).compileComponents();
   });
 
