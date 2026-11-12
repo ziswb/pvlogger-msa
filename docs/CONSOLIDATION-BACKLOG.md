@@ -159,6 +159,19 @@ next release; it changes nothing for them.
     the next drain + power-off of the primary's node** (the case from 10:23): pass = no kubelet restart of the data
     accessor, at most one failed fast run, DB errors (`An I/O error occurred`, SQLState 08006) for at most ~60 s.
 
+49. ⚪ **Major/toolchain bumps left over from the 2026-11-12 upgrade run** (added 2026-11-12, awaiting the owner's
+    pick per `docs/UPGRADING.md`; the patch/minor bumps went in on branch `upgrade/2026-11-12-patch-minor`)
+
+    | Bump | From → to | Pros | Cons / breaking | Risk | Effort |
+    |---|---|---|---|---|---|
+    | Node build image (frontend Dockerfile `web` stage) | `node:24-alpine` → `node:26-alpine` | 26 is the active LTS since 2026-10-28; matches the dev machine (26.13.1); 24 is maintenance-only from now on | Build stage only; the bundle should come out the same. `engines` already says `>=24` | low | small: one `FROM`, image build, `capture.sh` compare, frontend patch bump |
+    | `foojay-resolver-convention` (`settings.gradle.kts`) | 0.8.0 → 1.0.0 | Removes the deprecated `JvmVendorSpec.IBM_SEMERU` reference ahead of the next Gradle major; shaded deps | Needs Java 17+ to run Gradle (already 25). Only used to auto-download a JDK, which neither the local build nor the `gradle:9-jdk25` image does — no image content changes | low | tiny: one line, `./gradlew build`, no image bump |
+    | TypeScript | 6.0.3 → 7.0.2 | — | **Blocked**: Angular 22.2.6 requires `>=6.0 <6.1`. Wait for an Angular release that supports 7 | — | — |
+
+    Also seen: `@angular/animations` and `@angular/platform-browser-dynamic` are deprecated (npm "latest" points at
+    20.x). Neither is imported in `src/` or `angular.json`, only listed in `package.json`; removing them is a
+    cleanup, not an upgrade (check build, tests and the Material components afterwards).
+
 ## Done (resolved, superseded or moot)
 
 1. ~~**masterdata-server prod config DB-name mismatch**~~
