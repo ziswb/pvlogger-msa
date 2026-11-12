@@ -159,30 +159,6 @@ next release; it changes nothing for them.
     the next drain + power-off of the primary's node** (the case from 10:23): pass = no kubelet restart of the data
     accessor, at most one failed fast run, DB errors (`An I/O error occurred`, SQLState 08006) for at most ~60 s.
 
-49. ⚪ **Major/toolchain bumps left over from the 2026-11-12 upgrade run** (added 2026-11-12, awaiting the owner's
-    pick per `docs/UPGRADING.md`; the patch/minor bumps went in on branch `upgrade/2026-11-12-patch-minor`)
-
-    | Bump | From → to | Pros | Cons / breaking | Risk | Effort |
-    |---|---|---|---|---|---|
-    | Node build image (frontend Dockerfile `web` stage) | `node:24-alpine` → `node:26-alpine` | 26 is the active LTS since 2026-10-28; matches the dev machine (26.13.1); 24 is maintenance-only from now on | Build stage only; the bundle should come out the same. `engines` already says `>=24` | low | small: one `FROM`, image build, `capture.sh` compare, frontend patch bump |
-    | `foojay-resolver-convention` (`settings.gradle.kts`) | 0.8.0 → 1.0.0 | Removes the deprecated `JvmVendorSpec.IBM_SEMERU` reference ahead of the next Gradle major; shaded deps | Needs Java 17+ to run Gradle (already 25). Only used to auto-download a JDK, which neither the local build nor the `gradle:9-jdk25` image does — no image content changes | low | tiny: one line, `./gradlew build`, no image bump |
-    | TypeScript | 6.0.3 → 7.0.2 | — | **Blocked**: Angular 22.2.6 requires `>=6.0 <6.1`. Wait for an Angular release that supports 7 | — | — |
-
-    Also seen: `@angular/animations` and `@angular/platform-browser-dynamic` are deprecated (npm "latest" points at
-    20.x). Removing them is a cleanup, not an upgrade. (The first note here said neither was imported — wrong:
-    `@angular/animations` is reached through `@angular/platform-browser/animations`.)
-
-    *Status 2026-11-12:* the 2026-11-12 patch upgrades are live (infrastructure `4b12174`). The owner approved
-    Node 26, foojay 1.0.0 and the package removal; implemented on branch `upgrade/2026-11-12-majors`, frontend 3.13.9:
-    - foojay 1.0.0: `./gradlew cleanTest build` green, no image change.
-    - Packages removed: `provideAnimations()` dropped from `main.ts` (Material 22 animates with CSS and treats no
-      animation module like `BrowserAnimations`); the dashboard spec disables animations with Material's
-      `MATERIAL_ANIMATIONS` token instead of `NoopAnimationsModule`. JS bundle 1.36 → 1.30 MB. `capture.sh` vs
-      the 3.13.8 code: snapshot, screenshots (pixels) and live check identical.
-    - Node 26: the Docker `web` stage's `dist` is byte-identical between `node:24-alpine` and `node:26-alpine`;
-      `engines` raised to `>=26`. The image starts and serves `/`.
-    TypeScript 7 stays blocked by Angular 22. **Open until 3.13.9 is checked live.**
-
 ## Done (resolved, superseded or moot)
 
 1. ~~**masterdata-server prod config DB-name mismatch**~~
@@ -1065,3 +1041,31 @@ next release; it changes nothing for them.
 
     **Resolved 2026-11-11** with frontend 3.13.7 (`8408a00a`, `ca5c2f5e`; infrastructure `2e52b62`). Checked live:
     `curl -sI` shows no `last-modified`; date only → `200`, matching ETag → `304`.
+
+49. ~~⚪ **Major/toolchain bumps left over from the 2026-11-12 upgrade run**~~ (added 2026-11-12, then awaiting the owner's
+    pick per `docs/UPGRADING.md`; the patch/minor bumps went in on branch `upgrade/2026-11-12-patch-minor`)
+
+    | Bump | From → to | Pros | Cons / breaking | Risk | Effort |
+    |---|---|---|---|---|---|
+    | Node build image (frontend Dockerfile `web` stage) | `node:24-alpine` → `node:26-alpine` | 26 is the active LTS since 2026-10-28; matches the dev machine (26.13.1); 24 is maintenance-only from now on | Build stage only; the bundle should come out the same. `engines` already says `>=24` | low | small: one `FROM`, image build, `capture.sh` compare, frontend patch bump |
+    | `foojay-resolver-convention` (`settings.gradle.kts`) | 0.8.0 → 1.0.0 | Removes the deprecated `JvmVendorSpec.IBM_SEMERU` reference ahead of the next Gradle major; shaded deps | Needs Java 17+ to run Gradle (already 25). Only used to auto-download a JDK, which neither the local build nor the `gradle:9-jdk25` image does — no image content changes | low | tiny: one line, `./gradlew build`, no image bump |
+    | TypeScript | 6.0.3 → 7.0.2 | — | **Blocked**: Angular 22.2.6 requires `>=6.0 <6.1`. Wait for an Angular release that supports 7 | — | — |
+
+    Also seen: `@angular/animations` and `@angular/platform-browser-dynamic` are deprecated (npm "latest" points at
+    20.x). Removing them is a cleanup, not an upgrade. (The first note here said neither was imported — wrong:
+    `@angular/animations` is reached through `@angular/platform-browser/animations`.)
+
+    *Status 2026-11-12:* the 2026-11-12 patch upgrades are live (infrastructure `4b12174`). The owner approved
+    Node 26, foojay 1.0.0 and the package removal; implemented on branch `upgrade/2026-11-12-majors`, frontend 3.13.9:
+    - foojay 1.0.0: `./gradlew cleanTest build` green, no image change.
+    - Packages removed: `provideAnimations()` dropped from `main.ts` (Material 22 animates with CSS and treats no
+      animation module like `BrowserAnimations`); the dashboard spec disables animations with Material's
+      `MATERIAL_ANIMATIONS` token instead of `NoopAnimationsModule`. JS bundle 1.36 → 1.30 MB. `capture.sh` vs
+      the 3.13.8 code: snapshot, screenshots (pixels) and live check identical.
+    - Node 26: the Docker `web` stage's `dist` is byte-identical between `node:24-alpine` and `node:26-alpine`;
+      `engines` raised to `>=26`. The image starts and serves `/`.
+
+    **Resolved 2026-11-12** with frontend 3.13.9 (`34d62a4b`..`33f11a83`; infrastructure `9218b3e`). Checked live:
+    `/` serves the new bundle `main-P436D6YI.js`, `/v1/daydata` → `200`, `/livedata` sends a current KPI frame; the
+    owner checked the dashboard in the browser. TypeScript 7 stays blocked until Angular supports it (next upgrade
+    run).
