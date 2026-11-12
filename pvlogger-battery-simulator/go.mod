@@ -1,9 +1,9 @@
 module pvlogger-battery-simulator
 
-go 1.27.3
+go 1.27.4
 
 require (
-	github.com/jackc/pgx/v5 v5.12.0
+	github.com/jackc/pgx/v5 v5.13.0
 	pv-logger v0.0.0
 )
 

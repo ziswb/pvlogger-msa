@@ -1,6 +1,6 @@
 module pvlogger-fusionsolar-auth
 
-go 1.27.3
+go 1.27.4
 
 replace pv-logger => ../pv-logger
 

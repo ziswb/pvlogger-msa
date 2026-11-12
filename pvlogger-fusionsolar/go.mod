@@ -1,6 +1,6 @@
 module pvlogger-fusionsolar
 
-go 1.27.3
+go 1.27.4
 
 tool github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen
 
@@ -11,7 +11,7 @@ replace pv-logger => ../pv-logger
 replace pvlogger-shared-modbus => ../pvlogger-shared-modbus
 
 require (
-	github.com/jackc/pgx/v5 v5.12.0
+	github.com/jackc/pgx/v5 v5.13.0
 	github.com/jackc/tern/v2 v2.4.3
 	k8s.io/apimachinery v0.37.2
 	k8s.io/client-go v0.37.2

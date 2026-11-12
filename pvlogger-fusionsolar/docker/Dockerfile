@@ -1,4 +1,4 @@
-FROM golang:1.27.3 AS golang
+FROM golang:1.27.4 AS golang
 
 ADD . /
 WORKDIR /pvlogger-fusionsolar

@@ -1,6 +1,6 @@
 # Multi-arch: the cluster runs arm64, the relay on the receiver's server
 # usually amd64. The build stage runs natively and cross-compiles.
-FROM --platform=$BUILDPLATFORM golang:1.27.3 AS golang
+FROM --platform=$BUILDPLATFORM golang:1.27.4 AS golang
 ARG TARGETARCH=arm64
 
 ADD . /
