@@ -9,7 +9,7 @@ FROM gcr.io/distroless/static-debian13
 
 LABEL author="Bruno Ziswiler"
 LABEL description="PV Fast Data Collector - focused KPI register reader and KPI computer"
-LABEL version="0.13.3"
+LABEL version="0.13.4"
 
 COPY --from=golang /fast-data-collector .
 
