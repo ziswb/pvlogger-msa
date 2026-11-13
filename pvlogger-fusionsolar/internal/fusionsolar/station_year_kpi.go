@@ -44,8 +44,11 @@ func (f *FusionSolarAccess) SaveStationYearKpiResponse(response *model.KpiStatio
 func (f *FusionSolarAccess) insertStationYearKpiResponseParams(response *model.KpiStationYearResponse) (int32, error) {
 	logging.Info("saving station year KPI response params to database")
 	i, err := f.insertResponseFromData(kpiStationYearResponseAdapter{response})
+	if err != nil {
+		return i, err
+	}
 	logging.Info("station year KPI response saved successfully")
-	return i, err
+	return i, nil
 }
 
 func (f *FusionSolarAccess) insertStationYearKpiResponseBasicParams(responseId int32, response *model.KpiStationYearResponse) error {

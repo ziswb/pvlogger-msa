@@ -64,8 +64,11 @@ func (f *FusionSolarAccess) SaveDev5MinKPIs(response *model.DeviceFiveMinutesKpi
 func (f *FusionSolarAccess) insertDeviceFiveMinutesKpiResponseParams(response *model.DeviceFiveMinutesKpiResponse) (int32, error) {
 	logging.Info("saving device five minutes KPI response params to database")
 	i, err := f.insertResponseFromData(deviceFiveMinutesKpiResponseAdapter{response})
+	if err != nil {
+		return i, err
+	}
 	logging.Info("device five minutes KPI response saved successfully")
-	return i, err
+	return i, nil
 }
 
 // TODO: generalize this function by introducing an interface for the response; afterwards search and remove redundant code

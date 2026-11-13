@@ -29,3 +29,29 @@ func requireJSON200(endpoint string, decoded bool, httpResp *http.Response, body
 	return fmt.Errorf("%s: unexpected FusionSolar reply: status %q, content type %q, body %q%s",
 		endpoint, status, contentType, snippet, suffix)
 }
+
+// APIError is a reply FusionSolar decoded fine but refused: success is not
+// true. Such replies come back with HTTP 200 and carry no usable params or
+// data (e.g. failCode 305 USER_MUST_RELOGIN, 401 "Invalid access to current
+// interface!" when the API account has expired), so saving them would panic.
+type APIError struct {
+	FailCode int
+	Message  string
+}
+
+func (e *APIError) Error() string {
+	return fmt.Sprintf("FusionSolar refused the request: failCode %d, message %q", e.FailCode, e.Message)
+}
+
+// requireSuccess returns an *APIError unless the reply says success: true.
+// A missing success field counts as a refusal.
+func requireSuccess(resp FsResponseData) error {
+	if s := resp.GetSuccess(); s != nil && *s {
+		return nil
+	}
+	msg := ""
+	if m := resp.GetMessage(); m != nil {
+		msg = *m
+	}
+	return &APIError{FailCode: resp.GetFailCode(), Message: msg}
+}

@@ -52,8 +52,11 @@ func (f *FusionSolarAccess) SaveDeviceRealKpiResponse(response *model.DeviceReal
 func (f *FusionSolarAccess) insertDeviceRealKpiResponseParams(response *model.DeviceRealKpiResponse) (int32, error) {
 	logging.Info("saving device real KPI response params to database")
 	i, err := f.insertResponseFromData(deviceRealKpiResponseAdapter{response})
+	if err != nil {
+		return i, err
+	}
 	logging.Info("device real KPI response saved successfully")
-	return i, err
+	return i, nil
 }
 
 func (f *FusionSolarAccess) insertDeviceRealKpiResponseBasicParams(responseId int32, response *model.DeviceRealKpiResponse) error {

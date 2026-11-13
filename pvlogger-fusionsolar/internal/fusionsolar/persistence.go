@@ -36,7 +36,13 @@ func (f *FusionSolarAccess) insertResponseFromData(resp FsResponseData) (int32, 
 		Success:   repository.BoolOrFalse(resp.GetSuccess()),
 		Timestamp: pgtype.Timestamp{Valid: true, Time: time.Now()},
 	}
-	return f.repo.InsertFsResponse(f.db.Ctx, input)
+	id, err := f.repo.InsertFsResponse(f.db.Ctx, input)
+	if err != nil {
+		return id, err
+	}
+	// The raw reply is stored first, so a refused request stays visible in
+	// fs_response; only then stop before the params and data are read.
+	return id, requireSuccess(resp)
 }
 
 func (f *FusionSolarAccess) upsertExtendedKpis(responseId int32, typ model.FusionSolarDataType, data []struct {
