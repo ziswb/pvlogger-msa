@@ -1090,3 +1090,8 @@ next release; it changes nothing for them.
 
     *Status 2026-11-13:* implemented, not released. `ng test` 70/70 green, `ng build` OK; the CDP background-tab
     repro against a local dev server shows axes while hidden and all lines 3 s after switching to the tab.
+
+    *Status 2026-11-13:* live with frontend 3.13.10 (`2cbda2d7`, `9770321c`; infrastructure `6e9ea9e`). `/` serves
+    `main-6AKHNOJ4.js`, `/v1/daydata` → `200`. The CDP background-tab repro against the live site, 3 runs: axes while
+    hidden, all lines 3 s after switching to the tab (on 3.13.9 they stayed empty for good). Open until the owner
+    confirms the iPhone Home Screen app.
