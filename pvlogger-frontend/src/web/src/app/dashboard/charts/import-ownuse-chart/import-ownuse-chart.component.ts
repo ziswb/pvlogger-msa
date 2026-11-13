@@ -22,6 +22,10 @@ export class ImportOwnuseChartComponent implements OnInit, OnDestroy {
   constructor(private kpiDataSource: KpiDataSourceService, private appBus: AppBus) {}
 
   ngOnInit() {
+    // Build the full options now, not only on the first KPI value: that comes on an
+    // animation frame, which a hidden tab never gets, and Highcharts' update() adds
+    // no series to a chart created without them (backlog item 50).
+    this.getChart(Date.now());
     this.kpiSubscription = this.appBus.kpiValues.subscribe((value) => {
       this.getChart(value.createdAt);
     });

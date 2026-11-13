@@ -1069,3 +1069,24 @@ next release; it changes nothing for them.
     `/` serves the new bundle `main-P436D6YI.js`, `/v1/daydata` → `200`, `/livedata` sends a current KPI frame; the
     owner checked the dashboard in the browser. TypeScript 7 stays blocked until Angular supports it (next upgrade
     run).
+
+50. 🔴 **Charts stay empty when the dashboard loads in a hidden tab** (added 2026-11-13)
+
+    Seen mostly in the iPhone Home Screen app and in Safari, sometimes in Firefox, and in Chrome on a tab restored in
+    the background: the KPI tiles show current values, the charts stay empty (no axes, no lines) until a force
+    reload. Reproduced in Chrome by opening the dashboard as a real background tab over CDP (Playwright fakes
+    `visible`) and switching to it: the charts never filled, not even with the next live values.
+
+    Cause: since frontend 3.13.1 (`d296988c`) `AppBus.kpiValues` emits on animation frames, so a chart component gets
+    its first value — and with it its `chartOptions` with series — one frame after `ngOnInit`, and in a hidden tab
+    only once it is shown. If Highcharts loaded before that (always in a hidden tab; a race in a visible one, made
+    likelier by the cached chunk since item 47), highcharts-angular creates the chart from `{}`. Highcharts'
+    `chart.update()` without `oneToOne` updates existing series only and silently ignores the rest, so every later
+    update is lost.
+
+    Fix: each chart component builds its full options synchronously in `ngOnInit` (`getChart(Date.now())`) before
+    subscribing, so the chart always starts with its series. Each chart spec renders the chart with an `AppBus`
+    that never emits (`renderedSeriesInHiddenTab`) and checks the legend shows all series; red before the fix.
+
+    *Status 2026-11-13:* implemented, not released. `ng test` 70/70 green, `ng build` OK; the CDP background-tab
+    repro against a local dev server shows axes while hidden and all lines 3 s after switching to the tab.

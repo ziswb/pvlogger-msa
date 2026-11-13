@@ -3,7 +3,7 @@ import { provideHttpClient, withXhr } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { ConsumedImportedChart } from './consumed-imported-chart';
-import { expectChartRendered, provideTestHighcharts } from '../testing';
+import { expectChartRendered, provideTestHighcharts, renderedSeriesInHiddenTab } from '../testing';
 
 describe('ConsumedImportedChart', () => {
   let component: ConsumedImportedChart;
@@ -27,5 +27,9 @@ describe('ConsumedImportedChart', () => {
 
   it('should render a chart', async () => {
     await expectChartRendered(fixture);
+  });
+
+  it('has its series when created before the first KPI value (hidden tab)', async () => {
+    expect(await renderedSeriesInHiddenTab(ConsumedImportedChart)).toEqual(['Consumed Power', 'Imported Power']);
   });
 });
