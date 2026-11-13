@@ -29,11 +29,25 @@ describe('KpiDataSourceService', () => {
     expect(result).not.toBe(fetchService.solarpowerdata);
   });
 
-  it('should return a copy of gridPowerData', () => {
-    fetchService.gridpowerdata = [[10, 20]];
-    const result = service.getGridPowerData();
+  it('should return a copy of importedPowerData', () => {
+    fetchService.importedpowerdata = [[10, 20]];
+    const result = service.getImportedPowerData();
     expect(result).toEqual([[10, 20]]);
-    expect(result).not.toBe(fetchService.gridpowerdata);
+    expect(result).not.toBe(fetchService.importedpowerdata);
+  });
+
+  it('should return a copy of exportedPowerData', () => {
+    fetchService.exportedpowerdata = [[10, -20]];
+    const result = service.getExportedPowerData();
+    expect(result).toEqual([[10, -20]]);
+    expect(result).not.toBe(fetchService.exportedpowerdata);
+  });
+
+  it('should return a copy of selfConsumedPowerData', () => {
+    fetchService.selfconsumedpowerdata = [[10, 30]];
+    const result = service.getSelfConsumedPowerData();
+    expect(result).toEqual([[10, 30]]);
+    expect(result).not.toBe(fetchService.selfconsumedpowerdata);
   });
 
   it('should return a copy of usedPowerData', () => {

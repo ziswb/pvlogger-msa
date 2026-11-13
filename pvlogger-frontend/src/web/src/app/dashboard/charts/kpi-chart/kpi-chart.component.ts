@@ -35,45 +35,50 @@ export class KpiChartComponent implements OnInit, OnDestroy {
     this.kpiSubscription?.unsubscribe();
   }
 
-// https://www.highcharts.com/demo/line-time-series
+/**
+   * The current power values over the day: the same five KPIs as the
+   * "Daily KPIs so far" chart, but live kW instead of cumulative kWh.
+   */
   getChart(date: number) {
     this.chartOptions = {
       series: [{
-        type: 'line',
-        name: 'Inverter Power',
-        data: this.kpiDataSource.getSolarPowerData(),
-        color: '#7bb5ec',
-      }, {
-        type: 'line',
-        name: 'Consumed Power',
+        type: 'area',
+        name: 'Consumed',
         data: this.kpiDataSource.getUsedPowerData(),
         color: '#f7a35c',
       }, {
         type: 'area',
-        name: 'Grid Power',
-        data: this.kpiDataSource.getGridPowerData(),
-        zones: [{
-          value: 0,
-          color: {
-            linearGradient: {x1: 0, y1: 0, x2: 0, y2: 1},
-            stops: [
-              [0, new Highcharts.Color('#00f942').setOpacity(0).get('rgba') as string],
-              [1, new Highcharts.Color('#00f942').get('rgba') as string],
-            ]
-          }
-        }, {
-          color: {
-            linearGradient: {x1: 0, y1: 0, x2: 0, y2: 1},
-            stops: [
-              [0, new Highcharts.Color('#ff2600').get('rgba') as string],
-              [1, new Highcharts.Color('#ff2600').setOpacity(0).get('rgba') as string]
-            ]
-          }
-        }]
-      },],
+        name: 'Produced',
+        data: this.kpiDataSource.getSolarPowerData(),
+        color: '#7bb5ec',
+      }, {
+        type: 'area',
+        name: 'Imported',
+        data: this.kpiDataSource.getImportedPowerData(),
+        color: '#ff2600',
+      }, {
+        type: 'area',
+        name: 'Exported',
+        data: this.kpiDataSource.getExportedPowerData(),
+        color: '#00f942',
+      }, {
+        type: 'area',
+        name: 'Self-Consumed',
+        data: this.kpiDataSource.getSelfConsumedPowerData(),
+        color: '#b388eb',
+      }],
       chart: {
-        type: 'line',
+        type: 'area',
         zooming: { type: 'x' },
+      },
+      plotOptions: {
+        area: {
+          fillOpacity: 0.35,
+          lineWidth: 1,
+          marker: { enabled: false },
+          // Exported is negative, so fill towards zero, not the axis bottom.
+          threshold: 0,
+        },
       },
       title: {text: undefined},
       tooltip: {
@@ -83,7 +88,8 @@ export class KpiChartComponent implements OnInit, OnDestroy {
       xAxis: createTimeXAxis(date),
       yAxis: {
         title: {text: undefined},
-        labels: {format: '{value} kW'}
+        labels: {format: '{value} kW'},
+        plotLines: [{ value: 0, width: 1, color: '#ccd6eb', zIndex: 3 }],
       },
     };
   }

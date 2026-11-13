@@ -30,6 +30,6 @@ describe('KpichartComponent', () => {
   });
 
   it('has its series when created before the first KPI value (hidden tab)', async () => {
-    expect(await renderedSeriesInHiddenTab(KpiChartComponent)).toEqual(['Inverter Power', 'Consumed Power', 'Grid Power']);
+    expect(await renderedSeriesInHiddenTab(KpiChartComponent)).toEqual(['Consumed', 'Produced', 'Imported', 'Exported', 'Self-Consumed']);
   });
 });

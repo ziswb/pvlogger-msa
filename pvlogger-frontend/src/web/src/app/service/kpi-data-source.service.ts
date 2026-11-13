@@ -40,8 +40,16 @@ export class KpiDataSourceService implements OnDestroy {
     return this.kpiFetchService.solarpowerdata.slice();
   }
 
-  public getGridPowerData(): number[][] {
-    return this.kpiFetchService.gridpowerdata.slice();
+  public getImportedPowerData(): number[][] {
+    return this.kpiFetchService.importedpowerdata.slice();
+  }
+
+  public getExportedPowerData(): number[][] {
+    return this.kpiFetchService.exportedpowerdata.slice();
+  }
+
+  public getSelfConsumedPowerData(): number[][] {
+    return this.kpiFetchService.selfconsumedpowerdata.slice();
   }
 
   public getUsedPowerData(): number[][] {

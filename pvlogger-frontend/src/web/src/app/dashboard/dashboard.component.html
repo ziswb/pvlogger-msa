@@ -2,48 +2,27 @@
 <div class="grid-container">
   <mat-grid-list cols="{{ ( cardLayout | async )?.columns }}" rowHeight="200px">
     <!-- KPI Values-->
-    @for (mc of miniCardData; track mc) {
+    @for (mc of miniCardData; track mc; let last = $last) {
       <mat-grid-tile
-        [colspan]="( cardLayout | async )?.miniCard?.cols"
+        [colspan]="last ? ( cardLayout | async )?.lastMiniCard?.cols : ( cardLayout | async )?.miniCard?.cols"
         [rowspan]="( cardLayout | async )?.miniCard?.rows">
         <app-mini-card [title]="mc.title" [colorClass]="mc.colorClass" [kwFn]="mc.kwFn" [kWhFn]="mc.kWhFn"></app-mini-card>
       </mat-grid-tile>
     }
-    <!-- KPI chart -->
+    <!-- Current KPIs (live power) -->
     <mat-grid-tile
       [colspan]="( cardLayout | async )?.table?.cols"
       [rowspan]="( cardLayout | async )?.table?.rows">
-      <app-card title="KPI Chart">
+      <app-card title="Current KPIs">
         <app-kpichart></app-kpichart>
       </app-card>
     </mat-grid-tile>
-    <!--Charts-->
+    <!-- Daily energy KPIs (cumulative), as Grafana's "Today's KPIs so far" -->
     <mat-grid-tile
       [colspan]="( cardLayout | async )?.chart?.cols"
       [rowspan]="( cardLayout | async )?.chart?.rows">
-      <app-card title="Self Consumed vs. Imported">
-        <app-import-ownuse-chart></app-import-ownuse-chart>
-      </app-card>
-    </mat-grid-tile>
-    <mat-grid-tile
-      [colspan]="( cardLayout | async )?.chart?.cols"
-      [rowspan]="( cardLayout | async )?.chart?.rows">
-      <app-card title="Produced vs. Self Consumed vs. Exported">
-        <app-produced-consumed-chart></app-produced-consumed-chart>
-      </app-card>
-    </mat-grid-tile>
-    <mat-grid-tile
-      [colspan]="( cardLayout | async )?.chart?.cols"
-      [rowspan]="( cardLayout | async )?.chart?.rows">
-      <app-card title="Import vs. Export">
-        <app-import-export-chart></app-import-export-chart>
-      </app-card>
-    </mat-grid-tile>
-    <mat-grid-tile
-      [colspan]="( cardLayout | async )?.chart?.cols"
-      [rowspan]="( cardLayout | async )?.chart?.rows">
-      <app-card title="Consumed vs. Imported">
-        <app-consumed-imported-chart></app-consumed-imported-chart>
+      <app-card title="Daily KPIs so far">
+        <app-daily-kpi-chart></app-daily-kpi-chart>
       </app-card>
     </mat-grid-tile>
   </mat-grid-list>

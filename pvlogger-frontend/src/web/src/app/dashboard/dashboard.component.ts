@@ -2,10 +2,7 @@ import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { map } from 'rxjs/operators';
 import { KpiValues } from '../model/kpi-values.model';
-import { ConsumedImportedChart } from './charts/consumed-imported-chart/consumed-imported-chart';
-import { ImportExportChartComponent } from './charts/import-export-chart/import-export-chart.component';
-import { ProducedConsumedChartComponent } from './charts/produced-consumed-chart/produced-consumed-chart.component';
-import { ImportOwnuseChartComponent } from './charts/import-ownuse-chart/import-ownuse-chart.component';
+import { DailyKpiChartComponent } from './charts/daily-kpi-chart/daily-kpi-chart.component';
 import { KpiChartComponent } from './charts/kpi-chart/kpi-chart.component';
 import { CardComponent } from './card/card.component';
 import { MiniCardComponent } from './mini-card/mini-card.component';
@@ -18,7 +15,7 @@ import { DatepickerComponent } from '../datepicker/datepicker.component';
     templateUrl: './dashboard.component.html',
     styleUrls: ['./dashboard.component.sass'],
     changeDetection: ChangeDetectionStrategy.Eager,
-    imports: [DatepickerComponent, MatGridList, MatGridTile, MiniCardComponent, CardComponent, KpiChartComponent, ImportOwnuseChartComponent, ProducedConsumedChartComponent, ImportExportChartComponent, ConsumedImportedChart, AsyncPipe]
+    imports: [DatepickerComponent, MatGridList, MatGridTile, MiniCardComponent, CardComponent, KpiChartComponent, DailyKpiChartComponent, AsyncPipe]
 })
 export class DashboardComponent {
   miniCardData: MiniCardModel[] = [
@@ -26,6 +23,7 @@ export class DashboardComponent {
     new MiniCardModel('Energieimport', 'pv-import', (value) => value.gridToHousePower, (value) => value.dailyEnergyImported),
     new MiniCardModel('PV Produktion', 'pv-prod', (value) => value.solarPower, (value) => value.dailyEnergyYield),
     new MiniCardModel('Energieexport', 'pv-export', (value) => value.solarToGridPower, (value) => value.dailyEnergyExported),
+    new MiniCardModel('Eigenverbrauch', 'pv-self', (value) => value.solarToHousePower, (value) => value.dailyEnergySelfCovered),
   ];
   /** Based on the screen size, switch from standard to one column per row */
   cardLayout = this.breakpointObserver.observe([Breakpoints.Handset, Breakpoints.Tablet]).pipe(
@@ -46,6 +44,7 @@ export class DashboardComponent {
     return {
       columns: 1,
       miniCard: {cols: 1, rows: 1},
+      lastMiniCard: {cols: 1, rows: 1},
       chart: {cols: 1, rows: 3},
       table: {cols: 1, rows: 4},
     };
@@ -55,6 +54,8 @@ export class DashboardComponent {
     return {
       columns: 2,
       miniCard: {cols: 1, rows: 1},
+      // Five cards in two columns: the last one takes the whole row.
+      lastMiniCard: {cols: 2, rows: 1},
       chart: {cols: 2, rows: 3},
       table: {cols: 2, rows: 3},
     };
@@ -62,10 +63,11 @@ export class DashboardComponent {
 
   private defaultLayout() {
     return {
-      columns: 4,
+      columns: 5,
       miniCard: {cols: 1, rows: 1},
-      chart: {cols: 2, rows: 3},
-      table: {cols: 4, rows: 3},
+      lastMiniCard: {cols: 1, rows: 1},
+      chart: {cols: 5, rows: 3},
+      table: {cols: 5, rows: 3},
     };
   }
 

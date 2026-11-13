@@ -19,7 +19,9 @@ export class KpiFetchServiceService implements OnDestroy {
   dailyexporteddata: number[][] = [[]];
   dailyimporteddata: number[][] = [[]];
   solarpowerdata: number[][] = [[]];
-  gridpowerdata: number[][] = [[]];
+  importedpowerdata: number[][] = [[]];
+  exportedpowerdata: number[][] = [[]];
+  selfconsumedpowerdata: number[][] = [[]];
   usedpowerdata: number[][] = [[]];
   private subject: WebSocketSubject<KpiValues> | undefined;
   private wsSubscription: Subscription | undefined;
@@ -116,7 +118,9 @@ export class KpiFetchServiceService implements OnDestroy {
     this.seenCreatedAt.clear();
     this.latest = undefined;
     this.solarpowerdata = [[]];
-    this.gridpowerdata = [[]];
+    this.importedpowerdata = [[]];
+    this.exportedpowerdata = [[]];
+    this.selfconsumedpowerdata = [[]];
     this.usedpowerdata = [[]];
     this.dailyexporteddata = [[]];
     this.dailyimporteddata = [[]];
@@ -137,7 +141,9 @@ export class KpiFetchServiceService implements OnDestroy {
     }
     this.seenCreatedAt.add(value.createdAt);
     this.solarpowerdata.push([value.createdAt, value.solarPower]);
-    this.gridpowerdata.push([value.createdAt, value.gridPower]);
+    this.importedpowerdata.push([value.createdAt, value.gridToHousePower]);
+    this.exportedpowerdata.push([value.createdAt, -value.solarToGridPower]);
+    this.selfconsumedpowerdata.push([value.createdAt, value.solarToHousePower]);
     this.usedpowerdata.push([value.createdAt, value.ownConsumption]);
     this.dailyexporteddata.push([value.createdAt, -value.dailyEnergyExported]);
     this.dailyimporteddata.push([value.createdAt, value.dailyEnergyImported]);
@@ -160,7 +166,9 @@ export class KpiFetchServiceService implements OnDestroy {
 
   private sortData() {
     this.solarpowerdata.sort((a, b) => this.compareArrays(a, b));
-    this.gridpowerdata.sort((a, b) => this.compareArrays(a, b));
+    this.importedpowerdata.sort((a, b) => this.compareArrays(a, b));
+    this.exportedpowerdata.sort((a, b) => this.compareArrays(a, b));
+    this.selfconsumedpowerdata.sort((a, b) => this.compareArrays(a, b));
     this.usedpowerdata.sort((a, b) => this.compareArrays(a, b));
     this.dailyexporteddata.sort((a, b) => this.compareArrays(a, b));
     this.dailyimporteddata.sort((a, b) => this.compareArrays(a, b));

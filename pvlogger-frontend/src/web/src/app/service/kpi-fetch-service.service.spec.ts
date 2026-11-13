@@ -15,14 +15,21 @@ describe('KpiFetchServiceService', () => {
 
   describe('pushData', () => {
     it('should populate all data arrays from a KPI value', () => {
-      const kpi = createKpi(1000, 5.0, -200, 3.0, 10.5, 2.0, 8.5, 12.0);
+      const kpi = {
+        ...createKpi(1000, 5.0, -200, 3.0, 10.5, 2.0, 8.5, 12.0),
+        gridToHousePower: 0.4,
+        solarToGridPower: 1.5,
+        solarToHousePower: 2.6,
+      };
 
       (service as any).pushData(kpi);
 
       // Each array starts with one empty entry [[]] plus the pushed entry
       expect(service.solarpowerdata.length).toBe(2);
       expect(service.solarpowerdata[1]).toEqual([1000, 5.0]);
-      expect(service.gridpowerdata[1]).toEqual([1000, -200]);
+      expect(service.importedpowerdata[1]).toEqual([1000, 0.4]);
+      expect(service.exportedpowerdata[1]).toEqual([1000, -1.5]); // negated
+      expect(service.selfconsumedpowerdata[1]).toEqual([1000, 2.6]);
       expect(service.usedpowerdata[1]).toEqual([1000, 3.0]);
       expect(service.dailyexporteddata[1]).toEqual([1000, -10.5]); // negated
       expect(service.dailyimporteddata[1]).toEqual([1000, 2.0]);
@@ -77,7 +84,9 @@ describe('KpiFetchServiceService', () => {
       service.clearData();
 
       expect(service.solarpowerdata).toEqual([[]]);
-      expect(service.gridpowerdata).toEqual([[]]);
+      expect(service.importedpowerdata).toEqual([[]]);
+      expect(service.exportedpowerdata).toEqual([[]]);
+      expect(service.selfconsumedpowerdata).toEqual([[]]);
       expect(service.usedpowerdata).toEqual([[]]);
       expect(service.dailyexporteddata).toEqual([[]]);
       expect(service.dailyimporteddata).toEqual([[]]);
