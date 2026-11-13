@@ -73,7 +73,7 @@ Database runs via Docker Compose in `pvlogger-database/`.
 - `pv-device-data-collector` — Nightly static/config register + device identifier collection
 - `pvlogger-fusionsolar` — FusionSolar API data integration (writes its own `fsdata` DB directly)
 - `pvlogger-fusionsolar-auth` — Refreshes the FusionSolar token into a K8s secret
-- `pvlogger-kpi-exporter` — Exports the latest KPIs as `pv_*` JSON: `serve` mode (token-protected endpoint) feeds the `relay` on the receiver's server; the old file-writing `export` CronJob still runs, but nothing syncs its files any more and it goes after about 2026-11-06 (ADR-0021, backlog 44)
+- `pvlogger-kpi-exporter` — Exports the latest KPIs as `pv_*` JSON: `serve` mode (token-protected endpoint) feeds the `relay` on the receiver's server. The file-writing `export` mode is still in the code and is still the default `KPI_EXPORTER_MODE`, but nothing deploys it: its CronJob has been removed (ADR-0021, backlog 44)
 - `pv-logger`, `pvlogger-shared-modbus` — Shared Go libraries (logging/env config; Modbus TCP client, KPI math + single KPI aggregation path, hard-coded KPI register set, REST clients, collector jobs, Pushgateway metrics)
 
 **Tools (not deployed):** `pvlogger-battery-simulator` (local CLI, see its README), `pvlogger-database` (local compose DB + migration history).
@@ -94,7 +94,7 @@ Kubernetes DNS handles inter-service discovery. The ingress (Traefik on the LAN,
 
 ### Data Storage
 
-PostgreSQL 18 (in production since 2026-10-25: the in-cluster CloudNativePG cluster `pvlogger-db`, TLS required; database roles are managed there and migrations only GRANT to them — ADR-0023) with Flyway migrations (in each service's `src/main/resources/db/migration/`; exception: `fsdata` uses tern migrations embedded in fusionsolar, run as the manual `MIGRATE` job — ADR-0022). Exposed ORM for Kotlin services, pgx/sqlc for Go services.
+PostgreSQL 18 (in production: the in-cluster CloudNativePG cluster `pvlogger-db`, TLS required; database roles are managed there and migrations only GRANT to them — ADR-0023) with Flyway migrations (in each service's `src/main/resources/db/migration/`; exception: `fsdata` uses tern migrations embedded in fusionsolar, run as the manual `MIGRATE` job — ADR-0022). Exposed ORM for Kotlin services, pgx/sqlc for Go services.
 
 ## Code Conventions
 
@@ -116,7 +116,7 @@ Configuration uses HOCON files with environment variable interpolation (`${ENV_V
 
 ### Go Service Structure
 
-Go services use a job dispatch pattern (switch on job name), read K8s secrets for credentials, and import shared code from `pv-logger` via workspace replace directives.
+Go services use a job dispatch pattern (switch on job name), read K8s secrets for credentials, and import shared code from `pv-logger` and `pvlogger-shared-modbus` through `replace` directives in their `go.mod` (all modules are listed in `go.work`).
 
 ### Key Technology Choices
 
