@@ -98,10 +98,21 @@ next release; it changes nothing for them.
 
     *Re-verified 2026-10-19:* unchanged — the Tiltfile still loads `pvlogger-infrastructure/...` manifests and has
     no `docker_build`.
+
+    *Scope extended 2026-11-14 (publication, items 51–53), no longer low priority:* Tilt becomes the robust dev
+    loop *and* the "try it" path of the public repo. Rebuild it on the Helm chart moved into this repo (item 52) with
+    a committed `values-dev.yaml`, `docker_build` for every service (live update where it pays off), dummy dev
+    credentials instead of the base64 secret scripts, an in-cluster Postgres, and a configurable k8s context (Rancher
+    Desktop, not hard-coded `docker-desktop`).
 30. **Refresh the outdated mock server** (low prio, ex open question 8): unused for a while and out of date. Update it
     so the Tilt environment (item 23)
     works again for larger changes, and consider building e2e tests around it — none exist today. It stays local-only,
     never production (open question 6).
+
+    *Scope extended 2026-11-14 (publication), no longer low priority:* synthetic physics instead of fixed values — a
+    PV production curve over the day with cloud noise, a house load profile, grid import/export derived so the KPIs
+    add up — plus a backfill job that writes ~30 days of synthetic history, so the day/history charts have data on
+    first start. Same data feeds Tilt testing (KPI and daily-delta paths) and the README screenshots (never real data).
 42. ⚪ **Drop the unused `modbus_response_data` indexes — a quarter after the CloudNativePG cutover** (split out of
     item 41 on 2026-10-23; the cutover it waited on ran 2026-10-25)
 
@@ -158,6 +169,29 @@ next release; it changes nothing for them.
     fast collector run. A clean promote closes the sockets, so this did not exercise `socketTimeout`. **Open until
     the next drain + power-off of the primary's node** (the case from 10:23): pass = no kubelet restart of the data
     accessor, at most one failed fast run, DB errors (`An I/O error occurred`, SQLState 08006) for at most ~60 s.
+
+51. 🟡 **Prepare the repo for publication on GitHub** (added 2026-11-14)
+
+    Decision: this repo goes public as the working repo ("public-first"); site specifics (hosts, network, site
+    identifiers, credentials) live only in the private infrastructure repo. To do before the first push:
+    placeholders (`<tailnet>`, `<db-host>`, `<lan-ip>`, `<site-lat>`/`<site-lon>`) instead of site values in docs;
+    untrack `.idea/`; Apache-2.0 `LICENSE` plus a `NOTICE` (Huawei register definitions attribution, trademarks);
+    root `README`; a `.gitleaks.toml` with pattern rules for site data (run in CI, item 53) and a local pre-commit +
+    commit-msg hook; a CLAUDE.md rule that this repo is public and takes placeholders only. The battery summary at
+    the root is replaced by an English "Why" in the battery simulator README.
+52. 🟡 **Move the Helm chart into this repo** (added 2026-11-14)
+
+    The chart (today in infrastructure `roles/pvlogger_helm_deploy/chart/`) is fully generic; move it to
+    `deploy/helm/pvlogger/` with a committed `values-dev.yaml`, so the chart is versioned with the code it deploys
+    and Tilt (item 23) tests exactly what goes live. Infrastructure keeps only the site values (`values.yaml.j2`,
+    1Password lookups) and the install task, and consumes the chart by release tag (OCI, item 53). Record as an
+    ADR here and in infrastructure.
+53. 🟡 **CI and releases on GitHub Actions** (added 2026-11-14)
+
+    On push/PR: Gradle build + tests (Testcontainers), Go build + lint, frontend build, gitleaks with the repo's
+    `.gitleaks.toml`. On a release tag (`<module>/vX.Y.Z`): multi-arch images (amd64 + arm64) and the chart as an
+    OCI artifact to GHCR. Infrastructure then pulls from GHCR through the private registry acting as a pull-through
+    cache. Replaces the manual build-and-push steps of the release flow; update CLAUDE.md and the release-flow docs.
 
 ## Done (resolved, superseded or moot)
 
