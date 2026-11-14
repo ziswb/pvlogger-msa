@@ -36,6 +36,9 @@ func (s *ReadRegisterValuesService) fetchRegisterValues(deviceId model.UByte, de
 		if err != nil {
 			return fmt.Errorf("error requesting register values: %w", err)
 		}
+		if err := response.CheckRegisterValuesPayload(registerDefinitions, pduBytes); err != nil {
+			return fmt.Errorf("not storing register values: %w", err)
+		}
 		valueResponse := response.NewRegisterValueResponseFromBytes(req.RegisterDefinitions, req.JobId, req.RequestId, req.RequestTime, *mbapHeader, pduBytes)
 		if logging.DebugEnabled() {
 			logging.Debug("register values received", "count", len(valueResponse.Values), "device_id", deviceId, "device_types", deviceTypes)

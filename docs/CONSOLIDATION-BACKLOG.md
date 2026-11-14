@@ -304,6 +304,11 @@ next release; it changes nothing for them.
 
     *Kept in Done 2026-10-19:* the `TcpHandler` hardening is optional and has no item of its own; open one if
     reconnect failures ever show up.
+    *Done 2026-11-14:* it showed up. The 13:02 full sweep failed: the read timed out, the retry on the same socket
+    read a late exception reply (`83 06`, server busy) as the answer, and the collector POSTed an empty value set
+    (HTTP 400). `TcpHandler.ExecuteRequest` now reconnects before every retry and returns a Modbus exception reply as
+    an `ExceptionError`, and the full collector stores a block only after `CheckRegisterValuesPayload` confirmed it
+    complete (full collector 0.8.5; fast and device collectors pick it up with their next release).
 13. ~~**Bootstrap differs per service**~~
 
     **Resolved 2026-08-14.** The shape is the data accessor's: `install(Koin)` (Ktor plugin, application-scoped — not

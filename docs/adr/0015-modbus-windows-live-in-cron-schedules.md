@@ -54,5 +54,11 @@ part of every day by design — the caveat ADR-0013 anticipated). The Grafana
 - Reconnect-between-attempts in `TcpHandler` remains an optional hardening,
   with a caveat from the test: two reconnecting clients ping-pong the line on
   a last-connect-wins device until the shorter job finishes.
+  *Implemented 2026-11-14* (full collector 0.8.5) after a full sweep failed:
+  the read timed out, the retry on the same socket read a late exception
+  reply and an empty value set was stored. Every retry now runs on a fresh
+  connection, and a Modbus exception reply is an error. The ping-pong caveat
+  stands only for accidental overlap: the schedules keep one client on the
+  line, and the retries are capped at three.
 - All CronJobs set `spec.timeZone` explicitly (Europe/Zurich), so the hour-0
   boundary is deliberate rather than inherited from the node timezone.

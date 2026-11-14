@@ -258,3 +258,29 @@ func TestReadRegisterValues_PayloadUnderflow(t *testing.T) {
 		t.Fatalf("expected 1 value (underflow on second), got %d", len(values))
 	}
 }
+
+func TestCheckRegisterValuesPayload(t *testing.T) {
+	defs := []model.RegisterDefinition{regDef("a", "U16", 1), regDef("b", "I32", 2)} // 6 bytes
+	full := append([]byte{0x03, 0x06}, append(u16Bytes(1), u32Bytes(2)...)...)
+	tests := []struct {
+		name    string
+		pdu     []byte
+		wantErr bool
+	}{
+		{"complete", full, false},
+		// The 2026-11-14 13:02 case: nothing but function code and one byte.
+		{"exception-sized", []byte{0x83, 0x06}, true},
+		{"empty", nil, true},
+		{"truncated", full[:5], true},
+		{"byte count mismatch", append([]byte{0x03, 0x04}, full[2:]...), true},
+		{"wrong function code", append([]byte{0x04}, full[1:]...), true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := CheckRegisterValuesPayload(defs, tt.pdu)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CheckRegisterValuesPayload() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}

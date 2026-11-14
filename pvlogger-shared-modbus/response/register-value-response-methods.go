@@ -3,6 +3,7 @@ package response
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"pv-logger/logging"
 	"pvlogger-shared-modbus/model"
 	"strings"
@@ -25,6 +26,27 @@ func NewRegisterValueResponseFromBytes(regDefs []model.RegisterDefinition, jobId
 	}
 }
 
+// CheckRegisterValuesPayload reports whether pdu is a complete read holding
+// registers response for regDefs: function code 0x03 and exactly the byte count
+// the definitions need. Anything else must not be stored; a partial or empty
+// value set would pass for a reading of the device.
+func CheckRegisterValuesPayload(regDefs []model.RegisterDefinition, pdu []byte) error {
+	expected := 0
+	for _, d := range regDefs {
+		expected += d.Quantity.Value * 2
+	}
+	if len(pdu) < 2 {
+		return fmt.Errorf("response PDU too short: %d bytes", len(pdu))
+	}
+	if pdu[0] != model.ReadRegisters.Value {
+		return fmt.Errorf("unexpected function code 0x%02x, want 0x%02x", pdu[0], model.ReadRegisters.Value)
+	}
+	if int(pdu[1]) != expected || len(pdu)-2 != expected {
+		return fmt.Errorf("incomplete register values: byte count %d, payload %d bytes, want %d", pdu[1], len(pdu)-2, expected)
+	}
+	return nil
+}
+
 // readRegisterValues decodes multiple register values from payload bytes.
 // Each value's concrete Go type is determined by its RegisterDefinition.Type.
 func readRegisterValues(registerDefinitions []model.RegisterDefinition, payload []byte) []*RegisterValue {
@@ -43,8 +65,7 @@ func readRegisterValues(registerDefinitions []model.RegisterDefinition, payload 
 			if logging.DebugEnabled() {
 				logging.Debug("register value", "register_address", registerDefinition.RegisterAddress, "value", v.Value)
 			}
-		}
-		if logging.DebugEnabled() {
+		} else if logging.DebugEnabled() {
 			logging.Debug("register value", "register_address", registerDefinition.RegisterAddress, "value", "<nil>")
 		}
 		offset += byteCount
