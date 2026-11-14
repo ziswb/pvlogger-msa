@@ -43,27 +43,27 @@ export class KpiChartComponent implements OnInit, OnDestroy {
     this.chartOptions = {
       series: [{
         type: 'area',
-        name: 'Consumed',
+        name: 'Consuming',
         data: this.kpiDataSource.getUsedPowerData(),
         color: '#f7a35c',
       }, {
         type: 'area',
-        name: 'Produced',
+        name: 'Producing',
         data: this.kpiDataSource.getSolarPowerData(),
         color: '#7bb5ec',
       }, {
         type: 'area',
-        name: 'Imported',
+        name: 'Importing',
         data: this.kpiDataSource.getImportedPowerData(),
         color: '#ff2600',
       }, {
         type: 'area',
-        name: 'Exported',
+        name: 'Exporting',
         data: this.kpiDataSource.getExportedPowerData(),
         color: '#00f942',
       }, {
         type: 'area',
-        name: 'Self-Consumed',
+        name: 'Self-Consuming',
         data: this.kpiDataSource.getSelfConsumedPowerData(),
         color: '#b388eb',
       }],

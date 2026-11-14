@@ -19,10 +19,10 @@ import { DatepickerComponent } from '../datepicker/datepicker.component';
 })
 export class DashboardComponent {
   miniCardData: MiniCardModel[] = [
-    new MiniCardModel('Energieverbrauch', 'pv-usage', (value) => value.ownConsumption, (value) => value.dailyEnergyConsumed),
-    new MiniCardModel('Energieimport', 'pv-import', (value) => value.gridToHousePower, (value) => value.dailyEnergyImported),
-    new MiniCardModel('PV Produktion', 'pv-prod', (value) => value.solarPower, (value) => value.dailyEnergyYield),
-    new MiniCardModel('Energieexport', 'pv-export', (value) => value.solarToGridPower, (value) => value.dailyEnergyExported),
+    new MiniCardModel('Verbrauch', 'pv-usage', (value) => value.ownConsumption, (value) => value.dailyEnergyConsumed),
+    new MiniCardModel('Import', 'pv-import', (value) => value.gridToHousePower, (value) => value.dailyEnergyImported),
+    new MiniCardModel('Produktion', 'pv-prod', (value) => value.solarPower, (value) => value.dailyEnergyYield),
+    new MiniCardModel('Export', 'pv-export', (value) => value.solarToGridPower, (value) => value.dailyEnergyExported),
     new MiniCardModel('Eigenverbrauch', 'pv-self', (value) => value.solarToHousePower, (value) => value.dailyEnergySelfCovered),
   ];
   /** Based on the screen size, switch from standard to one column per row */

@@ -25,7 +25,7 @@ describe('MiniCardComponent', () => {
   });
 
   it('should have default title', () => {
-    expect(component.title).toBe('PV Produktion');
+    expect(component.title).toBe('Produktion');
   });
 
   it('should clean up subscription on destroy', () => {

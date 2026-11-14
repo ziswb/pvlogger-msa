@@ -13,7 +13,7 @@ import { MatCard, MatCardHeader, MatCardTitle, MatCardContent, MatCardFooter, Ma
     imports: [MatCard, MatCardHeader, MatCardTitle, MatCardContent, MatCardFooter, MatCardSubtitle, DecimalPipe, DatePipe]
 })
 export class MiniCardComponent implements OnInit, OnDestroy {
-  @Input() title = 'PV Produktion';
+  @Input() title = 'Produktion';
   @Input() colorClass = 'pvprod';
   @Input() kwFn: (value: KpiValues) => number = () => 0.0;
   @Input() kWhFn: (value: KpiValues) => number = () => 0.0;
