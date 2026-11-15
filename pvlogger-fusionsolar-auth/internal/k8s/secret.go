@@ -35,45 +35,22 @@ func NewSecretManager(namespace string) (*SecretManager, error) {
 	}, nil
 }
 
+// UpdateToken writes the token into the existing secret. The chart creates
+// the secret (without data); the job may only get and update that one object,
+// so it never creates secrets (pvlogger-msa backlog 58).
 func (sm *SecretManager) UpdateToken(ctx context.Context, secretName, tokenKey, token string) error {
 	secretsClient := sm.client.CoreV1().Secrets(sm.namespace)
 
 	existing, err := secretsClient.Get(ctx, secretName, metav1.GetOptions{})
 	if err != nil {
 		if errors.IsNotFound(err) {
-			return sm.createSecret(ctx, secretName, tokenKey, token)
+			return fmt.Errorf("secret %s/%s not found: the Helm chart creates it with fusionsolarAuth.enabled: %w",
+				sm.namespace, secretName, err)
 		}
 		return fmt.Errorf("failed to get secret: %w", err)
 	}
 
 	return sm.updateSecret(ctx, existing, tokenKey, token)
-}
-
-func (sm *SecretManager) createSecret(ctx context.Context, secretName, tokenKey, token string) error {
-	logging.Info("creating new secret", "name", secretName, "namespace", sm.namespace)
-
-	secret := &corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      secretName,
-			Namespace: sm.namespace,
-			Labels: map[string]string{
-				"app":        "pvlogger-fusionsolar-auth",
-				"managed-by": "pvlogger-fusionsolar-auth",
-			},
-		},
-		Type: corev1.SecretTypeOpaque,
-		StringData: map[string]string{
-			tokenKey: token,
-		},
-	}
-
-	_, err := sm.client.CoreV1().Secrets(sm.namespace).Create(ctx, secret, metav1.CreateOptions{})
-	if err != nil {
-		return fmt.Errorf("failed to create secret: %w", err)
-	}
-
-	logging.Info("secret created successfully", "name", secretName)
-	return nil
 }
 
 func (sm *SecretManager) updateSecret(ctx context.Context, secret *corev1.Secret, tokenKey, token string) error {

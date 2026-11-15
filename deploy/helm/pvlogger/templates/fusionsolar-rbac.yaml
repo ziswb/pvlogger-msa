@@ -38,6 +38,25 @@ roleRef:
 {{- end }}
 ---
 {{- if .Values.fusionsolarAuth.enabled }}
+# The token store. The chart creates it without data so the auth job needs no
+# "create" on secrets (which cannot be limited to one name, and would let it
+# mint a token Secret for any service account here; backlog 58). The job
+# fills it; Helm never sets data, so upgrades leave the token alone, and
+# "keep" leaves it in place when the release or the toggle goes.
+# A secret the job created before this change must be adopted once
+# (meta.helm.sh/release-name and -namespace annotations,
+# app.kubernetes.io/managed-by=Helm label), or the upgrade refuses it.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: fusionsolar-token-secret
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: pvlogger-fusionsolar-auth
+  annotations:
+    helm.sh/resource-policy: keep
+type: Opaque
+---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -58,9 +77,6 @@ rules:
     resources: ["secrets"]
     resourceNames: ["fusionsolar-token-secret"]
     verbs: ["get", "update", "patch"]
-  - apiGroups: [""]
-    resources: ["secrets"]
-    verbs: ["create"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
