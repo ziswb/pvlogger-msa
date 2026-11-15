@@ -6,12 +6,22 @@ credentials) must not enter it, in files or in commit messages. Three layers:
 1. **Pattern rules** in [`.gitleaks.toml`](../.gitleaks.toml): gitleaks' default secret
    rules plus rules for site data (`home.arpa` hosts, tailnet names, private IPs, MAC
    addresses, coordinates, FusionSolar station codes, e-mail addresses). They run in CI
-   ([`.github/workflows/gitleaks.yml`](../.github/workflows/gitleaks.yml), full history)
-   and in the `pre-commit` hook.
-2. **Private exact-value blocklist**, checked by `pre-commit` (staged additions) and
-   `commit-msg`. The list itself is kept outside the repo. A hit names the placeholder
-   to use, never the value.
+   ([`.github/workflows/gitleaks.yml`](../.github/workflows/gitleaks.yml), full history
+   and commit messages) and in the hooks below.
+2. **Private exact-value blocklist**, checked by the hooks. The list itself is kept
+   outside the repo. A hit names the placeholder to use, never the value.
 3. **Agent rules** in [`CLAUDE.md`](../CLAUDE.md).
+
+The hooks run both checks:
+
+| Hook | Scans |
+|---|---|
+| `pre-commit` | the staged additions |
+| `commit-msg` | the message (not the `git commit -v` diff below the scissors) |
+| `pre-push` | every commit being pushed, patches and messages: also what the other hooks never saw (rebase, cherry-pick, `git am`, GUI clients) |
+
+CI runs after the push, when the content is already public, so `pre-push` is the
+last check that can still stop a leak.
 
 ## Setup (once per clone)
 
@@ -22,6 +32,8 @@ brew install gitleaks                                           # or see gitleak
 ```
 
 Without `pvlogger.blocklist` the blocklist check is skipped with a notice. If it is
-configured but the file is missing, the commit is refused. Placeholders in use:
+configured but the file is missing, the commit or push is refused, and so it is when
+gitleaks is missing (a maintainer clone must run both checks; elsewhere a missing
+gitleaks only prints a notice). Placeholders in use:
 `<db-host>`, `<central-host>`, `<registry-host>`, `<pvlogger-host>`, `<tailnet>`,
 `<lan-ip>`, `<lan-subnet>`, `<dongle-ip>`, `<site-lat>`, `<site-lon>`, `<station-code>`.

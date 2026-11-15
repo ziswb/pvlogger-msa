@@ -1,3 +1,14 @@
 #!/bin/sh
-# Leak guard for commit messages: private blocklist (see .githooks/README.md).
-exec python3 "$(dirname "$0")/blocklist-check.py" --message "$1"
+# Leak guard for commit messages (see .githooks/README.md): pattern rules +
+# private blocklist. gitleaks' history scan covers patches, not messages.
+set -e
+hooks_dir=$(dirname "$0")
+. "$hooks_dir/lib.sh"
+
+if have_gitleaks commit-msg; then
+  # The message only: no comments, nothing below `git commit -v`'s scissors.
+  sed -e '/^# -\{24\} >8 -\{24\}$/,$d' -e '/^#/d' "$1" |
+    gitleaks stdin --redact=100 --no-banner --log-level warn --config .gitleaks.toml
+fi
+
+exec python3 "$hooks_dir/blocklist-check.py" --message "$1"

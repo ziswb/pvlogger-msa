@@ -10,3 +10,8 @@ gradle_home
 **/.DS_Store
 pvlogger-database/docker/dumps
 pvlogger-database/docker/postgres*-data
+# Local settings and site values must not reach a build context (public repo, CLAUDE.md).
+.claude
+**/*.env
+**/.env*
+**/*.iml

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Refuse a commit whose staged additions or message contain a blocklisted value.
+"""Refuse a commit or push whose additions or messages contain a blocklisted value.
 
 The blocklist is private (site hosts, network, location, accounts) and lives outside
 this public repo. Point git at it once per clone:
@@ -7,11 +7,14 @@ this public repo. Point git at it once per clone:
     git config pvlogger.blocklist /path/to/blocklist.txt
 
 Format (same as `git filter-repo --replace-text`): one entry per line,
-`literal==>replacement` or `regex:<python regex>==>replacement`; `#` starts a comment.
-Matches are reported with the suggested placeholder, never with the value itself.
+`literal`, `regex:<python regex>` or `glob:<pattern>`, each optionally followed by
+`==>replacement` (default `***REMOVED***`); `#` starts a comment. Literals and globs
+match case-insensitively. Matches are reported with the suggested placeholder,
+never with the value itself.
 
-Usage: blocklist-check.py --staged | --message <file>
+Usage: blocklist-check.py --staged | --message <file> | --range <git rev range...>
 """
+import fnmatch
 import os
 import re
 import subprocess
@@ -30,42 +33,74 @@ def load(path):
     with open(path, encoding="utf-8") as fh:
         for raw in fh:
             line = raw.rstrip("\n")
-            if not line.strip() or line.lstrip().startswith("#") or "==>" not in line:
+            if not line.strip() or line.lstrip().startswith("#"):
                 continue
-            pattern, replacement = line.rsplit("==>", 1)
+            pattern, replacement = line.rsplit("==>", 1) if "==>" in line else (line, "***REMOVED***")
             if pattern.startswith("regex:"):
                 rules.append((re.compile(pattern[len("regex:"):]), replacement))
+            elif pattern.startswith("glob:"):
+                # fnmatch.translate anchors the whole string; strip that to search.
+                rx = re.sub(r"^\(\?s:(.*)\)\\[zZ]$", r"(?s:\1)", fnmatch.translate(pattern[len("glob:"):]))
+                rules.append((re.compile(rx, re.IGNORECASE), replacement))
             else:
                 rules.append((re.compile(re.escape(pattern), re.IGNORECASE), replacement))
     return rules
 
 
-def staged_additions():
+def diff_additions(args):
+    """Added lines of `git diff <args>`, with their file and line number."""
     diff = subprocess.run(
-        ["git", "diff", "--cached", "-U0", "--no-color", "--no-ext-diff", "--diff-filter=ACMR"],
-        capture_output=True, text=True, errors="replace",
+        ["git", "diff", "-U0", "--no-color", "--no-ext-diff", "--diff-filter=ACMR", *args],
+        capture_output=True, text=True, errors="replace", check=True,
     ).stdout
-    path, lineno = "?", 0
+    path, lineno, in_header = "?", 0, False
     for line in diff.splitlines():
-        if line.startswith("+++ "):
+        if line.startswith("diff --git "):
+            in_header = True
+        elif in_header and line.startswith("+++ "):
             path = line[6:] if line.startswith("+++ b/") else line[4:]
         elif line.startswith("@@"):
+            in_header = False
             m = re.search(r"\+(\d+)", line)
             lineno = int(m.group(1)) if m else 0
-        elif line.startswith("+"):
+        elif not in_header and line.startswith("+"):
+            # A content line may itself start with "++"; only the header's "+++" is a path.
             yield path, lineno, line[1:]
             lineno += 1
+
+
+SCISSORS = "# ------------------------ >8 ------------------------"
 
 
 def message_lines(path):
     with open(path, encoding="utf-8", errors="replace") as fh:
         for i, line in enumerate(fh, 1):
+            if line.rstrip("\n") == SCISSORS:  # `git commit -v`: the diff below is not the message
+                break
             if not line.startswith("#"):
                 yield "commit message", i, line
 
 
+def range_lines(rev_args):
+    """Added lines and commit messages of every commit in the range (pre-push)."""
+    commits = subprocess.run(
+        ["git", "rev-list", "--reverse", *rev_args], capture_output=True, text=True, check=True,
+    ).stdout.split()
+    for sha in commits:
+        message = subprocess.run(
+            ["git", "log", "-1", "--format=%B", sha], capture_output=True, text=True, errors="replace", check=True,
+        ).stdout
+        for i, line in enumerate(message.splitlines(), 1):
+            yield f"message of {sha[:10]}", i, line
+        parent = [f"{sha}^"] if subprocess.run(
+            ["git", "rev-parse", "--verify", "--quiet", f"{sha}^"], capture_output=True,
+        ).returncode == 0 else ["4b825dc642cb6eb9a060e54bf8d69288fbee4904"]  # the empty tree
+        for path, lineno, text in diff_additions([*parent, sha]):
+            yield f"{sha[:10]} {path}", lineno, text
+
+
 def main():
-    if len(sys.argv) < 2 or sys.argv[1] not in ("--staged", "--message"):
+    if len(sys.argv) < 2 or sys.argv[1] not in ("--staged", "--message", "--range"):
         print(__doc__, file=sys.stderr)
         return 2
     path = blocklist_path()
@@ -73,10 +108,16 @@ def main():
         print("blocklist-check: pvlogger.blocklist not configured, skipping (see .githooks/README.md)", file=sys.stderr)
         return 0
     if not os.path.isfile(path):
-        print(f"blocklist-check: blocklist {path} not found; refusing to commit unchecked", file=sys.stderr)
+        print(f"blocklist-check: blocklist {path} not found; refusing to go on unchecked", file=sys.stderr)
         return 1
     rules = load(path)
-    lines = staged_additions() if sys.argv[1] == "--staged" else message_lines(sys.argv[2])
+    mode = sys.argv[1]
+    if mode == "--staged":
+        lines = diff_additions(["--cached"])
+    elif mode == "--message":
+        lines = message_lines(sys.argv[2])
+    else:
+        lines = range_lines(sys.argv[2:])
     hits = []
     for where, lineno, text in lines:
         for rx, replacement in rules:
@@ -84,7 +125,7 @@ def main():
                 hits.append(f"  {where}:{lineno}: blocklisted value, use {replacement}")
                 break
     if hits:
-        print("blocklist-check: site-specific values in this commit (repo is public, placeholders only):", file=sys.stderr)
+        print("blocklist-check: site-specific values (repo is public, placeholders only):", file=sys.stderr)
         print("\n".join(hits), file=sys.stderr)
         return 1
     return 0

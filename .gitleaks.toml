@@ -18,15 +18,15 @@ keywords = ["tskey-"]
 [[rules]]
 id = "tailnet-name"
 description = "Tailnet DNS name (use <tailnet>.ts.net)"
-regex = '''\b[a-z0-9-]+\.ts\.net\b'''
+regex = '''(?i)\b[a-z0-9-]+\.ts\.net\b'''
 keywords = [".ts.net"]
   [[rules.allowlists]]
-  regexes = ['''^example\.ts\.net$''']
+  regexes = ['''(?i)^example\.ts\.net$''']
 
 [[rules]]
 id = "home-arpa-host"
 description = "LAN host name under home.arpa (use a placeholder such as <db-host>)"
-regex = '''\b[a-z0-9-]+\.home\.arpa\b'''
+regex = '''(?i)\b[a-z0-9-]+\.home\.arpa\b'''
 keywords = ["home.arpa"]
 
 [[rules]]
@@ -40,8 +40,14 @@ keywords = ["192.168.", "10.", "172.", "100."]
 
 [[rules]]
 id = "mac-address"
-description = "MAC address"
-regex = '''\b(?:[0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}\b'''
+description = "MAC address (colon or hyphen separated)"
+regex = '''\b(?:(?:[0-9A-Fa-f]{2}:){5}|(?:[0-9A-Fa-f]{2}-){5})[0-9A-Fa-f]{2}\b'''
+
+[[rules]]
+id = "tailscale-ipv6"
+description = "Tailscale IPv6 address (fd7a:115c:a1e0::/48; use <lan-ip>)"
+regex = '''(?i)\bfd7a:115c:a1e0:[0-9a-f:]+'''
+keywords = ["fd7a:115c:a1e0"]
 
 [[rules]]
 id = "geo-coordinates"

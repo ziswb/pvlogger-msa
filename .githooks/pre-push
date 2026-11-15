@@ -1,0 +1,29 @@
+#!/bin/sh
+# Leak guard, last local layer (see .githooks/README.md): scans every commit
+# about to be pushed, patches and messages, before it becomes public. Catches
+# what pre-commit/commit-msg never saw (rebase, cherry-pick, am, GUI clients).
+set -e
+hooks_dir=$(dirname "$0")
+. "$hooks_dir/lib.sh"
+remote=$1
+zero=0000000000000000000000000000000000000000
+
+check=0
+have_gitleaks pre-push && check=1
+
+# shellcheck disable=SC2086 # $range is several rev-list arguments, split on purpose
+while read -r _ local_sha _ remote_sha; do
+  [ "$local_sha" = "$zero" ] && continue # a deletion pushes nothing
+  if [ "$remote_sha" = "$zero" ]; then
+    range="$local_sha --not --remotes=$remote" # new ref: what the remote lacks
+  else
+    range="$remote_sha..$local_sha"
+  fi
+  [ -z "$(git rev-list $range)" ] && continue
+  if [ "$check" = 1 ]; then
+    gitleaks git --log-opts="$range" --redact=100 --no-banner --log-level warn --config .gitleaks.toml
+    git log --format=%B $range |
+      gitleaks stdin --redact=100 --no-banner --log-level warn --config .gitleaks.toml
+  fi
+  python3 "$hooks_dir/blocklist-check.py" --range $range
+done

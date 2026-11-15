@@ -8,6 +8,8 @@ on:
     branches: [main]
     paths: &paths
       - "deploy/**"
+      - "*/docker/Dockerfile"
+      - "scripts/check-chart-tags.sh"
       - ".github/workflows/chart.yml"
   pull_request:
     paths: *paths
@@ -17,7 +19,8 @@ permissions:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Superseded PR runs only: every commit pushed to a branch gets its own result.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   CHART: deploy/helm/pvlogger
@@ -47,8 +50,8 @@ jobs:
           tar -xzf "$RUNNER_TEMP/$tarball" -C "$RUNNER_TEMP" kubeconform
       - name: Lint
         run: |
-          helm lint "$CHART" -f deploy/dev/values-dev.yaml
-          helm lint "$CHART" -f deploy/ci/values-all-enabled.yaml
+          helm lint --strict "$CHART" -f deploy/dev/values-dev.yaml
+          helm lint --strict "$CHART" -f deploy/ci/values-all-enabled.yaml
       # The defaults alone must fail on the required site values, with a message.
       - name: Defaults refuse to render
         run: |
@@ -65,6 +68,24 @@ jobs:
               | "$RUNNER_TEMP/kubeconform" -strict -summary \
                   -skip Certificate,IngressRoute
           done
+      # The Tilt-only manifests outside the chart, with their placeholders filled.
+      - name: Validate dev manifests
+        run: |
+          for f in deploy/dev/postgres.yaml deploy/dev/backfill-job.yaml; do
+            sed -e 's/__NAMESPACE__/pvlogger/g' -e 's|__TIMEZONE__|Etc/UTC|g' "$f"
+            echo "---"
+          done | "$RUNNER_TEMP/kubeconform" -strict -summary
+      # Dev-only settings must not render without the mock server (ADR-0025).
+      - name: Dev settings need the mock
+        run: |
+          if helm template t "$CHART" -f deploy/dev/values-dev.yaml \
+               --set modbusMockServer.enabled=false >/dev/null 2>&1; then
+            echo "::error::devAcceptClientTimestamps rendered without modbusMockServer"
+            exit 1
+          fi
+      # ADR-0024: the chart pins exactly the versions the Dockerfiles build.
+      - name: Image tags match the Dockerfiles
+        run: scripts/check-chart-tags.sh
       # A chart change since the last chart/v* tag needs a higher Chart.yaml version
       # (ADR-0024). Before the first tag there is nothing to compare with.
       - name: Chart version bumped
