@@ -1,7 +1,7 @@
 BIN_PATH := ./build
 LINUX_BUILD_OPTIONS := CGO_ENABLED=0 GOARCH=arm64 GOOS=linux
 MACOS_BUILD_OPTIONS := CGO_ENABLED=0 GOARCH=arm64 GOOS=darwin
-COMMANDS := mock-server
+COMMANDS := mock-server backfill
 
 .PHONY: build clean lint prod test
 

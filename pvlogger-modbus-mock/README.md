@@ -45,6 +45,30 @@ always gets a complete answer. Other function codes get exception 0x01.
 | `DONGLE_DEVICE_ID` | `100` | Same setting as the collectors |
 | `TZ` | container zone | The plant's local time (day curve, daily-yield reset) |
 
+## The history backfill (`cmd/backfill`, `internal/backfill`)
+
+Writes the plant's last days into the data accessor, so the dashboard has a
+history on first start. For every minute it stores the raw KPI row the fast
+collector would have stored and the KPI row the shared aggregation would have
+computed (shared `kpis` code; today's energy as the counters' difference to
+local midnight), both dated that minute. Mock server and backfill report the
+same reading at register resolution (`mock.ReadingOf`), so the switch from
+history to live data is seamless.
+
+The data accessor must run with `DEV_ACCEPT_CLIENT_TIMESTAMPS=true` (chart:
+`dataAccessor.devAcceptClientTimestamps`), otherwise the raw rows are dated on
+arrival. A day that already has KPI rows is filled only before its first row:
+a rerun stores nothing, and the history ends where live data begins.
+
+| Variable | Default | |
+|---|---|---|
+| `BACKFILL_DAYS` | `30` | Counted back from today's local midnight |
+| `DA_HOST`, `DA_PORT`, `DA_PROTOCOL` | `localhost`, `8083`, `http` | The data accessor, as for the collectors |
+| `TZ` | container zone | Same zone as the mock server and the data accessor |
+
+One image holds both commands: the entrypoint is `/mock-server`, a Job runs
+`/backfill`.
+
 ```bash
-make test lint build      # build/mock-server (linux) and build/mock-server-darwin
+make test lint build      # build/<command> (linux) and build/<command>-darwin
 ```

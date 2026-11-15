@@ -52,6 +52,7 @@ func TestDataAccessorPathsMatchKotlinConstants(t *testing.T) {
 		{"DATA_ACCESSOR_STORE_RAW_KPI_REGISTER_VALUES", StoreRawKpiRegisterValuesPath},
 		{"DATA_ACCESSOR_READ_LATEST_REGISTER_VALUE_PATH", ReadLatestRegisterValuePath},
 		{"DATA_ACCESSOR_READ_METER_ENERGY_TODAY", ReadMeterEnergyTodayPath},
+		{"DATA_ACCESSOR_READ_DATA_TODAY_VALUES_PATH", ReadDayDataPath},
 	}
 	for _, c := range checks {
 		kotlinValue, ok := kotlin[c.kotlinName]

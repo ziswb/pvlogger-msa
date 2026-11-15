@@ -14,6 +14,7 @@ const (
 	StoreRawKpiRegisterValuesPath = "store-raw-kpi-register-values"
 	ReadLatestRegisterValuePath   = "read-latest-register-value"
 	ReadMeterEnergyTodayPath      = "meter-energy-today"
+	ReadDayDataPath               = "daydata"
 )
 
 // DataAccessorConfig holds where the data accessor runs — the only part of

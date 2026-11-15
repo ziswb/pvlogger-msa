@@ -33,11 +33,8 @@ func (t table) str(addr uint16, quantity int, v string) {
 // registers returns the register table of unit for the snapshot s.
 func (s *Server) registers(unit uint8, snap plant.Snapshot) table {
 	t := table{}
-	pvW := math.Round(snap.PVPowerW)
-	loadW := math.Round(snap.LoadPowerW)
-	// Grid as the difference of the rounded values, so that
-	// active power + grid power = load holds exactly, as on the real dongle.
-	gridImportW := loadW - pvW
+	r := ReadingOf(snap)
+	pvW, loadW, gridImportW := r.PVW, r.LoadW, r.GridImportW
 	if unit == s.dongleUnit {
 		t.u32(37498, uint32(math.Round(dcPowerW(pvW))))
 		t.u32(37500, uint32(loadW))
@@ -48,11 +45,11 @@ func (s *Server) registers(unit uint8, snap plant.Snapshot) table {
 	}
 	identity(t, s.plant.PeakPowerW())
 	inverter(t, pvW)
-	t.u32(32106, centi(snap.YieldTotalKWh))
-	t.u32(32114, centi(snap.YieldTodayKWh))
+	t.u32(32106, centi(r.YieldTotalKWh))
+	t.u32(32114, centi(r.YieldTodayKWh))
 	meter(t, -gridImportW)
-	t.u32(37119, centi(snap.ExportedTotalKWh))
-	t.u32(37121, centi(snap.ImportedTotalKWh))
+	t.u32(37119, centi(r.ExportedTotalKWh))
+	t.u32(37121, centi(r.ImportedTotalKWh))
 	return t
 }
 
