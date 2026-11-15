@@ -221,6 +221,23 @@ next release; it changes nothing for them.
     - gitleaks on PRs reads the PR's own `.gitleaks.toml`: use the base branch's (or CODEOWNERS on it).
     - Tilt: its own namespace (`pvlogger-dev`), so a mistaken `--k8s-context` cannot overwrite a `pvlogger` release.
 
+59. 🟡 **Database clients survive the policy race, so the DB policy can drop its pod-CIDR rule** (added 2026-11-16,
+    follows security finding 60 / item 57)
+
+    The infrastructure DB policy (`pvlogger_db/templates/04-networkpolicy.yaml.j2`) admits 5432 from the whole pod
+    CIDR, i.e. from every pod in the cluster (logins still need a password and TLS). It exists for the race item 57
+    hit on the app ports: kube-router admits a new pod to `allow-intra-namespace` only a moment after it starts, and
+    the db-backup CronJob was refused at the 2026-10-25 cutover. Clients that connect at pod start without a retry:
+    fusionsolar (`internal/database/connection.go`, one `pgx.Connect`) and the chart's db-backup script
+    (`pg_isready` on the standby, then `pg_dump`). The data accessor and the masterdata server already retry in
+    `DatabaseFactory`.
+
+    To do: fusionsolar retries a refused connect (as `pvlogger-shared-modbus/httpclient`); the backup script waits
+    while the primary answers "no response" before it picks a host. Release, deploy, then in infrastructure drop the
+    pod-CIDR rule and `pvlogger_db_pod_cidr` (the namespace's pods keep reaching 5432 through
+    `allow-intra-namespace`). Verify: a pod in `default` cannot connect to 5432; a fusionsolar run and a db-backup
+    run succeed.
+
 ## Done (resolved, superseded or moot)
 
 1. ~~**masterdata-server prod config DB-name mismatch**~~

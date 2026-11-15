@@ -111,6 +111,19 @@ data:
         echo "-> Finished deleting old backups for database '${DB}'"
     }
 
+    # A new pod reaches the database only once kube-router has added its IP to
+    # the namespace's allow-intra-namespace policy, a moment after it starts
+    # (backlog 59). Until then pg_isready reports "no response" (exit 2); wait
+    # up to ~10 s for that to pass, so neither the standby check below nor the
+    # first pg_dump sees the refusal. Any other answer ends the wait.
+    for _ in $(seq 1 10); do
+        rc=0
+        pg_isready -q -t 2 -U "${POSTGRESQL_USERNAME}" -d postgres -h "${POSTGRESQL_HOST}" -p "${POSTGRESQL_PORT}" || rc=$?
+        [ "${rc}" -ne 2 ] && break
+        echo "-> ${POSTGRESQL_HOST} not reachable yet, waiting..."
+        sleep 1
+    done
+
     # Dump from a standby (values dbBackup.host, e.g. a CloudNativePG -ro service): the dump
     # reads the whole database from the instance's disk, which etcd shares, and
     # on the primary's node that stalled etcd (2026-10-31). Fall back to the
