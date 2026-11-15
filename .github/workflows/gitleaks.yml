@@ -36,11 +36,18 @@ jobs:
             "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/$tarball"
           echo "${GITLEAKS_SHA256}  $RUNNER_TEMP/$tarball" | sha256sum -c -
           tar -xzf "$RUNNER_TEMP/$tarball" -C "$RUNNER_TEMP" gitleaks
+      # The rules come from the default branch, not from the commit under scan:
+      # a branch or PR must not be able to weaken the rules it is checked with
+      # (backlog 58). A change to .gitleaks.toml takes effect once it is on main.
+      - name: Rules from the default branch
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: git show "origin/${DEFAULT_BRANCH}:.gitleaks.toml" > "$RUNNER_TEMP/gitleaks.toml"
       - name: Scan history
         run: |
-          "$RUNNER_TEMP/gitleaks" git --config .gitleaks.toml --redact=100 --no-banner --verbose
+          "$RUNNER_TEMP/gitleaks" git --config "$RUNNER_TEMP/gitleaks.toml" --redact=100 --no-banner --verbose
       # `gitleaks git` scans patches only; commit messages go through stdin.
       - name: Scan commit messages
         run: |
           git log --all --format=%B \
-            | "$RUNNER_TEMP/gitleaks" stdin --config .gitleaks.toml --redact=100 --no-banner --verbose
+            | "$RUNNER_TEMP/gitleaks" stdin --config "$RUNNER_TEMP/gitleaks.toml" --redact=100 --no-banner --verbose

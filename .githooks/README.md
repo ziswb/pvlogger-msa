@@ -7,7 +7,8 @@ credentials) must not enter it, in files or in commit messages. Three layers:
    rules plus rules for site data (`home.arpa` hosts, tailnet names, private IPs, MAC
    addresses, coordinates, FusionSolar station codes, e-mail addresses). They run in CI
    ([`.github/workflows/gitleaks.yml`](../.github/workflows/gitleaks.yml), full history
-   and commit messages) and in the hooks below.
+   and commit messages, always with the rules from `main`, so a branch cannot weaken its
+   own scan) and in the hooks below.
 2. **Private exact-value blocklist**, checked by the hooks. The list itself is kept
    outside the repo. A hit names the placeholder to use, never the value.
 3. **Agent rules** in [`CLAUDE.md`](../CLAUDE.md).
