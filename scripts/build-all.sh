@@ -166,7 +166,7 @@ PV_LOGGER_MODULES=(
   "pvlogger-masterdata-server"
   "pvlogger-modbus-data-accessor"
   "pv-device-data-collector"
-  "pvlogger-modbus-mock-server"
+  "pvlogger-modbus-mock"
 )
 
 echo "cleaning build logs"

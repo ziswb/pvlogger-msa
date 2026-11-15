@@ -98,9 +98,8 @@ themselves pragmatically — default to a job/endpoint in an existing service
 | Service | Responsibility |
 |---|---|
 | `pvlogger-modbus-data-accessor` | **The central data service.** Owns the `pvdata` DB (register values, raw KPI registers, house KPIs). All collectors write through it; frontend and exporter read from it. REST paths are defined in `pvlogger-shared-rest`. |
-| `pvlogger-masterdata-server` | Owns the `pvmasterdata` DB. Imports Huawei's register definitions from CSVs; project-curated definitions (the DONGLE unit-100 block) ship as Flyway data migrations instead (ADR-0017). Serves the catalog to collectors and the mock server. |
+| `pvlogger-masterdata-server` | Owns the `pvmasterdata` DB. Imports Huawei's register definitions from CSVs; project-curated definitions (the DONGLE unit-100 block) ship as Flyway data migrations instead (ADR-0017). Serves the catalog to the collectors. |
 | `pvlogger-frontend` | Serves the prebuilt Angular SPA, proxies the latest KPI as the `/livedata` WebSocket (one shared 60 s poll for all sessions, ADR-0019). History data goes **directly** SPA → data accessor (via the ingress, which passes only `/v1/daydata` of the data accessor — ADR-0020). |
-| `pvlogger-modbus-mock-server` | Emulates a Modbus TCP device (raw TCP, not HTTP) using real register definitions from the masterdata server. **Local development only — never deployed to production** (confirmed 2026-08-07); the Helm chart's mock-server template exists solely for local use. |
 
 ### Go CronJob collectors (short-lived batch runs)
 
@@ -133,6 +132,11 @@ Purchase deferred as uneconomical (2026); the CLI stays as the standing
 re-evaluation tool (ADR-0006).
 `pvlogger-database/` — local Docker Compose Postgres + historical migration
 runbooks; not a service.
+`pvlogger-modbus-mock` — the **synthetic plant**: one deterministic model of a
+generic 10 kWp plant and household, served over Modbus TCP in place of the
+SmartDongle so the real collectors run against it. **Local development only —
+never deployed to production** (confirmed 2026-08-07); the chart's mock template
+is off by default (ADR-0025).
 
 ## Data flow
 
@@ -141,7 +145,7 @@ flowchart LR
     MB[Inverters + Meter\nModbus TCP] -->|poll| FAST[fast collector]
     MB -->|poll| FULL[full collector*]
     MB -->|nightly| DEV[device collector]
-    MD[masterdata-server] -->|register defs| FULL & DEV & MOCK[mock server]
+    MD[masterdata-server] -->|register defs| FULL & DEV
     FAST & FULL & DEV -->|REST| DA[modbus-data-accessor]
     FS[FusionSolar API] --> FSC[fusionsolar jobs] -->|SQL| FSDB[(fsdata)]
     DA --> PVDB[(pvdata)]
@@ -196,6 +200,6 @@ All three are dumped nightly by the db-backup CronJob (infrastructure repo). A f
   **intended environment for developing larger changes** (confirmed
   2026-08-07) — but it has rotted: the Tiltfile references a
   `pvlogger-infrastructure/` directory that no longer exists and has no
-  `docker_build` steps, and the mock server is outdated. Repair is backlog
-  item 23 (fix, don't remove), the mock-server refresh is item 30 — both low
+  `docker_build` steps. Repair is backlog item 23 (fix, don't remove), the
+  synthetic plant and its mock server are item 30 (ADR-0025) — both low
   priority; verify before relying on the flow.

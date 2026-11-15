@@ -91,7 +91,6 @@ Database runs via Docker Compose in `pvlogger-database/`.
 - `pvlogger-frontend` — Angular 22 SPA (Angular Material + Highcharts) served by Ktor (port 8085); also serves the `/livedata` WebSocket
 - `pvlogger-masterdata-server` — Modbus register master data CRUD/import service (port 8081)
 - `pvlogger-modbus-data-accessor` — Central data store/query service for register values and KPIs (port 8083)
-- `pvlogger-modbus-mock-server` — Mock Modbus TCP device for local testing (raw TCP port 8502)
 - `pvlogger-shared-model`, `pvlogger-shared-rest`, `pvlogger-shared-database`, `pvlogger-shared-ktor` — Shared Kotlin libraries (Modbus domain model; REST path constants + KPI DTO; Hikari/Flyway bootstrap; Ktor service bootstrap: CallLogging/CallId, Prometheus `/metrics`, StatusPages, shared `PvHttpClient`, `closeOnShutdown` — ADR-0018)
 
 **Go Services (CronJob-based):**
@@ -101,6 +100,7 @@ Database runs via Docker Compose in `pvlogger-database/`.
 - `pvlogger-fusionsolar` — FusionSolar API data integration (writes its own `fsdata` DB directly)
 - `pvlogger-fusionsolar-auth` — Refreshes the FusionSolar token into a K8s secret
 - `pvlogger-kpi-exporter` — Exports the latest KPIs as `pv_*` JSON: `serve` mode (token-protected endpoint) feeds the `relay` on the receiver's server. The file-writing `export` mode is still in the code and is still the default `KPI_EXPORTER_MODE`, but nothing deploys it: its CronJob has been removed (ADR-0021, backlog 44)
+- `pvlogger-modbus-mock` — Local development only: the deterministic synthetic plant served over Modbus TCP in place of the SmartDongle (port 8502, Service port 502; ADR-0025)
 - `pv-logger`, `pvlogger-shared-modbus` — Shared Go libraries (logging/env config; Modbus TCP client, KPI math + single KPI aggregation path, hard-coded KPI register set, REST clients, collector jobs, Pushgateway metrics)
 
 **Tools (not deployed):** `pvlogger-battery-simulator` (local CLI, see its README), `pvlogger-database` (local compose DB + migration history).

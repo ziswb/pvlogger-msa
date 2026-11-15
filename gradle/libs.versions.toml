@@ -13,12 +13,10 @@ loggingVersion = "8.0.7"
 postgresVersion = "42.7.14"
 prometheusVersion = "1.17.2"
 testcontainersVersion = "2.0.5"
-cacheVersion = "0.14.0"
 junitVersion = "6.1.3"
 
 [libraries]
 commons-csv = { module = "org.apache.commons:commons-csv", version.ref = "commonsCsvVersion" }
-reactivecircus-cache = { module = "io.github.reactivecircus.cache4k:cache4k", version.ref = "cacheVersion" }
 
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposedVersion" }
 exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposedVersion" }
@@ -60,7 +58,6 @@ ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktorV
 ktor-server-status-pages = { module = "io.ktor:ktor-server-status-pages", version.ref = "ktorVersion" }
 ktor-server-webjars = { module = "io.ktor:ktor-server-webjars", version.ref = "ktorVersion" }
 ktor-server-websockets = { module = "io.ktor:ktor-server-websockets", version.ref = "ktorVersion" }
-ktor-network = { module = "io.ktor:ktor-network", version.ref = "ktorVersion" }
 
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logbackVersion" }
 micrometer-registry-prometheus = { module = "io.micrometer:micrometer-registry-prometheus", version.ref = "prometheusVersion" }
