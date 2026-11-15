@@ -50,6 +50,7 @@ modbus:
   connectionSleepMs: "1200"
   meterDeviceIds: "1"
   inverterDeviceIds: "1"
+  # The SmartDongle's own unit, serving the aggregate live-power block (backlog 33).
   dongleDeviceId: "100"
 
 # Prometheus Pushgateway the fast and full collectors push their run metrics to.
@@ -81,6 +82,13 @@ dataAccessor:
     tag: "3.13.1"
   replicas: 1
   port: 8083
+  # CPU limit far above the request on purpose: its load is bursty. With a
+  # 100m limit and the default 100 ms CFS period it got 10 ms of CPU per
+  # period and was throttled in 80% of them (measured 2026-08-26), adding
+  # 100-200 ms to reads the database answers in under 1 ms, while its average
+  # use stayed at ~19m. Memory stays requests == limits. masterdataServer and
+  # frontend keep requests == limits (Guaranteed QoS): they throttle in well
+  # under 1% of periods.
   resources:
     limits:
       cpu: 1000m
@@ -279,6 +287,9 @@ dbBackup:
   # Pod affinity for the job. Empty: anywhere.
   affinity: {}
   uid: 1000
+  # 2Gi memory: the job was OOM-killed at 25Mi and 512Mi against a
+  # CloudNativePG cluster (anonymous memory past 260 MB during fsdata, cause
+  # not found yet). 3 CPUs: pg_dump plus zstd -T0 shared one core before.
   persistence:
     # Site values: the NFS export that receives the dumps.
     nfsServer: ""

@@ -204,6 +204,13 @@ next release; it changes nothing for them.
     5. The role's `IMPROVEMENTS.md` open items move here as backlog items (neutral wording); its item 5 is done by
        step 1, item 2 joins item 54. Update CLAUDE.md, the release flow and the frontend README/docs that name the
        old chart path.
+
+    *Steps 1-5 done 2026-11-15:* `ba13c94` (chart, `deploy/dev/values-dev.yaml`, `deploy/ci/values-all-enabled.yaml`),
+    `4a445a1` (`chart.yml`), infrastructure `36404c5` (site values only, `git archive` install, chart copy and
+    `IMPROVEMENTS.md` removed, `registry-prune.sh` reads the chart from the clone), item 55 for the open improvement
+    ideas. Acceptance diff: only the dropped `app.kubernetes.io/version` label and comments differ. Open: tag
+    `chart/v1.0.0` on the pushed commit once `chart.yml` is green, deploy with `pvlogger_chart_version: 1.0.0`, check
+    live, then move this item to Done.
 53. 🟡 **CI and releases on GitHub Actions** (added 2026-11-14)
 
     On push/PR: Gradle build + tests (Testcontainers), Go build + lint, frontend build, gitleaks with the repo's
@@ -223,6 +230,26 @@ next release; it changes nothing for them.
     Add an `existingSecret` name per secret: when it is set, the chart only references that Secret and infra creates
     it itself (from 1Password). Values stay the default, so Tilt keeps working from one `values-dev.yaml`. Kept out of
     item 52 on purpose: the move does not change behaviour.
+55. ⚪ **Chart improvements** (added 2026-11-15, moved with the chart from the infrastructure role's `IMPROVEMENTS.md`)
+
+    Not scheduled; none is a defect. Numbers are the old list's, for traceability in the infrastructure history.
+
+    | # | Topic | Current state | Improvement |
+    |---|---|---|---|
+    | 4 | Database settings | `db-config` carries the user twice (`DB_USER`, `POSTGRESQL_USERNAME`, item 40) | One set of keys all components read |
+    | 6 | Dump retention | Keeps the 3 newest dumps per database | Configurable retention; a verify step after each dump |
+    | 8 | PodDisruptionBudgets | None | PDBs for the Deployments, once they run more than one replica |
+    | 9 | ResourceQuota / LimitRange | Resources per pod only | Namespace-level quota and defaults |
+    | 10 | Chart hygiene | No chart tests, no values schema | `templates/tests/`, `values.schema.json`, a useful `NOTES.txt` |
+    | 11 | Labels | Mix of `app:` and Helm recommended labels | `app.kubernetes.io/{name,instance,version,component,managed-by}` everywhere |
+    | 12 | Names | CronJob names follow no single pattern | `<release>-<component>-<job>` (renames recreate the objects) |
+    | 13 | Storage | Direct NFS PV for the dump directory | A StorageClass option |
+    | 15 | Egress policies | Ingress policies only (default-deny ingress) | Default-deny egress plus allows for the Modbus gateway, the Kubernetes API, the Pushgateway and the database |
+    | 16 | CronJob metrics | Collectors push to the Pushgateway | PodMonitors, if the collectors expose metrics instead |
+    | 17 | Logging | Log level configurable, plain text | JSON log format |
+
+    Done by item 52: old 3 (service hosts derived from the release) and 5 (site values out of the templates). Old 2
+    (secret management) continues as item 54.
 
 ## Done (resolved, superseded or moot)
 

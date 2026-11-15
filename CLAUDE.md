@@ -10,7 +10,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 system has no authentication except the KPI export endpoint's bearer token (ADR-0021);
 everywhere else network isolation is the only boundary, ADR-0020),
 [docs/UPGRADING.md](docs/UPGRADING.md) (standing procedure for dependency/tooling upgrades).
-Deployment lives in the sibling `infrastructure` repo (see `infrastructure/docs/LANDSCAPE.md`).
+The Helm chart lives here (`deploy/helm/pvlogger/`, ADR-0024): it pins the image tags and is
+released as git tag `chart/vX.Y.Z`. The sibling `infrastructure` repo holds only the site values
+and the install (see `infrastructure/docs/LANDSCAPE.md`).
 
 ## This repository is public
 
