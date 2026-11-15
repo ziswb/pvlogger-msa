@@ -79,8 +79,9 @@ Tilt is the environment for larger changes: the Helm chart with `deploy/dev/valu
 image built from the checkout, a plain dev PostgreSQL (`deploy/dev/postgres.yaml`), the Go Modbus mock
 (synthetic plant) and a 30-day history backfill (ADR-0025). Dashboard on `http://localhost/` (Rancher
 Desktop's Traefik); data accessor and masterdata server port-forwarded to 8083/8081, Postgres to 15432.
-The Tiltfile refuses any context but `rancher-desktop` (`-- --k8s-context=<name>` for another local
-cluster) and uses the host's time zone (`-- --timezone=<zone>`).
+Everything runs in namespace `pvlogger-dev` (production's is `pvlogger`). The Tiltfile refuses any context
+but `rancher-desktop` (`-- --k8s-context=<name>` for another local cluster) and uses the host's time zone
+(`-- --timezone=<zone>`).
 
 For quick service work without Kubernetes, a local database runs via Docker Compose in `pvlogger-database/`.
 

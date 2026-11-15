@@ -18,7 +18,10 @@ config.define_string('k8s-context', usage='Kubernetes context Tilt may deploy to
 config.define_string('timezone', usage="IANA zone of the environment (default: the host's zone, else UTC)")
 cfg = config.parse()
 
-NAMESPACE = 'pvlogger'
+# Not "pvlogger", the production namespace: should a wrong --k8s-context ever
+# get past the guard below, this release cannot overwrite the real one
+# (backlog 58).
+NAMESPACE = 'pvlogger-dev'
 
 # Guard: only the named local context, never a production cluster.
 expected_context = cfg.get('k8s-context', 'rancher-desktop')
