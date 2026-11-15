@@ -31,6 +31,7 @@ old one. Half a page max; the point is the *why*. Template: see
 - [0022 — `fsdata` migrations: tern, embedded in fusionsolar, run as a manual `MIGRATE` job](0022-fsdata-migrations-tern-job-in-fusionsolar.md)
 - [0023 — Database roles live in CloudNativePG; migrations only GRANT](0023-db-roles-in-cnpg-migrations-only-grant.md)
 - [0024 — The Helm chart lives here and pins the deployed versions; site values stay private](0024-helm-chart-lives-here-site-values-stay-private.md)
+- [0025 — One synthetic plant in Go feeds the mock server and the history backfill](0025-synthetic-plant-in-go-mock-and-backfill.md)
 
 ## Candidate ADRs (implicit decisions worth writing down)
 

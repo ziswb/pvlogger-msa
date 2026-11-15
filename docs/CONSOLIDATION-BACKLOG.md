@@ -113,6 +113,17 @@ next release; it changes nothing for them.
     PV production curve over the day with cloud noise, a house load profile, grid import/export derived so the KPIs
     add up — plus a backfill job that writes ~30 days of synthetic history, so the day/history charts have data on
     first start. Same data feeds Tilt testing (KPI and daily-delta paths) and the README screenshots (never real data).
+
+    *Decided 2026-11-15 ([ADR-0025](adr/0025-synthetic-plant-in-go-mock-and-backfill.md)):* a deterministic synthetic
+    plant as a Go package; a Go mock server replaces the Kotlin one (reuses `pvlogger-shared-modbus` registers and
+    framing); a Go backfill job stores raw KPI rows and KPI rows for 30 days, KPIs via the shared `kpis` code, daily
+    energy from the plant's counters; the raw-row store takes a client `dateCreated` only with
+    `DEV_ACCEPT_CLIENT_TIMESTAMPS` (off by default). Plant spec: latitude 47° (configurable), 10 kWp, one inverter
+    (unit 1), meter unit 1, dongle unit 100, no battery; clear-sky curve from sun elevation, a deterministic weather
+    type per day (sunny/mixed/overcast) with minute-level cloud noise; house load ~250 W base, morning/evening peaks,
+    deterministic appliance blocks (~4,500 kWh/year); counters 32106, 32114 (daily, resets at local midnight),
+    37119/37121 as sums of per-minute values; every other register a fixed plausible value by type, fake serials;
+    computed in `global.timezone`.
 42. ⚪ **Drop the unused `modbus_response_data` indexes — a quarter after the CloudNativePG cutover** (split out of
     item 41 on 2026-10-23; the cutover it waited on ran 2026-10-25)
 
