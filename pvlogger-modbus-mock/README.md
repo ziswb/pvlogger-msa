@@ -56,9 +56,11 @@ same reading at register resolution (`mock.ReadingOf`), so the switch from
 history to live data is seamless.
 
 The data accessor must run with `DEV_ACCEPT_CLIENT_TIMESTAMPS=true` (chart:
-`dataAccessor.devAcceptClientTimestamps`), otherwise the raw rows are dated on
-arrival. A day that already has KPI rows is filled only before its first row:
-a rerun stores nothing, and the history ends where live data begins.
+`dataAccessor.devAcceptClientTimestamps`); without it, it refuses the dated raw
+rows (400) and the backfill stops. Only minutes without a KPI row are filled:
+a rerun completes an interrupted run and otherwise stores nothing, and live
+data is never overwritten. Yesterday goes first, so the live rows written
+meanwhile get their midnight baseline within seconds.
 
 | Variable | Default | |
 |---|---|---|

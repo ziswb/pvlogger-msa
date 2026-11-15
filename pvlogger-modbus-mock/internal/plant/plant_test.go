@@ -202,3 +202,27 @@ func TestClockChangeDaysKeepTheirHoursAndResetAtMidnight(t *testing.T) {
 		}
 	}
 }
+
+// America/Santiago starts DST at midnight: 2025-09-07 begins at 01:00 and has
+// 23 hours. The day must keep its date and its yield must start from 0.
+func TestADayWithoutMidnightStartsAtTheEndOfTheGap(t *testing.T) {
+	loc, err := time.LoadLocation("America/Santiago")
+	if err != nil {
+		t.Fatal(err)
+	}
+	start := plant.StartOfDay(time.Date(2025, 9, 7, 12, 0, 0, 0, loc))
+	if start.Day() != 7 || start.Hour() != 1 {
+		t.Fatalf("the 7th starts at %s, want 01:00 on the 7th", start.Format(time.DateTime))
+	}
+	if next := plant.NextDay(start); next.Sub(start) != 23*time.Hour {
+		t.Errorf("the 7th lasts %s, want 23h", next.Sub(start))
+	}
+	p := newPlant(loc)
+	if s := p.At(start); s.YieldTodayKWh != 0 {
+		t.Errorf("yield at the start of the 7th = %v, want 0", s.YieldTodayKWh)
+	}
+	evening := p.At(time.Date(2025, 9, 7, 20, 0, 0, 0, loc))
+	if evening.YieldTodayKWh <= 0 {
+		t.Errorf("no yield on the 7th by 20:00")
+	}
+}

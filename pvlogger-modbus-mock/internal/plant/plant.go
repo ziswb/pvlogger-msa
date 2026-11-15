@@ -86,7 +86,7 @@ func New(cfg Config) *Plant {
 	if cfg.Origin.IsZero() {
 		cfg.Origin = time.Date(2025, 1, 1, 0, 0, 0, 0, cfg.Location)
 	}
-	cfg.Origin = localMidnight(cfg.Origin.In(cfg.Location))
+	cfg.Origin = StartOfDay(cfg.Origin.In(cfg.Location))
 	return &Plant{cfg: cfg, totals: map[time.Time]energy{}}
 }
 
@@ -100,7 +100,7 @@ func (p *Plant) Location() *time.Location { return p.cfg.Location }
 func (p *Plant) At(t time.Time) Snapshot {
 	minute := t.In(p.cfg.Location).Truncate(time.Minute)
 	s := p.power(minute)
-	midnight := localMidnight(minute)
+	midnight := StartOfDay(minute)
 	beforeToday := p.energyBefore(midnight)
 	total := beforeToday.plus(p.day(midnight)[int(minute.Sub(midnight)/time.Minute)])
 	s.YieldTotalKWh = total.yield
@@ -128,7 +128,7 @@ func (p *Plant) power(minute time.Time) Snapshot {
 // before.
 func (p *Plant) energyBefore(m time.Time) energy {
 	var sum energy
-	for day := p.cfg.Origin; day.Before(m); day = nextMidnight(day) {
+	for day := p.cfg.Origin; day.Before(m); day = NextDay(day) {
 		sum = sum.plus(p.dayTotal(day))
 	}
 	return sum
@@ -166,7 +166,7 @@ func (p *Plant) day(midnight time.Time) []energy {
 // computeDay computes a day's running sums and caches its total. Minutes
 // before the origin count as nothing.
 func (p *Plant) computeDay(midnight time.Time) []energy {
-	end := nextMidnight(midnight)
+	end := NextDay(midnight)
 	sums := make([]energy, 0, 25*60+1)
 	var e energy
 	for m := midnight; m.Before(end); m = m.Add(time.Minute) {
@@ -183,13 +183,26 @@ func (p *Plant) computeDay(midnight time.Time) []energy {
 	return sums
 }
 
-func localMidnight(t time.Time) time.Time {
-	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+// StartOfDay is the first instant of t's local date: midnight, or the end of
+// the DST gap in a zone that skips midnight (there time.Date normalises
+// 00:00 to 23:00 of the day before, which belongs to the wrong date).
+func StartOfDay(t time.Time) time.Time {
+	return dayStart(t.Year(), t.Month(), t.Day(), t.Location())
 }
 
-// nextMidnight steps by calendar day, so DST days get their 23 or 25 hours.
-func nextMidnight(midnight time.Time) time.Time {
-	return time.Date(midnight.Year(), midnight.Month(), midnight.Day()+1, 0, 0, 0, 0, midnight.Location())
+// NextDay is the start of the local date after day's. It steps by calendar
+// day, so DST days get their 23 or 25 hours.
+func NextDay(day time.Time) time.Time {
+	return dayStart(day.Year(), day.Month(), day.Day()+1, day.Location())
+}
+
+func dayStart(y int, m time.Month, d int, loc *time.Location) time.Time {
+	date := time.Date(y, m, d, 12, 0, 0, 0, loc)
+	start := time.Date(y, m, d, 0, 0, 0, 0, loc)
+	for start.Day() != date.Day() {
+		start = start.Add(time.Hour)
+	}
+	return start
 }
 
 // clearSkyPowerW is the plant's output under a clear sky at t: direct sun on

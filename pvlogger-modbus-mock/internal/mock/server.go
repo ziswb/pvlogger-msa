@@ -21,11 +21,16 @@ const (
 
 	meiReadDeviceID = 0x0E
 
-	exIllegalFunction  = 0x01
-	exIllegalDataValue = 0x03
+	exIllegalFunction    = 0x01
+	exIllegalDataAddress = 0x02
+	exIllegalDataValue   = 0x03
 
 	// maxReadCount is the Modbus limit of registers per read request.
 	maxReadCount = 125
+
+	// idleTimeout closes a connection whose client went away without closing
+	// it; the collectors send their next request within seconds.
+	idleTimeout = 5 * time.Minute
 )
 
 // Server answers Modbus TCP requests with the plant's state at now().
@@ -60,6 +65,9 @@ func (s *Server) handle(conn net.Conn) {
 	defer func() { _ = conn.Close() }()
 	for {
 		header := make([]byte, 7)
+		if err := conn.SetReadDeadline(time.Now().Add(idleTimeout)); err != nil {
+			return
+		}
 		if _, err := io.ReadFull(conn, header); err != nil {
 			return
 		}
@@ -94,6 +102,9 @@ func (s *Server) answer(unit uint8, pdu []byte) []byte {
 		count := binary.BigEndian.Uint16(pdu[3:])
 		if count == 0 || count > maxReadCount {
 			return exception(pdu[0], exIllegalDataValue)
+		}
+		if int(start)+int(count) > 0x10000 {
+			return exception(pdu[0], exIllegalDataAddress)
 		}
 		words := s.registers(unit, s.plant.At(s.now()))
 		out := []byte{fcReadHoldingRegisters, byte(2 * count)}

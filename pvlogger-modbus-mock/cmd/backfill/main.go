@@ -1,7 +1,8 @@
 // Command backfill writes the synthetic plant's last days as history into the
 // data accessor, for local development only (ADR-0025). The data accessor must
-// run with DEV_ACCEPT_CLIENT_TIMESTAMPS; days that already have KPI rows are
-// filled only before their first row, so a rerun is harmless.
+// run with DEV_ACCEPT_CLIENT_TIMESTAMPS (without it, it refuses the dated raw
+// rows); only minutes without a KPI row are filled, so a rerun completes an
+// interrupted run and is otherwise harmless.
 //
 // Environment: BACKFILL_DAYS (default 30, counted back from today's local
 // midnight), DA_HOST/DA_PORT/DA_PROTOCOL (the data accessor, as for the

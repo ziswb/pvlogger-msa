@@ -15,6 +15,7 @@ import (
 
 	"pv-logger/config"
 	"pv-logger/logging"
+	sharedconfig "pvlogger-shared-modbus/config"
 
 	"pvlogger-modbus-mock/internal/mock"
 	"pvlogger-modbus-mock/internal/plant"
@@ -22,7 +23,7 @@ import (
 
 func main() {
 	port := config.GetIntEnv("MOCK_PORT", "8502")
-	dongleUnit := uint8(config.GetIntEnv("DONGLE_DEVICE_ID", "100"))
+	dongleUnit := sharedconfig.DevIdConfig().DongleDeviceId
 
 	p := plant.New(plant.Config{Location: time.Local})
 	// The first snapshot sums every day since the plant's origin. Do it before

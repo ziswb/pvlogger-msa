@@ -256,6 +256,16 @@ func TestUnsupportedFunctionIsRefused(t *testing.T) {
 	}
 }
 
+func TestReadPastTheLastAddressIsRefused(t *testing.T) {
+	f := newFixture(t, exporting)
+	// Read 2 holding registers from 0xFFFF: the second does not exist.
+	_, _, err := f.client.ExecuteRequest([]byte{0, 1, 0, 0, 0, 6, 1, 0x03, 0xFF, 0xFF, 0, 2})
+	var ex *modbus.ExceptionError
+	if !errors.As(err, &ex) || ex.ExceptionCode != 0x02 {
+		t.Errorf("error = %v, want exception 0x02 (illegal data address)", err)
+	}
+}
+
 func assertNear(t *testing.T, what string, got, want, tolerance float64) {
 	t.Helper()
 	if math.Abs(got-want) > tolerance {

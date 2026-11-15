@@ -5,6 +5,7 @@ package backfill
 
 import (
 	"fmt"
+	"slices"
 	"time"
 
 	"pv-logger/logging"
@@ -17,7 +18,7 @@ import (
 )
 
 // rawKpiRegisterValues is the data accessor's raw-row DTO; dateCreated is
-// honoured only with DEV_ACCEPT_CLIENT_TIMESTAMPS.
+// accepted only with DEV_ACCEPT_CLIENT_TIMESTAMPS (otherwise refused, 400).
 type rawKpiRegisterValues struct {
 	JobId                    string  `json:"jobId"`
 	InverterActivePower      float64 `json:"inverterActivePower"` // kW
@@ -34,74 +35,90 @@ type dayRow struct {
 	CreatedAt int64 `json:"createdAt"`
 }
 
-// Run stores a raw KPI row and a KPI row for every minute in [from, until),
-// local day by local day. A day that already has KPI rows (live data or an
-// earlier run) is filled only up to its first row, so a rerun stores nothing
-// and the history ends where the live data begins.
+// Run stores a raw KPI row and a KPI row for every minute in [from, until)
+// that has no KPI row yet (live data or an earlier run), local day by local
+// day. A rerun therefore completes a run that died mid-day and stores nothing
+// once the history is complete.
+//
+// The day before until's day goes first: until its last raw row exists, the
+// live data accessor has no midnight baseline and the live KPI rows it stores
+// meanwhile record no exported or imported energy for today.
 func Run(p *plant.Plant, client *persistence.PersistingService, from, until time.Time) error {
 	loc := p.Location()
 	start := from.In(loc).Truncate(time.Minute)
-	for day := localMidnight(start); day.Before(until); day = day.AddDate(0, 0, 1) {
-		end := day.AddDate(0, 0, 1)
+	for _, day := range dayOrder(plant.StartOfDay(start), until) {
+		end := plant.NextDay(day)
 		if until.Before(end) {
 			end = until
-		}
-		first, err := firstRowOf(client, day)
-		if err != nil {
-			return err
-		}
-		if first != nil && first.Before(end) {
-			end = *first
 		}
 		begin := day
 		if begin.Before(start) {
 			begin = start
 		}
-		if err := fill(p, client, begin, end); err != nil {
+		have, err := minutesWithRows(client, day)
+		if err != nil {
 			return err
 		}
-		if begin.Before(end) {
-			logging.Info("backfilled", "day", day.Format(time.DateOnly), "from", begin.Format(time.TimeOnly), "until", end.Format(time.TimeOnly))
+		stored, err := fill(p, client, begin, end, have)
+		if err != nil {
+			return err
+		}
+		if stored > 0 {
+			logging.Info("backfilled", "day", day.Format(time.DateOnly), "minutes", stored)
 		}
 	}
 	return nil
 }
 
-func localMidnight(t time.Time) time.Time {
-	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+// dayOrder lists the starts of the local days in [first, until), the second
+// newest first, then the newest, then the rest newest to oldest.
+func dayOrder(first, until time.Time) []time.Time {
+	var days []time.Time
+	for day := first; day.Before(until); day = plant.NextDay(day) {
+		days = append(days, day)
+	}
+	slices.Reverse(days)
+	if len(days) > 1 {
+		days[0], days[1] = days[1], days[0]
+	}
+	return days
 }
 
-// firstRowOf returns when the day's first KPI row was stored, or nil.
-func firstRowOf(client *persistence.PersistingService, day time.Time) (*time.Time, error) {
+// minutesWithRows returns the minutes of the day that already have a KPI row.
+func minutesWithRows(client *persistence.PersistingService, day time.Time) (map[int64]bool, error) {
 	var rows []dayRow
 	path := fmt.Sprintf("%s/%d-%d-%d", sharedconfig.ReadDayDataPath, day.Year(), day.Month(), day.Day())
 	if err := client.GetJSON(path, &rows); err != nil {
 		return nil, fmt.Errorf("reading the KPI rows of %s: %w", day.Format(time.DateOnly), err)
 	}
-	var first *time.Time
+	have := make(map[int64]bool, len(rows))
 	for _, r := range rows {
-		if at := time.UnixMilli(r.CreatedAt); first == nil || at.Before(*first) {
-			first = &at
-		}
+		have[time.UnixMilli(r.CreatedAt).Truncate(time.Minute).UnixMilli()] = true
 	}
-	return first, nil
+	return have, nil
 }
 
-// fill stores the rows of every minute in [begin, end).
-func fill(p *plant.Plant, client *persistence.PersistingService, begin, end time.Time) error {
-	loc := p.Location()
+// fill stores the rows of every minute in [begin, end) not in have and
+// returns how many minutes it stored. A refused raw row (400) usually means
+// the data accessor runs without DEV_ACCEPT_CLIENT_TIMESTAMPS.
+func fill(p *plant.Plant, client *persistence.PersistingService, begin, end time.Time, have map[int64]bool) (int, error) {
+	stored := 0
 	for at := begin; at.Before(end); at = at.Add(time.Minute) {
+		if have[at.UnixMilli()] {
+			continue
+		}
 		r := mock.ReadingOf(p.At(at))
-		midnight := mock.ReadingOf(p.At(time.Date(at.Year(), at.Month(), at.Day(), 0, 0, 0, 0, loc)))
+		midnight := mock.ReadingOf(p.At(plant.StartOfDay(at)))
 		jobId := "backfill-" + at.UTC().Format("20060102T1504")
 		if err := client.StoreValues(rawRowOf(jobId, at, r), sharedconfig.StoreRawKpiRegisterValuesPath); err != nil {
-			return fmt.Errorf("storing the raw row of %s: %w", at.Format(time.DateTime), err)
+			return stored, fmt.Errorf("storing the raw row of %s (does the data accessor run with DEV_ACCEPT_CLIENT_TIMESTAMPS?): %w", at.Format(time.DateTime), err)
 		}
 		if err := client.StoreValues(kpiRowOf(jobId, at, r, midnight), sharedconfig.StoreKpiValuesPath); err != nil {
-			return fmt.Errorf("storing the KPI row of %s: %w", at.Format(time.DateTime), err)
+			return stored, fmt.Errorf("storing the KPI row of %s: %w", at.Format(time.DateTime), err)
 		}
+		stored++
 	}
-	return nil
+	return stored, nil
 }
 
 func rawRowOf(jobId string, at time.Time, r mock.Reading) *rawKpiRegisterValues {

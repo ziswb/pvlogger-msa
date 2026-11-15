@@ -51,6 +51,10 @@ type fakeDataAccessor struct {
 	mu   sync.Mutex
 	raw  map[int64]rawRow
 	kpis map[int64]kpiRow
+	// order holds the raw rows' dateCreated in the order they arrived;
+	// failAfter > 0 refuses every raw row after that many.
+	order     []int64
+	failAfter int
 }
 
 func newFakeDataAccessor(t *testing.T, loc *time.Location) (*fakeDataAccessor, *persistence.PersistingService) {
@@ -72,7 +76,12 @@ func (f *fakeDataAccessor) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
+		if f.failAfter > 0 && len(f.order) >= f.failAfter {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
 		f.raw[*row.DateCreated] = row
+		f.order = append(f.order, *row.DateCreated)
 	case r.Method == http.MethodPost && r.URL.Path == "/v1/store-kpi-values":
 		var row kpiRow
 		if json.NewDecoder(r.Body).Decode(&row) != nil {
@@ -150,26 +159,29 @@ func TestEveryMinuteGetsTheReadingAndTheDaysEnergy(t *testing.T) {
 	}
 }
 
-func TestADayIsFilledOnlyBeforeItsFirstRow(t *testing.T) {
+func TestOnlyMinutesWithoutARowAreFilled(t *testing.T) {
 	loc := zone(t)
 	p := plant.New(plant.Config{Location: loc})
 	da, client := newFakeDataAccessor(t, loc)
 	from := time.Date(2025, 6, 20, 22, 0, 0, 0, loc)
 	until := time.Date(2025, 6, 21, 2, 0, 0, 0, loc)
-	// Live data since 01:00 on the 21st.
+	// Live data from 01:00 to 01:30 on the 21st, a few seconds into each minute.
 	live := time.Date(2025, 6, 21, 1, 0, 0, 0, loc)
-	da.kpis[live.UnixMilli()] = kpiRow{DateCreated: live.UnixMilli()}
+	for at := live; at.Before(live.Add(30 * time.Minute)); at = at.Add(time.Minute) {
+		ms := at.Add(7 * time.Second).UnixMilli()
+		da.kpis[ms] = kpiRow{DateCreated: ms}
+	}
 
 	if err := Run(p, client, from, until); err != nil {
 		t.Fatal(err)
 	}
-	// 22:00–00:00 on the 20th and 00:00–01:00 on the 21st.
-	if len(da.raw) != 180 {
-		t.Errorf("stored %d raw rows, want 180", len(da.raw))
+	// 4 hours minus the 30 live minutes.
+	if len(da.raw) != 210 {
+		t.Errorf("stored %d raw rows, want 210", len(da.raw))
 	}
 	for ms := range da.raw {
-		if !time.UnixMilli(ms).Before(live) {
-			t.Errorf("backfilled %s, after the live data began", time.UnixMilli(ms).In(loc).Format(time.DateTime))
+		if at := time.UnixMilli(ms); !at.Before(live) && at.Before(live.Add(30*time.Minute)) {
+			t.Errorf("backfilled %s, a minute with live data", at.In(loc).Format(time.DateTime))
 		}
 	}
 
@@ -179,6 +191,75 @@ func TestADayIsFilledOnlyBeforeItsFirstRow(t *testing.T) {
 	}
 	if len(da.raw) != stored {
 		t.Errorf("a second run stored %d more raw rows", len(da.raw)-stored)
+	}
+}
+
+func TestARerunCompletesAnInterruptedRun(t *testing.T) {
+	loc := zone(t)
+	p := plant.New(plant.Config{Location: loc})
+	da, client := newFakeDataAccessor(t, loc)
+	from := time.Date(2025, 6, 21, 0, 0, 0, 0, loc)
+	until := time.Date(2025, 6, 21, 6, 0, 0, 0, loc)
+
+	da.failAfter = 100
+	if err := Run(p, client, from, until); err == nil {
+		t.Fatal("the interrupted run reported no error")
+	}
+	da.failAfter = 0
+	if err := Run(p, client, from, until); err != nil {
+		t.Fatal(err)
+	}
+	if len(da.raw) != 360 || len(da.kpis) != 360 {
+		t.Errorf("stored %d raw and %d KPI rows, want 360 each", len(da.raw), len(da.kpis))
+	}
+}
+
+func TestYesterdayIsFilledFirst(t *testing.T) {
+	loc := zone(t)
+	p := plant.New(plant.Config{Location: loc})
+	da, client := newFakeDataAccessor(t, loc)
+	from := time.Date(2025, 6, 18, 23, 0, 0, 0, loc)
+	until := time.Date(2025, 6, 21, 0, 30, 0, 0, loc)
+
+	if err := Run(p, client, from, until); err != nil {
+		t.Fatal(err)
+	}
+	var days []string
+	for _, ms := range da.order {
+		if d := time.UnixMilli(ms).In(loc).Format(time.DateOnly); len(days) == 0 || days[len(days)-1] != d {
+			days = append(days, d)
+		}
+	}
+	want := []string{"2025-06-20", "2025-06-21", "2025-06-19", "2025-06-18"}
+	if strings.Join(days, " ") != strings.Join(want, " ") {
+		t.Errorf("filled the days in the order %v, want %v", days, want)
+	}
+}
+
+// America/Santiago starts DST at midnight: 2025-09-07 begins at 01:00.
+func TestDaysStayAlignedWhereMidnightIsSkipped(t *testing.T) {
+	loc, err := time.LoadLocation("America/Santiago")
+	if err != nil {
+		t.Fatal(err)
+	}
+	p := plant.New(plant.Config{Location: loc})
+	da, client := newFakeDataAccessor(t, loc)
+	from := time.Date(2025, 9, 6, 22, 0, 0, 0, loc)
+	until := time.Date(2025, 9, 8, 2, 0, 0, 0, loc)
+
+	if err := Run(p, client, from, until); err != nil {
+		t.Fatal(err)
+	}
+	if minutes := int(until.Sub(from).Minutes()); len(da.raw) != minutes {
+		t.Errorf("stored %d raw rows, want %d", len(da.raw), minutes)
+	}
+	for ms := range da.raw {
+		if at := time.UnixMilli(ms).In(loc); at.Before(from) || !at.Before(until) {
+			t.Errorf("backfilled %s, outside [from, until)", at.Format(time.DateTime))
+		}
+	}
+	if got := plant.StartOfDay(time.Date(2025, 9, 7, 12, 0, 0, 0, loc)); got.Hour() != 1 || got.Day() != 7 {
+		t.Errorf("the 7th starts at %s, want 01:00 on the 7th", got.Format(time.DateTime))
 	}
 }
 
