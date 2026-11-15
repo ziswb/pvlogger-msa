@@ -176,3 +176,35 @@ func TestTcpHandler_ExceptionThenSuccess(t *testing.T) {
 		t.Fatalf("ExecuteRequest: %v", err)
 	}
 }
+
+// A device that starts listening only after the first attempts were refused,
+// as an in-namespace server does for a pod kube-router has not admitted yet.
+func TestTcpHandler_ConnectRetriesARefusedConnection(t *testing.T) {
+	refusedWait = 50 * time.Millisecond
+	t.Cleanup(func() { refusedWait = 500 * time.Millisecond })
+
+	probe, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	addr := probe.Addr().String()
+	_ = probe.Close()
+	go func() {
+		time.Sleep(200 * time.Millisecond)
+		ln, err := net.Listen("tcp", addr)
+		if err != nil {
+			return
+		}
+		t.Cleanup(func() { _ = ln.Close() })
+		conn, err := ln.Accept()
+		if err == nil {
+			t.Cleanup(func() { _ = conn.Close() })
+		}
+	}()
+
+	h := NewTcpHandler(addr, time.Second, 0)
+	if err := h.Connect(); err != nil {
+		t.Fatalf("Connect: %v", err)
+	}
+	_ = h.Close()
+}

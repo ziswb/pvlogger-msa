@@ -8,6 +8,7 @@ import (
 	"net"
 	"pv-logger/logging"
 	"pvlogger-shared-modbus/model"
+	"syscall"
 	"time"
 )
 
@@ -44,7 +45,7 @@ func (h *TcpHandler) Close() error {
 
 func (h *TcpHandler) Connect() error {
 	logging.Info("connecting to modbus device", "address", h.address)
-	conn, err := (&net.Dialer{Timeout: h.timeout, KeepAlive: 30 * time.Second}).Dial("tcp", h.address)
+	conn, err := dialRetryingRefused(&net.Dialer{Timeout: h.timeout, KeepAlive: 30 * time.Second}, h.address)
 	if err != nil {
 		return err
 	}
@@ -61,6 +62,26 @@ func (h *TcpHandler) Connect() error {
 	time.Sleep(h.sleep) // huawei modbus is not ready for requests immediately after connection
 	logging.Debug("connected to modbus device")
 	return nil
+}
+
+// refusedAttempts × refusedWait bounds how long a refused connect is retried.
+// In the cluster a new pod reaches an in-namespace server (the dev mock) only
+// once kube-router has admitted its IP, a moment after the start (backlog
+// 58); a busy device may refuse briefly too. Variables for the tests.
+var (
+	refusedAttempts = 10
+	refusedWait     = 500 * time.Millisecond
+)
+
+func dialRetryingRefused(d *net.Dialer, address string) (net.Conn, error) {
+	for attempt := 1; ; attempt++ {
+		conn, err := d.Dial("tcp", address)
+		if err == nil || !errors.Is(err, syscall.ECONNREFUSED) || attempt >= refusedAttempts {
+			return conn, err
+		}
+		logging.Warn("modbus connection refused, retrying", "address", address, "attempt", attempt)
+		time.Sleep(refusedWait)
+	}
 }
 
 // maxAttempts is how often ExecuteRequest tries a request before giving up.
