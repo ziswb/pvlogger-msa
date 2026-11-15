@@ -32,6 +32,7 @@ spec:
           name: pv-fast-data-collector
         spec:
           restartPolicy: Never
+          automountServiceAccountToken: false
           containers:
             - name: pv-fast-data-collector
               image: {{ include "pvlogger.image" (dict "global" .Values.global "image" .Values.pvFastDataCollector.image) }}
@@ -53,8 +54,4 @@ spec:
                 limits:
                   cpu: {{ .Values.pvFastDataCollector.resources.limits.cpu }}
                   memory: {{ .Values.pvFastDataCollector.resources.limits.memory }}
-              volumeMounts:
-                {{- include "pvlogger.timezoneVolumeMount" . | nindent 16 }}
-          volumes:
-            {{- include "pvlogger.timezoneVolume" . | nindent 12 }}
 {{- end }}

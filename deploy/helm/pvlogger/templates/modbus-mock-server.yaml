@@ -20,6 +20,7 @@ spec:
         app: pvlogger-modbus-mock-server
     spec:
       terminationGracePeriodSeconds: 30
+      automountServiceAccountToken: false
       containers:
         - name: pvlogger-modbus-mock-server
           image: {{ include "pvlogger.image" (dict "global" .Values.global "image" .Values.modbusMockServer.image) }}
@@ -49,7 +50,6 @@ spec:
             failureThreshold: 3
           resources:
             {{- toYaml .Values.modbusMockServer.resources | nindent 12 }}
-      # No timezone hostPath: the binary embeds time/tzdata and reads TZ.
 ---
 apiVersion: v1
 kind: Service

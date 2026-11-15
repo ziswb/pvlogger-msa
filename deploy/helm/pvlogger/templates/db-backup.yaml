@@ -184,6 +184,7 @@ spec:
           name: pvlogger-db-backup
         spec:
           restartPolicy: Never
+          automountServiceAccountToken: false
           {{- with .Values.dbBackup.affinity }}
           affinity:
             {{- toYaml . | nindent 12 }}
@@ -199,6 +200,7 @@ spec:
               image: {{ .Values.dbBackup.image }}
               securityContext:
                 allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
                 capabilities:
                   drop: ["ALL"]
               imagePullPolicy: IfNotPresent
@@ -225,7 +227,7 @@ spec:
                   readOnly: false
                 - mountPath: /script
                   name: backup-script
-                {{- include "pvlogger.timezoneVolumeMount" . | nindent 16 }}
+                {{- include "pvlogger.tmpVolumeMount" . | nindent 16 }}
               resources:
                 requests:
                   cpu: {{ .Values.dbBackup.resources.requests.cpu }}
@@ -244,5 +246,5 @@ spec:
                 # the job runs as the backup uid, so 0500 locked it out. The
                 # script carries no secrets — those arrive as env vars.
                 defaultMode: 0555
-            {{- include "pvlogger.timezoneVolume" . | nindent 12 }}
+            {{- include "pvlogger.tmpVolume" . | nindent 12 }}
 {{- end }}

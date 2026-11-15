@@ -27,7 +27,7 @@ It covers libraries, major versions and tooling (JDK, Go, Gradle, Node/Angular, 
 | Go libraries | every `*/go.mod` (and `go.work.sum`) |
 | Go toolchain | `go.work`, each `go.mod` `go` line, `FROM golang:*` in Dockerfiles, `.golangci.yml` / golangci-lint version |
 | Frontend | `pvlogger-frontend/src/web/package.json` (+ lockfile) |
-| Runtime images | `distroless/static-debian*`, `eclipse-temurin:*-ubi*-minimal`, `node:*-alpine` (frontend build stage) |
+| Base images | Every `FROM` in `*/docker/Dockerfile` is pinned as `image:tag@sha256:<digest>` (backlog 58): `golang`, `distroless/static-debian*:nonroot`, `gradle:*-jdk*-alpine`, `eclipse-temurin:*-ubi*-minimal`, `node:*-alpine`. Change tag and digest together; the digest is the multi-arch index's (`docker buildx imagetools inspect <image:tag>`). A new digest for the same tag (a rebuilt base) is a patch bump of every image built on it |
 | CI | `.github/workflows/*.yml`: action SHAs (+ tag comment), `java-version`, golangci-lint `version`, `node-version`, Helm `version`, `KUBECONFORM_VERSION` + `KUBECONFORM_SHA256`, `GITLEAKS_VERSION` + `GITLEAKS_SHA256` (`go-version-file: go.work` follows by itself) |
 | Chart images | `deploy/helm/pvlogger/values.yaml`: `dbBackup.image` (Postgres client, same major as production), `heartbeat.image` (curl), `imagePrepull.holdImage` (pause) |
 | Tilt | `deploy/dev/postgres.yaml` (dev Postgres image), the Tiltfile's `version_settings` constraint |

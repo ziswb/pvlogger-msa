@@ -1,4 +1,4 @@
-FROM gradle:9-jdk25-alpine AS build
+FROM gradle:9-jdk25-alpine@sha256:0ae8e5ac9d253704444bb8acb7f905928d09b2e5ac5e05c42737f74e261f6623 AS build
 
 ENV GRADLE_USER_HOME="/workspace/gradle_home"
 ADD . /workspace
@@ -6,7 +6,7 @@ ADD . /workspace
 WORKDIR /workspace
 RUN gradle :pvlogger-modbus-data-accessor:clean :pvlogger-modbus-data-accessor:buildFatJar
 
-FROM eclipse-temurin:25-jre-ubi10-minimal
+FROM eclipse-temurin:25-jre-ubi10-minimal@sha256:2e8ee3e5f7ee514713aaae37ccaa7902a1c24c0532dcc8712312d8a002214828
 
 LABEL author="Bruno Ziswiler"
 LABEL description="PV Logger Data Accessor"

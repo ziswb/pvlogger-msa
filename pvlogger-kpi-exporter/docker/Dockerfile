@@ -1,6 +1,6 @@
 # Multi-arch: the cluster runs arm64, the relay on the receiver's server
 # usually amd64. The build stage runs natively and cross-compiles.
-FROM --platform=$BUILDPLATFORM golang:1.27.4 AS golang
+FROM --platform=$BUILDPLATFORM golang:1.27.4@sha256:5e8afd493a7124a8586e134d9b532731161d4b9becf9dee5a5956b107426f93d AS golang
 ARG TARGETARCH=arm64
 
 COPY . /
@@ -11,12 +11,14 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     make prod GOARCH=${TARGETARCH}
 
-FROM gcr.io/distroless/static-debian13
+# nonroot: uid 65532 also outside the chart (plain docker run); the chart
+# sets its own uid. Base images pinned by digest (docs/UPGRADING.md).
+FROM gcr.io/distroless/static-debian13:nonroot@sha256:aafe993665bf6200db38a02c11a9351e782a84b6a45e7f33b6695638c88e3931
 
 LABEL author="Bruno Ziswiler"
 LABEL description="PV Logger KPI Exporter"
 LABEL version="3.5.2"
 
-COPY --from=golang /exporter .
+COPY --from=golang /exporter /exporter
 
 ENTRYPOINT ["/exporter"]

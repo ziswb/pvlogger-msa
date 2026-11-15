@@ -30,6 +30,7 @@ spec:
           name: {{ $appLabel }}
         spec:
           restartPolicy: Never
+          automountServiceAccountToken: false
           containers:
             - name: {{ $appLabel }}
               image: {{ include "pvlogger.image" (dict "global" $.Values.global "image" $.Values.pvDeviceDataCollector.image) }}
@@ -54,9 +55,5 @@ spec:
                 limits:
                   cpu: {{ $.Values.pvDeviceDataCollector.resources.limits.cpu }}
                   memory: {{ $.Values.pvDeviceDataCollector.resources.limits.memory }}
-              volumeMounts:
-                {{- include "pvlogger.timezoneVolumeMount" $ | nindent 16 }}
-          volumes:
-            {{- include "pvlogger.timezoneVolume" $ | nindent 12 }}
 {{- end }}
 {{- end }}

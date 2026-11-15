@@ -20,6 +20,7 @@ spec:
         app: pvlogger-frontend
     spec:
       terminationGracePeriodSeconds: 30
+      automountServiceAccountToken: false
       containers:
         - name: pvlogger-frontend
           image: {{ include "pvlogger.image" (dict "global" .Values.global "image" .Values.frontend.image) }}
@@ -54,7 +55,7 @@ spec:
           resources:
             {{- toYaml .Values.frontend.resources | nindent 12 }}
           volumeMounts:
-            {{- include "pvlogger.timezoneVolumeMount" . | nindent 12 }}
+            {{- include "pvlogger.tmpVolumeMount" . | nindent 12 }}
       volumes:
-        {{- include "pvlogger.timezoneVolume" . | nindent 8 }}
+        {{- include "pvlogger.tmpVolume" . | nindent 8 }}
 {{- end }}

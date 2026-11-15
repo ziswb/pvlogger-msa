@@ -85,26 +85,6 @@ Common timezone environment variable
 {{- end }}
 
 {{/*
-Common timezone volume
-*/}}
-{{- define "pvlogger.timezoneVolume" -}}
-- name: timezone
-  hostPath:
-    path: /usr/share/zoneinfo
-    type: Directory
-{{- end }}
-
-{{/*
-Common timezone volume mount
-*/}}
-{{- define "pvlogger.timezoneVolumeMount" -}}
-- name: timezone
-  mountPath: /etc/localtime
-  subPath: {{ .Values.global.timezone }}
-  readOnly: true
-{{- end }}
-
-{{/*
 Pod annotations that roll a Deployment when its env-sourced ConfigMaps or
 Secrets change (envFrom/secretKeyRef are read only at container start).
 pvlogger.checksum hashes a rendered template without its helm.sh/chart label,
@@ -141,6 +121,7 @@ securityContext:
   runAsGroup: 1000
   runAsNonRoot: true
   allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
   capabilities:
     drop: ["ALL"]
   seccompProfile:
@@ -148,9 +129,9 @@ securityContext:
 {{- end }}
 
 {{/*
-Container hardening for the Go jobs (infrastructure security finding 25). Their images set no
-user (root); the network clients and the KPI exporter need none of it. Pass the
-uid: (dict "uid" .Values.global.runAsUid).
+Container hardening for the Go jobs (infrastructure security finding 25). Their images are
+distroless :nonroot; the network clients and the KPI exporter write nothing, so
+the root filesystem is read-only. Pass the uid: (dict "uid" .Values.global.runAsUid).
 */}}
 {{- define "pvlogger.goSecurityContext" -}}
 securityContext:
@@ -158,8 +139,25 @@ securityContext:
   runAsGroup: {{ .uid }}
   runAsNonRoot: true
   allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
   capabilities:
     drop: ["ALL"]
   seccompProfile:
     type: RuntimeDefault
+{{- end }}
+
+{{/*
+A writable /tmp for a container with a read-only root filesystem: the JVM
+writes its perf data and Netty its native library there, db-backup its
+.pgpass. Volume and mount; the volume goes under the pod's volumes.
+*/}}
+{{- define "pvlogger.tmpVolume" -}}
+- name: tmp
+  emptyDir:
+    sizeLimit: 64Mi
+{{- end }}
+
+{{- define "pvlogger.tmpVolumeMount" -}}
+- name: tmp
+  mountPath: /tmp
 {{- end }}

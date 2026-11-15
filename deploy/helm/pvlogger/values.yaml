@@ -18,8 +18,8 @@ global:
   imageRegistry: ""
   imagePullPolicy: IfNotPresent
   timezone: "UTC"
-  # Run-as uid/gid of the Go jobs (their images set no user). The JVM images
-  # run as 1000 on their own.
+  # Run-as uid/gid of the Go jobs (their distroless :nonroot images default
+  # to 65532; the chart pins this uid). The JVM images run as 1000 on their own.
   runAsUid: 1000
 
 # Rendered into Secrets (an existingSecret option is backlog item 54).

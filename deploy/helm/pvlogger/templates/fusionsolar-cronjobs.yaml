@@ -66,9 +66,5 @@ spec:
                 limits:
                   cpu: {{ $.Values.fusionsolar.resources.limits.cpu }}
                   memory: {{ $.Values.fusionsolar.resources.limits.memory }}
-              volumeMounts:
-                {{- include "pvlogger.timezoneVolumeMount" $ | nindent 16 }}
-          volumes:
-            {{- include "pvlogger.timezoneVolume" $ | nindent 12 }}
 {{- end }}
 {{- end }}

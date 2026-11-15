@@ -37,6 +37,7 @@ spec:
       annotations:
         checksum/config: {{ include "pvlogger.checksum" (dict "root" . "file" "/configmaps.yaml") }}
     spec:
+      automountServiceAccountToken: false
       # The token Secret is mounted 0440: fsGroup makes its group the run-as
       # uid's, so the non-root exporter can read it (infrastructure security finding 25).
       securityContext:
@@ -79,7 +80,6 @@ spec:
             - name: export-token
               mountPath: /etc/pvlogger-export
               readOnly: true
-            {{- include "pvlogger.timezoneVolumeMount" . | nindent 12 }}
           resources:
             {{- toYaml .Values.kpiExportServe.resources | nindent 12 }}
       volumes:
@@ -87,7 +87,6 @@ spec:
           secret:
             secretName: pvlogger-export-token
             defaultMode: 0440
-        {{- include "pvlogger.timezoneVolume" . | nindent 8 }}
 ---
 apiVersion: v1
 kind: Service
