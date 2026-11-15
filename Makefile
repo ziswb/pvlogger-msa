@@ -1,4 +1,4 @@
-SUB_DIRS := pv-fast-data-collector pv-full-data-collector pvlogger-fusionsolar pvlogger-fusionsolar-auth pvlogger-kpi-exporter pv-device-data-collector pvlogger-battery-simulator
+SUB_DIRS := pv-fast-data-collector pv-full-data-collector pvlogger-fusionsolar pvlogger-fusionsolar-auth pvlogger-kpi-exporter pv-device-data-collector pvlogger-battery-simulator pvlogger-modbus-mock
 # Go libraries: no Makefile of their own, tested and linted from here.
 LIB_DIRS := pv-logger pvlogger-shared-modbus
 

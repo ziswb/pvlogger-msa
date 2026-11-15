@@ -9,5 +9,6 @@ use (
 	./pvlogger-fusionsolar
 	./pvlogger-fusionsolar-auth
 	./pvlogger-kpi-exporter
+	./pvlogger-modbus-mock
 	./pvlogger-shared-modbus
 )
