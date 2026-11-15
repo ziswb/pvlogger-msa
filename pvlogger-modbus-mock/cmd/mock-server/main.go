@@ -25,6 +25,11 @@ func main() {
 	dongleUnit := uint8(config.GetIntEnv("DONGLE_DEVICE_ID", "100"))
 
 	p := plant.New(plant.Config{Location: time.Local})
+	// The first snapshot sums every day since the plant's origin. Do it before
+	// listening, so the readiness probe passes only once requests are fast.
+	start := time.Now()
+	p.At(start)
+	logging.Info("plant counters computed", "duration", time.Since(start).String())
 	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		logging.Fatal("cannot listen", "port", port, "error", err)

@@ -38,8 +38,13 @@ type Config struct {
 type Plant struct {
 	cfg Config
 
-	mu   sync.Mutex
-	days map[time.Time][]energy // local midnight → energy before each minute of that day, plus the day's total
+	mu sync.Mutex
+	// totals: local midnight → the whole day's energy, for every day asked so
+	// far (a few hundred entries). The per-minute running sums are kept for
+	// the last day asked only: all days since the origin would be ~24 MB.
+	totals     map[time.Time]energy
+	lastDay    time.Time
+	lastMinute []energy
 }
 
 // energy is what flowed over some span of minutes, in kWh.
@@ -82,7 +87,7 @@ func New(cfg Config) *Plant {
 		cfg.Origin = time.Date(2025, 1, 1, 0, 0, 0, 0, cfg.Location)
 	}
 	cfg.Origin = localMidnight(cfg.Origin.In(cfg.Location))
-	return &Plant{cfg: cfg, days: map[time.Time][]energy{}}
+	return &Plant{cfg: cfg, totals: map[time.Time]energy{}}
 }
 
 // PeakPowerW is the plant's rated (peak) power.
@@ -130,20 +135,37 @@ func (p *Plant) energyBefore(m time.Time) energy {
 }
 
 func (p *Plant) dayTotal(midnight time.Time) energy {
-	d := p.day(midnight)
-	return d[len(d)-1]
+	p.mu.Lock()
+	total, ok := p.totals[midnight]
+	p.mu.Unlock()
+	if ok {
+		return total
+	}
+	sums := p.computeDay(midnight)
+	return sums[len(sums)-1]
 }
 
 // day returns the running sum of one local day: entry i is the energy of the
-// minutes before minute i, the last entry the whole day's. Computed once per
-// day and cached; minutes before the origin count as nothing.
+// minutes before minute i, the last entry the whole day's. The last day asked
+// is cached (the mock server asks for today, the backfill day by day).
 func (p *Plant) day(midnight time.Time) []energy {
 	p.mu.Lock()
-	cached, ok := p.days[midnight]
-	p.mu.Unlock()
-	if ok {
+	if p.lastMinute != nil && p.lastDay.Equal(midnight) {
+		cached := p.lastMinute
+		p.mu.Unlock()
 		return cached
 	}
+	p.mu.Unlock()
+	sums := p.computeDay(midnight)
+	p.mu.Lock()
+	p.lastDay, p.lastMinute = midnight, sums
+	p.mu.Unlock()
+	return sums
+}
+
+// computeDay computes a day's running sums and caches its total. Minutes
+// before the origin count as nothing.
+func (p *Plant) computeDay(midnight time.Time) []energy {
 	end := nextMidnight(midnight)
 	sums := make([]energy, 0, 25*60+1)
 	var e energy
@@ -156,7 +178,7 @@ func (p *Plant) day(midnight time.Time) []energy {
 	}
 	sums = append(sums, e)
 	p.mu.Lock()
-	p.days[midnight] = sums
+	p.totals[midnight] = e
 	p.mu.Unlock()
 	return sums
 }
