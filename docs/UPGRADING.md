@@ -105,6 +105,5 @@ the commit predates them) and copy its `build/upgrade-check/<name>` over.
 
 ## Known gaps
 
-- There's no end-to-end local environment: Tilt and the mock server are broken (backlog 23, 30).
-  Either repair them first as a separate step, or accept that the collector → data accessor path is only checked
-  by unit tests and the first production run.
+- There are no automated end-to-end tests. `tilt up` (CLAUDE.md, Local Development) runs the collector → data
+  accessor → dashboard path against the synthetic plant; use it to check an upgrade before the first production run.

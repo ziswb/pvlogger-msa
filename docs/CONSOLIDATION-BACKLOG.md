@@ -104,6 +104,13 @@ next release; it changes nothing for them.
     a committed `values-dev.yaml`, `docker_build` for every service (live update where it pays off), dummy dev
     credentials instead of the base64 secret scripts, an in-cluster Postgres, and a configurable k8s context (Rancher
     Desktop, not hard-coded `docker-desktop`).
+
+    *Rebuilt 2026-11-15:* `Tiltfile` on the chart (`deploy/dev/values-dev.yaml`), `docker_build` for the JVM and
+    collector/mock images (context = repo root, `only` per stack), dev PostgreSQL and backfill Job in `deploy/dev/`,
+    context guard (`rancher-desktop` unless `-- --k8s-context`), host time zone, dashboard through Rancher Desktop's
+    Traefik on `http://localhost/` (new chart key `ingress.traefik.tls: false`), masterdata import and "run now"
+    buttons for the collectors. Ran green on Rancher Desktop: backfill ~2 min, fast/full collectors against the mock,
+    ingress allowlist holds. Open: the user's own check (incl. a midnight crossing); amd64 hosts need item 56.
 30. **Refresh the outdated mock server** (low prio, ex open question 8): unused for a while and out of date. Update it
     so the Tilt environment (item 23)
     works again for larger changes, and consider building e2e tests around it — none exist today. It stays local-only,
@@ -229,6 +236,15 @@ next release; it changes nothing for them.
 
     Done by item 52: old 3 (service hosts derived from the release) and 5 (site values out of the templates). Old 2
     (secret management) continues as item 54.
+56. 🟡 **Go images hard-code arm64** (added 2026-11-15, found while rebuilding Tilt, item 23)
+
+    Every Go Makefile except the KPI exporter's sets `GOARCH=arm64` in `LINUX_BUILD_OPTIONS`, and their Dockerfiles
+    build in a `golang` stage of the target platform. On an amd64 host (a public user's `tilt up`, an amd64 CI
+    runner) the images build but their binary does not start (exec format error). Do it like
+    `pvlogger-kpi-exporter/docker/Dockerfile`: build stage `FROM --platform=$BUILDPLATFORM`, `ARG TARGETARCH`, and
+    `make prod GOARCH=${TARGETARCH}`, with the Makefiles taking `GOARCH` from the caller (default: the host's,
+    `go env GOARCH`, for `make build` too). Also the `-darwin` local builds hard-code arm64. Prerequisite for the
+    multi-arch GHCR images of item 53 part 2 and for the public "try it" path (item 23).
 
 ## Done (resolved, superseded or moot)
 

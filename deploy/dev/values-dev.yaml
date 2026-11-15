@@ -23,3 +23,15 @@ dataAccessor:
 # Tilt builds the images locally and runs the jobs as the images' own users.
 global:
   imagePullPolicy: IfNotPresent
+
+# The SPA needs /v1/daydata and /livedata on its own origin: Rancher Desktop's
+# Traefik (kube-system) serves the chart's allowlist on http://localhost/.
+ingress:
+  enabled: true
+  traefik:
+    enabled: true
+    host: "localhost"
+    tls: false
+    namespace: "kube-system"
+
+# global.timezone is set by the Tiltfile (the host's zone).

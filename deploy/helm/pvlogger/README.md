@@ -27,7 +27,7 @@ Optional components, all off by default except the network policies:
 | Component | Turn on with | Also needs |
 |---|---|---|
 | FusionSolar API jobs | `fusionsolar.enabled`, `fusionsolarAuth.enabled` | `secrets.fusionsolarPassword`, `fusionsolar.username`/`stationCode`/`devTypeId`, `fusionsolarAuth.username`/`fsHost` |
-| Ingress (Traefik + cert-manager) | `ingress.enabled`, `ingress.traefik.enabled` | `ingress.traefik.host`, `ingress.traefik.clusterIssuer` |
+| Ingress (Traefik + cert-manager) | `ingress.enabled`, `ingress.traefik.enabled` | `ingress.traefik.host`, `ingress.traefik.clusterIssuer` (unless `ingress.traefik.tls` is false: plain HTTP, dev only) |
 | Ingress (Tailscale operator) | `ingress.enabled`, `ingress.tailscale.enabled` | `ingress.tailscale.hostname` |
 | KPI export endpoint | `kpiExportServe.enabled` | `secrets.kpiExportToken`, `kpiExportServe.tailscaleHostname`/`tailscaleTag` |
 | Nightly DB dump to NFS | `dbBackup.enabled` | `dbBackup.persistence.nfsServer`/`nfsPath` |

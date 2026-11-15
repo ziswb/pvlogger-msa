@@ -333,6 +333,10 @@ ingress:
   traefik:
     enabled: false
     host: ""
+    # HTTPS on the websecure entry point with a cert-manager certificate.
+    # false: plain HTTP on the web entry point, no certificate (local
+    # development only).
+    tls: true
     # cert-manager ClusterIssuer for the Traefik host's certificate.
     clusterIssuer: ""
     # Namespace of the Traefik pods, for the NetworkPolicy.

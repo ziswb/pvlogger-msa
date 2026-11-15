@@ -71,17 +71,18 @@ Helm, kubeconform, gitleaks; see docs/UPGRADING.md).
 ### Local Development
 
 ```bash
-tilt up     # Start full local K8s dev environment (requires Docker Desktop K8s)
-tilt down   # Tear down
+tilt up --context rancher-desktop     # Full local K8s environment (Rancher Desktop: Kubernetes and Traefik on)
+tilt down --context rancher-desktop   # Tear down (the dev Postgres PVC stays)
 ```
 
-⚠️ Tilt (with the mock server) is the intended environment for developing larger
-changes, but it has rotted: the Tiltfile references a `pvlogger-infrastructure/`
-directory that no longer exists and has no `docker_build` steps, and the mock
-server is outdated. Verify before relying on it — repair is consolidation-backlog
-item 23, the mock-server refresh item 30 (both low priority).
+Tilt is the environment for larger changes: the Helm chart with `deploy/dev/values-dev.yaml`, every
+image built from the checkout, a plain dev PostgreSQL (`deploy/dev/postgres.yaml`), the Go Modbus mock
+(synthetic plant) and a 30-day history backfill (ADR-0025). Dashboard on `http://localhost/` (Rancher
+Desktop's Traefik); data accessor and masterdata server port-forwarded to 8083/8081, Postgres to 15432.
+The Tiltfile refuses any context but `rancher-desktop` (`-- --k8s-context=<name>` for another local
+cluster) and uses the host's time zone (`-- --timezone=<zone>`).
 
-Database runs via Docker Compose in `pvlogger-database/`.
+For quick service work without Kubernetes, a local database runs via Docker Compose in `pvlogger-database/`.
 
 ## Architecture
 

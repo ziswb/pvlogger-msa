@@ -1,0 +1,52 @@
+# Writes the synthetic plant's last 30 days into the data accessor, so the
+# dashboard has a history on first start (ADR-0025, pvlogger-modbus-mock
+# README). Same image as the mock server, command /backfill. Idempotent: a
+# rerun stores nothing, and the history ends where live data begins.
+#
+# The Tiltfile starts it once the data accessor is ready and replaces
+# __NAMESPACE__ and __TIMEZONE__ (the zone must be the one of the mock server and the data accessor).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pvlogger-backfill
+  namespace: __NAMESPACE__
+  labels:
+    app: pvlogger-backfill
+spec:
+  backoffLimit: 2
+  template:
+    metadata:
+      labels:
+        app: pvlogger-backfill
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: backfill
+          image: bziswiler/pvlogger-modbus-mock
+          command: ["/backfill"]
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
+          env:
+            - name: TZ
+              value: "__TIMEZONE__"
+            - name: BACKFILL_DAYS
+              value: "30"
+            - name: DA_HOST
+              value: "pvlogger-modbus-data-accessor-service"
+            - name: DA_PORT
+              value: "8083"
+            - name: DA_PROTOCOL
+              value: "http"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 32Mi
+            limits:
+              memory: 128Mi

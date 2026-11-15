@@ -196,10 +196,8 @@ All three are dumped nightly by the db-backup CronJob (infrastructure repo). A f
 - Generic defaults (ports, schedules, resources) are chart defaults; **site
   values** (Modbus host `<dongle-ip>`, device IDs, DB endpoints, secrets) stay in
   the infrastructure repo.
-- Local dev: `tilt up` per CLAUDE.md. Tilt (including the mock server) is the
-  **intended environment for developing larger changes** (confirmed
-  2026-08-07) — but it has rotted: the Tiltfile references a
-  `pvlogger-infrastructure/` directory that no longer exists and has no
-  `docker_build` steps. Repair is backlog item 23 (fix, don't remove), the
-  synthetic plant and its mock server are item 30 (ADR-0025) — both low
-  priority; verify before relying on the flow.
+- Local dev: `tilt up` per CLAUDE.md — the **intended environment for developing
+  larger changes** (confirmed 2026-08-07). It deploys this chart with
+  `deploy/dev/values-dev.yaml` and locally built images, plus a plain dev
+  PostgreSQL, the synthetic plant's Modbus mock and its history backfill
+  (ADR-0025, backlog items 23 and 30).

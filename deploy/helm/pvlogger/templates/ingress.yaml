@@ -1,5 +1,6 @@
 {{- if .Values.ingress.enabled }}
 {{- if .Values.ingress.traefik.enabled }}
+{{- if .Values.ingress.traefik.tls }}
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
@@ -15,6 +16,7 @@ spec:
   duration: 8760h # 1 year
   renewBefore: 720h # 30 days
 ---
+{{- end }}
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
@@ -22,7 +24,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   entryPoints:
-    - websecure
+    - {{ .Values.ingress.traefik.tls | ternary "websecure" "web" }}
   # An allowlist, not a pass-through (ADR-0020, security finding 42): the
   # SPA needs only GET /v1/daydata from the data accessor, plus its own files
   # and /livedata from the frontend. Everything else under /v1 (the collectors'
@@ -47,8 +49,10 @@ spec:
           name: pvlogger-frontend-service
           port: pvlogger-frontend
           nativeLB: true
+  {{- if .Values.ingress.traefik.tls }}
   tls:
     secretName: pvlogger-tls-secret
+  {{- end }}
 ---
 {{- end }}
 {{- if .Values.ingress.tailscale.enabled }}

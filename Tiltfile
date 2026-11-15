@@ -1,169 +1,172 @@
-version_settings(constraint='>=0.22.2')
-k8s_context('docker-desktop')
-allow_k8s_contexts('docker-desktop')
+# -*- mode: Python -*-
+#
+# Local development environment (backlog item 23): the Helm chart
+# (deploy/helm/pvlogger, ADR-0024) with deploy/dev/values-dev.yaml, every image
+# built from this checkout, a plain PostgreSQL, the synthetic plant as the
+# Modbus device and a 30-day history backfill (ADR-0025).
+#
+#   tilt up --context rancher-desktop
+#   tilt up --context <ctx> -- --k8s-context=<ctx> --timezone=Europe/Vienna
+#   tilt down --context rancher-desktop
+#
+# Dashboard: http://localhost/ (Rancher Desktop's Traefik). See CLAUDE.md,
+# "Local Development".
 
-pg_pw_yml = """
+version_settings(constraint='>=0.33.0')
+
+config.define_string('k8s-context', usage='Kubernetes context Tilt may deploy to (default rancher-desktop)')
+config.define_string('timezone', usage="IANA zone of the environment (default: the host's zone, else UTC)")
+cfg = config.parse()
+
+NAMESPACE = 'pvlogger'
+
+# Guard: only the named local context, never a production cluster.
+expected_context = cfg.get('k8s-context', 'rancher-desktop')
+allow_k8s_contexts(expected_context)
+if k8s_context() != expected_context:
+    fail('Current Kubernetes context is "%s", this Tiltfile deploys only to "%s". ' % (k8s_context(), expected_context) +
+         'Run `tilt up --context %s`, or pass `-- --k8s-context=<name>` for another local cluster.' % expected_context)
+
+
+def host_timezone():
+    # macOS and most Linux distributions link /etc/localtime into a zoneinfo tree.
+    link = str(local('readlink /etc/localtime 2>/dev/null || true', quiet=True, echo_off=True)).strip()
+    marker = 'zoneinfo/'
+    if marker in link:
+        return link[link.index(marker) + len(marker):]
+    return 'UTC'
+
+
+# One zone for everything: CronJob schedules, the plant's day (daily-yield
+# reset), the data accessor's "today" and the backfill.
+timezone = cfg.get('timezone', host_timezone())
+print('pvlogger dev environment: context %s, namespace %s, timezone %s' % (expected_context, NAMESPACE, timezone))
+
+
+def dev_manifest(path):
+    return blob(str(read_file(path)).replace('__NAMESPACE__', NAMESPACE).replace('__TIMEZONE__', timezone))
+
+
+# --- Images -----------------------------------------------------------------
+# Every Dockerfile builds from the repository root. `only` keeps a change in one
+# stack from rebuilding the other's images. Repositories match the chart's
+# image.repository values (no registry: Rancher Desktop's moby engine shares
+# its images with the cluster, nothing is pushed).
+
+# settings.gradle.kts includes every JVM project, so each JVM build needs all of them.
+JVM_COMMON = [
+    'settings.gradle.kts',
+    'build.gradle.kts',
+    'gradle',
+    'pvlogger-frontend',
+    'pvlogger-masterdata-server',
+    'pvlogger-modbus-data-accessor',
+    'pvlogger-shared-model',
+    'pvlogger-shared-rest',
+    'pvlogger-shared-database',
+    'pvlogger-shared-ktor',
+]
+
+# go.work lists every Go module, so the Go builds need all of them.
+GO_COMMON = [
+    'go.work',
+    'go.work.sum',
+    'pv-device-data-collector',
+    'pv-fast-data-collector',
+    'pv-full-data-collector',
+    'pv-logger',
+    'pvlogger-battery-simulator',
+    'pvlogger-fusionsolar',
+    'pvlogger-fusionsolar-auth',
+    'pvlogger-kpi-exporter',
+    'pvlogger-modbus-mock',
+    'pvlogger-shared-modbus',
+]
+
+JVM_IMAGES = {
+    'bziswiler/pvlogger-frontend': 'pvlogger-frontend',
+    'bziswiler/pvlogger-modbus-data-accessor': 'pvlogger-modbus-data-accessor',
+    'bziswiler/pvlogger-masterdata-server': 'pvlogger-masterdata-server',
+}
+
+GO_IMAGES = {
+    'bziswiler/pv-fast-data-collector': 'pv-fast-data-collector',
+    'bziswiler/pv-full-data-collector': 'pv-full-data-collector',
+    'bziswiler/pv-device-data-collector': 'pv-device-data-collector',
+    'bziswiler/pvlogger-modbus-mock': 'pvlogger-modbus-mock',
+}
+
+# The backends ignore the Angular sources: an SPA edit rebuilds only the frontend.
+for repo, module in JVM_IMAGES.items():
+    docker_build(repo, '.', dockerfile=module + '/docker/Dockerfile', only=JVM_COMMON,
+                 ignore=[] if module == 'pvlogger-frontend' else ['pvlogger-frontend/src/web'])
+
+for repo, module in GO_IMAGES.items():
+    docker_build(repo, '.', dockerfile=module + '/docker/Dockerfile', only=GO_COMMON)
+
+# --- Manifests --------------------------------------------------------------
+
+k8s_yaml(blob("""
 apiVersion: v1
-data:
-  POSTGRES_PASSWORD: """ + str(local('./scripts/get_postgres_pw_base64_encoded.sh')) + """
-kind: Secret
+kind: Namespace
 metadata:
-  name: postgresql-secret
-  namespace: postgresql
-type: kubernetes.io/generic
-"""
-k8s_yaml([
-    blob(pg_pw_yml)
-])
+  name: %s
+""" % NAMESPACE))
 
-fs_pw_yml = """
-apiVersion: v1
-data:
-  FUSIONSOLAR_PASSWORD: """ + str(local('./scripts/get_fusion_solar_pw_base64_encoded.sh')) + """
-kind: Secret
-metadata:
-  name: fusionsolar-secret
-  namespace: pvlogger
-type: kubernetes.io/generic
-"""
-k8s_yaml([
-    blob(fs_pw_yml)
-])
+k8s_yaml(helm(
+    'deploy/helm/pvlogger',
+    name='pvlogger',
+    namespace=NAMESPACE,
+    values=['deploy/dev/values-dev.yaml'],
+    set=['global.timezone=' + timezone],
+))
 
-local_resource('install_traefik', cmd='./scripts/install_traefik.sh')
+# Not in the chart: the dev database and the history backfill.
+k8s_yaml(dev_manifest("deploy/dev/postgres.yaml"))
+k8s_yaml(dev_manifest('deploy/dev/backfill-job.yaml'))
 
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_common_install/files/pvlogger-db-configmap.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_common_install/files/pvlogger-namespace.yaml')
+# --- Resources --------------------------------------------------------------
 
-k8s_yaml(local('./scripts/replace_path_by_home.sh ./tilt-templates/pg-backup-data-pv-template.yaml'))
-k8s_yaml(local('./scripts/replace_path_by_home.sh ./tilt-templates/pg-data-data-pv-template.yaml'))
-k8s_yaml(local('./scripts/replace_path_by_home.sh ./tilt-templates/pg-logs-data-pv-template.yaml'))
-k8s_yaml(local('./scripts/replace_path_by_home.sh ./tilt-templates/pg-os-data-pv-template.yaml'))
-k8s_yaml(local('./scripts/replace_path_by_home.sh ./tilt-templates/kpi-export-data-pv-template.yaml'))
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/postgresql_create_namespace/files/postgresql-namespace.yaml')
-k8s_yaml('./tilt-templates/postgresql-pvc-backups.yaml')
-k8s_yaml('./tilt-templates/postgresql-pvc-data.yaml')
-k8s_yaml('./tilt-templates/postgresql-pvc-logs.yaml')
-k8s_yaml('./tilt-templates/postgresql-pvc-os.yaml')
-k8s_yaml('./tilt-templates/postgresql-deployment.yaml')
-k8s_yaml('./tilt-templates/postgresql-service.yaml')
+k8s_resource('pvlogger-dev-postgres', labels=['dev'], port_forwards=['15432:5432'],
+             objects=['pvlogger-dev-postgres-init:configmap'])
+k8s_resource('pvlogger-modbus-mock-server', labels=['dev'])
 
-pv_pw_yml = """
-apiVersion: v1
-data:
-  POSTGRES_PASSWORD: """ + str(local('./scripts/get_postgres_pw_base64_encoded.sh')) + """
-kind: Secret
-metadata:
-  name: postgresql-secret
-  namespace: pvlogger
-type: kubernetes.io/generic
-"""
-k8s_yaml([
-    blob(pv_pw_yml)
-])
+k8s_resource('pvlogger-modbus-data-accessor', labels=['services'], resource_deps=['pvlogger-dev-postgres'],
+             port_forwards=['8083:8083'])
+k8s_resource('pvlogger-masterdata-server', labels=['services'], resource_deps=['pvlogger-dev-postgres'],
+             port_forwards=['8081:8081'])
+k8s_resource('pvlogger-frontend', labels=['services'], resource_deps=['pvlogger-modbus-data-accessor'],
+             links=[link('http://localhost/', 'dashboard')])
 
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_masterdata_server_install/files/pvlogger-masterdata-server-deployment.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_masterdata_server_install/files/pvlogger-masterdata-server-service.yaml')
+k8s_resource('pvlogger-backfill', labels=['dev'], resource_deps=['pvlogger-modbus-data-accessor'])
 
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_modbus_data_accessor_install/files/pvlogger-modbus-data-accessor-deployment.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_modbus_data_accessor_install/files/pvlogger-modbus-data-accessor-service.yaml')
+# The full and device collectors read the register catalog from the
+# masterdata server. The import is idempotent (unique register address).
+local_resource(
+    'masterdata-import',
+    cmd='for i in 1 2 3 4 5 6 7 8 9 10; do ' +
+        'curl -sSf -X PUT http://localhost:8081/import-master-data && exit 0; sleep 3; done; exit 1',
+    resource_deps=['pvlogger-masterdata-server'],
+    labels=['dev'],
+)
 
-cm_yml = """
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: lwip-config
-  namespace: pvlogger
-data:
-  MODBUS_HOSTNAME: "pvlogger-modbus-mock-server-service.pvlogger.svc.cluster.local"
-  MODBUS_PORT: "8502"
-  MODBUS_TIMEOUT: "5"
-"""
-k8s_yaml([
-    blob(cm_yml)
-])
+# The collectors run on their chart schedules (the fast one every minute).
+# The buttons start a run now, like `kubectl create job --from=cronjob/...`.
+COLLECTOR_CRONJOBS = [
+    'pv-fast-data-collector-cronjob',
+    'pv-full-data-collector-cronjob',
+    'pv-device-static-data-collector-cronjob',
+    'pv-device-identifiers-cronjob',
+    'pv-device-list-cronjob',
+]
 
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pv_device_data_collector_install/files/pv-device-data-collector-configmap-common.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pv_device_data_collector_install/files/pv-device-data-collector-configmap-device-identifiers.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pv_device_data_collector_install/files/pv-device-data-collector-configmap-dynamic-data.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pv_device_data_collector_install/files/pv-device-data-collector-configmap-static-data.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pv_device_data_collector_install/files/pv-device-data-collector-cronjob-device-identifiers.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pv_device_data_collector_install/files/pv-device-data-collector-cronjob-dynamic-data.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pv_device_data_collector_install/files/pv-device-data-collector-cronjob-static-data.yaml')
-
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_modbus_mock_server_install/files/pvlogger-modbus-mock-server-deployment.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_modbus_mock_server_install/files/pvlogger-modbus-mock-server-service.yaml')
-
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_kpi_exporter_install/files/pvlogger-kpi-exporter-cm.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_kpi_exporter_install/files/pvlogger-kpi-exporter-cronjob.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_kpi_exporter_install/files/pvlogger-kpi-exporter-pvc.yaml')
-
-tf_mw_yml = """
-apiVersion: traefik.io/v1alpha1
-kind: Middleware
-metadata:
-  name: strip-pv
-  namespace: pvlogger
-spec:
-  stripPrefix:
-    prefixes:
-      - /pv
-"""
-k8s_yaml([
-    blob(tf_mw_yml)
-])
-
-tf_dt_yml = """
-apiVersion: traefik.io/v1alpha1
-kind: IngressRoute
-metadata:
-  name: pvlogger-data
-  namespace: pvlogger
-spec:
-  entryPoints:
-    - web
-  routes:
-    - kind: Rule
-      match: Host(`localhost`) && PathPrefix(`/v1`)
-      priority: 10
-      services:
-        - kind: Service
-          name: pvlogger-modbus-data-accessor-service
-          port: pvlogger-data-accessor
-          nativeLB: true
-    - kind: Rule
-      match: Host(`localhost`) && PathPrefix(`/livedata`)
-      priority: 100
-      services:
-        - kind: Service
-          name: pvlogger-frontend-service
-          port: pvlogger-frontend
-          nativeLB: true
-    - kind: Rule
-      match: Host(`localhost`) && PathPrefix(`/pv`)
-      priority: 1000
-      middlewares:
-        - name: "strip-pv"
-          namespace: pvlogger
-      services:
-        - kind: Service
-          name: pvlogger-frontend-service
-          port: pvlogger-frontend
-          nativeLB: true
-"""
-k8s_yaml([
-    blob(tf_dt_yml)
-])
-
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_frontend_install/files/pvlogger-frontend-deployment.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_frontend_install/files/pvlogger-frontend-service.yaml')
-
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_fusionsolar_install/files/pvlogger-fusionsolar-cm.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_fusionsolar_install/files/pvlogger-fusionsolar-cm-1.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_fusionsolar_install/files/pvlogger-fusionsolar-cm-2.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_fusionsolar_install/files/pvlogger-fusionsolar-cm-3.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_fusionsolar_install/files/pvlogger-fusionsolar-cm-4.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_fusionsolar_install/files/pvlogger-fusionsolar-cronjob-1.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_fusionsolar_install/files/pvlogger-fusionsolar-cronjob-2.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_fusionsolar_install/files/pvlogger-fusionsolar-cronjob-3.yaml')
-k8s_yaml('pvlogger-infrastructure/workload-setup/roles/pvlogger_fusionsolar_install/files/pvlogger-fusionsolar-cronjob-4.yaml')
+for cronjob in COLLECTOR_CRONJOBS:
+    k8s_resource(cronjob, labels=['collectors'], resource_deps=['pvlogger-modbus-mock-server'])
+    local_resource(
+        'run-' + cronjob.replace('-cronjob', ''),
+        cmd='kubectl --context %s -n %s create job --from=cronjob/%s %s-$(date +%%s)' % (
+            expected_context, NAMESPACE, cronjob, cronjob.replace('-cronjob', '')),
+        trigger_mode=TRIGGER_MODE_MANUAL,
+        auto_init=False,
+        labels=['collectors'],
+    )
