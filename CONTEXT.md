@@ -24,8 +24,8 @@ SmartDongle). It:
 - stores everything in PostgreSQL,
 - computes household energy **KPIs**,
 - serves a **dashboard** (live via WebSocket + per-day history),
-- exports the latest KPI snapshot as JSON to an external family PV-comparison
-  platform (pulled over Tailscale by a relay on the receiver's server, ADR-0021),
+- exports the latest KPI snapshot as JSON to an external PV-comparison
+  platform run by a third party (pulled over Tailscale by a relay on the receiver's server, ADR-0021),
 - and feeds a **battery simulator** used to evaluate a LUNA2000 battery purchase
   (2026 verdict: not economical yet — purchase deferred, simulator kept for
   re-evaluation when prices change; ADR-0006).
@@ -102,7 +102,7 @@ themselves pragmatically — default to a job/endpoint in an existing service
 | `pv-device-data-collector` | Nightly: reads STATIC/CONFIG registers, device identifiers and device list. Stays permanently; scheduled at night to avoid the per-minute dynamic polling (one-Modbus-client constraint, ADR-0004). |
 | `pvlogger-fusionsolar` | Six scheduled jobs pulling FusionSolar OpenAPI KPIs (station/device, real-time/day/month/year) — writes **directly** to the `fsdata` DB (not via the data accessor). |
 | `pvlogger-fusionsolar-auth` | Refreshes the FusionSolar API token into a K8s secret every 20 min; the collector jobs read it. |
-| `pvlogger-kpi-exporter` | Builds a German-keyed (`pv_*`) JSON file from the latest KPI. One binary, three modes (ADR-0021, infrastructure ADR-0024): `serve` (Deployment, token-protected `GET /v1/export/latest`, reached over Tailscale) and `relay` (a systemd service on the receiver's server that fetches from `serve` and writes the files there) carry the export since 2026-10-23. `export` is the old file-writing path: the mode is still in the code and is still the default, but nothing deploys it since its CronJob, NFS volume and the OneDrive sync were removed (backlog 44). Consumed by the operator's receiver: he runs a small platform comparing the energy/PV data of three family households (operator, another household, his own). This is an **external consumer** — treat the file naming, keys, and 5-min cadence as a de-facto contract. |
+| `pvlogger-kpi-exporter` | Builds a German-keyed JSON file (`pv_*`, the receiver's key prefix and part of its contract) from the latest KPI. One binary, three modes (ADR-0021, infrastructure ADR-0024): `serve` (Deployment, token-protected `GET /v1/export/latest`, reached over Tailscale) and `relay` (a systemd service on the receiver's server that fetches from `serve` and writes the files there) carry the export since 2026-10-23. `export` is the old file-writing path: the mode is still in the code and is still the default, but nothing deploys it since its CronJob, NFS volume and the OneDrive sync were removed (backlog 44). Consumed by a third party (the receiver), who runs a small platform comparing the energy/PV data of several private PV installations. This is an **external consumer** — treat the file naming, keys, and 5-min cadence as a de-facto contract. |
 
 ### Shared libraries
 
@@ -139,7 +139,7 @@ flowchart LR
     MD --> MDDB[(pvmasterdata)]
     DA -->|read-latest-kpi| FE[frontend Ktor] -->|WebSocket /livedata| SPA[Angular SPA]
     DA -->|/v1/daydata via ingress| SPA
-    DA -->|read-latest-kpi| EXP[kpi-exporter serve] -->|Tailscale, token| REL[relay on receiver's server] --> ONE[JSON files\nfamily PV-comparison platform]
+    DA -->|read-latest-kpi| EXP[kpi-exporter serve] -->|Tailscale, token| REL[relay on receiver's server] --> ONE[JSON files\nexternal PV-comparison platform]
 ```
 
 \* full collector: hourly sweep at minute 2 of hours 1–23 (ADR-0016).

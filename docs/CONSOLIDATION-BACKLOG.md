@@ -48,7 +48,7 @@ explicitly and again by `defer`; the explicit close is gone and `TcpHandler.Clos
 `pvlogger-shared-modbus/tcp-handler_test.go`). Fast and full collectors pick up the idempotent `Close` with their
 next release; it changes nothing for them.
 
-**Receiver export (ADR-0021, infrastructure ADR-0024) — switched 2026-10-23.**
+**KPI export to the receiver (ADR-0021, infrastructure ADR-0024) — switched 2026-10-23.**
 - Done here: the exporter's `serve` and `relay` modes, consumption fix, multi-arch image, install guide
   (`pvlogger-kpi-exporter/README.md`). Brief with the contract (service/port 8080, `GET /v1/export/latest`,
   Bearer token from `KPI_EXPORT_TOKEN_FILE`) handed to the infrastructure side.

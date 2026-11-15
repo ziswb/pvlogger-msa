@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -22,6 +23,19 @@ func envOr(key, def string) string {
 	return def
 }
 
+// envFloatOr parses the environment variable key as a float, or returns def if it is unset.
+func envFloatOr(key string, def float64) float64 {
+	v := os.Getenv(key)
+	if v == "" {
+		return def
+	}
+	f, err := strconv.ParseFloat(v, 64)
+	if err != nil {
+		logging.Fatal(fmt.Sprintf("%s=%q is not a number", key, v))
+	}
+	return f
+}
+
 type batteryList []string
 
 func (b *batteryList) String() string     { return strings.Join(*b, ",") }
@@ -33,11 +47,11 @@ func main() {
 	toStr := flag.String("to", "", "end date, e.g. 2025-01-01 (local time, exclusive)")
 	flag.Var(&batteries, "battery", "battery preset, repeatable (default: luna2000-15, luna2000-20)")
 	maxGap := flag.Duration("max-gap", 5*time.Minute, "intervals longer than this are excluded (SoC held)")
-	importPrice := flag.Float64("import-price", 0.2576, "grid import price per kWh (flat tariff)")
-	feedInPrice := flag.Float64("feedin-price", 0.06, "feed-in remuneration per kWh")
+	importPrice := flag.Float64("import-price", envFloatOr("PVLOGGER_IMPORT_PRICE", 0.30), "grid import price per kWh, flat tariff; env PVLOGGER_IMPORT_PRICE sets the default")
+	feedInPrice := flag.Float64("feedin-price", envFloatOr("PVLOGGER_FEEDIN_PRICE", 0.08), "feed-in remuneration per kWh; env PVLOGGER_FEEDIN_PRICE sets the default")
 	csvPath := flag.String("csv", "", "optional path for a per-month CSV export")
 	summaryCSVPath := flag.String("summary-csv", "", "optional path for a whole-period summary CSV (one row per battery)")
-	dbHost := flag.String("db-host", envOr("PVLOGGER_DB_HOST", "localhost"), "PostgreSQL host (default: $PVLOGGER_DB_HOST, else localhost)")
+	dbHost := flag.String("db-host", envOr("PVLOGGER_DB_HOST", "localhost"), "PostgreSQL host; env PVLOGGER_DB_HOST sets the default")
 	dbPort := flag.Int("db-port", 5432, "PostgreSQL port")
 	dbName := flag.String("db-name", "pvdata", "database name")
 	dbUser := flag.String("db-user", "battery_sim_ro", "database user (password via PGPASSWORD)")

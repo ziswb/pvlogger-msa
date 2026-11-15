@@ -113,8 +113,8 @@ Or build a binary with `make build` (output in `./build/`).
 | `-to` | *(required)* | End date `YYYY-MM-DD`, Europe/Zurich, exclusive |
 | `-battery` | `luna2000-15`, `luna2000-20` | Battery preset; repeat the flag to compare several in one run |
 | `-max-gap` | `5m` | Intervals longer than this are excluded (SoC held); Go duration syntax |
-| `-import-price` | `0.2576` | Grid import price per kWh (flat tariff) |
-| `-feedin-price` | `0.06` | Feed-in remuneration per kWh |
+| `-import-price` | `$PVLOGGER_IMPORT_PRICE`, else `0.30` | Grid import price per kWh (flat tariff) |
+| `-feedin-price` | `$PVLOGGER_FEEDIN_PRICE`, else `0.08` | Feed-in remuneration per kWh |
 | `-csv` | *(off)* | Write a per-month, per-battery CSV to this path |
 | `-summary-csv` | *(off)* | Write a whole-period summary CSV (one row per battery) to this path |
 | `-db-host` | `$PVLOGGER_DB_HOST`, else `localhost` | PostgreSQL host |

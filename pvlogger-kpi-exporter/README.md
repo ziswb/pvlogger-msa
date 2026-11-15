@@ -1,7 +1,8 @@
 # pvlogger-kpi-exporter
 
-Exports the latest KPI row as the `pv_*` JSON file the family PV-comparison
-platform reads. One binary, three modes (`KPI_EXPORTER_MODE`, ADR-0021):
+Exports the latest KPI row as the `pv_*` JSON file an external PV-comparison
+platform reads (the prefix is the receiver's, part of the export contract).
+One binary, three modes (`KPI_EXPORTER_MODE`, ADR-0021):
 
 | Mode | Runs | Does |
 |---|---|---|
