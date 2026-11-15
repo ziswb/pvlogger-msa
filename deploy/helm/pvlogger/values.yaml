@@ -374,5 +374,3 @@ heartbeat:
 # Default-deny ingress plus the allows the components need. On by default.
 networkPolicies:
   enabled: true
-  # Source of kubelet probes; k3s/Flannel's default pod network.
-  kubeletCidr: "10.42.0.0/16"

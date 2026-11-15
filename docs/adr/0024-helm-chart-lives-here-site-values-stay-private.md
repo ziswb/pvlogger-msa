@@ -35,7 +35,9 @@ readers need a chart they can install on their own, while the site specifics
 4. **Homelab templates stay in the chart, off by default:** heartbeat, image
    pre-pull, DB backup, Traefik and Tailscale ingress, KPI export serve. Network
    policies are **on** by default, with the k3s pod network as the default
-   kubelet CIDR.
+   kubelet CIDR. *(Amended 2026-11-15, backlog 57: the kubelet-probe policy and
+   its CIDR are gone; that CIDR admitted every pod in the cluster, security
+   finding 60.)*
 5. **Secrets keep coming from values**; `required` fails a render without a DB
    password. An `existingSecret` option is backlog item 54.
 6. **The dev database is not in the chart.** Tilt deploys a plain Postgres

@@ -27,46 +27,10 @@ spec:
     - from:
         - podSelector: {}
 ---
-# Allow kubelet health probes (liveness/readiness) from cluster nodes.
-# On K3S/Flannel, kubelet probes originate from the cni0 bridge IP (10.42.x.1)
-# within the pod CIDR, not from the node's physical network IP.
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: allow-kubelet-probes
-  namespace: {{ .Release.Namespace }}
-spec:
-  podSelector:
-    matchExpressions:
-      - key: app
-        operator: In
-        values:
-          - pvlogger-frontend
-          - pvlogger-modbus-data-accessor
-          - pvlogger-masterdata-server
-          - pvlogger-kpi-exporter-serve
-          - pvlogger-modbus-mock-server
-  policyTypes:
-    - Ingress
-  ingress:
-    - from:
-        - ipBlock:
-            cidr: {{ .Values.networkPolicies.kubeletCidr }}
-      ports:
-        - protocol: TCP
-          port: {{ .Values.frontend.port }}
-        - protocol: TCP
-          port: {{ .Values.dataAccessor.port }}
-        - protocol: TCP
-          port: {{ .Values.masterdataServer.port }}
-        {{- if .Values.kpiExportServe.enabled }}
-        - protocol: TCP
-          port: {{ .Values.kpiExportServe.port }}
-        {{- end }}
-        {{- if .Values.modbusMockServer.enabled }}
-        - protocol: TCP
-          port: {{ .Values.modbusMockServer.containerPort }}
-        {{- end }}
+# No policy for kubelet probes: k3s's policy controller (kube-router) admits
+# traffic from a pod's own node, which is where the probes come from. An
+# ipBlock for them would have to be the pod CIDR, and that admits every pod in
+# the cluster (security finding 60, backlog 57).
 ---
 # Allow Traefik ingress controller to reach the frontend and data accessor.
 # Traefik terminates TLS and routes external traffic to these services.

@@ -34,19 +34,7 @@ depth / operational.
 
 ### 🔴 Exploitable / data-integrity
 
-60. **The kubelet-probe NetworkPolicy may admit every pod in the cluster.** *Added
-    2026-11-15 (review of the chart move, backlog 57); not verified on the cluster.*
-
-    `deploy/helm/pvlogger/templates/network-policies.yaml` allows the probe ports from
-    `networkPolicies.kubeletCidr`, default `10.42.0.0/16`: k3s's whole pod network, not
-    only the nodes' bridge addresses the kubelet probes come from. If k3s's policy
-    controller (kube-router) matches pod source IPs against that `ipBlock`, any pod in
-    any namespace reaches the frontend, the data accessor (unauthenticated `store-*`
-    writes), the masterdata server (`PUT /import-master-data`) and the KPI exporter,
-    and the default-deny ingress the posture note relies on holds only at the namespace
-    edge. Check: from a pod in another namespace, `curl` the data accessor Service. If
-    it answers, drop the policy (kube-router already admits node-local traffic, so
-    probes may pass without it) or narrow it to each node's bridge gateway (`/32`).
+None.
 
 ### ⚪ Defence in depth / operational
 
@@ -208,6 +196,19 @@ Also fixed before the 2026-03-13 review and still holding: **CORS lockdown** (co
 `application-prod.conf` files** (commit `b2281352`; re-verified 2026-08-17 at line 2 of
 every prod config, with `true` only in dev configs — the one test-config instance went
 with sunrise-sunset on 2026-08-27).
+
+60. ~~**The kubelet-probe NetworkPolicy admitted every pod in the cluster**~~ — **fixed
+    2026-11-15** (backlog 57, chart 2.0.0). `allow-kubelet-probes` allowed the app ports from
+    `networkPolicies.kubeletCidr`, default `10.42.0.0/16`: k3s's whole pod network, not only
+    the nodes. Confirmed in Tilt (k3s with kube-router): a pod in `default` got 200 from the
+    data accessor and the masterdata server, while Postgres (not in that policy) refused it.
+    The chart drops the policy and the value: kube-router admits traffic from a pod's own
+    node, so probes pass without it, and the curl is refused. The policy had also hidden a
+    race: kube-router admits a new pod to `allow-intra-namespace` only a moment after it
+    starts, and 1 of 6 device collector runs got `connection refused` from the masterdata
+    server 1 ms after start. The shared Go HTTP client (`pvlogger-shared-modbus/httpclient`)
+    now retries a refused connection for up to 5 s. The infrastructure repo's DB policy
+    uses the same pod-CIDR `ipBlock` for 5432 (logins still need a password and TLS).
 
 ## Withdrawn
 
