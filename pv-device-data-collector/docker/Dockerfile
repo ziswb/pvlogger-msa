@@ -1,9 +1,12 @@
 FROM golang:1.27.4 AS golang
 
-ADD . /
+COPY . /
 WORKDIR /pv-device-data-collector
 
-RUN make prod
+# Module and build caches survive between builds (BuildKit; backlog 58).
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    make prod
 
 FROM gcr.io/distroless/static-debian13
 

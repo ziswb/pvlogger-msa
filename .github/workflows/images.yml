@@ -1,0 +1,52 @@
+# Every image builds from its Dockerfile (backlog 58). Code changes are built
+# and tested by jvm.yml, go.yml and frontend.yml; this catches what only the
+# image build exercises: the Dockerfile, the build context (.dockerignore) and
+# the build stage's own steps. Nothing is pushed (GHCR releases: backlog 53
+# part 2). The Go binaries are arm64 until backlog 56; building them on the
+# amd64 runner still checks the Dockerfile.
+name: Images
+
+on:
+  push:
+    branches: [main]
+    paths: &paths
+      - "*/docker/Dockerfile"
+      - ".dockerignore"
+      - ".github/workflows/images.yml"
+  pull_request:
+    paths: *paths
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Superseded PR runs only: every commit pushed to a branch gets its own result.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        module:
+          - pv-device-data-collector
+          - pv-fast-data-collector
+          - pv-full-data-collector
+          - pvlogger-frontend
+          - pvlogger-fusionsolar
+          - pvlogger-fusionsolar-auth
+          - pvlogger-kpi-exporter
+          - pvlogger-masterdata-server
+          - pvlogger-modbus-data-accessor
+          - pvlogger-modbus-mock
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build
+        env:
+          MODULE: ${{ matrix.module }}
+        run: docker build -f "$MODULE/docker/Dockerfile" -t "ci/$MODULE" .
