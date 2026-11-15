@@ -142,7 +142,7 @@ fusionsolar:
   enabled: false
   image:
     repository: "bziswiler/pvlogger-fusionsolar"
-    tag: "3.5.4"
+    tag: "3.5.5"
   # Site values: the FusionSolar API account, plant and devices.
   username: ""
   stationCode: ""
