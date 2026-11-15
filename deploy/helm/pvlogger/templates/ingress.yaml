@@ -1,0 +1,109 @@
+{{- if .Values.ingress.enabled }}
+{{- if .Values.ingress.traefik.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: pvlogger-tls
+  namespace: {{ .Release.Namespace }}
+spec:
+  secretName: pvlogger-tls-secret
+  issuerRef:
+    name: {{ required "ingress.traefik.clusterIssuer is required" .Values.ingress.traefik.clusterIssuer }}
+    kind: ClusterIssuer
+  dnsNames:
+    - {{ required "ingress.traefik.host is required" .Values.ingress.traefik.host }}
+  duration: 8760h # 1 year
+  renewBefore: 720h # 30 days
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: pvlogger-data
+  namespace: {{ .Release.Namespace }}
+spec:
+  entryPoints:
+    - websecure
+  # An allowlist, not a pass-through (ADR-0020, security finding 42): the
+  # SPA needs only GET /v1/daydata from the data accessor, plus its own files
+  # and /livedata from the frontend. Everything else under /v1 (the collectors'
+  # unauthenticated store-* writes, the read-latest-* reads) is called
+  # in-cluster through the Service, never through here. Widening this needs
+  # the same review as a new endpoint.
+  routes:
+    - kind: Rule
+      match: "Host(`{{ .Values.ingress.traefik.host }}`) && PathPrefix(`/v1/daydata`) && Method(`GET`)"
+      priority: 100
+      services:
+        - kind: Service
+          name: pvlogger-modbus-data-accessor-service
+          port: pvlogger-data-accessor
+          nativeLB: true
+    - kind: Rule
+      # /metrics is for Prometheus in-cluster, not for the LAN.
+      match: "Host(`{{ .Values.ingress.traefik.host }}`) && (PathPrefix(`/`) || PathPrefix(`/livedata`)) && !PathPrefix(`/metrics`)"
+      priority: 10
+      services:
+        - kind: Service
+          name: pvlogger-frontend-service
+          port: pvlogger-frontend
+          nativeLB: true
+  tls:
+    secretName: pvlogger-tls-secret
+---
+{{- end }}
+{{- if .Values.ingress.tailscale.enabled }}
+# No selector and no Endpoints: anything routed here gets an error from the
+# proxy instead of a backend (the Tailscale Ingress's /metrics, security finding 18).
+apiVersion: v1
+kind: Service
+metadata:
+  name: pvlogger-blackhole
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "pvlogger.labels" . | nindent 4 }}
+spec:
+  ports:
+    - port: 80
+      protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pvlogger
+  namespace: {{ .Release.Namespace }}
+spec:
+  tls:
+    - hosts:
+        - {{ required "ingress.tailscale.hostname is required" .Values.ingress.tailscale.hostname }}
+  ingressClassName: tailscale
+  # Same allowlist as the IngressRoute above, as far as an Ingress can express
+  # it: only /v1/daydata to the data accessor (no method match here). The
+  # frontend's /metrics is cut out of the "/" prefix by a longer path to a
+  # Service without endpoints, so the proxy cannot reach it (security
+  # finding 18; Prometheus scrapes the pod directly).
+  rules:
+    - http:
+        paths:
+          - path: /metrics
+            pathType: Prefix
+            backend:
+              service:
+                name: pvlogger-blackhole
+                port:
+                  number: 80
+          - path: /v1/daydata
+            pathType: Prefix
+            backend:
+              service:
+                name: pvlogger-modbus-data-accessor-service
+                port:
+                  number: {{ .Values.dataAccessor.port }}
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pvlogger-frontend-service
+                port:
+                  number: {{ .Values.frontend.port }}
+{{- end }}
+{{- end }}

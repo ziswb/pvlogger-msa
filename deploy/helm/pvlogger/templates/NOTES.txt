@@ -1,0 +1,44 @@
+Thank you for installing {{ .Chart.Name }}.
+
+Your release is named {{ .Release.Name }}.
+
+To learn more about the release, try:
+
+  $ helm status {{ .Release.Name }} -n {{ .Release.Namespace }}
+  $ helm get all {{ .Release.Name }} -n {{ .Release.Namespace }}
+
+Components deployed:
+{{- if .Values.frontend.enabled }}
+  - Frontend (Deployment): pvlogger-frontend
+{{- end }}
+{{- if .Values.dataAccessor.enabled }}
+  - Data Accessor (Deployment): pvlogger-modbus-data-accessor
+{{- end }}
+{{- if .Values.masterdataServer.enabled }}
+  - Masterdata Server (Deployment): pvlogger-masterdata-server
+{{- end }}
+{{- if .Values.fusionsolarAuth.enabled }}
+  - FusionSolar Auth (CronJob): pvlogger-fusionsolar-auth-cronjob
+{{- end }}
+{{- if .Values.fusionsolar.enabled }}
+  - FusionSolar Data Collection (CronJobs): {{ len .Values.fusionsolar.cronjobs }} jobs
+{{- end }}
+{{- if .Values.pvDeviceDataCollector.enabled }}
+  - PV Device Data Collector (CronJobs): {{ len .Values.pvDeviceDataCollector.cronjobs }} jobs
+{{- end }}
+{{- if .Values.kpiExporter.enabled }}
+  - KPI export endpoint: pvlogger-kpi-exporter-serve
+{{- end }}
+{{- if .Values.dbBackup.enabled }}
+  - DB Backup (CronJob): pvlogger-db-backup-cronjob
+{{- end }}
+
+{{- if .Values.ingress.enabled }}
+Ingress:
+{{- if .Values.ingress.traefik.enabled }}
+  - Traefik: http://{{ .Values.ingress.traefik.host }}
+{{- end }}
+{{- if .Values.ingress.tailscale.enabled }}
+  - Tailscale: https://{{ .Values.ingress.tailscale.hostname }}
+{{- end }}
+{{- end }}

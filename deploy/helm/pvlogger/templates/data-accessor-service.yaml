@@ -1,0 +1,18 @@
+{{- if .Values.dataAccessor.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: pvlogger-modbus-data-accessor-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: pvlogger-modbus-data-accessor
+spec:
+  type: ClusterIP
+  ports:
+    - name: pvlogger-data-accessor
+      port: {{ .Values.dataAccessor.port }}
+      protocol: TCP
+      targetPort: tcp-data-acc
+  selector:
+    app: pvlogger-modbus-data-accessor
+{{- end }}

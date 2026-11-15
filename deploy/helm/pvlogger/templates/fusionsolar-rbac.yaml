@@ -1,0 +1,80 @@
+{{- if .Values.fusionsolar.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: fusionsolar-sa
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: pvlogger-fusionsolar
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: fusionsolar-secret-reader
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: pvlogger-fusionsolar
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["fusionsolar-token-secret"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: fusionsolar-secret-reader-binding
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: pvlogger-fusionsolar
+subjects:
+  - kind: ServiceAccount
+    name: fusionsolar-sa
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: fusionsolar-secret-reader
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}
+---
+{{- if .Values.fusionsolarAuth.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: fusionsolar-auth-sa
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: pvlogger-fusionsolar-auth
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: fusionsolar-auth-secret-manager
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: pvlogger-fusionsolar-auth
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["fusionsolar-token-secret"]
+    verbs: ["get", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: fusionsolar-auth-secret-manager-binding
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: pvlogger-fusionsolar-auth
+subjects:
+  - kind: ServiceAccount
+    name: fusionsolar-auth-sa
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: fusionsolar-auth-secret-manager
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}

@@ -1,0 +1,235 @@
+{{- if .Values.dbBackup.enabled }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pvlogger-db-backup-pv
+spec:
+  capacity:
+    storage: {{ .Values.dbBackup.persistence.size }}
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ''
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem
+  {{- with .Values.dbBackup.persistence.nfsMountOptions }}
+  mountOptions: {{ toJson . }}
+  {{- end }}
+  nfs:
+    server: {{ required "dbBackup.persistence.nfsServer is required" .Values.dbBackup.persistence.nfsServer }}
+    path: {{ required "dbBackup.persistence.nfsPath is required" .Values.dbBackup.persistence.nfsPath }}
+    readOnly: false
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvlogger-db-backup-pvc
+  namespace: {{ .Release.Namespace }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ''
+  resources:
+    requests:
+      storage: {{ .Values.dbBackup.persistence.size }}
+  volumeName: pvlogger-db-backup-pv
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pvlogger-db-backup-script-cm
+  namespace: {{ .Release.Namespace }}
+data:
+  backup_postgres_db.sh: |
+    #!/usr/bin/env bash
+
+    set -e
+    set -u
+    set -o pipefail
+    
+    BACKUP_DIR="/backup"
+    # Not ${HOME}: the job runs as a numeric uid with no passwd entry, so HOME
+    # is `/`, which it cannot write. pg_dump finds the file via PGPASSFILE.
+    PG_PASS_FILE="/tmp/.pgpass"
+    export PGPASSFILE="${PG_PASS_FILE}"
+    DB_NAMES=(
+      "pvmasterdata"
+      "fsdata"
+      "pvdata"
+    )
+    
+    # One database's failure must not cost the others. This used to be a flat loop
+    # under `set -e`, so the first failing pg_dump aborted the run and every
+    # database after it went unbacked-up — including pvdata, the only one that is
+    # actually irreplaceable. Removing the retired `sunrisesunset` from the list
+    # above is what exposed it: while the live ConfigMap still named the
+    # already-dropped database, and it happened to sort first, a full run backed
+    # up nothing at all.
+    #
+    # Each database is now attempted independently and failures are collected, so
+    # a run reports failure at the end (non-zero exit -> the CronJob is Failed and
+    # the generic collector alerting picks it up, ADR-0013) while still having
+    # backed up everything that was healthy. Errors are checked explicitly rather
+    # than by errexit, because errexit is suspended inside an `if` condition.
+    backup_one() {
+        local DB="$1"
+        # zstd on all cores, not single-threaded gzip: the dump reads the whole
+        # database from a standby's NVMe, which etcd shares, and the shorter
+        # it runs, the fewer of that drive's stalls it causes (infrastructure backlog 96).
+        # Dumps up to 2026-10-31 are .sql.gz; restore with zstd -dc or gunzip -c.
+        local file="${DB}-$(date +%Y-%m-%d_%Hh-%Mm-%Ss).sql.zst"
+
+        echo "${POSTGRESQL_HOST}:${POSTGRESQL_PORT}:${DB}:${POSTGRESQL_USERNAME}:${POSTGRES_PASSWORD}" > "${PG_PASS_FILE}" || return 1
+        chmod 0600 "${PG_PASS_FILE}" || return 1
+
+        # Dump straight into the backup directory under a hidden temporary name,
+        # then rename it in place. The old way (dump to /tmp, then mv to NFS)
+        # wrote every dump twice through the page cache, which counts against
+        # the memory limit (infrastructure backlog 89). The dot keeps a partial file out of
+        # the pruning below; a leftover from a killed run is removed first.
+        local partial="${BACKUP_DIR}/.${file}.partial"
+        rm -f "${BACKUP_DIR}/.${DB}-"*.partial
+
+        echo "Starting to create database backup for database '${DB}' at $(date +'%d.%m.%Y %H:%M:%S')..."
+        if ! pg_dump -U "${POSTGRESQL_USERNAME}" -h "${POSTGRESQL_HOST}" -p "${POSTGRESQL_PORT}" "${DB}" | zstd -q -T0 > "${partial}"; then
+            rm -f "${partial}"
+            return 1
+        fi
+        echo "-> Database backup successfully created for ${DB} at $(date +'%d.%m.%Y %H:%M:%S')"
+
+        mv "${partial}" "${BACKUP_DIR}/${file}" || return 1
+        echo "-> Database backup ${file} successfully written to ${BACKUP_DIR}"
+        # No chown: the export all_squashes to the job's own uid (infrastructure ADR-0009), so
+        # the dump already carries the right owner — and a chown to anything
+        # else is refused by the server, which would fail every database.
+        echo "-> Finished creating database backup for database '${DB}' at $(date +'%d.%m.%Y %H:%M:%S')"
+
+        # Keep the three most recent dumps per database. Pruning failing is not
+        # worth failing the backup over — the dump is already safely in place.
+        echo "-> Deleting old backups for database '${DB}'..."
+        ( cd "${BACKUP_DIR}" && find . -maxdepth 1 -type f -name "${DB}-*" -printf '%f\0' | sort -z -r | tail -z -n +4 | xargs -0 -r -I {} rm -f '{}' ) \
+            || echo "-> WARNING: pruning old backups for '${DB}' failed; the new dump is unaffected"
+        echo "-> Finished deleting old backups for database '${DB}'"
+    }
+
+    # Dump from a standby (values dbBackup.host, e.g. a CloudNativePG -ro service): the dump
+    # reads the whole database from the instance's disk, which etcd shares, and
+    # on the primary's node that stalled etcd (2026-10-31). Fall back to the
+    # application's host when no standby answers, so a single-instance cluster
+    # or two lost standbys still get their backup.
+    if [ -n "${BACKUP_DB_HOST:-}" ] && [ "${BACKUP_DB_HOST}" != "${POSTGRESQL_HOST}" ]; then
+        # -U and -d explicit: without them pg_isready looks up the OS user,
+        # which this numeric uid does not have, and exits 3 ("no attempt")
+        # without connecting (first test, 2026-10-31).
+        if pg_isready -q -t 10 -U "${POSTGRESQL_USERNAME}" -d postgres -h "${BACKUP_DB_HOST}" -p "${POSTGRESQL_PORT}"; then
+            POSTGRESQL_HOST="${BACKUP_DB_HOST}"
+        else
+            echo "-> WARNING: no standby answers at ${BACKUP_DB_HOST}; dumping from ${POSTGRESQL_HOST} instead" >&2
+        fi
+    fi
+    echo "Dumping from ${POSTGRESQL_HOST}"
+
+    failed=()
+    for DB in "${DB_NAMES[@]}"
+    do
+        if backup_one "${DB}"; then
+            continue
+        fi
+        echo "-> ERROR: backup FAILED for database '${DB}' at $(date +'%d.%m.%Y %H:%M:%S'); continuing with the rest" >&2
+        failed+=("${DB}")
+    done
+
+    if [ "${#failed[@]}" -gt 0 ]; then
+        echo "Backup run finished with failures: ${failed[*]}" >&2
+        exit 1
+    fi
+    echo "Backup run finished successfully for all ${#DB_NAMES[@]} databases."
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: pvlogger-db-backup-cj
+  name: pvlogger-db-backup-cronjob
+spec:
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 1
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 10
+  schedule: {{ .Values.dbBackup.schedule | quote }}
+  timeZone: {{ $.Values.global.timezone | quote }}
+  jobTemplate:
+    metadata:
+      name: pvlogger-db-backup-job
+    spec:
+      completions: 1
+      backoffLimit: 1
+      template:
+        metadata:
+          labels:
+            app: pvlogger-db-backup
+          name: pvlogger-db-backup
+        spec:
+          restartPolicy: Never
+          {{- with .Values.dbBackup.affinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          securityContext:
+            runAsUser: {{ .Values.dbBackup.uid }}
+            runAsGroup: {{ .Values.dbBackup.uid }}
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: pvlogger-db-backup-container
+              image: {{ .Values.dbBackup.image }}
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop: ["ALL"]
+              imagePullPolicy: IfNotPresent
+              command:
+                - /bin/bash
+              args:
+                - -c
+                - /script/backup_postgres_db.sh
+              env:
+                {{- include "pvlogger.timezoneEnv" . | nindent 16 }}
+                {{- with .Values.dbBackup.host }}
+                - name: BACKUP_DB_HOST
+                  value: {{ . | quote }}
+                {{- end }}
+              envFrom:
+                - configMapRef:
+                    name: db-config
+                    optional: false
+                - secretRef:
+                    name: postgresql-secret
+              volumeMounts:
+                - mountPath: /backup
+                  name: backup-directory
+                  readOnly: false
+                - mountPath: /script
+                  name: backup-script
+                {{- include "pvlogger.timezoneVolumeMount" . | nindent 16 }}
+              resources:
+                requests:
+                  cpu: {{ .Values.dbBackup.resources.requests.cpu }}
+                  memory: {{ .Values.dbBackup.resources.requests.memory }}
+                limits:
+                  cpu: {{ .Values.dbBackup.resources.limits.cpu }}
+                  memory: {{ .Values.dbBackup.resources.limits.memory }}
+          volumes:
+            - name: backup-directory
+              persistentVolumeClaim:
+                claimName: pvlogger-db-backup-pvc
+            - name: backup-script
+              configMap:
+                name: pvlogger-db-backup-script-cm
+                # World-readable/executable: the mounted file is root-owned and
+                # the job runs as the backup uid, so 0500 locked it out. The
+                # script carries no secrets — those arrive as env vars.
+                defaultMode: 0555
+            {{- include "pvlogger.timezoneVolume" . | nindent 12 }}
+{{- end }}

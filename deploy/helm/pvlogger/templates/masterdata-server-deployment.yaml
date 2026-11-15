@@ -1,0 +1,67 @@
+{{- if .Values.masterdataServer.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pvlogger-masterdata-server
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: pvlogger-masterdata-server
+    {{- include "pvlogger.labels" . | nindent 4 }}
+spec:
+  revisionHistoryLimit: 2
+  replicas: {{ .Values.masterdataServer.replicas }}
+  selector:
+    matchLabels:
+      app: pvlogger-masterdata-server
+  template:
+    metadata:
+      name: pvlogger-masterdata-server
+      labels:
+        app: pvlogger-masterdata-server
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: pvlogger-masterdata-server
+          image: {{ include "pvlogger.image" (dict "global" .Values.global "image" .Values.masterdataServer.image) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          {{- include "pvlogger.jvmSecurityContext" . | nindent 10 }}
+          ports:
+            - containerPort: {{ .Values.masterdataServer.port }}
+              name: tcp-masterdata
+              protocol: TCP
+          env:
+            {{- include "pvlogger.timezoneEnv" . | nindent 12 }}
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql-secret
+                  key: POSTGRES_PASSWORD
+            - name: MASTER_DATA_PATH
+              value: {{ .Values.masterdataServer.masterdataPath | quote }}
+          envFrom:
+            - configMapRef:
+                name: db-config
+                optional: false
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: {{ .Values.masterdataServer.port }}
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 8
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: {{ .Values.masterdataServer.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 10
+            failureThreshold: 12
+          resources:
+            {{- toYaml .Values.masterdataServer.resources | nindent 12 }}
+          volumeMounts:
+            {{- include "pvlogger.timezoneVolumeMount" . | nindent 12 }}
+      volumes:
+        {{- include "pvlogger.timezoneVolume" . | nindent 8 }}
+{{- end }}

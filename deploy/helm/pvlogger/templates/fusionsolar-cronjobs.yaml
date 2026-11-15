@@ -1,0 +1,74 @@
+{{- if .Values.fusionsolar.enabled }}
+{{- range .Values.fusionsolar.cronjobs }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    app: pvlogger-fusionsolar-cj-{{ .name }}
+  name: pvlogger-fusionsolar-cronjob-{{ .name }}
+spec:
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 10
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: {{ .startingDeadlineSeconds | default 10 }}
+  schedule: {{ .schedule | quote }}
+  timeZone: {{ $.Values.global.timezone | quote }}
+  jobTemplate:
+    metadata:
+      name: pvlogger-fusionsolar-job-{{ .name }}
+    spec:
+      backoffLimit: {{ .backoffLimit }}
+      template:
+        metadata:
+          labels:
+            app: pvlogger-fusionsolar-{{ .name }}
+          name: pvlogger-fusionsolar-{{ .name }}
+        spec:
+          serviceAccountName: fusionsolar-sa
+          terminationGracePeriodSeconds: 30
+          restartPolicy: Never
+          containers:
+            - name: pvlogger-fusionsolar
+              image: {{ include "pvlogger.image" (dict "global" $.Values.global "image" $.Values.fusionsolar.image) }}
+              {{- include "pvlogger.goSecurityContext" (dict "uid" $.Values.global.runAsUid) | nindent 14 }}
+              ports:
+                - containerPort: 8090
+                  name: tcp-frontend
+                  protocol: TCP
+              envFrom:
+                - configMapRef:
+                    name: db-config
+                    optional: false
+                - configMapRef:
+                    name: fusionsolar-config
+                    optional: false
+                - configMapRef:
+                    name: fusionsolar-config-{{ .name }}
+                    optional: false
+                - secretRef:
+                    name: postgresql-secret
+              env:
+                {{- include "pvlogger.timezoneEnv" $ | nindent 16 }}
+                - name: USE_TOKEN_SECRET
+                  value: "true"
+                - name: K8S_NAMESPACE
+                  value: {{ $.Release.Namespace | quote }}
+                - name: K8S_TOKEN_SECRET_NAME
+                  value: "fusionsolar-token-secret"
+                - name: K8S_TOKEN_KEY
+                  value: "FUSIONSOLAR_TOKEN"
+              resources:
+                requests:
+                  cpu: {{ $.Values.fusionsolar.resources.requests.cpu }}
+                  memory: {{ $.Values.fusionsolar.resources.requests.memory }}
+                limits:
+                  cpu: {{ $.Values.fusionsolar.resources.limits.cpu }}
+                  memory: {{ $.Values.fusionsolar.resources.limits.memory }}
+              volumeMounts:
+                {{- include "pvlogger.timezoneVolumeMount" $ | nindent 16 }}
+          volumes:
+            {{- include "pvlogger.timezoneVolume" $ | nindent 12 }}
+{{- end }}
+{{- end }}

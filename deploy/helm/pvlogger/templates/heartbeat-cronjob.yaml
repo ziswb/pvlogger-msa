@@ -1,0 +1,100 @@
+{{- if .Values.heartbeat.enabled }}
+{{- /*
+Data-freshness heartbeat (resilience plan, phase 2). Every few minutes it asks
+the data-accessor for the newest stored reading and reports to a
+healthchecks.io-style ping URL (secrets.heartbeatPingUrl):
+a plain ping when the reading is younger than maxAgeSeconds, a /fail ping when
+it is older or the data-accessor does not answer. healthchecks.io also alerts
+when pings stop altogether (cluster down, no internet), which nothing inside
+the cluster could report. Outbound only.
+*/}}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: heartbeat-secret
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "pvlogger.labels" . | nindent 4 }}
+type: Opaque
+data:
+  HC_PING_URL: {{ required "secrets.heartbeatPingUrl is required" .Values.secrets.heartbeatPingUrl | b64enc | quote }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: pvlogger-heartbeat-cronjob
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: pvlogger-heartbeat-cj
+    {{- include "pvlogger.labels" . | nindent 4 }}
+spec:
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 60
+  schedule: {{ .Values.heartbeat.schedule | quote }}
+  timeZone: {{ $.Values.global.timezone | quote }}
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 120
+      template:
+        metadata:
+          labels:
+            app: pvlogger-heartbeat
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          enableServiceLinks: false
+          containers:
+            - name: heartbeat
+              image: {{ .Values.heartbeat.image }}
+              imagePullPolicy: IfNotPresent
+              securityContext:
+                seccompProfile:
+                  type: RuntimeDefault
+                runAsNonRoot: true
+                # The image names its user (curl_user) instead of a uid, which
+                # runAsNonRoot cannot verify; 100 is that user.
+                runAsUser: 100
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: ["ALL"]
+              env:
+                - name: KPI_URL
+                  value: {{ printf "http://%s:%v%s" (include "pvlogger.dataAccessorHost" .) .Values.dataAccessor.port .Values.kpiExporter.restPath | quote }}
+                - name: MAX_AGE
+                  value: {{ .Values.heartbeat.maxAgeSeconds | quote }}
+                - name: HC_PING_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: heartbeat-secret
+                      key: HC_PING_URL
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -u
+                  ping() { curl -fsS -m 10 --retry 3 -o /dev/null --data-raw "$2" "$HC_PING_URL$1"; }
+                  if ! body=$(curl -fsS -m 20 "$KPI_URL"); then
+                    echo "data-accessor did not answer"
+                    ping /fail "data-accessor did not answer ($KPI_URL)"
+                    exit
+                  fi
+                  created=$(printf '%s' "$body" | tr -d '\n' | sed -n 's/.*"createdAt"[[:space:]]*:[[:space:]]*\([0-9][0-9]*\).*/\1/p')
+                  if [ -z "$created" ]; then
+                    echo "no createdAt in: $body"
+                    ping /fail "no createdAt in the data-accessor's answer"
+                    exit
+                  fi
+                  age=$(( $(date +%s) - created / 1000 ))
+                  if [ "$age" -le "$MAX_AGE" ]; then
+                    echo "newest reading ${age}s old"
+                    ping "" "newest reading ${age}s old"
+                  else
+                    echo "newest reading ${age}s old, limit ${MAX_AGE}s"
+                    ping /fail "newest reading ${age}s old, limit ${MAX_AGE}s"
+                  fi
+              resources:
+                {{- toYaml .Values.heartbeat.resources | nindent 16 }}
+{{- end }}

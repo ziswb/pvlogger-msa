@@ -1,0 +1,21 @@
+# Values for the local Tilt environment (backlog item 23). Not a production
+# example: dummy credentials, no TLS to the database, the mock server as the
+# Modbus device. Outside the chart directory, so it is never packaged.
+
+secrets:
+  postgresPassword: "dev-only-not-a-secret"
+
+database:
+  # The plain dev Postgres that Tilt deploys from deploy/dev/ (not part of the chart).
+  host: "pvlogger-dev-postgres"
+  sslmode: "disable"
+
+modbus:
+  host: "pvlogger-modbus-mock-server-service"
+
+modbusMockServer:
+  enabled: true
+
+# Tilt builds the images locally and runs the jobs as the images' own users.
+global:
+  imagePullPolicy: IfNotPresent

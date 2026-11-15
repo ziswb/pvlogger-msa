@@ -1,0 +1,53 @@
+{{- if .Values.fusionsolarAuth.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: pvlogger-fusionsolar-auth-cronjob
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: pvlogger-fusionsolar-auth
+spec:
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 10
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 10
+  schedule: {{ .Values.fusionsolarAuth.schedule | quote }}
+  timeZone: {{ $.Values.global.timezone | quote }}
+  jobTemplate:
+    metadata:
+      name: pvlogger-fusionsolar-auth-job
+    spec:
+      backoffLimit: 1
+      template:
+        metadata:
+          labels:
+            app: pvlogger-fusionsolar-auth
+        spec:
+          serviceAccountName: fusionsolar-auth-sa
+          terminationGracePeriodSeconds: 30
+          restartPolicy: Never
+          containers:
+            - name: fusionsolar-auth
+              image: {{ include "pvlogger.image" (dict "global" .Values.global "image" .Values.fusionsolarAuth.image) }}
+              {{- include "pvlogger.goSecurityContext" (dict "uid" .Values.global.runAsUid) | nindent 14 }}
+              env:
+                {{- include "pvlogger.timezoneEnv" . | nindent 16 }}
+              envFrom:
+                - configMapRef:
+                    name: fusionsolar-auth-config
+                    optional: false
+                - secretRef:
+                    name: fusionsolar-secret
+                    optional: false
+              resources:
+                requests:
+                  cpu: {{ .Values.fusionsolarAuth.resources.requests.cpu }}
+                  memory: {{ .Values.fusionsolarAuth.resources.requests.memory }}
+                limits:
+                  cpu: {{ .Values.fusionsolarAuth.resources.limits.cpu }}
+                  memory: {{ .Values.fusionsolarAuth.resources.limits.memory }}
+              volumeMounts:
+                {{- include "pvlogger.timezoneVolumeMount" . | nindent 16 }}
+          volumes:
+            {{- include "pvlogger.timezoneVolume" . | nindent 12 }}
+{{- end }}

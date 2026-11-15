@@ -1,0 +1,62 @@
+{{- if .Values.pvDeviceDataCollector.enabled }}
+{{- range .Values.pvDeviceDataCollector.cronjobs }}
+{{- $cronjobName := .cronjobName | default (printf "pv-device-%s-collector-cronjob" .name) }}
+{{- $appLabel := .cronjobName | default (printf "pv-device-%s-collector" .name) | replace "-cronjob" "" }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    app: {{ $appLabel }}
+  name: {{ $cronjobName }}
+spec:
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 10
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 10
+  schedule: {{ .schedule | quote }}
+  timeZone: {{ $.Values.global.timezone | quote }}
+  suspend: false
+  jobTemplate:
+    metadata:
+      name: {{ $cronjobName | replace "-cronjob" "-job" }}
+    spec:
+      backoffLimit: {{ .backoffLimit }}
+      template:
+        metadata:
+          labels:
+            app: {{ $appLabel }}
+          name: {{ $appLabel }}
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: {{ $appLabel }}
+              image: {{ include "pvlogger.image" (dict "global" $.Values.global "image" $.Values.pvDeviceDataCollector.image) }}
+              {{- include "pvlogger.goSecurityContext" (dict "uid" $.Values.global.runAsUid) | nindent 14 }}
+              imagePullPolicy: {{ $.Values.global.imagePullPolicy }}
+              env:
+                {{- include "pvlogger.timezoneEnv" $ | nindent 16 }}
+              envFrom:
+                - configMapRef:
+                    name: pv-device-data-collector-job-common-config
+                    optional: false
+                - configMapRef:
+                    name: pv-device-data-collector-config-{{ .name }}-configmap
+                    optional: false
+                - configMapRef:
+                    name: lwip-config
+                    optional: false
+              resources:
+                requests:
+                  cpu: {{ $.Values.pvDeviceDataCollector.resources.requests.cpu }}
+                  memory: {{ $.Values.pvDeviceDataCollector.resources.requests.memory }}
+                limits:
+                  cpu: {{ $.Values.pvDeviceDataCollector.resources.limits.cpu }}
+                  memory: {{ $.Values.pvDeviceDataCollector.resources.limits.memory }}
+              volumeMounts:
+                {{- include "pvlogger.timezoneVolumeMount" $ | nindent 16 }}
+          volumes:
+            {{- include "pvlogger.timezoneVolume" $ | nindent 12 }}
+{{- end }}
+{{- end }}

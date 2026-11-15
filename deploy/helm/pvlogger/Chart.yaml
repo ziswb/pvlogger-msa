@@ -1,0 +1,20 @@
+apiVersion: v2
+name: pvlogger
+description: PVLogger, a solar (PV) monitoring system for Huawei SUN2000 inverters, as one Helm chart
+type: application
+# Chart version = the set of pinned image tags plus templates (ADR-0024).
+# Released as git tag chart/vX.Y.Z. No appVersion: the components have their
+# own versions (values.yaml).
+version: 1.0.0
+home: https://github.com/ziswb/pvlogger-msa
+sources:
+  - https://github.com/ziswb/pvlogger-msa
+keywords:
+  - pvlogger
+  - solar
+  - monitoring
+  - photovoltaic
+  - modbus
+maintainers:
+  - name: Bruno Ziswiler
+    url: https://github.com/ziswb

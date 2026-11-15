@@ -1,0 +1,64 @@
+{{- if .Values.pvFullDataCollector.enabled }}
+{{- /*
+The masterdata-driven extended sweep (ADR-0016): one run per hour
+at minute 2 of hours 1-23, inside the 02-04 window reserved from the fast
+collector. No suspend toggle anymore — ADR-0016 superseded the ADR-0004
+fast/full alternative (the old toggle key was broken anyway, backlog 2).
+*/}}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: pv-full-data-collector
+  name: pv-full-data-collector-cronjob
+spec:
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 10
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 10
+  schedule: {{ .Values.pvFullDataCollector.schedule | quote }}
+  timeZone: {{ $.Values.global.timezone | quote }}
+  jobTemplate:
+    metadata:
+      name: pv-full-data-collector-job
+    spec:
+      backoffLimit: 0
+      # The run must die inside the reserved 02-04 window: the SmartDongle is
+      # last-connect-wins, so an overrun would fight the fast collector's
+      # minute-5 reconnect instead of failing cleanly (ADR-0016). 150s from a
+      # minute-2 start leaves ~30s margin before minute 5.
+      activeDeadlineSeconds: 150
+      template:
+        metadata:
+          labels:
+            app: pv-full-data-collector
+          name: pv-full-data-collector
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: pv-full-data-collector
+              image: {{ include "pvlogger.image" (dict "global" .Values.global "image" .Values.pvFullDataCollector.image) }}
+              {{- include "pvlogger.goSecurityContext" (dict "uid" .Values.global.runAsUid) | nindent 14 }}
+              imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+              env:
+                {{- include "pvlogger.timezoneEnv" . | nindent 16 }}
+              envFrom:
+                - configMapRef:
+                    name: pv-full-data-collector-config
+                    optional: false
+                - configMapRef:
+                    name: lwip-config
+                    optional: false
+              resources:
+                requests:
+                  cpu: {{ .Values.pvFullDataCollector.resources.requests.cpu }}
+                  memory: {{ .Values.pvFullDataCollector.resources.requests.memory }}
+                limits:
+                  cpu: {{ .Values.pvFullDataCollector.resources.limits.cpu }}
+                  memory: {{ .Values.pvFullDataCollector.resources.limits.memory }}
+              volumeMounts:
+                {{- include "pvlogger.timezoneVolumeMount" . | nindent 16 }}
+          volumes:
+            {{- include "pvlogger.timezoneVolume" . | nindent 12 }}
+{{- end }}

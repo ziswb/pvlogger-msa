@@ -1,0 +1,65 @@
+{{- if .Values.dataAccessor.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pvlogger-modbus-data-accessor
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: pvlogger-modbus-data-accessor
+    {{- include "pvlogger.labels" . | nindent 4 }}
+spec:
+  revisionHistoryLimit: 2
+  replicas: {{ .Values.dataAccessor.replicas }}
+  selector:
+    matchLabels:
+      app: pvlogger-modbus-data-accessor
+  template:
+    metadata:
+      name: pvlogger-modbus-data-accessor
+      labels:
+        app: pvlogger-modbus-data-accessor
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: pvlogger-modbus-data-accessor
+          image: {{ include "pvlogger.image" (dict "global" .Values.global "image" .Values.dataAccessor.image) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          {{- include "pvlogger.jvmSecurityContext" . | nindent 10 }}
+          ports:
+            - containerPort: {{ .Values.dataAccessor.port }}
+              name: tcp-data-acc
+              protocol: TCP
+          env:
+            {{- include "pvlogger.timezoneEnv" . | nindent 12 }}
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgresql-secret
+                  key: POSTGRES_PASSWORD
+          envFrom:
+            - configMapRef:
+                name: db-config
+                optional: false
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: {{ .Values.dataAccessor.port }}
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 8
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: {{ .Values.dataAccessor.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 10
+            failureThreshold: 12
+          resources:
+            {{- toYaml .Values.dataAccessor.resources | nindent 12 }}
+          volumeMounts:
+            {{- include "pvlogger.timezoneVolumeMount" . | nindent 12 }}
+      volumes:
+        {{- include "pvlogger.timezoneVolume" . | nindent 8 }}
+{{- end }}

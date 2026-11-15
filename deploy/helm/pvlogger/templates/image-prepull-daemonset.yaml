@@ -1,0 +1,91 @@
+{{- if .Values.imagePrepull.enabled }}
+{{- /*
+Keeps every pinned PVLogger image on every node (resilience plan, phase 2), so a
+pod can start on any node while the registry is down.
+The pull policy is IfNotPresent everywhere, so a present image is all a pod
+needs.
+
+The images are mounted as image volumes: the kubelet pulls them, but nothing in
+them runs. The PVLogger images are distroless, so there is no shell to run
+instead, and their entrypoints would start real collector runs. A mounted image
+also counts as in use, so the kubelet's image GC keeps it.
+
+The list follows the components' own enabled flags and tags, so a version bump
+in values.yaml rolls this DaemonSet and pulls the new tag on every node.
+*/}}
+{{- $components := list "frontend" "dataAccessor" "masterdataServer" "fusionsolarAuth" "fusionsolar" "pvDeviceDataCollector" "pvFastDataCollector" "pvFullDataCollector" "kpiExporter" "modbusMockServer" }}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: pvlogger-image-prepull
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: pvlogger-image-prepull
+    {{- include "pvlogger.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app: pvlogger-image-prepull
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      # Nothing serves from these pods; two nodes pulling at a time keeps the
+      # registry and the network unhurried.
+      maxUnavailable: 2
+  template:
+    metadata:
+      labels:
+        app: pvlogger-image-prepull
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      containers:
+        - name: hold
+          image: {{ .Values.imagePrepull.holdImage }}
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            seccompProfile:
+              type: RuntimeDefault
+            runAsNonRoot: true
+            runAsUser: 65535
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 1m
+              memory: 4Mi
+            limits:
+              memory: 16Mi
+          volumeMounts:
+            {{- range $c := $components }}
+            {{- $v := index $.Values $c }}
+            {{- if $v.enabled }}
+            - name: img-{{ $c | lower }}
+              mountPath: /images/{{ $c }}
+              readOnly: true
+            {{- end }}
+            {{- end }}
+            {{- if .Values.heartbeat.enabled }}
+            - name: img-heartbeat
+              mountPath: /images/heartbeat
+              readOnly: true
+            {{- end }}
+      volumes:
+        {{- range $c := $components }}
+        {{- $v := index $.Values $c }}
+        {{- if $v.enabled }}
+        - name: img-{{ $c | lower }}
+          image:
+            reference: {{ include "pvlogger.image" (dict "global" $.Values.global "image" $v.image) }}
+            pullPolicy: IfNotPresent
+        {{- end }}
+        {{- end }}
+        {{- if .Values.heartbeat.enabled }}
+        - name: img-heartbeat
+          image:
+            reference: {{ .Values.heartbeat.image }}
+            pullPolicy: IfNotPresent
+        {{- end }}
+{{- end }}

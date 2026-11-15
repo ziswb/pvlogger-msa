@@ -1,0 +1,73 @@
+# CI only (.github/workflows/chart.yml): turns every optional template on, so
+# that none of them goes unrendered. Placeholder values, nothing deploys this.
+
+global:
+  imageRegistry: "registry.example.invalid"
+  runAsUid: 3000
+
+secrets:
+  postgresPassword: "ci-placeholder"
+  fusionsolarPassword: "ci-placeholder"
+  heartbeatPingUrl: "https://ping.example.invalid/ci"
+  kpiExportToken: "ci-placeholder"
+
+database:
+  host: "db.example.invalid"
+
+modbus:
+  host: "modbus.example.invalid"
+  inverterDeviceIds: "1,2"
+
+pushgateway:
+  enabled: true
+  host: "pushgateway.example.invalid"
+
+fusionsolarAuth:
+  enabled: true
+  username: "ci-user"
+  fsHost: "fusionsolar.example.invalid"
+
+fusionsolar:
+  enabled: true
+  username: "ci-user"
+  stationCode: "NE=0"
+  devTypeId: "0"
+
+kpiExportServe:
+  enabled: true
+  tailscaleHostname: "ci-export"
+  tailscaleTag: "tag:ci-export"
+
+dbBackup:
+  enabled: true
+  host: "db-ro.example.invalid"
+  persistence:
+    nfsServer: "nfs.example.invalid"
+    nfsPath: "/export/pvlogger"
+    nfsMountOptions: ["nfsvers=4.1"]
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: DoesNotExist
+
+modbusMockServer:
+  enabled: true
+
+ingress:
+  enabled: true
+  traefik:
+    enabled: true
+    host: "pvlogger.example.invalid"
+    clusterIssuer: "ci-issuer"
+  tailscale:
+    enabled: true
+    hostname: "pvlogger"
+
+imagePrepull:
+  enabled: true
+
+heartbeat:
+  enabled: true

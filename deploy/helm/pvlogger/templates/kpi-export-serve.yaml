@@ -1,0 +1,129 @@
+{{- /*
+The KPI export endpoint for the receiver's relay (ADR-0021): the KPI exporter
+image in serve mode answers GET /v1/export/latest with today's export file
+content, behind a bearer token. The relay joins the tailnet with its own tag
+and reaches only the Tailscale ingress below (kpiExportServe.tailscaleTag,
+tcp:443); the tailnet policy, kept with the installation, grants nothing else.
+*/ -}}
+{{- if and .Values.kpiExporter.enabled .Values.kpiExportServe.enabled }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: pvlogger-export-token
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "pvlogger.labels" . | nindent 4 }}
+type: Opaque
+data:
+  token: {{ required "secrets.kpiExportToken is empty" .Values.secrets.kpiExportToken | b64enc | quote }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pvlogger-kpi-exporter-serve
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: pvlogger-kpi-exporter-serve
+    {{- include "pvlogger.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pvlogger-kpi-exporter-serve
+  template:
+    metadata:
+      labels:
+        app: pvlogger-kpi-exporter-serve
+    spec:
+      # The token Secret is mounted 0440: fsGroup makes its group the run-as
+      # uid's, so the non-root exporter can read it (infrastructure security finding 25).
+      securityContext:
+        fsGroup: {{ .Values.kpiExporter.uid }}
+      containers:
+        - name: pvlogger-kpi-exporter-serve
+          image: {{ include "pvlogger.image" (dict "global" .Values.global "image" .Values.kpiExporter.image) }}
+          {{- include "pvlogger.goSecurityContext" (dict "uid" .Values.kpiExporter.uid) | nindent 10 }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          env:
+            - name: KPI_EXPORTER_MODE
+              value: serve
+            - name: HTTP_PORT
+              value: {{ .Values.kpiExportServe.port | quote }}
+            # Read on every request: a rotated Secret takes effect without a
+            # restart (the kubelet refreshes the mounted file).
+            - name: KPI_EXPORT_TOKEN_FILE
+              value: /etc/pvlogger-export/token
+            {{- include "pvlogger.timezoneEnv" . | nindent 12 }}
+          # REST_* (the data accessor, in-cluster) and KPI_FILE_PREFIX.
+          envFrom:
+            - configMapRef:
+                name: exporter-config
+                optional: false
+          ports:
+            - name: export
+              containerPort: {{ .Values.kpiExportServe.port }}
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: export
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: export
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          volumeMounts:
+            - name: export-token
+              mountPath: /etc/pvlogger-export
+              readOnly: true
+            {{- include "pvlogger.timezoneVolumeMount" . | nindent 12 }}
+          resources:
+            {{- toYaml .Values.kpiExportServe.resources | nindent 12 }}
+      volumes:
+        - name: export-token
+          secret:
+            secretName: pvlogger-export-token
+            defaultMode: 0440
+        {{- include "pvlogger.timezoneVolume" . | nindent 8 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pvlogger-kpi-exporter-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "pvlogger.labels" . | nindent 4 }}
+spec:
+  selector:
+    app: pvlogger-kpi-exporter-serve
+  ports:
+    - name: export
+      port: {{ .Values.kpiExportServe.port }}
+      targetPort: export
+---
+# Its own device and tag, so the tailnet policy can give the relay exactly
+# this one device. Only /v1/export/ is routed; /healthz stays in-cluster.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pvlogger-export
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    tailscale.com/tags: {{ required "kpiExportServe.tailscaleTag is required" .Values.kpiExportServe.tailscaleTag | quote }}
+spec:
+  ingressClassName: tailscale
+  tls:
+    - hosts:
+        - {{ required "kpiExportServe.tailscaleHostname is required" .Values.kpiExportServe.tailscaleHostname }}
+  rules:
+    - http:
+        paths:
+          - path: /v1/export/
+            pathType: Prefix
+            backend:
+              service:
+                name: pvlogger-kpi-exporter-service
+                port:
+                  number: {{ .Values.kpiExportServe.port }}
+{{- end }}

@@ -1,0 +1,18 @@
+{{- if .Values.frontend.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: pvlogger-frontend-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: pvlogger-frontend
+spec:
+  type: ClusterIP
+  ports:
+    - name: pvlogger-frontend
+      port: {{ .Values.frontend.port }}
+      protocol: TCP
+      targetPort: tcp-frontend
+  selector:
+    app: pvlogger-frontend
+{{- end }}

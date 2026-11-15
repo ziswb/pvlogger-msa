@@ -1,0 +1,60 @@
+{{- if .Values.frontend.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pvlogger-frontend
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: pvlogger-frontend
+    {{- include "pvlogger.labels" . | nindent 4 }}
+spec:
+  revisionHistoryLimit: 2
+  replicas: {{ .Values.frontend.replicas }}
+  selector:
+    matchLabels:
+      app: pvlogger-frontend
+  template:
+    metadata:
+      name: pvlogger-frontend
+      labels:
+        app: pvlogger-frontend
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: pvlogger-frontend
+          image: {{ include "pvlogger.image" (dict "global" .Values.global "image" .Values.frontend.image) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          {{- include "pvlogger.jvmSecurityContext" . | nindent 10 }}
+          ports:
+            - containerPort: {{ .Values.frontend.port }}
+              name: tcp-frontend
+              protocol: TCP
+          env:
+            {{- include "pvlogger.timezoneEnv" . | nindent 12 }}
+            - name: DATA_ACCESSOR_HOST
+              value: "pvlogger-modbus-data-accessor-service.{{ .Release.Namespace }}.svc.cluster.local"
+            - name: DATA_ACCESSOR_PORT
+              value: {{ .Values.dataAccessor.port | quote }}
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: {{ .Values.frontend.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 6
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: {{ .Values.frontend.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 10
+            failureThreshold: 9
+          resources:
+            {{- toYaml .Values.frontend.resources | nindent 12 }}
+          volumeMounts:
+            {{- include "pvlogger.timezoneVolumeMount" . | nindent 12 }}
+      volumes:
+        {{- include "pvlogger.timezoneVolume" . | nindent 8 }}
+{{- end }}

@@ -1,0 +1,71 @@
+{{- if .Values.modbusMockServer.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pvlogger-modbus-mock-server
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: pvlogger-modbus-mock-server
+    {{- include "pvlogger.labels" . | nindent 4 }}
+spec:
+  revisionHistoryLimit: 2
+  replicas: {{ .Values.modbusMockServer.replicas }}
+  selector:
+    matchLabels:
+      app: pvlogger-modbus-mock-server
+  template:
+    metadata:
+      name: pvlogger-modbus-mock-server
+      labels:
+        app: pvlogger-modbus-mock-server
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: pvlogger-modbus-mock-server
+          image: {{ include "pvlogger.image" (dict "global" .Values.global "image" .Values.modbusMockServer.image) }}
+          {{- include "pvlogger.jvmSecurityContext" . | nindent 10 }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          env:
+            {{- include "pvlogger.timezoneEnv" . | nindent 12 }}
+          ports:
+            - containerPort: {{ .Values.modbusMockServer.port }}
+              name: tcp-modbus
+              protocol: TCP
+          livenessProbe:
+            tcpSocket:
+              port: {{ .Values.modbusMockServer.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 5
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.modbusMockServer.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 20
+            timeoutSeconds: 10
+            failureThreshold: 8
+          resources:
+            {{- toYaml .Values.modbusMockServer.resources | nindent 12 }}
+          volumeMounts:
+            {{- include "pvlogger.timezoneVolumeMount" . | nindent 12 }}
+      volumes:
+        {{- include "pvlogger.timezoneVolume" . | nindent 8 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pvlogger-modbus-mock-server-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: pvlogger-modbus-mock-server
+    {{- include "pvlogger.labels" . | nindent 4 }}
+spec:
+  selector:
+    app: pvlogger-modbus-mock-server
+  ports:
+    - name: tcp-modbus
+      port: {{ .Values.modbusMockServer.port }}
+      targetPort: {{ .Values.modbusMockServer.port }}
+      protocol: TCP
+{{- end }}

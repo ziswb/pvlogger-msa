@@ -1,0 +1,18 @@
+{{- if .Values.masterdataServer.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: pvlogger-masterdata-server-service
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: pvlogger-masterdata-server
+spec:
+  type: ClusterIP
+  ports:
+    - name: pvlogger-masterdata
+      port: {{ .Values.masterdataServer.port }}
+      protocol: TCP
+      targetPort: tcp-masterdata
+  selector:
+    app: pvlogger-masterdata-server
+{{- end }}

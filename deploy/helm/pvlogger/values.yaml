@@ -1,0 +1,355 @@
+# Default values for the pvlogger chart (ADR-0024).
+#
+# Generic defaults are complete: ports, schedules, resources, log levels and
+# toggles work as they are. Site values (registry, database host, Modbus
+# gateway, FusionSolar account, ingress names, secrets) default to empty or
+# neutral values and are set by the installation; see README.md.
+#
+# Image tags are the single source of truth for the deployed versions: a
+# component's bump commit changes its tag here and the chart version in
+# Chart.yaml together.
+#
+# Every CronJob sets spec.timeZone from global.timezone: schedules are written
+# in that zone, not in kube-controller-manager's.
+
+global:
+  # Registry host (and optional path) in front of each image repository.
+  # Empty: the repository alone, i.e. Docker Hub.
+  imageRegistry: ""
+  imagePullPolicy: IfNotPresent
+  timezone: "UTC"
+  # Run-as uid/gid of the Go jobs (their images set no user). The JVM images
+  # run as 1000 on their own.
+  runAsUid: 1000
+
+# Rendered into Secrets (an existingSecret option is backlog item 54).
+secrets:
+  # Required.
+  postgresPassword: ""
+  # Only with fusionsolar or fusionsolarAuth enabled.
+  fusionsolarPassword: ""
+  # Only with heartbeat enabled: the healthchecks.io-style ping URL.
+  heartbeatPingUrl: ""
+  # Only with kpiExportServe enabled: the bearer token (ADR-0021).
+  kpiExportToken: ""
+
+database:
+  # Required: the PostgreSQL host that holds pvdata, pvmasterdata and fsdata.
+  host: ""
+  port: "5432"
+  username: "pvlogger"
+  # The services read POSTGRESQL_SSLMODE, db-backup's pg_dump PGSSLMODE.
+  sslmode: "require"
+
+# The Modbus TCP gateway (the SmartDongle) and the unit IDs behind it, shared
+# by the device, fast and full collectors (CONTEXT.md, Device).
+modbus:
+  host: ""
+  port: "502"
+  timeout: "5"
+  connectionSleepMs: "1200"
+  meterDeviceIds: "1"
+  inverterDeviceIds: "1"
+  dongleDeviceId: "100"
+
+# Prometheus Pushgateway the fast and full collectors push their run metrics to.
+pushgateway:
+  enabled: false
+  host: ""
+  port: "9091"
+  protocol: "http"
+
+frontend:
+  enabled: true
+  image:
+    repository: "bziswiler/pvlogger-frontend"
+    tag: "3.14.1"
+  replicas: 1
+  port: 8085
+  resources:
+    limits:
+      cpu: 250m
+      memory: 350Mi
+    requests:
+      cpu: 250m
+      memory: 350Mi
+
+dataAccessor:
+  enabled: true
+  image:
+    repository: "bziswiler/pvlogger-modbus-data-accessor"
+    tag: "3.13.1"
+  replicas: 1
+  port: 8083
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 350Mi
+    requests:
+      cpu: 100m
+      memory: 350Mi
+
+masterdataServer:
+  enabled: true
+  image:
+    repository: "bziswiler/pvlogger-masterdata-server"
+    tag: "3.6.1"
+  replicas: 1
+  port: 8081
+  masterdataPath: "/opt/pvlogger/masterdata/"
+  resources:
+    limits:
+      cpu: 100m
+      memory: 300Mi
+    requests:
+      cpu: 100m
+      memory: 300Mi
+
+# Refreshes the FusionSolar API token into a Secret for the fusionsolar jobs.
+fusionsolarAuth:
+  enabled: false
+  image:
+    repository: "bziswiler/pvlogger-fusionsolar-auth"
+    tag: "3.4.3"
+  schedule: "*/20 * * * *"
+  # Site values: the FusionSolar API account and its regional host.
+  username: ""
+  fsHost: ""
+  fsPath: "thirdData"
+  fsProtocol: "https"
+  logLevel: "INFO"
+  resources:
+    limits:
+      cpu: 50m
+      memory: 50Mi
+    requests:
+      cpu: 10m
+      memory: 20Mi
+
+fusionsolar:
+  enabled: false
+  image:
+    repository: "bziswiler/pvlogger-fusionsolar"
+    tag: "3.5.4"
+  # Site values: the FusionSolar API account, plant and devices.
+  username: ""
+  stationCode: ""
+  devTypeId: ""
+  maxPoolSize: "3"
+  dbName: "fsdata"
+  driverClass: "org.postgresql.Driver"
+  resources:
+    limits:
+      cpu: 50m
+      memory: 50Mi
+    requests:
+      cpu: 50m
+      memory: 50Mi
+  cronjobs:
+    - name: "dev5minkpi"
+      schedule: "2 */6 * * *"
+      jobName: "DEVICE_5_MIN_KPI"
+      backoffLimit: 2
+      startingDeadlineSeconds: 10
+    - name: "devkpi"
+      schedule: "1/5 * * * *"
+      jobName: "DEVICE_REAL_KPI"
+      backoffLimit: 0
+      startingDeadlineSeconds: 10
+    - name: "stnday"
+      schedule: "25 5 5,19 * *"
+      jobName: "STATION_DAY_KPI"
+      backoffLimit: 1
+      startingDeadlineSeconds: 30
+    - name: "stnkpi"
+      schedule: "3/5 * * * *"
+      jobName: "STATION_REAL_KPI"
+      backoffLimit: 0
+      startingDeadlineSeconds: 10
+    - name: "stnmonth"
+      schedule: "25 5 6,20 * *"
+      jobName: "STATION_MONTH_KPI"
+      backoffLimit: 1
+      startingDeadlineSeconds: 30
+    - name: "stnyear"
+      schedule: "25 5 7,21 * *"
+      jobName: "STATION_YEAR_KPI"
+      backoffLimit: 1
+      startingDeadlineSeconds: 30
+
+# Nightly static/config registers and device identifiers, in hour 0's
+# reserved Modbus window (minutes 02-04, ADR-0015).
+pvDeviceDataCollector:
+  enabled: true
+  image:
+    repository: "bziswiler/pv-device-data-collector"
+    tag: "3.7.4"
+  logLevel: "debug"
+  resources:
+    limits:
+      cpu: 50m
+      memory: 50Mi
+    requests:
+      cpu: 50m
+      memory: 50Mi
+  cronjobs:
+    - name: "static-data"
+      cronjobName: "pv-device-static-data-collector-cronjob"
+      schedule: "2 0 * * *"
+      jobName: "FETCH_MODBUS_STATIC_DATA_JOB"
+      backoffLimit: 2
+    - name: "device-identifiers"
+      cronjobName: "pv-device-identifiers-cronjob"
+      schedule: "3 0 * * *"
+      jobName: "FETCH_DEVICE_IDENTIFIERS_JOB"
+      backoffLimit: 2
+    - name: "device-list"
+      cronjobName: "pv-device-list-cronjob"
+      schedule: "4 0 * * *"
+      jobName: "FETCH_DEVICE_LIST_JOB"
+      backoffLimit: 2
+
+# The sole per-minute KPI collector; minutes 02-04 belong to the device and
+# full collectors (ADR-0016).
+pvFastDataCollector:
+  enabled: true
+  image:
+    repository: "bziswiler/pv-fast-data-collector"
+    tag: "0.13.4"
+  schedule: "0-1,5-59 * * * *"
+  logLevel: "debug"
+  resources:
+    limits:
+      cpu: 50m
+      memory: 50Mi
+    requests:
+      cpu: 50m
+      memory: 50Mi
+
+# The hourly extended sweep at minute 2 of hours 1-23 (ADR-0016).
+pvFullDataCollector:
+  enabled: true
+  image:
+    repository: "bziswiler/pv-full-data-collector"
+    tag: "0.8.5"
+  schedule: "2 1-23 * * *"
+  logLevel: "debug"
+  resources:
+    limits:
+      cpu: 50m
+      memory: 50Mi
+    requests:
+      cpu: 50m
+      memory: 50Mi
+
+# Image and settings of the KPI exporter; it runs only as kpiExportServe.
+kpiExporter:
+  enabled: true
+  uid: 1000
+  image:
+    repository: "bziswiler/pvlogger-kpi-exporter"
+    tag: "3.5.2"
+  restPath: "/v1/read-latest-kpi"
+  # Name prefix of the export file the receiver gets (ADR-0021).
+  filePrefix: "pv_export"
+
+# The token-protected KPI export endpoint behind its own Tailscale ingress
+# (ADR-0021). Off by default.
+kpiExportServe:
+  enabled: false
+  port: 8080
+  # Site values: the tailnet device name and the ACL tag of the ingress.
+  tailscaleHostname: ""
+  tailscaleTag: ""
+  resources:
+    limits:
+      cpu: 100m
+      memory: 64Mi
+    requests:
+      cpu: 20m
+      memory: 32Mi
+
+# Nightly pg_dump of the three databases to an NFS export. Off by default.
+dbBackup:
+  enabled: false
+  image: "postgres:18.6-trixie"
+  schedule: "15 2 * * *"
+  # Where pg_dump connects, e.g. a read-only standby. Empty: database.host.
+  host: ""
+  # Pod affinity for the job. Empty: anywhere.
+  affinity: {}
+  uid: 1000
+  persistence:
+    # Site values: the NFS export that receives the dumps.
+    nfsServer: ""
+    nfsPath: ""
+    nfsMountOptions: []
+    size: "10Gi"
+  resources:
+    limits:
+      cpu: 3000m
+      memory: 2Gi
+    requests:
+      cpu: 1000m
+      memory: 128Mi
+
+# Local development only, never production (CONTEXT.md).
+modbusMockServer:
+  enabled: false
+  image:
+    repository: "bziswiler/pvlogger-modbus-mock-server"
+    tag: "3.3.1"
+  replicas: 1
+  port: 502
+  resources:
+    limits:
+      cpu: 100m
+      memory: 100Mi
+    requests:
+      cpu: 50m
+      memory: 50Mi
+
+# The ingress exposes an allowlist only (ADR-0020). Off by default.
+ingress:
+  enabled: false
+  traefik:
+    enabled: false
+    host: ""
+    # cert-manager ClusterIssuer for the Traefik host's certificate.
+    clusterIssuer: ""
+    # Namespace of the Traefik pods, for the NetworkPolicy.
+    namespace: "traefik"
+  tailscale:
+    enabled: false
+    hostname: ""
+    # Namespace of the Tailscale operator's proxies, for the NetworkPolicies.
+    namespace: "tailscale"
+
+# Keeps every pinned image on every node, so pods start while the registry is
+# down (image volumes; needs Kubernetes with the ImageVolume feature). holdImage
+# should be an image already on every node, e.g. the sandbox (pause) image.
+imagePrepull:
+  enabled: false
+  holdImage: "docker.io/rancher/mirrored-pause:3.10.2"
+
+# Data-freshness heartbeat to a healthchecks.io-style ping URL
+# (secrets.heartbeatPingUrl). Needs a shell and curl, which the distroless
+# images lack, hence its own image. Off by default.
+heartbeat:
+  enabled: false
+  image: "docker.io/curlimages/curl:8.23.0"
+  schedule: "*/5 * * * *"
+  maxAgeSeconds: 600
+  resources:
+    limits:
+      cpu: 100m
+      memory: 32Mi
+    requests:
+      cpu: 10m
+      memory: 16Mi
+
+# Default-deny ingress plus the allows the components need. On by default.
+networkPolicies:
+  enabled: true
+  # Source of kubelet probes; k3s/Flannel's default pod network.
+  kubeletCidr: "10.42.0.0/16"

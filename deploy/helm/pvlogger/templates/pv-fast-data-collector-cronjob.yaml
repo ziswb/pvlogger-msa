@@ -1,0 +1,60 @@
+{{- if .Values.pvFastDataCollector.enabled }}
+{{- /*
+The sole per-minute KPI collector (ADR-0016) — no toggle, no
+fallback role. Minutes 02-04 of EVERY hour are the reserved non-fast Modbus
+window (the SmartDongle is last-connect-wins, ADR-0015): hour 0 belongs to
+the nightly device collectors, hours 1-23 to the full collector's hourly
+sweep (pv-full-data-collector-cronjob.yaml).
+*/}}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: pv-fast-data-collector
+  name: pv-fast-data-collector-cronjob
+spec:
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 10
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 10
+  schedule: {{ .Values.pvFastDataCollector.schedule | quote }}
+  timeZone: {{ .Values.global.timezone | quote }}
+  jobTemplate:
+    metadata:
+      name: pv-fast-data-collector-job
+    spec:
+      backoffLimit: 0
+      template:
+        metadata:
+          labels:
+            app: pv-fast-data-collector
+          name: pv-fast-data-collector
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: pv-fast-data-collector
+              image: {{ include "pvlogger.image" (dict "global" .Values.global "image" .Values.pvFastDataCollector.image) }}
+              {{- include "pvlogger.goSecurityContext" (dict "uid" .Values.global.runAsUid) | nindent 14 }}
+              imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+              env:
+                {{- include "pvlogger.timezoneEnv" . | nindent 16 }}
+              envFrom:
+                - configMapRef:
+                    name: pv-fast-data-collector-config
+                    optional: false
+                - configMapRef:
+                    name: lwip-config
+                    optional: false
+              resources:
+                requests:
+                  cpu: {{ .Values.pvFastDataCollector.resources.requests.cpu }}
+                  memory: {{ .Values.pvFastDataCollector.resources.requests.memory }}
+                limits:
+                  cpu: {{ .Values.pvFastDataCollector.resources.limits.cpu }}
+                  memory: {{ .Values.pvFastDataCollector.resources.limits.memory }}
+              volumeMounts:
+                {{- include "pvlogger.timezoneVolumeMount" . | nindent 16 }}
+          volumes:
+            {{- include "pvlogger.timezoneVolume" . | nindent 12 }}
+{{- end }}

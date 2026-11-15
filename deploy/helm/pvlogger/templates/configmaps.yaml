@@ -1,0 +1,159 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "pvlogger.labels" . | nindent 4 }}
+data:
+  POSTGRESQL_HOST: {{ required "database.host is required" .Values.database.host | quote }}
+  POSTGRESQL_PORT: {{ .Values.database.port | quote }}
+  POSTGRESQL_USERNAME: {{ .Values.database.username | quote }}
+  # The JVM services read DB_USER, fusionsolar and db-backup POSTGRESQL_USERNAME:
+  # one value, two names (backlog item 40).
+  DB_USER: {{ .Values.database.username | quote }}
+  # TLS to the database. The services read POSTGRESQL_SSLMODE; db-backup's
+  # pg_dump reads PGSSLMODE (security finding 3).
+  POSTGRESQL_SSLMODE: {{ .Values.database.sslmode | quote }}
+  PGSSLMODE: {{ .Values.database.sslmode | quote }}
+---
+{{- if .Values.fusionsolarAuth.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fusionsolar-auth-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: pvlogger-fusionsolar-auth
+data:
+  USERNAME: {{ required "fusionsolarAuth.username is required" .Values.fusionsolarAuth.username | quote }}
+  FS_HOST: {{ required "fusionsolarAuth.fsHost is required" .Values.fusionsolarAuth.fsHost | quote }}
+  FS_PATH: {{ .Values.fusionsolarAuth.fsPath | quote }}
+  FS_PROTOCOL: {{ .Values.fusionsolarAuth.fsProtocol | quote }}
+  K8S_NAMESPACE: {{ .Release.Namespace | quote }}
+  K8S_SECRET_NAME: "fusionsolar-token-secret"
+  K8S_TOKEN_KEY: "FUSIONSOLAR_TOKEN"
+  LOG_LEVEL: {{ .Values.fusionsolarAuth.logLevel | quote }}
+{{- end }}
+---
+{{- if .Values.fusionsolar.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fusionsolar-config
+  namespace: {{ .Release.Namespace }}
+data:
+  USERNAME: {{ required "fusionsolar.username is required" .Values.fusionsolar.username | quote }}
+  FS_STATION_CODE: {{ required "fusionsolar.stationCode is required" .Values.fusionsolar.stationCode | quote }}
+  FS_DEV_TYPE_ID: {{ .Values.fusionsolar.devTypeId | quote }}
+  MAX_POOL_SIZE: {{ .Values.fusionsolar.maxPoolSize | quote }}
+  DB_NAME: {{ .Values.fusionsolar.dbName | quote }}
+  DRIVER_CLASS: {{ .Values.fusionsolar.driverClass | quote }}
+---
+{{- range .Values.fusionsolar.cronjobs }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fusionsolar-config-{{ .name }}
+  namespace: {{ $.Release.Namespace }}
+data:
+  JOB_NAME: {{ .jobName | quote }}
+---
+{{- end }}
+{{- end }}
+{{- if .Values.pvDeviceDataCollector.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pv-device-data-collector-job-common-config
+  namespace: {{ .Release.Namespace }}
+data:
+  MD_HOST: {{ include "pvlogger.masterdataHost" . | quote }}
+  MD_PORT: {{ .Values.masterdataServer.port | quote }}
+  MD_PROTOCOL: "http"
+  DA_HOST: {{ include "pvlogger.dataAccessorHost" . | quote }}
+  DA_PORT: {{ .Values.dataAccessor.port | quote }}
+  DA_PROTOCOL: "http"
+  METER_DEVICE_IDS: {{ .Values.modbus.meterDeviceIds | quote }}
+  INVERTER_DEVICE_IDS: {{ .Values.modbus.inverterDeviceIds | quote }}
+  LOG_LEVEL: {{ .Values.pvDeviceDataCollector.logLevel | quote }}
+---
+{{- range .Values.pvDeviceDataCollector.cronjobs }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pv-device-data-collector-config-{{ .name }}-configmap
+  namespace: {{ $.Release.Namespace }}
+data:
+  JOB_NAME: {{ .jobName | quote }}
+---
+{{- end }}
+{{- end }}
+{{- if or .Values.pvDeviceDataCollector.enabled .Values.pvFastDataCollector.enabled .Values.pvFullDataCollector.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lwip-config
+  namespace: {{ .Release.Namespace }}
+data:
+  MODBUS_HOSTNAME: {{ required "modbus.host is required" .Values.modbus.host | quote }}
+  MODBUS_PORT: {{ .Values.modbus.port | quote }}
+  MODBUS_TIMEOUT: {{ .Values.modbus.timeout | quote }}
+  MODBUS_CONNECTION_SLEEP_MS: {{ .Values.modbus.connectionSleepMs | quote }}
+{{- end }}
+{{- if .Values.pvFastDataCollector.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pv-fast-data-collector-config
+  namespace: {{ .Release.Namespace }}
+data:
+  DA_HOST: {{ include "pvlogger.dataAccessorHost" . | quote }}
+  DA_PORT: {{ .Values.dataAccessor.port | quote }}
+  DA_PROTOCOL: "http"
+  METER_DEVICE_IDS: {{ .Values.modbus.meterDeviceIds | quote }}
+  INVERTER_DEVICE_IDS: {{ .Values.modbus.inverterDeviceIds | quote }}
+  DONGLE_DEVICE_ID: {{ .Values.modbus.dongleDeviceId | quote }}
+  LOG_LEVEL: {{ .Values.pvFastDataCollector.logLevel | quote }}
+  PUSHGATEWAY_HOST: {{ .Values.pushgateway.host | quote }}
+  PUSHGATEWAY_PORT: {{ .Values.pushgateway.port | quote }}
+  PUSHGATEWAY_PROTOCOL: {{ .Values.pushgateway.protocol | quote }}
+  PUSHGATEWAY_ENABLED: {{ .Values.pushgateway.enabled | quote }}
+{{- end }}
+{{- if .Values.pvFullDataCollector.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pv-full-data-collector-config
+  namespace: {{ .Release.Namespace }}
+data:
+  MD_HOST: {{ include "pvlogger.masterdataHost" . | quote }}
+  MD_PORT: {{ .Values.masterdataServer.port | quote }}
+  MD_PROTOCOL: "http"
+  DA_HOST: {{ include "pvlogger.dataAccessorHost" . | quote }}
+  DA_PORT: {{ .Values.dataAccessor.port | quote }}
+  DA_PROTOCOL: "http"
+  METER_DEVICE_IDS: {{ .Values.modbus.meterDeviceIds | quote }}
+  INVERTER_DEVICE_IDS: {{ .Values.modbus.inverterDeviceIds | quote }}
+  DONGLE_DEVICE_ID: {{ .Values.modbus.dongleDeviceId | quote }}
+  LOG_LEVEL: {{ .Values.pvFullDataCollector.logLevel | quote }}
+  PUSHGATEWAY_HOST: {{ .Values.pushgateway.host | quote }}
+  PUSHGATEWAY_PORT: {{ .Values.pushgateway.port | quote }}
+  PUSHGATEWAY_PROTOCOL: {{ .Values.pushgateway.protocol | quote }}
+  PUSHGATEWAY_ENABLED: {{ .Values.pushgateway.enabled | quote }}
+{{- end }}
+---
+{{- if .Values.kpiExporter.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: exporter-config
+  namespace: {{ .Release.Namespace }}
+data:
+  REST_HOST: {{ include "pvlogger.dataAccessorHost" . | quote }}
+  REST_PORT: {{ .Values.dataAccessor.port | quote }}
+  REST_PATH: {{ .Values.kpiExporter.restPath | quote }}
+  KPI_FILE_PREFIX: {{ .Values.kpiExporter.filePrefix | quote }}
+{{- end }}
