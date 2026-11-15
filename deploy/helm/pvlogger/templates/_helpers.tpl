@@ -91,6 +91,7 @@ Common timezone volume
 - name: timezone
   hostPath:
     path: /usr/share/zoneinfo
+    type: Directory
 {{- end }}
 
 {{/*
@@ -100,6 +101,26 @@ Common timezone volume mount
 - name: timezone
   mountPath: /etc/localtime
   subPath: {{ .Values.global.timezone }}
+  readOnly: true
+{{- end }}
+
+{{/*
+Pod annotations that roll a Deployment when its env-sourced ConfigMaps or
+Secrets change (envFrom/secretKeyRef are read only at container start).
+*/}}
+{{- define "pvlogger.configChecksums" -}}
+checksum/config: {{ include (print .Template.BasePath "/configmaps.yaml") . | sha256sum }}
+checksum/secrets: {{ include (print .Template.BasePath "/secrets.yaml") . | sha256sum }}
+{{- end }}
+
+{{/*
+Dev-only settings must not reach a real deployment (ADR-0025): the client
+timestamps go with the mock server, which only a dev environment enables.
+*/}}
+{{- define "pvlogger.devGuard" -}}
+{{- if and .Values.dataAccessor.devAcceptClientTimestamps (not .Values.modbusMockServer.enabled) }}
+{{- fail "dataAccessor.devAcceptClientTimestamps is dev only (ADR-0025): it needs modbusMockServer.enabled" }}
+{{- end }}
 {{- end }}
 
 {{/*

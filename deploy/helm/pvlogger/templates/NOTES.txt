@@ -32,6 +32,13 @@ Components deployed:
 {{- if .Values.dbBackup.enabled }}
   - DB Backup (CronJob): pvlogger-db-backup-cronjob
 {{- end }}
+{{- if .Values.modbusMockServer.enabled }}
+  - Modbus mock server (Deployment): pvlogger-modbus-mock-server
+
+WARNING: dev settings are on (ADR-0025): the Modbus mock server
+{{- if .Values.dataAccessor.devAcceptClientTimestamps }} and DEV_ACCEPT_CLIENT_TIMESTAMPS on the data accessor{{ end }}.
+The collectors read a synthetic plant, not a real device. Never in production.
+{{- end }}
 
 {{- if .Values.ingress.enabled }}
 Ingress:

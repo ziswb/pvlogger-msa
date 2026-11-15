@@ -49,10 +49,7 @@ spec:
             failureThreshold: 3
           resources:
             {{- toYaml .Values.modbusMockServer.resources | nindent 12 }}
-          volumeMounts:
-            {{- include "pvlogger.timezoneVolumeMount" . | nindent 12 }}
-      volumes:
-        {{- include "pvlogger.timezoneVolume" . | nindent 8 }}
+      # No timezone hostPath: the binary embeds time/tzdata and reads TZ.
 ---
 apiVersion: v1
 kind: Service

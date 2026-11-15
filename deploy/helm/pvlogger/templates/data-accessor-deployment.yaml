@@ -1,3 +1,4 @@
+{{- include "pvlogger.devGuard" . }}
 {{- if .Values.dataAccessor.enabled }}
 apiVersion: apps/v1
 kind: Deployment
@@ -18,6 +19,8 @@ spec:
       name: pvlogger-modbus-data-accessor
       labels:
         app: pvlogger-modbus-data-accessor
+      annotations:
+        {{- include "pvlogger.configChecksums" . | nindent 8 }}
     spec:
       terminationGracePeriodSeconds: 30
       containers:

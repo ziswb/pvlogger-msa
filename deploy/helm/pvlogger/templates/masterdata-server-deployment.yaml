@@ -18,6 +18,8 @@ spec:
       name: pvlogger-masterdata-server
       labels:
         app: pvlogger-masterdata-server
+      annotations:
+        {{- include "pvlogger.configChecksums" . | nindent 8 }}
     spec:
       terminationGracePeriodSeconds: 30
       containers:
