@@ -167,6 +167,9 @@ for cronjob in COLLECTOR_CRONJOBS:
         cmd='kubectl --context %s -n %s create job --from=cronjob/%s %s-$(date +%%s)' % (
             expected_context, NAMESPACE, cronjob, cronjob.replace('-cronjob', '')),
         trigger_mode=TRIGGER_MODE_MANUAL,
+        # A click before the import has run waits for it: the full and device
+        # collectors fail without the register catalog.
+        resource_deps=['masterdata-import'],
         auto_init=False,
         labels=['collectors'],
     )
