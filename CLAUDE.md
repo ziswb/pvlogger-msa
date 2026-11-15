@@ -12,6 +12,23 @@ everywhere else network isolation is the only boundary, ADR-0020),
 [docs/UPGRADING.md](docs/UPGRADING.md) (standing procedure for dependency/tooling upgrades).
 Deployment lives in the sibling `infrastructure` repo (see `infrastructure/docs/LANDSCAPE.md`).
 
+## This repository is public
+
+Everything committed here (code, docs, commit messages) is public. Site specifics stay
+in the private `infrastructure` repo: host names, IPs, subnets, tailnet name, MACs,
+coordinates, FusionSolar account/station/device identifiers, serial numbers, e-mail
+addresses, household figures, people's names, and credentials of any kind.
+
+- Write placeholders instead: `<db-host>`, `<central-host>`, `<registry-host>`,
+  `<pvlogger-host>`, `<tailnet>`, `<lan-ip>`, `<lan-subnet>`, `<dongle-ip>`,
+  `<site-lat>`/`<site-lon>`, `<station-code>`. Scripts read site values from the
+  environment or `~/.config/pvlogger/local.env`, never from a hard-coded default.
+- Do not copy values from `infrastructure`, from cluster output (`kubectl`, logs) or
+  from 1Password into this repo, also not as examples in docs or commit messages.
+- The hooks in `.githooks/` (gitleaks + a private blocklist) must stay enabled
+  (`core.hooksPath .githooks`). Never commit with `--no-verify`; if a hook flags a line,
+  replace the value with a placeholder.
+
 ## Project Overview
 
 PVLogger is a solar panel monitoring and data collection system built as a polyglot microservices architecture. It integrates with Modbus devices and FusionSolar APIs, stores data in PostgreSQL, and serves a dashboard frontend.

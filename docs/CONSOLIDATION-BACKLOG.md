@@ -421,6 +421,8 @@ next release; it changes nothing for them.
     choice — only the files the item names were removed). Two parts of the item were already stale: no `.DS_Store`
     was ever tracked (only present on disk), and the `summary-2024.*` simulator outputs no longer exist in the tree
     or the index. Files remain in git history — nothing sensitive (internal LAN hostnames only, already in docs).
+    **Superseded 2026-11-15 (item 51):** `.idea/` is untracked too (kept on disk), because the repo goes public and
+    `dataSources.xml` names site hosts.
 25. ~~`pvlogger-frontend/src/web/README.md` is stock Angular-CLI boilerplate citing the wrong version.~~
 
     **Resolved 2026-08-16.** Rewritten in place (operator choice over module-root move or deletion) as a real README:

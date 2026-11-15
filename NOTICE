@@ -1,0 +1,22 @@
+PVLogger
+Copyright 2024-2026 Bruno Ziswiler
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+Third-party material
+--------------------
+
+pvlogger-masterdata-server/docker/Sun2000-*-Definitions.csv
+    Register tables transcribed from Huawei's published "SUN2000 Series Inverter
+    MODBUS Interface Definitions". The register addresses, names, types, units and
+    gains are Huawei's interface specification; they are included so the software
+    can talk to the devices and are not covered by this project's copyright.
+
+Trademarks
+----------
+
+Huawei, FusionSolar, SUN2000, LUNA2000, SmartDongle and DTSU666 are trademarks of
+Huawei Technologies Co., Ltd. This project is an independent work. It is not
+affiliated with, endorsed by or supported by Huawei. The FusionSolar OpenAPI
+description in pvlogger-fusionsolar/internal/openapi/ was written for this
+project from observed API behaviour and public documentation.

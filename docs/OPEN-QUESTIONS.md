@@ -115,7 +115,7 @@ _None._
    outdated; refreshing it, possibly as the basis for e2e tests (none exist
    today), is a new low-prio todo (backlog 30).
 
-### Site / hardware (partially in the Batteriespeicher doc — confirm)
+### Site / hardware
 
 9. ~~Which physical device answers Modbus at `<dongle-ip>` (SmartDongle?), and
    which physical units are Modbus IDs meter `1`, inverters `1,16`?~~
@@ -124,7 +124,7 @@ _None._
    daisy-chained to 1). The meter at ID `1` is a virtual device backed by the
    DTSU666-H wired to inverter `1`. Promoted to CONTEXT.md (Domain
    vocabulary → Device).
-10. ~~The site coordinates hard-coded in sunrise-sunset (<site-lat>…, <site-lon>…) — correct
+10. ~~The site coordinates hard-coded in sunrise-sunset (`<site-lat>`, `<site-lon>`) — correct
     and intentionally public in the repo?~~
     Answered 2026-08-07: correct — they are the operator's home coordinates.
     But hard-coding them is not intentional design: moving them to

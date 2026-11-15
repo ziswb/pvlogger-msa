@@ -6,8 +6,7 @@
 ## Context
 
 `pvlogger-battery-simulator` was built to evaluate a LUNA2000 purchase by
-replaying the house's real measured energy flows (see its README and
-`Batteriespeicher_Projekt_Zusammenfassung.md`). The 2026 evaluation concluded:
+replaying the house's real measured energy flows (see its README). The 2026 evaluation concluded:
 **at current parameters a battery is not economical.**
 
 ## Decision

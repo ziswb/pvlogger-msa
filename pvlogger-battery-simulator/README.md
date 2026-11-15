@@ -4,8 +4,20 @@ Answers the question *"what would a battery storage system actually have done fo
 before buying one — by replaying the house's **real, measured energy flows** against a
 simulated battery, minute by minute, instead of relying on rules of thumb.
 
-Background and motivation: see `Batteriespeicher_Projekt_Zusammenfassung.md` in the
-repository root.
+## Why
+
+A home battery is usually sized and justified with rules of thumb: a typical load
+profile, a self-consumption gain from a vendor calculator, a payback period from a
+sales pitch. This site already records every minute of PV production, house
+consumption, grid import and grid export (the data collectors and their KPIs), so
+there is a better source: the year that actually happened.
+
+The simulator replays that measured year against a modelled battery. Each minute it
+charges from what was really exported and discharges into what was really imported,
+within the battery's capacity, power limits, efficiency and reserve. Comparing presets
+(different sizes, other vendors) then rests on the site's own data. It reports
+self-consumption, autarky, avoided import, battery throughput and full cycles, and the
+yearly saving at a given tariff, which a purchase price can be compared against.
 
 **Status (2026-08-07):** first evaluation concluded — a battery is not economical at
 current prices; the purchase is deferred. This tool stays for re-evaluation when
@@ -105,7 +117,7 @@ Or build a binary with `make build` (output in `./build/`).
 | `-feedin-price` | `0.06` | Feed-in remuneration per kWh |
 | `-csv` | *(off)* | Write a per-month, per-battery CSV to this path |
 | `-summary-csv` | *(off)* | Write a whole-period summary CSV (one row per battery) to this path |
-| `-db-host` | `<db-host>` | PostgreSQL host |
+| `-db-host` | `$PVLOGGER_DB_HOST`, else `localhost` | PostgreSQL host |
 | `-db-port` | `5432` | PostgreSQL port |
 | `-db-name` | `pvdata` | Database name |
 | `-db-user` | `battery_sim_ro` | Database user; password **only** via `PGPASSWORD` |
@@ -113,8 +125,10 @@ Or build a binary with `make build` (output in `./build/`).
 
 ### Database connection
 
-Since the move to CloudNativePG (2026-10-25) the defaults connect to
-`<db-host>` (<db-ip>), port 5432, with `-db-sslmode require`.
+Since the move to CloudNativePG (2026-10-25) the simulator reads from the
+database standbys, port 5432, with `-db-sslmode require`. Set the host with
+`-db-host` or `PVLOGGER_DB_HOST` (for example in `~/.config/pvlogger/local.env`,
+see `scripts/build.sh`).
 
 - TLS is mandatory: plaintext logins are refused. `require` encrypts but does not
   verify the server certificate.

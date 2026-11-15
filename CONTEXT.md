@@ -15,10 +15,9 @@ to the `infrastructure` repo and the legacy folders:
 
 ## Purpose
 
-PVLogger monitors a private **16 kWp photovoltaic installation** (2× Huawei
+PVLogger monitors a private **photovoltaic installation** (2× Huawei
 SUN2000-8KTL-M1 inverters, Huawei DTSU666-H smart meter, Modbus TCP via a
-SmartDongle — see `Batteriespeicher_Projekt_Zusammenfassung.md` for the site
-description, in German). It:
+SmartDongle). It:
 
 - polls the inverters/meter over **Modbus TCP** (once per minute),
 - pulls portal data from the **Huawei FusionSolar OpenAPI**,
@@ -174,7 +173,8 @@ All three are dumped nightly by the db-backup CronJob (infrastructure repo). A f
 ## Build, versioning & deployment (summary)
 
 - Images are built by `scripts/build.sh` and pushed to the private registry
-  `<registry-host>:5000`. **A service's version is the `LABEL version` in its
+  `<registry-host>:5000` (`DOCKER_REGISTRY`, set outside the repo in
+  `~/.config/pvlogger/local.env`). **A service's version is the `LABEL version` in its
   Dockerfile** ([ADR-0003](docs/adr/0003-image-versioning-and-deployment.md)).
 - **Deployed** versions are pinned in the Helm chart's `values.yaml` in the
   infrastructure repo (declared single source of truth for what runs).

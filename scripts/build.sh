@@ -22,7 +22,14 @@ DOCKER_CMD=$(${REQUIRE_COMMAND} docker)
 GREP_CMD=$(${REQUIRE_COMMAND} grep)
 SED_CMD=$(${REQUIRE_COMMAND} sed)
 CURL_CMD=$(${REQUIRE_COMMAND} curl)
-DOCKER_REGISTRY="<registry-host>:5000"
+# Site settings (the private registry host) live outside this public repo, in
+# $PVLOGGER_LOCAL_ENV (default ~/.config/pvlogger/local.env), or in the environment.
+PVLOGGER_LOCAL_ENV="${PVLOGGER_LOCAL_ENV:-${HOME}/.config/pvlogger/local.env}"
+if [ -f "${PVLOGGER_LOCAL_ENV}" ]; then
+  # shellcheck source=/dev/null
+  . "${PVLOGGER_LOCAL_ENV}"
+fi
+DOCKER_REGISTRY="${DOCKER_REGISTRY:-}"
 LOCAL_REGISTRY="localhost:15000"
 REGISTRY_PATH="bziswiler"
 
@@ -84,6 +91,12 @@ if [ -z "${component}" ]; then
 fi
 
 PV_LOGGER_COMPONENT="$component"
+
+if [ -z "${registry}" ]; then
+  echo "Error: no registry. Set DOCKER_REGISTRY (host:port) in ${PVLOGGER_LOCAL_ENV}" >&2
+  echo "or the environment, or use -l for the local registry." >&2
+  exit 1
+fi
 
 # Validate component directory exists
 if [[ ! -d "${SCRIPT_DIR}/../${PV_LOGGER_COMPONENT}" ]]; then

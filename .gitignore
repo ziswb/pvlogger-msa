@@ -7,7 +7,8 @@ build/
 
 /.claude/settings.local.json
 
-# IDE project files (the .idea/ directory itself stays tracked — operator decision, backlog 24)
+# IDE project files (.idea/ untracked for publication, backlog 51; it held local data-source hosts)
+.idea/
 *.iml
 *.ipr
 *.iws

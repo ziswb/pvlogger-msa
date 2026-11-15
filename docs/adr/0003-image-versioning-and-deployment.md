@@ -13,8 +13,9 @@ placeholders.
 
 - A component's version is the **`LABEL version="x.y.z"` in its Dockerfile**.
   `scripts/build.sh` scrapes it, builds with the repo root as context, tags the
-  image `:<version>` only, and pushes it to `<registry-host>:5000` (or a local
-  registry with `-l`). It refuses a version that is already in the registry
+  image `:<version>` only, and pushes it to the registry in `DOCKER_REGISTRY`
+  (`<registry-host>:5000`, set outside the repo in `~/.config/pvlogger/local.env`),
+  or to a local registry with `-l`. It refuses a version that is already in the registry
   unless forced with `-f`.
 - What actually **runs** is pinned in the Helm chart's `values.yaml` in the
   infrastructure repo (`ansible/roles/pvlogger_helm_deploy/chart/`),

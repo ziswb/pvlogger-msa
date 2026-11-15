@@ -12,8 +12,8 @@ set -o pipefail
 SRC_DB_HOST="localhost"
 SRC_DB_PORT=5432
 
-DST_DB_HOST="<central-host>"
-DST_DB_PORT=5433
+DST_DB_HOST="${DST_DB_HOST:?set DST_DB_HOST to the target database host}"
+DST_DB_PORT="${DST_DB_PORT:-5433}"
 
 DBS_TO_MIGRATE=(
   "fsdata"

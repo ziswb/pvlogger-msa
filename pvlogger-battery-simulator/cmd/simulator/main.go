@@ -14,6 +14,14 @@ import (
 	"pvlogger-battery-simulator/internal/sim"
 )
 
+// envOr returns the environment variable key, or def if it is unset or empty.
+func envOr(key, def string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return def
+}
+
 type batteryList []string
 
 func (b *batteryList) String() string     { return strings.Join(*b, ",") }
@@ -29,7 +37,7 @@ func main() {
 	feedInPrice := flag.Float64("feedin-price", 0.06, "feed-in remuneration per kWh")
 	csvPath := flag.String("csv", "", "optional path for a per-month CSV export")
 	summaryCSVPath := flag.String("summary-csv", "", "optional path for a whole-period summary CSV (one row per battery)")
-	dbHost := flag.String("db-host", "<db-host>", "PostgreSQL host")
+	dbHost := flag.String("db-host", envOr("PVLOGGER_DB_HOST", "localhost"), "PostgreSQL host (default: $PVLOGGER_DB_HOST, else localhost)")
 	dbPort := flag.Int("db-port", 5432, "PostgreSQL port")
 	dbName := flag.String("db-name", "pvdata", "database name")
 	dbUser := flag.String("db-user", "battery_sim_ro", "database user (password via PGPASSWORD)")

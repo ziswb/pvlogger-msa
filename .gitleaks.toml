@@ -1,0 +1,75 @@
+# gitleaks configuration: the default secret rules plus rules for site data.
+#
+# This repository is public; site specifics (hosts, network, location, accounts) live
+# in a private infrastructure repo and appear here only as placeholders such as
+# <db-host>, <tailnet>, <lan-ip>, <site-lat>. These rules catch the patterns. A private
+# exact-value blocklist is checked by the local hooks (.githooks/).
+title = "pvlogger"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "tailscale-key"
+description = "Tailscale auth key, OAuth client secret or API key"
+regex = '''tskey-(?:auth|client|api)-[A-Za-z0-9-]{10,}'''
+keywords = ["tskey-"]
+
+[[rules]]
+id = "tailnet-name"
+description = "Tailnet DNS name (use <tailnet>.ts.net)"
+regex = '''\b[a-z0-9-]+\.ts\.net\b'''
+keywords = [".ts.net"]
+  [[rules.allowlists]]
+  regexes = ['''^example\.ts\.net$''']
+
+[[rules]]
+id = "home-arpa-host"
+description = "LAN host name under home.arpa (use a placeholder such as <db-host>)"
+regex = '''\b[a-z0-9-]+\.home\.arpa\b'''
+keywords = ["home.arpa"]
+
+[[rules]]
+id = "private-ipv4"
+description = "Private or Tailscale IPv4 address (use <lan-ip>)"
+regex = '''\b(?:192\.168|10\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01])|100\.(?:6[4-9]|[7-9]\d|1[01]\d|12[0-7]))\.\d{1,3}\.\d{1,3}\b'''
+keywords = ["192.168.", "10.", "172.", "100."]
+  [[rules.allowlists]]
+  description = "Kubernetes and container defaults, documentation placeholders"
+  regexes = ['''^10\.(?:42|43)\.0\.\d{1,3}$''', '''^10\.0\.0\.\d{1,3}$''']
+
+[[rules]]
+id = "mac-address"
+description = "MAC address"
+regex = '''\b(?:[0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}\b'''
+
+[[rules]]
+id = "geo-coordinates"
+description = "Latitude/longitude with three or more decimals (use <site-lat>/<site-lon>)"
+regex = '''(?i)\b(?:lat|latitude|lon|lng|longitude)["']?\s*[:=]\s*["']?-?\d{1,3}\.\d{3,}'''
+keywords = ["lat", "lon", "lng"]
+
+[[rules]]
+id = "fusionsolar-station-code"
+description = "FusionSolar plant (station) code"
+regex = '''NE=\d{5,}'''
+keywords = ["NE="]
+
+[[rules]]
+id = "personal-email"
+description = "E-mail address (commits use the GitHub noreply address)"
+regex = '''\b[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}\b'''
+keywords = ["@"]
+  [[rules.allowlists]]
+  description = "noreply and documentation domains"
+  regexes = ['''@users\.noreply\.github\.com$''', '''^noreply@anthropic\.com$''', '''@example\.(?:com|org|net)$''', '''@localhost$''']
+
+[allowlist]
+description = "Generated, vendored and third-party files"
+paths = [
+  '''(?:^|/)node_modules/''',
+  '''(?:^|/)build/''',
+  '''(?:^|/)package-lock\.json$''',
+  '''(?:^|/)go\.sum$''',
+  '''(?:^|/)gradle/wrapper/''',
+]
