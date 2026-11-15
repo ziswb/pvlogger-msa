@@ -11,8 +11,8 @@ inverters), built as a small polyglot microservice system on Kubernetes.
 - **Simulates** a home battery against the measured history before buying one
   ([battery simulator](pvlogger-battery-simulator/README.md)).
 
-> Status: personal project, running in production on a home k3s cluster. This README
-> is a skeleton; architecture diagram, screenshots and a "try it" section follow.
+> Status: personal project, running in production on a home k3s cluster. An
+> architecture diagram and screenshots will follow.
 
 ## Architecture
 
@@ -28,6 +28,10 @@ Kotlin/Ktor services hold the data and serve the UI; Go CronJobs do the collecti
 | `pvlogger-frontend` | Kotlin + Angular | dashboard SPA and `/livedata` WebSocket |
 | `pvlogger-fusionsolar`, `-auth` | Go | FusionSolar API integration |
 | `pvlogger-kpi-exporter` | Go | token-protected KPI export |
+| `pvlogger-modbus-mock` | Go | local development only: a synthetic plant over Modbus TCP and its history backfill |
+
+Everything deploys with one Helm chart, [`deploy/helm/pvlogger`](deploy/helm/pvlogger/README.md),
+which pins every image version.
 
 See [CONTEXT.md](CONTEXT.md) for the domain vocabulary and data flow, and
 [docs/adr/](docs/adr/) for the decisions behind it.
@@ -38,6 +42,31 @@ See [CONTEXT.md](CONTEXT.md) for the domain vocabulary and data flow, and
 ./gradlew build         # JVM services (tests need Docker for Testcontainers)
 ./gradlew makeGoBuild   # Go services
 ```
+
+## Try it locally
+
+With [Rancher Desktop](https://rancherdesktop.io/) (Kubernetes and Traefik on) and
+[Tilt](https://tilt.dev/):
+
+```bash
+tilt up --context rancher-desktop
+```
+
+This builds every image, installs the chart with a dev database and a synthetic PV
+plant in place of the real inverter, writes 30 days of history, and serves the
+dashboard on `http://localhost/`. The Go images are arm64-only for now (backlog 56),
+so this needs an Apple Silicon or other arm64 host.
+
+## Contributing
+
+Enable the leak-guard hooks once per clone (this repository is public; see
+[`.githooks/README.md`](.githooks/README.md)):
+
+```bash
+git config core.hooksPath .githooks
+```
+
+Security issues: see [SECURITY.md](SECURITY.md).
 
 ## Public code, private configuration
 

@@ -180,7 +180,7 @@ Each database is owned by exactly one service, which also owns its migrations (F
 | `pvmasterdata` | masterdata-server | register definitions |
 | `fsdata` | fusionsolar (tern migrations, manual `MIGRATE` job — ADR-0022) | FusionSolar responses & KPIs |
 
-All three are dumped nightly by the db-backup CronJob (infrastructure repo). A fourth,
+All three are dumped nightly by the chart's db-backup CronJob (`dbBackup.enabled`, set in the site values). A fourth,
 `sunrisesunset`, was dropped on 2026-08-27 with the retirement of its module (ADR-0005).
 
 ## Build, versioning & deployment (summary)

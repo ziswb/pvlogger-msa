@@ -19,7 +19,8 @@ placeholders.
   unless forced with `-f`.
 - What actually **runs** is pinned in the Helm chart's `values.yaml` in the
   infrastructure repo (`ansible/roles/pvlogger_helm_deploy/chart/`),
-  declared there as the single source of truth for deployed versions. Deployment
+  declared there as the single source of truth for deployed versions.
+  *(Superseded by ADR-0024: the chart and its pins live in this repo.)* Deployment
   is `ansible-playbook playbooks/pvlogger.yml`.
 - Release = bump the Dockerfile LABEL → `build.sh` → bump the chart tag → run the
   playbook.
@@ -27,7 +28,8 @@ placeholders.
 ## Consequences
 
 - Version truth is split across two repos by design: this repo says what *exists*
-  (registry tags), infrastructure says what *runs*.
+  (registry tags), infrastructure says what *runs*. *(Superseded by ADR-0024: this
+  repo's chart pins what runs; infrastructure pins only the chart version.)*
 - The `version =` fields in `build.gradle.kts` / Go modules are meaningless — do
   not bump them expecting any effect.
 - No `:latest` tag (dropped 2026-10-23, infrastructure backlog 58): nothing

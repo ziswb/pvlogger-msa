@@ -101,10 +101,9 @@ For quick service work without Kubernetes, a local database runs via Docker Comp
 - `pvlogger-fusionsolar` — FusionSolar API data integration (writes its own `fsdata` DB directly)
 - `pvlogger-fusionsolar-auth` — Refreshes the FusionSolar token into a K8s secret
 - `pvlogger-kpi-exporter` — Exports the latest KPIs as `pv_*` JSON: `serve` mode (token-protected endpoint) feeds the `relay` on the receiver's server. The file-writing `export` mode is still in the code and is still the default `KPI_EXPORTER_MODE`, but nothing deploys it: its CronJob has been removed (ADR-0021, backlog 44)
-- `pvlogger-modbus-mock` — Local development only: the deterministic synthetic plant served over Modbus TCP in place of the SmartDongle (port 8502, Service port 502; ADR-0025)
 - `pv-logger`, `pvlogger-shared-modbus` — Shared Go libraries (logging/env config; Modbus TCP client, KPI math + single KPI aggregation path, hard-coded KPI register set, REST clients, collector jobs, Pushgateway metrics)
 
-**Tools (not deployed):** `pvlogger-battery-simulator` (local CLI, see its README), `pvlogger-database` (local compose DB + migration history).
+**Tools (not deployed):** `pvlogger-battery-simulator` (local CLI, see its README), `pvlogger-database` (local compose DB + migration history), `pvlogger-modbus-mock` (local development only, ADR-0025: the deterministic synthetic plant served over Modbus TCP in place of the SmartDongle, port 8502, Service port 502, plus the history backfill Job; the chart's `modbusMockServer` is off by default).
 
 ### Communication Flow
 

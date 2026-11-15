@@ -38,5 +38,6 @@ The per-service bootstrap shape (backlog 13) stays in each `Application.kt`:
 - Every service now emits the `call-id` MDC — backlog item 16 (uneven
   `%X{call-id}` logback patterns) reduces to a logback.xml alignment.
 - The mock server (raw TCP, no HTTP pipeline) deliberately doesn't participate.
+  It was deleted on 2026-11-15, replaced by the Go mock (ADR-0025).
   The deprecated sunrise-sunset was the other non-participant until it was
   deleted on 2026-08-27 (ADR-0005, backlog item 28).

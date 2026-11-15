@@ -28,7 +28,7 @@ tasks {
 - `pvlogger-modbus-data-accessor`
 - `pvlogger-masterdata-server`
 - `pvlogger-frontend` (added 2026-08-15, backlog 21 — no Flyway symptom, but the same fat-JAR service-file handling applies)
-- `pvlogger-modbus-mock-server` (added 2026-08-15, backlog 21)
+- `pvlogger-modbus-mock-server` (added 2026-08-15, backlog 21; removed 2026-11-15, replaced by the Go `pvlogger-modbus-mock`, ADR-0025)
 
 **Context:** The existing `mergeServiceFiles()` configuration was a workaround for Flyway 10.x bug ([issue #3811](https://github.com/flyway/flyway/issues/3811)). With Ktor 3.x, this alone is insufficient. Both `mergeServiceFiles()` and `duplicatesStrategy = DuplicatesStrategy.INCLUDE` are required.
 

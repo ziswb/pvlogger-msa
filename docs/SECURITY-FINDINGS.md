@@ -34,7 +34,19 @@ depth / operational.
 
 ### 🔴 Exploitable / data-integrity
 
-None.
+60. **The kubelet-probe NetworkPolicy may admit every pod in the cluster.** *Added
+    2026-11-15 (review of the chart move, backlog 57); not verified on the cluster.*
+
+    `deploy/helm/pvlogger/templates/network-policies.yaml` allows the probe ports from
+    `networkPolicies.kubeletCidr`, default `10.42.0.0/16`: k3s's whole pod network, not
+    only the nodes' bridge addresses the kubelet probes come from. If k3s's policy
+    controller (kube-router) matches pod source IPs against that `ipBlock`, any pod in
+    any namespace reaches the frontend, the data accessor (unauthenticated `store-*`
+    writes), the masterdata server (`PUT /import-master-data`) and the KPI exporter,
+    and the default-deny ingress the posture note relies on holds only at the namespace
+    edge. Check: from a pod in another namespace, `curl` the data accessor Service. If
+    it answers, drop the policy (kube-router already admits node-local traffic, so
+    probes may pass without it) or narrow it to each node's bridge gateway (`/32`).
 
 ### ⚪ Defence in depth / operational
 
@@ -56,11 +68,9 @@ None.
 - **The `/livedata` WebSocket is unauthenticated**
   (`pvlogger-frontend/.../plugins/WebSockets.kt:49`). Read-only PV telemetry; consistent
   with the posture note. Listed for completeness.
-- **Committed internal hostname in the battery simulator.**
-  `pvlogger-battery-simulator/cmd/simulator/main.go:32-35` defaults `-db-host` to
-  `<db-host>` (until 2026-10-25: `<central-host>`) and `-db-user`
-  to `battery_sim_ro`. No password is committed (it is required from `PGPASSWORD` at
-  `:42-44`). Information disclosure only, and the repo is private.
+- ~~**Committed internal hostname in the battery simulator.**~~ Gone since the
+  publication prep (backlog 51, 2026-11-15): `-db-host` defaults to `PVLOGGER_DB_HOST`
+  or `localhost`, and the history was rewritten before the repo went public.
 
 ## Resolved
 

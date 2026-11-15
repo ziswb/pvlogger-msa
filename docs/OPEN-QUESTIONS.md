@@ -98,7 +98,8 @@ _None._
    for it. Dev-only or actually deployed?~~
    Answered 2026-08-07: never production — local development only. Promoted to
    the CONTEXT.md component table. Whether the chart keeps shipping the
-   template depends on the dev-loop decision (Q8).
+   template depends on the dev-loop decision (Q8). *Resolved 2026-11-15:* the
+   chart (now in this repo, ADR-0024) keeps it, off by default, for Tilt (ADR-0025).
 7. ~~**`Category.DEVLST` and `Type.MLD`** exist in the model; `MLD` throws
    `NotImplementedError` in the data accessor. Planned work or dead vocabulary?~~
    Answered 2026-08-07: neither dead nor a defect — deliberate **fail-fast
@@ -112,7 +113,9 @@ _None._
    environment for developing **larger changes** — so the Tiltfile rot gets
    fixed, not removed (backlog 23). The mock server went unused and is
    outdated; refreshing it, possibly as the basis for e2e tests (none exist
-   today), is a new low-prio todo (backlog 30).
+   today), is a new low-prio todo (backlog 30). *Resolved 2026-11-15:* Tilt runs
+   on the Helm chart (backlog 23) with the Go synthetic plant as mock server and
+   history backfill (backlog 30, ADR-0025).
 
 ### Site / hardware
 

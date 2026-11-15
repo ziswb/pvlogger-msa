@@ -6,7 +6,8 @@ It covers libraries, major versions and tooling (JDK, Go, Gradle, Node/Angular, 
 ## Ground rules
 
 - Work on a branch. Nothing is pushed, merged or deployed without the owner's go-ahead.
-  Rollout happens through the sibling `infrastructure` repo, and the owner watches the first CronJob runs.
+  Rollout: the owner tags the chart (`chart/vX.Y.Z`, ADR-0024) and the sibling `infrastructure` repo bumps its
+  pinned chart version; the owner watches the first CronJob runs.
 - **Major versions and toolchain changes need approval first.** Before any work, present a table with
   one row per major/toolchain bump: from → to, pros, cons/breaking changes, risk (low/med/high),
   and the effort expected. The owner picks which ones go ahead. Patch and minor bumps don't need approval.
@@ -28,7 +29,9 @@ It covers libraries, major versions and tooling (JDK, Go, Gradle, Node/Angular, 
 | Frontend | `pvlogger-frontend/src/web/package.json` (+ lockfile) |
 | Runtime images | `distroless/static-debian*`, `eclipse-temurin:*-ubi*-minimal`, `node:*-alpine` (frontend build stage) |
 | CI | `.github/workflows/*.yml`: action SHAs (+ tag comment), `java-version`, golangci-lint `version`, `node-version`, Helm `version`, `KUBECONFORM_VERSION` + `KUBECONFORM_SHA256`, `GITLEAKS_VERSION` + `GITLEAKS_SHA256` (`go-version-file: go.work` follows by itself) |
-| Test/dev DB | Testcontainers `postgres:18` (3 test bases), `pvlogger-database/docker/docker-compose.yaml`, `pvlogger-database/scripts/run-db-container.sh` |
+| Chart images | `deploy/helm/pvlogger/values.yaml`: `dbBackup.image` (Postgres client, same major as production), `heartbeat.image` (curl), `imagePrepull.holdImage` (pause) |
+| Tilt | `deploy/dev/postgres.yaml` (dev Postgres image), the Tiltfile's `version_settings` constraint |
+| Test/dev DB | Testcontainers `postgres:18` (3 test bases), `pvlogger-database/docker/docker-compose.yaml`, `pvlogger-database/scripts/run-db-container.sh`, `deploy/dev/postgres.yaml` |
 
 Not in scope here: the CNPG/PostgreSQL server version and the cluster setup. Those belong to the `infrastructure` repo.
 The test and dev Postgres versions should match production's major version.
@@ -63,14 +66,16 @@ The test and dev Postgres versions should match production's major version.
    - Every Docker image builds and its container starts (`docker build -f <service>/docker/Dockerfile .`).
    - Your own look at the dashboard: the scripts compare pixels, they don't judge whether a change is right.
 7. **Version bumps**: every image whose content changed gets a new `LABEL version` in its Dockerfile
-   (ADR-0003). A dependency or base-image change counts, even without code changes. Otherwise
+   (ADR-0003), and the same commit sets that tag in `deploy/helm/pvlogger/values.yaml` and bumps `version` in
+   `Chart.yaml` (ADR-0024; the chart's bump is the highest among its changes, see the chart README). CI
+   (`chart.yml`, `scripts/check-chart-tags.sh`) fails when a Dockerfile and its chart tag disagree. A dependency or base-image change counts, even without code changes. Otherwise
    `scripts/build-all.sh` skips the image ("version already in registry"). Never use `-f` for this: it would
    overwrite the tag production runs and take away the rollback target. Patch for dependency/base-only changes,
    minor for a runtime or framework major (JDK, Angular). Before committing, check the tags are free:
    `curl -I https://<registry-host>:5000/v2/bziswiler/<module>/manifests/<version>` → 404.
 8. **Report**: what changed (from → to), what was skipped and why, how each item was tested, what can only
    be checked in production (real Modbus device, FusionSolar API, K8s deploy), and the rollout and rollback notes
-   for the infrastructure repo.
+   (the chart version to tag and pin in the infrastructure repo).
 
 ## Check scripts (`scripts/upgrade-check/`)
 
