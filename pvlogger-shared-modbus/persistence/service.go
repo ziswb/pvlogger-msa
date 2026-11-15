@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"pv-logger/logging"
+	"pvlogger-shared-modbus/httpclient"
 	"time"
 )
 
@@ -28,11 +29,9 @@ type PersistingService struct {
 
 func NewPersistingService(host string, port int, protocol string, basePath string) *PersistingService {
 	return &PersistingService{
-		baseURL:  fmt.Sprintf("%s://%s:%d", protocol, host, port),
-		basePath: basePath,
-		httpClient: &http.Client{
-			Timeout: 30 * time.Second,
-		},
+		baseURL:    fmt.Sprintf("%s://%s:%d", protocol, host, port),
+		basePath:   basePath,
+		httpClient: httpclient.New(30 * time.Second),
 	}
 }
 

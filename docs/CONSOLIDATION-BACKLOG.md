@@ -235,10 +235,6 @@ next release; it changes nothing for them.
       battery simulator), `.dockerignore` keeps `.claude/` and env files out of the build context.
 
     Deferred (not done here):
-    - **Verify the kubelet-probe NetworkPolicy on the cluster** (security finding 60): `kubeletCidr` is the whole
-      pod CIDR, so if kube-router matches pod source IPs against it, every pod in the cluster reaches the
-      unauthenticated write endpoints. Test from a pod in another namespace; if it gets through, drop the policy or
-      narrow it to the nodes' bridge addresses.
     - Container hardening: `distroless/static-debian13:nonroot`, `readOnlyRootFilesystem`,
       `automountServiceAccountToken: false`, base images pinned by digest, the timezone hostPath dropped everywhere
       (Go embeds tzdata, the JVM reads `TZ`), so the namespace can enforce Pod Security `restricted`.
@@ -249,6 +245,18 @@ next release; it changes nothing for them.
     - fusionsolar-auth's Role can `create` any Secret: pre-create `fusionsolar-token-secret` and drop `create`.
     - gitleaks on PRs reads the PR's own `.gitleaks.toml`: use the base branch's (or CODEOWNERS on it).
     - Tilt: its own namespace (`pvlogger-dev`), so a mistaken `--k8s-context` cannot overwrite a `pvlogger` release.
+
+    *Security finding 60, confirmed in Tilt 2026-11-15 (k3s 1.37, kube-router):* a curl pod in `default` got 200
+    from the data accessor and masterdata server through `allow-kubelet-probes` (`ipBlock` = the whole pod CIDR);
+    Postgres, not in that policy, refused it. Without the policy the probes still pass (kube-router admits traffic
+    from the pod's own node) and the curl is refused, but a new collector pod's first call races kube-router adding
+    its IP to `allow-intra-namespace`: 1 of 6 device collector runs got `connection refused` from the masterdata
+    server 1 ms after start (the race the infrastructure DB policy works around with a static `ipBlock`). Fix: the
+    shared Go HTTP client (`pvlogger-shared-modbus/httpclient`) retries a refused connection for up to 5 s (safe for
+    POST: nothing reached the server), then the chart drops `allow-kubelet-probes` and `networkPolicies.kubeletCidr`.
+    Images: fast/full/device collectors and the mock (backfill) rebuilt on the shared client. *Verified in Tilt:*
+    12 device collector runs without the policy, 6 hit the refusal, each recovered after one retry (500 ms), no
+    errors; the curl from `default` is refused. Chart 2.0.0 (a removed values key is a major).
 
 ## Done (resolved, superseded or moot)
 

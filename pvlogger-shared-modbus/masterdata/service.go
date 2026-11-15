@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"pv-logger/logging"
 	"pvlogger-shared-modbus/config"
+	"pvlogger-shared-modbus/httpclient"
 	"pvlogger-shared-modbus/model"
 	"strings"
 	"time"
@@ -30,9 +31,7 @@ func NewMasterDataService() *MasterDataService {
 	return &MasterDataService{
 		baseURL:        fmt.Sprintf("%s://%s:%d", cfg.Protocol, cfg.Host, cfg.Port),
 		masterDataPath: config.MasterDataPath,
-		httpClient: &http.Client{
-			Timeout: 30 * time.Second,
-		},
+		httpClient:     httpclient.New(30 * time.Second),
 	}
 }
 
