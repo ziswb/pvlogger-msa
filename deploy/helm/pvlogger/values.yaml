@@ -195,7 +195,7 @@ pvDeviceDataCollector:
   enabled: true
   image:
     repository: "bziswiler/pv-device-data-collector"
-    tag: "3.7.4"
+    tag: "3.7.5"
   logLevel: "debug"
   resources:
     limits:
@@ -227,7 +227,7 @@ pvFastDataCollector:
   enabled: true
   image:
     repository: "bziswiler/pv-fast-data-collector"
-    tag: "0.13.4"
+    tag: "0.13.5"
   schedule: "0-1,5-59 * * * *"
   logLevel: "debug"
   resources:
@@ -243,7 +243,7 @@ pvFullDataCollector:
   enabled: true
   image:
     repository: "bziswiler/pv-full-data-collector"
-    tag: "0.8.5"
+    tag: "0.8.6"
   schedule: "2 1-23 * * *"
   logLevel: "debug"
   resources:
