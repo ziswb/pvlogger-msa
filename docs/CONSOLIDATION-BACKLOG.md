@@ -27,7 +27,8 @@ Dated items, in order:
 - **Next:** item 45, connection timeouts so a CNPG switchover does not hang the services (2026-11-05).
 - **From about 2027-01-25:** item 42, drop the unused `modbus_response_data` indexes.
 
-Everything else open here is low priority hygiene (items 23, 30).
+Everything else open here is low priority hygiene. Items 23 and 30 (Tilt, synthetic plant) were done on 2026-11-15
+(chart 1.1.0).
 
 ### Status 2026-10-21 (end of the 2026-10-20 session)
 
@@ -92,45 +93,6 @@ next release; it changes nothing for them.
 
 ## Open
 
-23. **Tiltfile rot**: references non-existent `pvlogger-infrastructure/` paths, no
-    `docker_build` steps. Decision (2026-08-07, ex open question 8): **fix, don't remove** — Tilt is the intended dev
-    loop for larger changes. Low priority; pairs with the mock-server refresh (item 30).
-
-    *Re-verified 2026-10-19:* unchanged — the Tiltfile still loads `pvlogger-infrastructure/...` manifests and has
-    no `docker_build`.
-
-    *Scope extended 2026-11-14 (publication, items 51–53), no longer low priority:* Tilt becomes the robust dev
-    loop *and* the "try it" path of the public repo. Rebuild it on the Helm chart moved into this repo (item 52) with
-    a committed `values-dev.yaml`, `docker_build` for every service (live update where it pays off), dummy dev
-    credentials instead of the base64 secret scripts, an in-cluster Postgres, and a configurable k8s context (Rancher
-    Desktop, not hard-coded `docker-desktop`).
-
-    *Rebuilt 2026-11-15:* `Tiltfile` on the chart (`deploy/dev/values-dev.yaml`), `docker_build` for the JVM and
-    collector/mock images (context = repo root, `only` per stack), dev PostgreSQL and backfill Job in `deploy/dev/`,
-    context guard (`rancher-desktop` unless `-- --k8s-context`), host time zone, dashboard through Rancher Desktop's
-    Traefik on `http://localhost/` (new chart key `ingress.traefik.tls: false`), masterdata import and "run now"
-    buttons for the collectors. Ran green on Rancher Desktop: backfill ~2 min, fast/full collectors against the mock,
-    ingress allowlist holds. Open: the user's own check (incl. a midnight crossing); amd64 hosts need item 56.
-30. **Refresh the outdated mock server** (low prio, ex open question 8): unused for a while and out of date. Update it
-    so the Tilt environment (item 23)
-    works again for larger changes, and consider building e2e tests around it — none exist today. It stays local-only,
-    never production (open question 6).
-
-    *Scope extended 2026-11-14 (publication), no longer low priority:* synthetic physics instead of fixed values — a
-    PV production curve over the day with cloud noise, a house load profile, grid import/export derived so the KPIs
-    add up — plus a backfill job that writes ~30 days of synthetic history, so the day/history charts have data on
-    first start. Same data feeds Tilt testing (KPI and daily-delta paths) and the README screenshots (never real data).
-
-    *Decided 2026-11-15 ([ADR-0025](adr/0025-synthetic-plant-in-go-mock-and-backfill.md)):* a deterministic synthetic
-    plant as a Go package; a Go mock server replaces the Kotlin one (reuses `pvlogger-shared-modbus` registers and
-    framing); a Go backfill job stores raw KPI rows and KPI rows for 30 days, KPIs via the shared `kpis` code, daily
-    energy from the plant's counters; the raw-row store takes a client `dateCreated` only with
-    `DEV_ACCEPT_CLIENT_TIMESTAMPS` (off by default). Plant spec: latitude 47° (configurable), 10 kWp, one inverter
-    (unit 1), meter unit 1, dongle unit 100, no battery; clear-sky curve from sun elevation, a deterministic weather
-    type per day (sunny/mixed/overcast) with minute-level cloud noise; house load ~250 W base, morning/evening peaks,
-    deterministic appliance blocks (~4,500 kWh/year); counters 32106, 32114 (daily, resets at local midnight),
-    37119/37121 as sums of per-minute values; every other register a fixed plausible value by type, fake serials;
-    computed in `global.timezone`.
 42. ⚪ **Drop the unused `modbus_response_data` indexes — a quarter after the CloudNativePG cutover** (split out of
     item 41 on 2026-10-23; the cutover it waited on ran 2026-10-25)
 
@@ -466,6 +428,26 @@ next release; it changes nothing for them.
     `pvlogger-shared-modbus`, which has tests. The flow now takes its two steps as functions (`runSweep`, no behaviour
     change, no release needed), and the tests pin: the aggregator gets the run that was read, a failed read never
     aggregates, an aggregation error is returned (non-zero exit), and the sweep reads DYNAMIC + ALARM.
+23. ~~**Tiltfile rot**~~: references non-existent `pvlogger-infrastructure/` paths, no
+    `docker_build` steps. Decision (2026-08-07, ex open question 8): **fix, don't remove** — Tilt is the intended dev
+    loop for larger changes. Low priority; pairs with the mock-server refresh (item 30).
+
+    *Re-verified 2026-10-19:* unchanged — the Tiltfile still loads `pvlogger-infrastructure/...` manifests and has
+    no `docker_build`.
+
+    *Scope extended 2026-11-14 (publication, items 51–53), no longer low priority:* Tilt becomes the robust dev
+    loop *and* the "try it" path of the public repo. Rebuild it on the Helm chart moved into this repo (item 52) with
+    a committed `values-dev.yaml`, `docker_build` for every service (live update where it pays off), dummy dev
+    credentials instead of the base64 secret scripts, an in-cluster Postgres, and a configurable k8s context (Rancher
+    Desktop, not hard-coded `docker-desktop`).
+
+    *Rebuilt 2026-11-15:* `Tiltfile` on the chart (`deploy/dev/values-dev.yaml`), `docker_build` for the JVM and
+    collector/mock images (context = repo root, `only` per stack), dev PostgreSQL and backfill Job in `deploy/dev/`,
+    context guard (`rancher-desktop` unless `-- --k8s-context`), host time zone, dashboard through Rancher Desktop's
+    Traefik on `http://localhost/` (new chart key `ingress.traefik.tls: false`), masterdata import and "run now"
+    buttons for the collectors. Ran green on Rancher Desktop: backfill ~2 min, fast/full collectors against the mock,
+    ingress allowlist holds. *Done 2026-11-15:* the user's own `tilt up` shows a valid dashboard; released with
+    chart 1.1.0. amd64 hosts need item 56.
 24. ~~Committed IDE files (`.ipr`, `.iws`, `.iml`), `.DS_Store`; simulator output files (`summary-2024.*`) committed at
     module root.~~
 
@@ -569,6 +551,30 @@ next release; it changes nothing for them.
     following collection runs complete. Repeatable procedure (also for later migrations, and as a check after the
     CloudNativePG import): `infrastructure/docs/runbooks/pvlogger-fsdata-migrate.md`. No chart template — the runbook
     builds the Job from the CronJob, so it cannot drift from the CronJobs' env.
+30. ~~**Refresh the outdated mock server**~~ (low prio, ex open question 8): unused for a while and out of date. Update it
+    so the Tilt environment (item 23)
+    works again for larger changes, and consider building e2e tests around it — none exist today. It stays local-only,
+    never production (open question 6).
+
+    *Scope extended 2026-11-14 (publication), no longer low priority:* synthetic physics instead of fixed values — a
+    PV production curve over the day with cloud noise, a house load profile, grid import/export derived so the KPIs
+    add up — plus a backfill job that writes ~30 days of synthetic history, so the day/history charts have data on
+    first start. Same data feeds Tilt testing (KPI and daily-delta paths) and the README screenshots (never real data).
+
+    *Decided 2026-11-15 ([ADR-0025](adr/0025-synthetic-plant-in-go-mock-and-backfill.md)):* a deterministic synthetic
+    plant as a Go package; a Go mock server replaces the Kotlin one (reuses `pvlogger-shared-modbus` registers and
+    framing); a Go backfill job stores raw KPI rows and KPI rows for 30 days, KPIs via the shared `kpis` code, daily
+    energy from the plant's counters; the raw-row store takes a client `dateCreated` only with
+    `DEV_ACCEPT_CLIENT_TIMESTAMPS` (off by default). Plant spec: latitude 47° (configurable), 10 kWp, one inverter
+    (unit 1), meter unit 1, dongle unit 100, no battery; clear-sky curve from sun elevation, a deterministic weather
+    type per day (sunny/mixed/overcast) with minute-level cloud noise; house load ~250 W base, morning/evening peaks,
+    deterministic appliance blocks (~4,500 kWh/year); counters 32106, 32114 (daily, resets at local midnight),
+    37119/37121 as sums of per-minute values; every other register a fixed plausible value by type, fake serials;
+    computed in `global.timezone`.
+
+    *Done 2026-11-15:* `pvlogger-modbus-mock` (plant, mock server, backfill; image 1.0.0), data accessor 3.14.0 with
+    `DEV_ACCEPT_CLIENT_TIMESTAMPS`, chart 1.1.0. Running it in Tilt found the plant caching per-minute sums of every
+    day since its origin (~24 MB against the 32Mi limit); fixed before the first image build.
 31. ~~🔴 **All 22 data-accessor tests fail on H2**~~
 
     **Resolved 2026-08-07**
