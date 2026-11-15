@@ -60,10 +60,11 @@ cd pvlogger-fusionsolar && make build
 
 ### CI (GitHub Actions)
 
-`.github/workflows/`: `jvm.yml`, `go.yml`, `frontend.yml` (path-filtered per stack) and
+`.github/workflows/`: `jvm.yml`, `go.yml`, `frontend.yml`, `chart.yml` (path-filtered per
+stack; `chart.yml` also fails a chart change without a `Chart.yaml` version bump) and
 `gitleaks.yml` (every push/PR, full history). Actions are pinned to commit SHAs with the tag
 as a comment; bump them together with the tools they mirror (JDK, Go, golangci-lint, Node,
-gitleaks; see docs/UPGRADING.md).
+Helm, kubeconform, gitleaks; see docs/UPGRADING.md).
 
 ### Local Development
 

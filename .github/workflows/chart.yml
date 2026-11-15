@@ -1,0 +1,88 @@
+# The Helm chart (backlog 52, ADR-0024): lint, render every template, validate
+# the manifests against the Kubernetes schemas, and refuse a chart change
+# without a chart version bump.
+name: Chart
+
+on:
+  push:
+    branches: [main]
+    paths: &paths
+      - "deploy/**"
+      - ".github/workflows/chart.yml"
+  pull_request:
+    paths: *paths
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CHART: deploy/helm/pvlogger
+  KUBECONFORM_VERSION: "0.8.0"
+  KUBECONFORM_SHA256: 9bc2bffbf71f261128533edaf912153948b7ff238f9a531ae6d34466ec287883 # linux-amd64
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The version-bump check compares with the last chart/v* tag.
+          fetch-depth: 0
+          persist-credentials: false
+      # Same major as the deploying workstation (infrastructure helm_version_min/max).
+      - uses: azure/setup-helm@2f5e7bc67f1f9972ab16657bb795f36d8f04de0e # v5.1.0
+        with:
+          version: v4.3.1
+      - name: Install kubeconform
+        run: |
+          tarball="kubeconform-linux-amd64.tar.gz"
+          curl -fsSLo "$RUNNER_TEMP/$tarball" \
+            "https://github.com/yannh/kubeconform/releases/download/v${KUBECONFORM_VERSION}/$tarball"
+          echo "${KUBECONFORM_SHA256}  $RUNNER_TEMP/$tarball" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/$tarball" -C "$RUNNER_TEMP" kubeconform
+      - name: Lint
+        run: |
+          helm lint "$CHART" -f deploy/dev/values-dev.yaml
+          helm lint "$CHART" -f deploy/ci/values-all-enabled.yaml
+      # The defaults alone must fail on the required site values, with a message.
+      - name: Defaults refuse to render
+        run: |
+          if out=$(helm template t "$CHART" 2>&1); then
+            echo "::error::the chart renders without database.host / secrets.postgresPassword"
+            exit 1
+          fi
+          echo "$out" | grep -q "is required"
+      - name: Render and validate
+        run: |
+          for values in deploy/dev/values-dev.yaml deploy/ci/values-all-enabled.yaml; do
+            echo "== $values"
+            helm template pvlogger "$CHART" -n pvlogger -f "$values" \
+              | "$RUNNER_TEMP/kubeconform" -strict -summary \
+                  -skip Certificate,IngressRoute
+          done
+      # A chart change since the last chart/v* tag needs a higher Chart.yaml version
+      # (ADR-0024). Before the first tag there is nothing to compare with.
+      - name: Chart version bumped
+        run: |
+          last=$(git tag --list 'chart/v*' --sort=-v:refname | head -n 1)
+          if [ -z "$last" ]; then
+            echo "No chart/v* tag yet."
+            exit 0
+          fi
+          if git diff --quiet "$last" HEAD -- "$CHART"; then
+            echo "Chart unchanged since $last."
+            exit 0
+          fi
+          tagged=${last#chart/v}
+          current=$(sed -n 's/^version: *//p' "$CHART/Chart.yaml")
+          highest=$(printf '%s\n%s\n' "$tagged" "$current" | sort -V | tail -n 1)
+          if [ "$current" = "$tagged" ] || [ "$highest" != "$current" ]; then
+            echo "::error file=$CHART/Chart.yaml::the chart changed since $last but its version is $current; bump it above $tagged"
+            exit 1
+          fi
+          echo "Chart $current > $last."
