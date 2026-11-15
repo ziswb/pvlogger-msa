@@ -221,6 +221,12 @@ next release; it changes nothing for them.
     - gitleaks on PRs reads the PR's own `.gitleaks.toml`: use the base branch's (or CODEOWNERS on it).
     - Tilt: its own namespace (`pvlogger-dev`), so a mistaken `--k8s-context` cannot overwrite a `pvlogger` release.
 
+    *Status 2026-11-16:* all six parts committed and verified in Tilt (`tilt ci` healthy, every collector, dashboard);
+    release chart 3.0.0 with every image patch-bumped. Also: the Modbus connect retries a refusal (the same startup
+    race, against the dev mock). Open: release (tag `chart/v3.0.0`, infrastructure pin; its adoption task for the
+    token secret is committed there), deploy, live check (pods ready, collectors run, a db-backup run), then a
+    server-side dry run of Pod Security `restricted` on the namespace before deciding to enforce it.
+
 ## Done (resolved, superseded or moot)
 
 1. ~~**masterdata-server prod config DB-name mismatch**~~

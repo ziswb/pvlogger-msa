@@ -14,7 +14,7 @@ FROM gcr.io/distroless/static-debian13:nonroot@sha256:aafe993665bf6200db38a02c11
 
 LABEL author="Bruno Ziswiler"
 LABEL description="PV Logger Fusion Solar"
-LABEL version="3.5.5"
+LABEL version="3.5.6"
 
 COPY --from=golang /fusionsolar /fusionsolar
 

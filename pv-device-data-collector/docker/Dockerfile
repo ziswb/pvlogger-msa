@@ -14,7 +14,7 @@ FROM gcr.io/distroless/static-debian13:nonroot@sha256:aafe993665bf6200db38a02c11
 
 LABEL author="Bruno Ziswiler"
 LABEL description="PV Device Data Collector written in Go"
-LABEL version="3.7.5"
+LABEL version="3.7.6"
 
 COPY --from=golang /device-data-collector /device-data-collector
 

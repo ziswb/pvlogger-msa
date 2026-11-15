@@ -64,7 +64,7 @@ frontend:
   enabled: true
   image:
     repository: "bziswiler/pvlogger-frontend"
-    tag: "3.14.1"
+    tag: "3.14.2"
   replicas: 1
   port: 8085
   resources:
@@ -79,7 +79,7 @@ dataAccessor:
   enabled: true
   image:
     repository: "bziswiler/pvlogger-modbus-data-accessor"
-    tag: "3.14.1"
+    tag: "3.14.2"
   replicas: 1
   port: 8083
   # Dev only (ADR-0025): raw KPI rows keep the client's dateCreated, so the
@@ -105,7 +105,7 @@ masterdataServer:
   enabled: true
   image:
     repository: "bziswiler/pvlogger-masterdata-server"
-    tag: "3.6.1"
+    tag: "3.6.2"
   replicas: 1
   port: 8081
   masterdataPath: "/opt/pvlogger/masterdata/"
@@ -122,7 +122,7 @@ fusionsolarAuth:
   enabled: false
   image:
     repository: "bziswiler/pvlogger-fusionsolar-auth"
-    tag: "3.4.3"
+    tag: "3.4.4"
   schedule: "*/20 * * * *"
   # Site values: the FusionSolar API account and its regional host.
   username: ""
@@ -142,7 +142,7 @@ fusionsolar:
   enabled: false
   image:
     repository: "bziswiler/pvlogger-fusionsolar"
-    tag: "3.5.5"
+    tag: "3.5.6"
   # Site values: the FusionSolar API account, plant and devices.
   username: ""
   stationCode: ""
@@ -195,7 +195,7 @@ pvDeviceDataCollector:
   enabled: true
   image:
     repository: "bziswiler/pv-device-data-collector"
-    tag: "3.7.5"
+    tag: "3.7.6"
   logLevel: "debug"
   resources:
     limits:
@@ -227,7 +227,7 @@ pvFastDataCollector:
   enabled: true
   image:
     repository: "bziswiler/pv-fast-data-collector"
-    tag: "0.13.5"
+    tag: "0.13.6"
   schedule: "0-1,5-59 * * * *"
   logLevel: "debug"
   resources:
@@ -243,7 +243,7 @@ pvFullDataCollector:
   enabled: true
   image:
     repository: "bziswiler/pv-full-data-collector"
-    tag: "0.8.6"
+    tag: "0.8.7"
   schedule: "2 1-23 * * *"
   logLevel: "debug"
   resources:
@@ -260,7 +260,7 @@ kpiExporter:
   uid: 1000
   image:
     repository: "bziswiler/pvlogger-kpi-exporter"
-    tag: "3.5.2"
+    tag: "3.5.3"
   restPath: "/v1/read-latest-kpi"
   # Name prefix of the export file the receiver gets (ADR-0021).
   filePrefix: "pv_export"
@@ -314,7 +314,7 @@ modbusMockServer:
   enabled: false
   image:
     repository: "bziswiler/pvlogger-modbus-mock"
-    tag: "1.0.1"
+    tag: "1.0.2"
   replicas: 1
   # Service port, the Modbus default; the container listens unprivileged on
   # containerPort.

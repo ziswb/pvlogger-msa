@@ -24,7 +24,7 @@ FROM eclipse-temurin:25-jre-ubi10-minimal@sha256:2e8ee3e5f7ee514713aaae37ccaa790
 
 LABEL author="Bruno Ziswiler"
 LABEL description="Frontend for PV Logger"
-LABEL version="3.14.1"
+LABEL version="3.14.2"
 
 RUN mkdir -p "/opt/pvlogger/"
 COPY --from=build "/workspace/pvlogger-frontend/build/libs/pvlogger-frontend-all.jar" "/opt/pvlogger/frontend.jar"
