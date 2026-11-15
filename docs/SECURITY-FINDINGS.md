@@ -1,7 +1,7 @@
 # Security Findings — pvlogger-msa
 
 Application-code findings from the full security review of 2026-03-13, **re-verified
-against the working tree on 2026-08-17** (HEAD `7e023286`). Each item cites the files,
+against the working tree on 2026-08-17** (HEAD `e0d45da9`). Each item cites the files,
 so it can be picked up independently. When an item is resolved with a "from now on we
 always do X" outcome, record that outcome as an ADR.
 
@@ -11,7 +11,7 @@ shared across both documents** — gaps in the sequence here mean the item belon
 other repo (or was withdrawn), never that a number is free for reuse. Items 40+ were
 added by the 2026-08-17 re-verification.
 
-**Status re-checked 2026-10-19** against HEAD `46a39ca0`: every open item still holds in the code. Open items sit
+**Status re-checked 2026-10-19** against HEAD `f388057f`: every open item still holds in the code. Open items sit
 under **Open** by severity; finished ones under **Resolved**, sorted by number. What to do next is decided in
 `CONSOLIDATION-BACKLOG.md` → *Next up*. (Item 3 closed 2026-10-25 with backlog item 40.)
 
@@ -65,7 +65,7 @@ None.
 ## Resolved
 
 2. ~~**SQL string interpolation in raw queries**~~ — **still fixed**, re-verified
-   2026-08-17. `RegisterReader.kt` no longer exists; commit `8a7bc565` moved it to
+   2026-08-17. `RegisterReader.kt` no longer exists; commit `0f0b36f3` moved it to
    `pvlogger-modbus-data-accessor/.../database/access/RegisterValueDao.kt`, which now uses
    the Exposed typed DSL end to end (lines 100-113) — the `PreparedStatement` the original
    fix introduced is gone because there is no raw SQL left to parameterize.
@@ -79,7 +79,7 @@ None.
    3.4.0), and the chart now sets `POSTGRESQL_SSLMODE=require` (`PGSSLMODE` for `db-backup`). Server: CloudNativePG
    serves TLS, and pg_hba rejects every plaintext login (`hostnossl … reject`, tested). Checked live 2026-10-25
    ~22:16 by the infrastructure side: data accessor, masterdata server and a fusionsolar run connect with TLS 1.3
-   (`pg_stat_ssl`). The battery simulator defaults to `-db-sslmode require` (`38401a00`). The old plaintext server
+   (`pg_stat_ssl`). The battery simulator defaults to `-db-sslmode require` (`26156296`). The old plaintext server
    `<central-host>:5434` gets no PVLogger sessions; its PVLogger databases go in runbook part D (around 2026-11-01).
    The server itself keeps running for other homelab apps.
    Residual: `require` does not verify the server certificate; `verify-full` would need CloudNativePG's CA on every
@@ -95,7 +95,7 @@ None.
    `extra` hook (`configuration/StatusPages.kt:14-17`).
 7. ~~**HTTP client `LogLevel.ALL` in production**~~ — **still fixed**, re-verified
    2026-08-17. `pvlogger-shared-ktor/.../PvHttpClient.kt:14` sets `LogLevel.INFO`; the
-   per-service copies were deduplicated into the shared library in commit `81b3aa5f`
+   per-service copies were deduplicated into the shared library in commit `25b4953f`
    (**ADR-0018**). The last per-service `HttpClient(` was in sunrise-sunset and went with
    that module on 2026-08-27, so the shared client is now the only one. No
    `LogLevel.ALL`/`BODY`/`HEADERS` anywhere.
@@ -194,8 +194,8 @@ None.
     used, nothing beyond what `/v1/daydata` serves.
 
 Also fixed before the 2026-03-13 review and still holding: **CORS lockdown** (commits
-`a581720`, `2cbd3f5`, `fc3dbd2` — see the note above) and **`development = false` in all
-`application-prod.conf` files** (commit `d7d34cf`; re-verified 2026-08-17 at line 2 of
+`06eaf780`, `25611b76`, `f7fa23ad` — see the note above) and **`development = false` in all
+`application-prod.conf` files** (commit `b2281352`; re-verified 2026-08-17 at line 2 of
 every prod config, with `true` only in dev configs — the one test-config instance went
 with sunrise-sunset on 2026-08-27).
 

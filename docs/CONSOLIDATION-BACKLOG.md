@@ -3,7 +3,7 @@
 Verified divergences and defects from a full repo review (2026-08-06), with file references. When an item is resolved
 with a "from now on we always do X" outcome, record it as an ADR.
 
-**Re-verified 2026-10-19** against HEAD `46a39ca0`. Open items are under **Open**; resolved, superseded and moot
+**Re-verified 2026-10-19** against HEAD `f388057f`. Open items are under **Open**; resolved, superseded and moot
 items under **Done**. Both sections are sorted by item number. Item numbers are stable IDs — never renumber or reuse
 one. The old category headings (defects / Go / Kotlin / hygiene) were dropped: the legend marker on each item
 carries the same information.
@@ -39,7 +39,7 @@ it: `fusionsolarAuth` 3.4.1, `pvDeviceDataCollector` 3.7.1, `pvFastDataCollector
 0.8.2, `kpiExporter` 3.5.0. *Deployed 2026-10-21 00:26* — every Deployment and CronJob runs the versions above
 (checked with `kubectl`). Note: a build started before the version bumps overwrote the tags fusionsolar-auth 3.4.0,
 fast collector 0.13.1, device collector 3.7.0 and full collector 0.8.1 with Go 1.27.3 rebuilds of the same source;
-`build.sh` now refuses that without `-f` (`ebe4159d`). *Verified 2026-10-21 18:50:* every pvlogger Job since the
+`build.sh` now refuses that without `-f` (`d1ec28f9`). *Verified 2026-10-21 18:50:* every pvlogger Job since the
 deploy completed (no failed Jobs, no Warning events); fast and full collectors store KPIs and push metrics, the
 device collectors, fusionsolar-auth and the exporter CronJob run cleanly. The only WARN is the device collectors'
 pre-existing "modbus connection already closed" (a double close, also in the runs before the deploy). *Fixed
@@ -918,7 +918,7 @@ next release; it changes nothing for them.
     rejects every plaintext login (`hostnossl … reject`). Checked live by the infrastructure side at ~22:16: data
     accessor, masterdata server and a fusionsolar run all connect with TLS 1.3 (`pg_stat_ssl`), and the test backup
     succeeded. The old server `<central-host>:5434` gets no PVLogger sessions any more; its databases are dropped in
-    runbook part D (around 2026-11-01). The battery simulator's defaults point at the new cluster (`38401a00`).
+    runbook part D (around 2026-11-01). The battery simulator's defaults point at the new cluster (`26156296`).
     Security finding 3 closed with it. **Closed 2026-10-25.**
 41. ~~🟡 **Remaining follow-ups from item 38**~~ (split out 2026-10-19 so that item 38 can sit under Done)
 
@@ -1016,7 +1016,7 @@ next release; it changes nothing for them.
     - a reconnect gets only the server's single cached value (ADR-0019), so the missed minutes are never fetched →
       straight lines across the gap;
     - after sleep or a network change the socket can be dead without a close event, so `retry` never fires → stale;
-    - a failed history fetch gives up after two retries and stays empty; and the midnight day switch (`525a3013`)
+    - a failed history fetch gives up after two retries and stays empty; and the midnight day switch (`4955d89f`)
       waits for a live value, so a dead socket leaves the tab on yesterday → empty or stale.
 
     To do (frontend, `KpiDataSourceService`): on `visibilitychange` to visible, after the tab was hidden for at least
@@ -1036,7 +1036,7 @@ next release; it changes nothing for them.
     `visibilitychange` (resync after 60 s hidden), `KpiFetchServiceService.refreshDataFor` merges the day without
     clearing. Unit tests cover the merge, the short-flick skip, the missed midnight and a picked past day.
 
-    **Resolved 2026-11-11** with frontend 3.13.4 (`3d55016e`, `26230352`; infrastructure `3ba22f0`). Deployed and
+    **Resolved 2026-11-11** with frontend 3.13.4 (`df7fe531`, `7525d71a`; infrastructure `3ba22f0`). Deployed and
     checked by the operator in the browser: back from a background tab, the dashboard fetches the day again and
     reconnects the live data.
 
@@ -1059,7 +1059,7 @@ next release; it changes nothing for them.
     and a SHA-256 `ETag`; `ConditionalHeaders` replaces `CachingHeaders` and answers the `304`. `SpaCachingTest`
     covers both rules and the `304` through the real plugin chain with gzip.
 
-    **Resolved 2026-11-11** with frontend 3.13.5 (`6bf2967b`, `a8141253`; infrastructure `10ee324`). Checked live with
+    **Resolved 2026-11-11** with frontend 3.13.5 (`e6f0db70`, `254380ed`; infrastructure `10ee324`). Checked live with
     GET: `/` → `no-cache` + `ETag`, `/main-BHBFA2FT.js` → `public, max-age=31536000, immutable`, `/` with
     `If-None-Match` → `304`. `curl -I` sent HEAD, which the static route did not answer (404, never enabled):
     fixed the same day in frontend 3.13.6 (`enableAutoHeadResponse()` in `spaResources`, regression test in
@@ -1080,7 +1080,7 @@ next release; it changes nothing for them.
     `ConditionalHeaders` turns versions into headers; `SpaCachingTest` checks there is no `Last-Modified` and that
     a date-only check gets `200`.
 
-    **Resolved 2026-11-11** with frontend 3.13.7 (`8408a00a`, `ca5c2f5e`; infrastructure `2e52b62`). Checked live:
+    **Resolved 2026-11-11** with frontend 3.13.7 (`1c3205b4`, `a29f5182`; infrastructure `2e52b62`). Checked live:
     `curl -sI` shows no `last-modified`; date only → `200`, matching ETag → `304`.
 
 49. ~~⚪ **Major/toolchain bumps left over from the 2026-11-12 upgrade run**~~ (added 2026-11-12, then awaiting the owner's
@@ -1106,7 +1106,7 @@ next release; it changes nothing for them.
     - Node 26: the Docker `web` stage's `dist` is byte-identical between `node:24-alpine` and `node:26-alpine`;
       `engines` raised to `>=26`. The image starts and serves `/`.
 
-    **Resolved 2026-11-12** with frontend 3.13.9 (`34d62a4b`..`33f11a83`; infrastructure `9218b3e`). Checked live:
+    **Resolved 2026-11-12** with frontend 3.13.9 (`b398b79c`..`90fd5f3d`; infrastructure `9218b3e`). Checked live:
     `/` serves the new bundle `main-P436D6YI.js`, `/v1/daydata` → `200`, `/livedata` sends a current KPI frame; the
     owner checked the dashboard in the browser. TypeScript 7 stays blocked until Angular supports it (next upgrade
     run).
@@ -1118,7 +1118,7 @@ next release; it changes nothing for them.
     reload. Reproduced in Chrome by opening the dashboard as a real background tab over CDP (Playwright fakes
     `visible`) and switching to it: the charts never filled, not even with the next live values.
 
-    Cause: since frontend 3.13.1 (`d296988c`) `AppBus.kpiValues` emits on animation frames, so a chart component gets
+    Cause: since frontend 3.13.1 (`335f2d00`) `AppBus.kpiValues` emits on animation frames, so a chart component gets
     its first value — and with it its `chartOptions` with series — one frame after `ngOnInit`, and in a hidden tab
     only once it is shown. If Highcharts loaded before that (always in a hidden tab; a race in a visible one, made
     likelier by the cached chunk since item 47), highcharts-angular creates the chart from `{}`. Highcharts'
@@ -1132,7 +1132,7 @@ next release; it changes nothing for them.
     *Status 2026-11-13:* implemented, not released. `ng test` 70/70 green, `ng build` OK; the CDP background-tab
     repro against a local dev server shows axes while hidden and all lines 3 s after switching to the tab.
 
-    *Status 2026-11-13:* live with frontend 3.13.10 (`2cbda2d7`, `9770321c`; infrastructure `6e9ea9e`). `/` serves
+    *Status 2026-11-13:* live with frontend 3.13.10 (`a8191c89`, `d4a795e6`; infrastructure `6e9ea9e`). `/` serves
     `main-6AKHNOJ4.js`, `/v1/daydata` → `200`. The CDP background-tab repro against the live site, 3 runs: axes while
     hidden, all lines 3 s after switching to the tab (on 3.13.9 they stayed empty for good). Open until the owner
     confirms the iPhone Home Screen app.

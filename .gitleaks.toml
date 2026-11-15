@@ -58,14 +58,18 @@ keywords = ["NE="]
 [[rules]]
 id = "personal-email"
 description = "E-mail address (commits use the GitHub noreply address)"
-regex = '''\b[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}\b'''
+regex = '''\b[A-Za-z0-9._%+-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,}\b'''
 keywords = ["@"]
   [[rules.allowlists]]
   description = "noreply and documentation domains"
   regexes = ['''@users\.noreply\.github\.com$''', '''^noreply@anthropic\.com$''', '''@example\.(?:com|org|net)$''', '''@localhost$''']
 
 [allowlist]
-description = "Generated, vendored and third-party files"
+description = "Generated, vendored and third-party files; known non-secret lines"
+regexTarget = "line"
+regexes = [
+  '''openapiSourceFolder\s*=''',
+]
 paths = [
   '''(?:^|/)node_modules/''',
   '''(?:^|/)build/''',
