@@ -17,19 +17,6 @@ import (
 	"pvlogger-modbus-mock/internal/plant"
 )
 
-// rawKpiRegisterValues is the data accessor's raw-row DTO; dateCreated is
-// accepted only with DEV_ACCEPT_CLIENT_TIMESTAMPS (otherwise refused, 400).
-type rawKpiRegisterValues struct {
-	JobId                    string  `json:"jobId"`
-	InverterActivePower      float64 `json:"inverterActivePower"` // kW
-	MeterActivePower         float64 `json:"meterActivePower"`    // W, positive = export
-	InverterDailyYield       float64 `json:"inverterDailyYield"`
-	InverterAccumulatedYield float64 `json:"inverterAccumulatedYield"`
-	MeterExportedEnergy      float64 `json:"meterExportedEnergy"`
-	MeterImportedEnergy      float64 `json:"meterImportedEnergy"`
-	DateCreated              int64   `json:"dateCreated"`
-}
-
 // dayRow is the part of a /v1/daydata row the backfill needs.
 type dayRow struct {
 	CreatedAt int64 `json:"createdAt"`
@@ -121,8 +108,9 @@ func fill(p *plant.Plant, client *persistence.PersistingService, begin, end time
 	return stored, nil
 }
 
-func rawRowOf(jobId string, at time.Time, r mock.Reading) *rawKpiRegisterValues {
-	return &rawKpiRegisterValues{
+func rawRowOf(jobId string, at time.Time, r mock.Reading) *persistence.RawKpiRegisterValues {
+	ms := at.UnixMilli()
+	return &persistence.RawKpiRegisterValues{
 		JobId:                    jobId,
 		InverterActivePower:      r.PVW / 1000,
 		MeterActivePower:         -r.GridImportW,
@@ -130,7 +118,8 @@ func rawRowOf(jobId string, at time.Time, r mock.Reading) *rawKpiRegisterValues 
 		InverterAccumulatedYield: r.YieldTotalKWh,
 		MeterExportedEnergy:      r.ExportedTotalKWh,
 		MeterImportedEnergy:      r.ImportedTotalKWh,
-		DateCreated:              at.UnixMilli(),
+		// Accepted only with DEV_ACCEPT_CLIENT_TIMESTAMPS (ADR-0025).
+		DateCreated: &ms,
 	}
 }
 

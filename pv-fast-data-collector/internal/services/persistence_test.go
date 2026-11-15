@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"io"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -41,6 +42,7 @@ func TestPersistenceService_StoreRawValues(t *testing.T) {
 	var (
 		mu           sync.Mutex
 		receivedBody RawKpiRegisterValues
+		rawBody      map[string]any
 		method       string
 		contentType  string
 	)
@@ -49,7 +51,9 @@ func TestPersistenceService_StoreRawValues(t *testing.T) {
 		defer mu.Unlock()
 		method = r.Method
 		contentType = r.Header.Get("Content-Type")
-		_ = json.NewDecoder(r.Body).Decode(&receivedBody)
+		body, _ := io.ReadAll(r.Body)
+		_ = json.Unmarshal(body, &receivedBody)
+		_ = json.Unmarshal(body, &rawBody)
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer server.Close()
@@ -84,6 +88,10 @@ func TestPersistenceService_StoreRawValues(t *testing.T) {
 	}
 	if receivedBody.MeterActivePower != -200.0 {
 		t.Errorf("MeterActivePower = %f, want -200.0", receivedBody.MeterActivePower)
+	}
+	// The data accessor refuses a client timestamp outside dev (ADR-0025).
+	if _, sent := rawBody["dateCreated"]; sent {
+		t.Errorf("the collector sent dateCreated; the data accessor would refuse the row")
 	}
 }
 

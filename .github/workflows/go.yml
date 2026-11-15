@@ -16,8 +16,10 @@ on:
       - "**/Makefile"
       - ".golangci.yml"
       - ".github/workflows/go.yml"
-      # Read by the Go drift tests (paths_drift_test.go, masterdata_drift_test.go).
+      # Read by the Go drift tests (paths_drift_test.go, masterdata_drift_test.go,
+      # raw_kpi_drift_test.go).
       - "pvlogger-shared-rest/src/main/kotlin/**/rest/*Paths.kt"
+      - "pvlogger-modbus-data-accessor/src/main/kotlin/**/RawKpiRegisterValues.kt"
       - "pvlogger-masterdata-server/src/main/resources/db/migration/V2__DongleAggregateBlock.sql"
   pull_request:
     paths: *paths

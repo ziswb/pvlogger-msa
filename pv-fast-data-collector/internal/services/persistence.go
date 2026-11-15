@@ -7,15 +7,9 @@ import (
 	"pvlogger-shared-modbus/response"
 )
 
-type RawKpiRegisterValues struct {
-	JobId                    string  `json:"jobId"`
-	InverterActivePower      float64 `json:"inverterActivePower"`
-	MeterActivePower         float64 `json:"meterActivePower"`
-	InverterDailyYield       float64 `json:"inverterDailyYield"`
-	InverterAccumulatedYield float64 `json:"inverterAccumulatedYield"`
-	MeterExportedEnergy      float64 `json:"meterExportedEnergy"`
-	MeterImportedEnergy      float64 `json:"meterImportedEnergy"`
-}
+// RawKpiRegisterValues is the shared raw-row DTO; the collector leaves
+// DateCreated nil (the data accessor dates the row on arrival).
+type RawKpiRegisterValues = persistence.RawKpiRegisterValues
 
 // PersistenceService is a thin domain wrapper around the shared
 // pvlogger-shared-modbus/persistence client (ADR-0010 error style).
