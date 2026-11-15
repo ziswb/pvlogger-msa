@@ -304,21 +304,25 @@ dbBackup:
       cpu: 1000m
       memory: 128Mi
 
+# The synthetic plant over Modbus TCP in place of the SmartDongle (ADR-0025).
 # Local development only, never production (CONTEXT.md).
 modbusMockServer:
   enabled: false
   image:
-    repository: "bziswiler/pvlogger-modbus-mock-server"
-    tag: "3.3.1"
+    repository: "bziswiler/pvlogger-modbus-mock"
+    tag: "1.0.0"
   replicas: 1
+  # Service port, the Modbus default; the container listens unprivileged on
+  # containerPort.
   port: 502
+  containerPort: 8502
   resources:
     limits:
       cpu: 100m
-      memory: 100Mi
+      memory: 32Mi
     requests:
-      cpu: 50m
-      memory: 50Mi
+      cpu: 10m
+      memory: 16Mi
 
 # The ingress exposes an allowlist only (ADR-0020). Off by default.
 ingress:

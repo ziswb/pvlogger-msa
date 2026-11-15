@@ -85,6 +85,9 @@ func New(cfg Config) *Plant {
 	return &Plant{cfg: cfg, days: map[time.Time][]energy{}}
 }
 
+// PeakPowerW is the plant's rated (peak) power.
+func (p *Plant) PeakPowerW() float64 { return p.cfg.PeakPowerW }
+
 // At returns the snapshot of the minute that contains t.
 func (p *Plant) At(t time.Time) Snapshot {
 	minute := t.In(p.cfg.Location).Truncate(time.Minute)

@@ -24,3 +24,27 @@ mapping (gains, sign conventions) lives with the mock server.
 Days are local days in the configured zone, so the daily yield resets at the
 same midnight the data accessor uses, including the 23- and 25-hour days of a
 clock change.
+
+## The mock server (`cmd/mock-server`, `internal/mock`)
+
+Serves the plant over Modbus TCP in place of the SmartDongle; the device, fast
+and full collectors run against it unchanged. It answers at the current minute:
+
+| Unit | Registers |
+|---|---|
+| Dongle (`DONGLE_DEVICE_ID`, default 100) | Aggregate block 37498–37516: input, load, grid (positive = import), battery (0), total active power. Active + grid = load exactly, as on the real dongle |
+| Every other unit (inverter, meter behind it) | Identity 30000–30073 (model `SUN2000-10KTL-M1`, fake serial `SIM0000001`, rated power), PV strings, phase voltages and currents, active power, status (on-grid / standby), counters 32106 and 32114; meter 37100–37138 (positive = export) with counters 37119 and 37121 |
+| Read device identification (0x2B) | Basic objects (vendor, product, version) and the device list (one inverter) |
+
+Registers it does not model read as 0, so the full collector's catalog sweep
+always gets a complete answer. Other function codes get exception 0x01.
+
+| Variable | Default | |
+|---|---|---|
+| `MOCK_PORT` | `8502` | Unprivileged; the chart's Service exposes it as 502 |
+| `DONGLE_DEVICE_ID` | `100` | Same setting as the collectors |
+| `TZ` | container zone | The plant's local time (day curve, daily-yield reset) |
+
+```bash
+make test lint build      # build/mock-server (linux) and build/mock-server-darwin
+```

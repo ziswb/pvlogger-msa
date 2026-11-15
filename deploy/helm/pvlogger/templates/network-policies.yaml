@@ -45,6 +45,7 @@ spec:
           - pvlogger-modbus-data-accessor
           - pvlogger-masterdata-server
           - pvlogger-kpi-exporter-serve
+          - pvlogger-modbus-mock-server
   policyTypes:
     - Ingress
   ingress:
@@ -61,6 +62,10 @@ spec:
         {{- if .Values.kpiExportServe.enabled }}
         - protocol: TCP
           port: {{ .Values.kpiExportServe.port }}
+        {{- end }}
+        {{- if .Values.modbusMockServer.enabled }}
+        - protocol: TCP
+          port: {{ .Values.modbusMockServer.containerPort }}
         {{- end }}
 ---
 # Allow Traefik ingress controller to reach the frontend and data accessor.

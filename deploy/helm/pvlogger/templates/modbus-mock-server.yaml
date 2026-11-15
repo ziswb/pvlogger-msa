@@ -23,28 +23,30 @@ spec:
       containers:
         - name: pvlogger-modbus-mock-server
           image: {{ include "pvlogger.image" (dict "global" .Values.global "image" .Values.modbusMockServer.image) }}
-          {{- include "pvlogger.jvmSecurityContext" . | nindent 10 }}
+          {{- include "pvlogger.goSecurityContext" (dict "uid" .Values.global.runAsUid) | nindent 10 }}
           imagePullPolicy: {{ .Values.global.imagePullPolicy }}
           env:
             {{- include "pvlogger.timezoneEnv" . | nindent 12 }}
+            - name: MOCK_PORT
+              value: {{ .Values.modbusMockServer.containerPort | quote }}
+            - name: DONGLE_DEVICE_ID
+              value: {{ .Values.modbus.dongleDeviceId | quote }}
           ports:
-            - containerPort: {{ .Values.modbusMockServer.port }}
+            - containerPort: {{ .Values.modbusMockServer.containerPort }}
               name: tcp-modbus
               protocol: TCP
           livenessProbe:
             tcpSocket:
-              port: {{ .Values.modbusMockServer.port }}
-            initialDelaySeconds: 15
+              port: tcp-modbus
             periodSeconds: 30
-            timeoutSeconds: 10
-            failureThreshold: 5
+            timeoutSeconds: 5
+            failureThreshold: 3
           readinessProbe:
             tcpSocket:
-              port: {{ .Values.modbusMockServer.port }}
-            initialDelaySeconds: 10
-            periodSeconds: 20
-            timeoutSeconds: 10
-            failureThreshold: 8
+              port: tcp-modbus
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
           resources:
             {{- toYaml .Values.modbusMockServer.resources | nindent 12 }}
           volumeMounts:
@@ -66,6 +68,6 @@ spec:
   ports:
     - name: tcp-modbus
       port: {{ .Values.modbusMockServer.port }}
-      targetPort: {{ .Values.modbusMockServer.port }}
+      targetPort: tcp-modbus
       protocol: TCP
 {{- end }}

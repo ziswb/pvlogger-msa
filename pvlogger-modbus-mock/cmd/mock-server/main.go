@@ -1,0 +1,37 @@
+// Command mock-server serves the synthetic plant over Modbus TCP in place of
+// the SmartDongle, for local development only (ADR-0025).
+//
+// Environment: MOCK_PORT (default 8502; the chart's Service maps 502 to it),
+// DONGLE_DEVICE_ID (default 100, as for the collectors), TZ (the plant's
+// local time: day curve and daily-yield reset).
+package main
+
+import (
+	"fmt"
+	"net"
+	"time"
+	// The distroless image has no zoneinfo; TZ needs the embedded database.
+	_ "time/tzdata"
+
+	"pv-logger/config"
+	"pv-logger/logging"
+
+	"pvlogger-modbus-mock/internal/mock"
+	"pvlogger-modbus-mock/internal/plant"
+)
+
+func main() {
+	port := config.GetIntEnv("MOCK_PORT", "8502")
+	dongleUnit := uint8(config.GetIntEnv("DONGLE_DEVICE_ID", "100"))
+
+	p := plant.New(plant.Config{Location: time.Local})
+	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	if err != nil {
+		logging.Fatal("cannot listen", "port", port, "error", err)
+	}
+	logging.Info("serving the synthetic plant over Modbus TCP",
+		"port", port, "dongle_unit", dongleUnit, "time_zone", time.Local.String())
+	if err := mock.NewServer(p, dongleUnit, time.Now).Serve(ln); err != nil {
+		logging.Fatal("mock server stopped", "error", err)
+	}
+}
