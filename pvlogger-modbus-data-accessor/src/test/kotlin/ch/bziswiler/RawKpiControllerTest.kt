@@ -13,6 +13,8 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.http.contentType
 import io.ktor.server.testing.ApplicationTestBuilder
@@ -147,14 +149,18 @@ class RawKpiControllerTest : TestBase() {
     }
 
     // ADR-0025: the backfill dates its raw rows itself, but only where the dev
-    // setting allows it; production ignores a client timestamp.
+    // setting allows it; without it a client timestamp is refused, not ignored.
     @Test
-    fun `a client timestamp is ignored by default`() = withApp {
+    fun `a client timestamp is refused by default`() = withApp {
         startApplication()
         cleanAllTables()
-        storeRaw(meterExportedEnergy = 100.0, dateCreated = yesterday.atTime(12, 0).atZone(zone).toInstant())
+        storeRaw(
+            meterExportedEnergy = 100.0,
+            dateCreated = yesterday.atTime(12, 0).atZone(zone).toInstant(),
+            expected = BadRequest,
+        )
         storeRaw(meterExportedEnergy = 150.0)
-        // Both rows are dated now: no yesterday baseline, no delta.
+        // Only the second row was stored: no yesterday baseline, no delta.
         assertEquals(0.0, readEnergyToday().exportedEnergyToday)
     }
 
@@ -168,7 +174,11 @@ class RawKpiControllerTest : TestBase() {
             assertEquals(50.0, readEnergyToday().exportedEnergyToday)
         }
 
-    private suspend fun ApplicationTestBuilder.storeRaw(meterExportedEnergy: Double, dateCreated: Instant? = null) {
+    private suspend fun ApplicationTestBuilder.storeRaw(
+        meterExportedEnergy: Double,
+        dateCreated: Instant? = null,
+        expected: HttpStatusCode = OK,
+    ) {
         val values = RawKpiRegisterValues(
             jobId = "test-job",
             meterExportedEnergy = meterExportedEnergy,
@@ -178,7 +188,7 @@ class RawKpiControllerTest : TestBase() {
             contentType(ContentType.Application.Json)
             setBody(Json.encodeToString(RawKpiRegisterValues.serializer(), values))
         }
-        assertEquals(OK, response.status)
+        assertEquals(expected, response.status)
     }
 
     private suspend fun ApplicationTestBuilder.readEnergyToday(): EnergyToday =

@@ -33,9 +33,13 @@ rows itself; KPI rows already carry the collector's `dateCreated`.
    accessor's day-difference SQL (which only computes for today and is exercised
    by the live path every minute).
 4. **The raw-row store accepts a client `dateCreated` only behind a dev setting**
-   (`DEV_ACCEPT_CLIENT_TIMESTAMPS`, off by default and in production, where the
-   field is ignored). With raw rows from the backfill, today's day-difference has
-   its midnight baseline and the switch from backfill to live data is seamless.
+   (`DEV_ACCEPT_CLIENT_TIMESTAMPS`, off by default and in production). Without it a
+   raw row that carries the field is refused (400), not stored as of now:
+   *amended 2026-11-15 (backlog 57)*, it was ignored at first, so a backfill against
+   a stock data accessor silently dated a month of raw rows today. The chart
+   refuses the setting unless the mock server is on. With raw rows from the
+   backfill, today's day-difference has its midnight baseline and the switch from
+   backfill to live data is seamless.
 
 ## Consequences
 

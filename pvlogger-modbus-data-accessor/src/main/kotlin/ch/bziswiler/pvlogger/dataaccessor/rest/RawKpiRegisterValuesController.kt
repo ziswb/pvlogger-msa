@@ -20,6 +20,13 @@ fun Routing.rawKpiRegisterValues() {
     route("/$DATA_ACCESSOR_API_V1_PATH") {
         post("/$DATA_ACCESSOR_STORE_RAW_KPI_REGISTER_VALUES") {
             val values = call.receive<RawKpiRegisterValues>()
+            // Refused rather than ignored (ADR-0025): a backfill against a data
+            // accessor without the dev setting would otherwise date a month of
+            // raw rows "now" and today's energy would show the whole month.
+            if (values.dateCreated != null && !appConfig.serverConfig.acceptClientTimestamps) {
+                call.respond(HttpStatusCode.BadRequest, "dateCreated needs DEV_ACCEPT_CLIENT_TIMESTAMPS")
+                return@post
+            }
             RawKpiRegisterValuesDao.store(values, acceptClientTimestamp = appConfig.serverConfig.acceptClientTimestamps)
             call.respond(HttpStatusCode.OK)
         }
