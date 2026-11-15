@@ -179,38 +179,6 @@ next release; it changes nothing for them.
     root `README`; a `.gitleaks.toml` with pattern rules for site data (run in CI, item 53) and a local pre-commit +
     commit-msg hook; a CLAUDE.md rule that this repo is public and takes placeholders only. The battery summary at
     the root is replaced by an English "Why" in the battery simulator README.
-52. 🟡 **Move the Helm chart into this repo** (added 2026-11-14)
-
-    The chart (today in infrastructure `roles/pvlogger_helm_deploy/chart/`) is fully generic; move it to
-    `deploy/helm/pvlogger/` with a committed `values-dev.yaml`, so the chart is versioned with the code it deploys
-    and Tilt (item 23) tests exactly what goes live. Infrastructure keeps only the site values (`values.yaml.j2`,
-    1Password lookups) and the install task, and consumes the chart by release tag (OCI, item 53). Record as an
-    ADR here and in infrastructure.
-
-    *Decided 2026-11-15 (grill), [ADR-0024](adr/0024-helm-chart-lives-here-site-values-stay-private.md),
-    infrastructure ADR-0032:* the chart pins the image tags; tag `chart/vX.Y.Z` from `1.0.0`, no `appVersion`.
-    `values-dev.yaml` goes to `deploy/dev/` (not into the chart directory, so it is never packaged), together with a
-    plain dev Postgres that Tilt deploys. Steps:
-    1. One commit here: copy the chart and clean it in the same commit (the unsanitized copy must never reach the
-       public history). Hard-coded NFS paths, device IDs and hostnames in templates become values; in-cluster service
-       hosts are computed from the release; generic defaults move from the role into `values.yaml`; neutral comments.
-    2. `chart.yml` workflow (path filter `deploy/**`): `helm lint` (defaults and `values-dev.yaml`), `helm template`
-       with a CI values file that enables every optional template, `kubeconform` (CRDs skipped), and a check that
-       `Chart.yaml` `version` changed when anything under the chart changed since the last `chart/v*` tag.
-    3. Infrastructure: `values.yaml.j2` and defaults shrink to site values, the role extracts the chart with
-       `git archive chart/vX.Y.Z` from the local clone (`pvlogger_chart_version`), the chart copy is deleted.
-    4. Acceptance: `helm template` of the old chart with today's site values equals the new chart with the new site
-       file (only chart-version labels differ), rendered in a scratch directory, never committed.
-    5. The role's `IMPROVEMENTS.md` open items move here as backlog items (neutral wording); its item 5 is done by
-       step 1, item 2 joins item 54. Update CLAUDE.md, the release flow and the frontend README/docs that name the
-       old chart path.
-
-    *Steps 1-5 done 2026-11-15:* `ba13c94` (chart, `deploy/dev/values-dev.yaml`, `deploy/ci/values-all-enabled.yaml`),
-    `4a445a1` (`chart.yml`), infrastructure `36404c5` (site values only, `git archive` install, chart copy and
-    `IMPROVEMENTS.md` removed, `registry-prune.sh` reads the chart from the clone), item 55 for the open improvement
-    ideas. Acceptance diff: only the dropped `app.kubernetes.io/version` label and comments differ. Open: tag
-    `chart/v1.0.0` on the pushed commit once `chart.yml` is green, deploy with `pvlogger_chart_version: 1.0.0`, check
-    live, then move this item to Done.
 53. 🟡 **CI and releases on GitHub Actions** (added 2026-11-14)
 
     On push/PR: Gradle build + tests (Testcontainers), Go build + lint, frontend build, gitleaks with the repo's
@@ -1168,6 +1136,45 @@ next release; it changes nothing for them.
     `/` serves the new bundle `main-P436D6YI.js`, `/v1/daydata` → `200`, `/livedata` sends a current KPI frame; the
     owner checked the dashboard in the browser. TypeScript 7 stays blocked until Angular supports it (next upgrade
     run).
+
+52. ~~🟡 **Move the Helm chart into this repo**~~ (added 2026-11-14)
+
+    The chart (today in infrastructure `roles/pvlogger_helm_deploy/chart/`) is fully generic; move it to
+    `deploy/helm/pvlogger/` with a committed `values-dev.yaml`, so the chart is versioned with the code it deploys
+    and Tilt (item 23) tests exactly what goes live. Infrastructure keeps only the site values (`values.yaml.j2`,
+    1Password lookups) and the install task, and consumes the chart by release tag (OCI, item 53). Record as an
+    ADR here and in infrastructure.
+
+    *Decided 2026-11-15 (grill), [ADR-0024](adr/0024-helm-chart-lives-here-site-values-stay-private.md),
+    infrastructure ADR-0032:* the chart pins the image tags; tag `chart/vX.Y.Z` from `1.0.0`, no `appVersion`.
+    `values-dev.yaml` goes to `deploy/dev/` (not into the chart directory, so it is never packaged), together with a
+    plain dev Postgres that Tilt deploys. Steps:
+    1. One commit here: copy the chart and clean it in the same commit (the unsanitized copy must never reach the
+       public history). Hard-coded NFS paths, device IDs and hostnames in templates become values; in-cluster service
+       hosts are computed from the release; generic defaults move from the role into `values.yaml`; neutral comments.
+    2. `chart.yml` workflow (path filter `deploy/**`): `helm lint` (defaults and `values-dev.yaml`), `helm template`
+       with a CI values file that enables every optional template, `kubeconform` (CRDs skipped), and a check that
+       `Chart.yaml` `version` changed when anything under the chart changed since the last `chart/v*` tag.
+    3. Infrastructure: `values.yaml.j2` and defaults shrink to site values, the role extracts the chart with
+       `git archive chart/vX.Y.Z` from the local clone (`pvlogger_chart_version`), the chart copy is deleted.
+    4. Acceptance: `helm template` of the old chart with today's site values equals the new chart with the new site
+       file (only chart-version labels differ), rendered in a scratch directory, never committed.
+    5. The role's `IMPROVEMENTS.md` open items move here as backlog items (neutral wording); its item 5 is done by
+       step 1, item 2 joins item 54. Update CLAUDE.md, the release flow and the frontend README/docs that name the
+       old chart path.
+
+    *Steps 1-5 done 2026-11-15:* `ba13c94` (chart, `deploy/dev/values-dev.yaml`, `deploy/ci/values-all-enabled.yaml`),
+    `4a445a1` (`chart.yml`), infrastructure `36404c5` (site values only, `git archive` install, chart copy and
+    `IMPROVEMENTS.md` removed, `registry-prune.sh` reads the chart from the clone), item 55 for the open improvement
+    ideas. Acceptance diff: only the dropped `app.kubernetes.io/version` label and comments differ. Open: tag
+    `chart/v1.0.0` on the pushed commit once `chart.yml` is green, deploy with `pvlogger_chart_version: 1.0.0`, check
+    live, then move this item to Done.
+
+    **Resolved 2026-11-15** with chart `chart/v1.0.0` (`a9b9aa9`; infrastructure `36404c5`). CI green on `a9b9aa9`
+    (Chart, JVM, Frontend, Gitleaks). `--check --diff` showed only the dropped `app.kubernetes.io/version` label and
+    comments. Checked live: Helm revision 81 `deployed` on `pvlogger-1.0.0` without app version, no Deployment pod
+    recreated (0 restarts), the first fast-collector and heartbeat runs after the upgrade `Completed`, `db-config`
+    labels as expected.
 
 50. 🔴 **Charts stay empty when the dashboard loads in a hidden tab** (added 2026-11-13)
 
