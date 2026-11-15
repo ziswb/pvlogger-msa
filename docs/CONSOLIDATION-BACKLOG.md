@@ -238,6 +238,12 @@ next release; it changes nothing for them.
     `allow-intra-namespace`). Verify: a pod in `default` cannot connect to 5432; a fusionsolar run and a db-backup
     run succeed.
 
+    *Status 2026-11-16:* chart 2.0.1 deployed, then the DB policy (infrastructure backlog 105); in the cluster only
+    the LAN `ipBlock` is left on 5432, and a pod in `default` gets no response from `pvlogger-db-rw` (rc 2). Open: a
+    db-backup run with the new wait; fusionsolar is disabled (infrastructure backlog 104), its retry goes live with
+    the re-enable. Found on the way: the `checksum/*` annotations (item 57) hashed the `helm.sh/chart` label, so every
+    chart release restarted the data accessor, masterdata server and KPI exporter; fixed in chart 2.0.2.
+
 ## Done (resolved, superseded or moot)
 
 1. ~~**masterdata-server prod config DB-name mismatch**~~

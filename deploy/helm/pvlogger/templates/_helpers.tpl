@@ -107,10 +107,17 @@ Common timezone volume mount
 {{/*
 Pod annotations that roll a Deployment when its env-sourced ConfigMaps or
 Secrets change (envFrom/secretKeyRef are read only at container start).
+pvlogger.checksum hashes a rendered template without its helm.sh/chart label,
+which changes with every chart version: otherwise every release would restart
+these Deployments (seen with 2.0.1).
 */}}
+{{- define "pvlogger.checksum" -}}
+{{- regexReplaceAll "(?m)^\\s*helm\\.sh/chart:.*$" (include (print .root.Template.BasePath .file) .root) "" | sha256sum }}
+{{- end }}
+
 {{- define "pvlogger.configChecksums" -}}
-checksum/config: {{ include (print .Template.BasePath "/configmaps.yaml") . | sha256sum }}
-checksum/secrets: {{ include (print .Template.BasePath "/secrets.yaml") . | sha256sum }}
+checksum/config: {{ include "pvlogger.checksum" (dict "root" . "file" "/configmaps.yaml") }}
+checksum/secrets: {{ include "pvlogger.checksum" (dict "root" . "file" "/secrets.yaml") }}
 {{- end }}
 
 {{/*

@@ -35,7 +35,7 @@ spec:
       labels:
         app: pvlogger-kpi-exporter-serve
       annotations:
-        checksum/config: {{ include (print .Template.BasePath "/configmaps.yaml") . | sha256sum }}
+        checksum/config: {{ include "pvlogger.checksum" (dict "root" . "file" "/configmaps.yaml") }}
     spec:
       # The token Secret is mounted 0440: fsGroup makes its group the run-as
       # uid's, so the non-root exporter can read it (infrastructure security finding 25).
