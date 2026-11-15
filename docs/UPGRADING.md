@@ -37,7 +37,7 @@ The test and dev Postgres versions should match production's major version.
 
 1. **Baseline (before changing anything)**
    - Rancher Desktop running (Testcontainers and the check scripts need Docker).
-   - `./gradlew cleanTest build` (includes Go build and lint), `go test ./...` in each Go module,
+   - `./gradlew cleanTest build` (includes Go build and lint), `make test` (every Go module, libraries included),
      `npm ci && npm run build:ci` in `pvlogger-frontend/src/web`, `npm audit`.
      Use `cleanTest`: a cached `test` task proves nothing.
    - Write down tests that already fail, so they aren't blamed on the upgrade.

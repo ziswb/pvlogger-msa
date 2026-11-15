@@ -1,4 +1,7 @@
-# Build, test and lint every Go module through the top-level Makefile (backlog 53).
+# Test and lint every Go module (services and the two libraries) through the
+# top-level Makefile (backlog 53). No binaries: images are built from their own
+# Dockerfiles, and `make build` would cross-compile each service twice
+# (darwin + linux) for nothing.
 name: Go
 
 on:
@@ -40,7 +43,7 @@ jobs:
         with:
           version: v2.15.0
           install-only: true
-      - name: Test and build
-        run: make build
+      - name: Test
+        run: make test
       - name: Lint
         run: make lint
