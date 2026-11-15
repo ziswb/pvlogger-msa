@@ -28,7 +28,7 @@ Dated items, in order:
 - **From about 2027-01-25:** item 42, drop the unused `modbus_response_data` indexes.
 
 Everything else open here is low priority hygiene. Items 23 and 30 (Tilt, synthetic plant) were done on 2026-11-15
-(chart 1.1.0).
+(chart 1.1.0); item 57 (review follow-ups, incl. security finding 60) on 2026-11-16 (chart 2.0.0, deployed).
 
 ### Status 2026-10-21 (end of the 2026-10-20 session)
 
@@ -207,34 +207,9 @@ next release; it changes nothing for them.
     `make prod GOARCH=${TARGETARCH}`, with the Makefiles taking `GOARCH` from the caller (default: the host's,
     `go env GOARCH`, for `make build` too). Also the `-darwin` local builds hard-code arm64. Prerequisite for the
     multi-arch GHCR images of item 53 part 2 and for the public "try it" path (item 23).
-57. 🟡 **Review of the 2026-11-15 work** (added 2026-11-15; five read-only reviews of `8e34fc0..81cc18a`:
-    security, consistency, correctness, completeness, best practices)
+58. ⚪ **Hardening and hygiene deferred from the review** (added 2026-11-16, split out of item 57)
 
-    Fixed in the follow-up commits (data accessor 3.14.1, mock 1.0.1, chart 1.1.1):
-    - Backfill: a day is gap-filled per minute, so a run that died mid-day is completed by the rerun (was: filled
-      only before the day's first row, which left a permanent hole). Yesterday is filled first, so live rows get
-      their midnight baseline within seconds. Day steps use `time.Date` (a zone whose DST gap is at midnight
-      shifted every later day by an hour).
-    - The data accessor rejects a raw row with `dateCreated` (400) unless `DEV_ACCEPT_CLIENT_TIMESTAMPS` is on.
-      Before, the field was ignored, so a backfill against a stock data accessor silently dated 30 days of raw rows
-      today and today's energy showed a month. ADR-0025 point 4 amended.
-    - Chart: `dataAccessor.devAcceptClientTimestamps` fails the render unless `modbusMockServer.enabled`; `NOTES.txt`
-      warns when either is on; Deployments roll on ConfigMap/Secret changes (`checksum/*` annotations); the
-      timezone hostPath is mounted read-only; the mock server drops it (it embeds `time/tzdata`).
-    - Mock server: a read past 0xFFFF answers exception 2 instead of wrapping; idle connections time out; the
-      dongle device ID comes from `sharedconfig.DevIdConfig()`.
-    - Leak guards: a `pre-push` hook scans the outgoing range (gitleaks + blocklist, diff and messages);
-      `commit-msg` also runs the gitleaks patterns; a missing gitleaks is fatal where the blocklist is configured;
-      `blocklist-check.py` handles bare and `glob:` lines, `+++` content lines and the `git commit -v` scissors;
-      `.gitleaks.toml` rules are case-insensitive where it matters, MACs with `-`, Tailscale IPv6.
-    - CI: `go.yml` also triggers on the Kotlin/SQL files its drift tests read; `gitleaks.yml` scans every branch
-      and the commit messages; superseded runs are cancelled on PRs only; `chart.yml` runs `helm lint --strict`,
-      validates `deploy/dev/*.yaml` and checks every Dockerfile `LABEL version` against its chart tag.
-    - Docs: UPGRADING (chart bump, chart/dev images), README (try it, chart, mock), SECURITY.md, stale references
-      (CONTEXT, TROUBLESHOOTING, OPEN-QUESTIONS Q6/Q8, ADR-0003/0018, item 53 text, security finding on the
-      battery simulator), `.dockerignore` keeps `.claude/` and env files out of the build context.
-
-    Deferred (not done here):
+    None is a defect; each was found by the item 57 reviews and left out of that fix on purpose.
     - Container hardening: `distroless/static-debian13:nonroot`, `readOnlyRootFilesystem`,
       `automountServiceAccountToken: false`, base images pinned by digest, the timezone hostPath dropped everywhere
       (Go embeds tzdata, the JVM reads `TZ`), so the namespace can enforce Pod Security `restricted`.
@@ -245,18 +220,6 @@ next release; it changes nothing for them.
     - fusionsolar-auth's Role can `create` any Secret: pre-create `fusionsolar-token-secret` and drop `create`.
     - gitleaks on PRs reads the PR's own `.gitleaks.toml`: use the base branch's (or CODEOWNERS on it).
     - Tilt: its own namespace (`pvlogger-dev`), so a mistaken `--k8s-context` cannot overwrite a `pvlogger` release.
-
-    *Security finding 60, confirmed in Tilt 2026-11-15 (k3s 1.37, kube-router):* a curl pod in `default` got 200
-    from the data accessor and masterdata server through `allow-kubelet-probes` (`ipBlock` = the whole pod CIDR);
-    Postgres, not in that policy, refused it. Without the policy the probes still pass (kube-router admits traffic
-    from the pod's own node) and the curl is refused, but a new collector pod's first call races kube-router adding
-    its IP to `allow-intra-namespace`: 1 of 6 device collector runs got `connection refused` from the masterdata
-    server 1 ms after start (the race the infrastructure DB policy works around with a static `ipBlock`). Fix: the
-    shared Go HTTP client (`pvlogger-shared-modbus/httpclient`) retries a refused connection for up to 5 s (safe for
-    POST: nothing reached the server), then the chart drops `allow-kubelet-probes` and `networkPolicies.kubeletCidr`.
-    Images: fast/full/device collectors and the mock (backfill) rebuilt on the shared client. *Verified in Tilt:*
-    12 device collector runs without the policy, 6 hit the refusal, each recovered after one retry (500 ms), no
-    errors; the curl from `default` is refused. Chart 2.0.0 (a removed values key is a major).
 
 ## Done (resolved, superseded or moot)
 
@@ -1284,3 +1247,49 @@ next release; it changes nothing for them.
     `main-6AKHNOJ4.js`, `/v1/daydata` → `200`. The CDP background-tab repro against the live site, 3 runs: axes while
     hidden, all lines 3 s after switching to the tab (on 3.13.9 they stayed empty for good). Open until the owner
     confirms the iPhone Home Screen app.
+57. ~~🟡 **Review of the 2026-11-15 work**~~ (added 2026-11-15; five read-only reviews of `8e34fc0..81cc18a`:
+    security, consistency, correctness, completeness, best practices)
+
+    Fixed in the follow-up commits (data accessor 3.14.1, mock 1.0.1, collectors fast 0.13.5 / full 0.8.6 /
+    device 3.7.5; chart 2.0.0, which replaced the never-tagged 1.1.1). The deferred findings went to item 58.
+    - Backfill: a day is gap-filled per minute, so a run that died mid-day is completed by the rerun (was: filled
+      only before the day's first row, which left a permanent hole). Yesterday is filled first, so live rows get
+      their midnight baseline within seconds. Day steps use `time.Date` (a zone whose DST gap is at midnight
+      shifted every later day by an hour).
+    - The data accessor rejects a raw row with `dateCreated` (400) unless `DEV_ACCEPT_CLIENT_TIMESTAMPS` is on.
+      Before, the field was ignored, so a backfill against a stock data accessor silently dated 30 days of raw rows
+      today and today's energy showed a month. ADR-0025 point 4 amended.
+    - Chart: `dataAccessor.devAcceptClientTimestamps` fails the render unless `modbusMockServer.enabled`; `NOTES.txt`
+      warns when either is on; Deployments roll on ConfigMap/Secret changes (`checksum/*` annotations); the
+      timezone hostPath is mounted read-only; the mock server drops it (it embeds `time/tzdata`).
+    - Mock server: a read past 0xFFFF answers exception 2 instead of wrapping; idle connections time out; the
+      dongle device ID comes from `sharedconfig.DevIdConfig()`.
+    - Leak guards: a `pre-push` hook scans the outgoing range (gitleaks + blocklist, diff and messages);
+      `commit-msg` also runs the gitleaks patterns; a missing gitleaks is fatal where the blocklist is configured;
+      `blocklist-check.py` handles bare and `glob:` lines, `+++` content lines and the `git commit -v` scissors;
+      `.gitleaks.toml` rules are case-insensitive where it matters, MACs with `-`, Tailscale IPv6.
+    - CI: `go.yml` also triggers on the Kotlin/SQL files its drift tests read; `gitleaks.yml` scans every branch
+      and the commit messages; superseded runs are cancelled on PRs only; `chart.yml` runs `helm lint --strict`,
+      validates `deploy/dev/*.yaml` and checks every Dockerfile `LABEL version` against its chart tag.
+    - Docs: UPGRADING (chart bump, chart/dev images), README (try it, chart, mock), SECURITY.md, stale references
+      (CONTEXT, TROUBLESHOOTING, OPEN-QUESTIONS Q6/Q8, ADR-0003/0018, item 53 text, security finding on the
+      battery simulator), `.dockerignore` keeps `.claude/` and env files out of the build context.
+
+    *Security finding 60, confirmed in Tilt 2026-11-15 (k3s 1.37, kube-router):* a curl pod in `default` got 200
+    from the data accessor and masterdata server through `allow-kubelet-probes` (`ipBlock` = the whole pod CIDR);
+    Postgres, not in that policy, refused it. Without the policy the probes still pass (kube-router admits traffic
+    from the pod's own node) and the curl is refused, but a new collector pod's first call races kube-router adding
+    its IP to `allow-intra-namespace`: 1 of 6 device collector runs got `connection refused` from the masterdata
+    server 1 ms after start (the race the infrastructure DB policy works around with a static `ipBlock`). Fix: the
+    shared Go HTTP client (`pvlogger-shared-modbus/httpclient`) retries a refused connection for up to 5 s (safe for
+    POST: nothing reached the server), then the chart drops `allow-kubelet-probes` and `networkPolicies.kubeletCidr`.
+    Images: fast/full/device collectors and the mock (backfill) rebuilt on the shared client. *Verified in Tilt:*
+    12 device collector runs without the policy, 6 hit the refusal, each recovered after one retry (500 ms), no
+    errors; the curl from `default` is refused. Chart 2.0.0 (a removed values key is a major).
+
+    *Done 2026-11-16:* chart/v2.0.0 (CI green on `0b63739`), infrastructure `pvlogger_chart_version` 2.0.0, deployed
+    2026-11-16 ~00:00. Live check: a curl pod in `default` to the data accessor Service got no connection (`000`,
+    pod terminated with an error; before the fix this answered 200), while a pod inside `pvlogger` still reaches it
+    (200, `allow-intra-namespace`). All Deployments ready without restarts; the collector runs after the deploy
+    completed, with no `retrying` or `job failed` log lines. A host-network pod (plex) cannot resolve cluster DNS
+    and is no test of the policy.
