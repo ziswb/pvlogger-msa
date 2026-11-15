@@ -7,14 +7,22 @@ import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import java.time.Instant
 
 object RawKpiRegisterValuesDao {
 
     private val logger = KotlinLogging.logger {}
 
-    fun store(values: RawKpiRegisterValues) = transaction {
+    /**
+     * Stores a raw row, dated on arrival; with [acceptClientTimestamp] (the dev
+     * setting, ADR-0025) a row that carries its own dateCreated keeps it.
+     */
+    fun store(values: RawKpiRegisterValues, acceptClientTimestamp: Boolean = false) = transaction {
         logger.trace { "Storing raw KPI register values '$values'" }
         RawKpiRegisterValuesTable.insert {
+            if (acceptClientTimestamp && values.dateCreated != null) {
+                it[dateCreated] = Instant.ofEpochMilli(values.dateCreated)
+            }
             it[jobId] = values.jobId
             it[inverterActivePower] = values.inverterActivePower
             it[meterActivePower] = values.meterActivePower

@@ -22,7 +22,11 @@ abstract class TestBase : KoinTest {
     @Suppress("unused")
     val koinTestExtension = KoinTestExtension.create { modules(appModule) }
 
-    fun <R> withApp(applicationTestBuilder: suspend ApplicationTestBuilder.() -> R) =
+    /** Runs a test application; [overrides] adds or overrides configuration keys. */
+    fun <R> withApp(
+        overrides: Map<String, String> = emptyMap(),
+        applicationTestBuilder: suspend ApplicationTestBuilder.() -> R,
+    ) =
         testApplication {
             truncateAllTables()
             application {
@@ -49,7 +53,7 @@ abstract class TestBase : KoinTest {
                         "messagequeue.user" to "artemis",
                         "messagequeue.passwd" to "artemis",
                         "messagequeue.brokerUrl" to "",
-                    )
+                    ).apply { overrides.forEach { (key, value) -> put(key, value) } }
             }
             applicationTestBuilder.invoke(this)
         }

@@ -20,6 +20,7 @@ import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -143,6 +144,41 @@ class RawKpiControllerTest : TestBase() {
         assertEquals(30.0, energy.exportedEnergyToday)
         assertEquals(15.0, energy.importedEnergyToday)
         assertEquals(40.0, energy.producedEnergyToday)
+    }
+
+    // ADR-0025: the backfill dates its raw rows itself, but only where the dev
+    // setting allows it; production ignores a client timestamp.
+    @Test
+    fun `a client timestamp is ignored by default`() = withApp {
+        startApplication()
+        cleanAllTables()
+        storeRaw(meterExportedEnergy = 100.0, dateCreated = yesterday.atTime(12, 0).atZone(zone).toInstant())
+        storeRaw(meterExportedEnergy = 150.0)
+        // Both rows are dated now: no yesterday baseline, no delta.
+        assertEquals(0.0, readEnergyToday().exportedEnergyToday)
+    }
+
+    @Test
+    fun `with the dev setting a client timestamp dates the row`() =
+        withApp(overrides = mapOf("dev.acceptClientTimestamps" to "true")) {
+            startApplication()
+            cleanAllTables()
+            storeRaw(meterExportedEnergy = 100.0, dateCreated = yesterday.atTime(12, 0).atZone(zone).toInstant())
+            storeRaw(meterExportedEnergy = 150.0)
+            assertEquals(50.0, readEnergyToday().exportedEnergyToday)
+        }
+
+    private suspend fun ApplicationTestBuilder.storeRaw(meterExportedEnergy: Double, dateCreated: Instant? = null) {
+        val values = RawKpiRegisterValues(
+            jobId = "test-job",
+            meterExportedEnergy = meterExportedEnergy,
+            dateCreated = dateCreated?.toEpochMilli(),
+        )
+        val response = client.post("/$DATA_ACCESSOR_API_V1_PATH/$DATA_ACCESSOR_STORE_RAW_KPI_REGISTER_VALUES") {
+            contentType(ContentType.Application.Json)
+            setBody(Json.encodeToString(RawKpiRegisterValues.serializer(), values))
+        }
+        assertEquals(OK, response.status)
     }
 
     private suspend fun ApplicationTestBuilder.readEnergyToday(): EnergyToday =

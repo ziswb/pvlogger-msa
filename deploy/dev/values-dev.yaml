@@ -16,6 +16,10 @@ modbus:
 modbusMockServer:
   enabled: true
 
+# The history backfill dates its raw rows itself (ADR-0025).
+dataAccessor:
+  devAcceptClientTimestamps: true
+
 # Tilt builds the images locally and runs the jobs as the images' own users.
 global:
   imagePullPolicy: IfNotPresent

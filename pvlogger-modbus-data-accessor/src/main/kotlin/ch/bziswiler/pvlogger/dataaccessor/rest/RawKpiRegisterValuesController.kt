@@ -5,6 +5,7 @@ import ch.bziswiler.pvlogger.dataaccessor.database.access.RawKpiRegisterValuesDa
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_API_V1_PATH
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_METER_ENERGY_TODAY
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_STORE_RAW_KPI_REGISTER_VALUES
+import ch.bziswiler.pvlogger.dataaccessor.configuration.AppConfig
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -12,12 +13,14 @@ import io.ktor.server.routing.Routing
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
+import org.koin.ktor.ext.inject
 
 fun Routing.rawKpiRegisterValues() {
+    val appConfig by inject<AppConfig>()
     route("/$DATA_ACCESSOR_API_V1_PATH") {
         post("/$DATA_ACCESSOR_STORE_RAW_KPI_REGISTER_VALUES") {
             val values = call.receive<RawKpiRegisterValues>()
-            RawKpiRegisterValuesDao.store(values)
+            RawKpiRegisterValuesDao.store(values, acceptClientTimestamp = appConfig.serverConfig.acceptClientTimestamps)
             call.respond(HttpStatusCode.OK)
         }
         get("/$DATA_ACCESSOR_READ_METER_ENERGY_TODAY") {

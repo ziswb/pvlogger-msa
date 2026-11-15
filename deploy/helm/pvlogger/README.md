@@ -34,6 +34,7 @@ Optional components, all off by default except the network policies:
 | Data-freshness heartbeat | `heartbeat.enabled` | `secrets.heartbeatPingUrl` |
 | Image pre-pull on every node | `imagePrepull.enabled` | Kubernetes with image volumes |
 | Modbus mock server (dev only) | `modbusMockServer.enabled` | |
+| Backdated raw rows for the history backfill (dev only) | `dataAccessor.devAcceptClientTimestamps` | |
 | Network policies | on (`networkPolicies.enabled`) | `networkPolicies.kubeletCidr` if your pod network is not k3s's `10.42.0.0/16` |
 
 A missing required value fails the render with a message that names the key.

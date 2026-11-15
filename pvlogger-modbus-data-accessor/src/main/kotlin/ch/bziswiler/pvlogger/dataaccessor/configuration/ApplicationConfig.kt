@@ -1,6 +1,7 @@
 package ch.bziswiler.pvlogger.dataaccessor.configuration
 
 import ch.bziswiler.pvlogger.shared.configuration.DatabaseConfig
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.application.Application
 import org.koin.ktor.ext.inject
 
@@ -11,7 +12,15 @@ class AppConfig {
 
 data class ServerConfig(
     val isProd: Boolean,
+    /**
+     * Dev only (ADR-0025): store a raw KPI row with the client's dateCreated,
+     * so the history backfill can write the past. Off by default and in
+     * production, where in-cluster callers must not backdate raw rows.
+     */
+    val acceptClientTimestamps: Boolean = false,
 )
+
+private val logger = KotlinLogging.logger {}
 
 fun Application.setupConfig() {
     val appConfig by inject<AppConfig>()
@@ -19,8 +28,16 @@ fun Application.setupConfig() {
     readDbConfig(appConfig)
 }
 
-private fun Application.readServerConfig(appConfig: AppConfig) = with(environment.config.config("ktor.server")) {
-    appConfig.apply { serverConfig = ServerConfig(isProd = property("isProd").getString().toBoolean()) }
+private fun Application.readServerConfig(appConfig: AppConfig) {
+    val acceptClientTimestamps =
+        environment.config.propertyOrNull("dev.acceptClientTimestamps")?.getString().toBoolean()
+    if (acceptClientTimestamps) {
+        logger.warn { "DEV_ACCEPT_CLIENT_TIMESTAMPS is on: raw KPI rows take the client's dateCreated. Never in production." }
+    }
+    appConfig.serverConfig = ServerConfig(
+        isProd = environment.config.property("ktor.server.isProd").getString().toBoolean(),
+        acceptClientTimestamps = acceptClientTimestamps,
+    )
 }
 
 private fun Application.readDbConfig(appConfig: AppConfig) = with(environment.config.config("database")) {
