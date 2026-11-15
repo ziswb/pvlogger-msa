@@ -58,6 +58,13 @@ cd pv-device-data-collector && make build
 cd pvlogger-fusionsolar && make build
 ```
 
+### CI (GitHub Actions)
+
+`.github/workflows/`: `jvm.yml`, `go.yml`, `frontend.yml` (path-filtered per stack) and
+`gitleaks.yml` (every push/PR, full history). Actions are pinned to commit SHAs with the tag
+as a comment; bump them together with the tools they mirror (JDK, Go, golangci-lint, Node,
+gitleaks; see docs/UPGRADING.md).
+
 ### Local Development
 
 ```bash

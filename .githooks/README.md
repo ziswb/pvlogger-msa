@@ -6,6 +6,7 @@ credentials) must not enter it, in files or in commit messages. Three layers:
 1. **Pattern rules** in [`.gitleaks.toml`](../.gitleaks.toml): gitleaks' default secret
    rules plus rules for site data (`home.arpa` hosts, tailnet names, private IPs, MAC
    addresses, coordinates, FusionSolar station codes, e-mail addresses). They run in CI
+   ([`.github/workflows/gitleaks.yml`](../.github/workflows/gitleaks.yml), full history)
    and in the `pre-commit` hook.
 2. **Private exact-value blocklist**, checked by `pre-commit` (staged additions) and
    `commit-msg`. The list itself is kept outside the repo. A hit names the placeholder

@@ -193,6 +193,12 @@ next release; it changes nothing for them.
     OCI artifact to GHCR. Infrastructure then pulls from GHCR through the private registry acting as a pull-through
     cache. Replaces the manual build-and-push steps of the release flow; update CLAUDE.md and the release-flow docs.
 
+    *Part 1 done 2026-11-15:* `.github/workflows/` `jvm.yml` (`./gradlew build -x makeGoBuild`, Testcontainers),
+    `go.yml` (`make build` + `make lint`, golangci-lint pinned to the local version), `frontend.yml` (`npm ci` +
+    `npm run build:ci`), `gitleaks.yml` (full history, pinned + checksummed binary). Path filters per stack,
+    superseded runs cancelled, actions pinned to commit SHAs. Open: part 2, tag-triggered GHCR releases
+    (`ghcr.io/ziswb/pvlogger-<module>`, chart `oci://ghcr.io/ziswb/charts/pvlogger`), after item 52.
+
 ## Done (resolved, superseded or moot)
 
 1. ~~**masterdata-server prod config DB-name mismatch**~~

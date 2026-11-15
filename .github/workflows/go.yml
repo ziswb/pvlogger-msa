@@ -1,0 +1,46 @@
+# Build, test and lint every Go module through the top-level Makefile (backlog 53).
+name: Go
+
+on:
+  push:
+    branches: [main]
+    paths: &paths
+      - "**/*.go"
+      - "**/go.mod"
+      - "**/go.sum"
+      - "go.work"
+      - "go.work.sum"
+      - "**/Makefile"
+      - ".golangci.yml"
+      - ".github/workflows/go.yml"
+  pull_request:
+    paths: *paths
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.work
+          cache-dependency-path: "**/go.sum"
+      # Keep in step with the local golangci-lint (docs/UPGRADING.md, Go toolchain row).
+      - uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
+        with:
+          version: v2.15.0
+          install-only: true
+      - name: Test and build
+        run: make build
+      - name: Lint
+        run: make lint
