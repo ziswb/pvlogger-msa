@@ -79,7 +79,7 @@ dataAccessor:
   enabled: true
   image:
     repository: "bziswiler/pvlogger-modbus-data-accessor"
-    tag: "3.13.1"
+    tag: "3.14.0"
   replicas: 1
   port: 8083
   # Dev only (ADR-0025): raw KPI rows keep the client's dateCreated, so the
