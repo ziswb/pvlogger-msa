@@ -167,7 +167,7 @@ next release; it changes nothing for them.
     cache. Replaces the manual build-and-push steps of the release flow; update CLAUDE.md and the release-flow docs.
 
     *Part 1 done 2026-11-15:* `.github/workflows/` `jvm.yml` (`./gradlew build -x makeGoBuild`, Testcontainers),
-    `go.yml` (`make build` + `make lint`, golangci-lint pinned to the local version), `frontend.yml` (`npm ci` +
+    `go.yml` (`make test` + `make lint` since `a37399e`, golangci-lint pinned to the local version), `frontend.yml` (`npm ci` +
     `npm run build:ci`), `gitleaks.yml` (full history, pinned + checksummed binary). Path filters per stack,
     superseded runs cancelled, actions pinned to commit SHAs. Open: part 2, tag-triggered GHCR releases
     (`ghcr.io/ziswb/pvlogger-<module>`, chart `oci://ghcr.io/ziswb/charts/pvlogger`), after item 52.
@@ -207,6 +207,48 @@ next release; it changes nothing for them.
     `make prod GOARCH=${TARGETARCH}`, with the Makefiles taking `GOARCH` from the caller (default: the host's,
     `go env GOARCH`, for `make build` too). Also the `-darwin` local builds hard-code arm64. Prerequisite for the
     multi-arch GHCR images of item 53 part 2 and for the public "try it" path (item 23).
+57. 🟡 **Review of the 2026-11-15 work** (added 2026-11-15; five read-only reviews of `8e34fc0..81cc18a`:
+    security, consistency, correctness, completeness, best practices)
+
+    Fixed in the follow-up commits (data accessor 3.14.1, mock 1.0.1, chart 1.1.1):
+    - Backfill: a day is gap-filled per minute, so a run that died mid-day is completed by the rerun (was: filled
+      only before the day's first row, which left a permanent hole). Yesterday is filled first, so live rows get
+      their midnight baseline within seconds. Day steps use `time.Date` (a zone whose DST gap is at midnight
+      shifted every later day by an hour).
+    - The data accessor rejects a raw row with `dateCreated` (400) unless `DEV_ACCEPT_CLIENT_TIMESTAMPS` is on.
+      Before, the field was ignored, so a backfill against a stock data accessor silently dated 30 days of raw rows
+      today and today's energy showed a month. ADR-0025 point 4 amended.
+    - Chart: `dataAccessor.devAcceptClientTimestamps` fails the render unless `modbusMockServer.enabled`; `NOTES.txt`
+      warns when either is on; Deployments roll on ConfigMap/Secret changes (`checksum/*` annotations); the
+      timezone hostPath is mounted read-only; the mock server drops it (it embeds `time/tzdata`).
+    - Mock server: a read past 0xFFFF answers exception 2 instead of wrapping; idle connections time out; the
+      dongle device ID comes from `sharedconfig.DevIdConfig()`.
+    - Leak guards: a `pre-push` hook scans the outgoing range (gitleaks + blocklist, diff and messages);
+      `commit-msg` also runs the gitleaks patterns; a missing gitleaks is fatal where the blocklist is configured;
+      `blocklist-check.py` handles bare and `glob:` lines, `+++` content lines and the `git commit -v` scissors;
+      `.gitleaks.toml` rules are case-insensitive where it matters, MACs with `-`, Tailscale IPv6.
+    - CI: `go.yml` also triggers on the Kotlin/SQL files its drift tests read; `gitleaks.yml` scans every branch
+      and the commit messages; superseded runs are cancelled on PRs only; `chart.yml` runs `helm lint --strict`,
+      validates `deploy/dev/*.yaml` and checks every Dockerfile `LABEL version` against its chart tag.
+    - Docs: UPGRADING (chart bump, chart/dev images), README (try it, chart, mock), SECURITY.md, stale references
+      (CONTEXT, TROUBLESHOOTING, OPEN-QUESTIONS Q6/Q8, ADR-0003/0018, item 53 text, security finding on the
+      battery simulator), `.dockerignore` keeps `.claude/` and env files out of the build context.
+
+    Deferred (not done here):
+    - **Verify the kubelet-probe NetworkPolicy on the cluster** (security finding 60): `kubeletCidr` is the whole
+      pod CIDR, so if kube-router matches pod source IPs against it, every pod in the cluster reaches the
+      unauthenticated write endpoints. Test from a pod in another namespace; if it gets through, drop the policy or
+      narrow it to the nodes' bridge addresses.
+    - Container hardening: `distroless/static-debian13:nonroot`, `readOnlyRootFilesystem`,
+      `automountServiceAccountToken: false`, base images pinned by digest, the timezone hostPath dropped everywhere
+      (Go embeds tzdata, the JVM reads `TZ`), so the namespace can enforce Pod Security `restricted`.
+    - Image builds: BuildKit cache mounts in the Go Dockerfiles, and a CI job that builds the Dockerfiles (with
+      item 53 part 2).
+    - One raw-row DTO in `pvlogger-shared-modbus` for the fast collector and the backfill, with a field-name drift
+      test against the Kotlin `RawKpiRegisterValues`.
+    - fusionsolar-auth's Role can `create` any Secret: pre-create `fusionsolar-token-secret` and drop `create`.
+    - gitleaks on PRs reads the PR's own `.gitleaks.toml`: use the base branch's (or CODEOWNERS on it).
+    - Tilt: its own namespace (`pvlogger-dev`), so a mistaken `--k8s-context` cannot overwrite a `pvlogger` release.
 
 ## Done (resolved, superseded or moot)
 
