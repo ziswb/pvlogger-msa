@@ -30,8 +30,9 @@ SmartDongle). It:
   (2026 verdict: not economical yet — purchase deferred, simulator kept for
   re-evaluation when prices change; ADR-0006).
 
-It runs as microservices on the homelab K3S cluster; deployment is owned by the
-`infrastructure` repo (Helm chart under `ansible/roles/pvlogger_helm_deploy/`).
+It runs as microservices on the homelab K3S cluster. The Helm chart lives in this
+repo (`deploy/helm/pvlogger/`); the `infrastructure` repo holds the **site values**
+and runs the install (ADR-0024; the move is backlog item 52).
 The microservice architecture was learning-driven; new services must justify
 themselves pragmatically — default to a job/endpoint in an existing service
 (ADR-0007).
@@ -81,6 +82,14 @@ themselves pragmatically — default to a job/endpoint in an existing service
   WebSocket. The frontend polls the data accessor once every 60 s and fans the
   result out to all connected sessions; polling runs only while at least one
   browser is connected (ADR-0019).
+- **Chart version** — one release of the pvlogger Helm chart, tagged
+  `chart/vX.Y.Z`: its templates plus the pinned image version of every
+  component. It is what an installation deploys (ADR-0024).
+  _Avoid_: "release" alone (ambiguous with a component's image version).
+- **Site values** — what only one installation knows (hosts, device IDs,
+  accounts, secrets, ingress names). They never enter this repo; this
+  installation's site values live in the private `infrastructure` repo.
+  _Avoid_: "config" (the chart's generic defaults are config too).
 
 ## Component map
 
@@ -176,10 +185,13 @@ All three are dumped nightly by the db-backup CronJob (infrastructure repo). A f
   `<registry-host>:5000` (`DOCKER_REGISTRY`, set outside the repo in
   `~/.config/pvlogger/local.env`). **A service's version is the `LABEL version` in its
   Dockerfile** ([ADR-0003](docs/adr/0003-image-versioning-and-deployment.md)).
-- **Deployed** versions are pinned in the Helm chart's `values.yaml` in the
-  infrastructure repo (declared single source of truth for what runs).
-- Cron schedules and runtime config (Modbus host `<dongle-ip>`, device IDs,
-  DB endpoints) live in the chart/Ansible role, not here.
+- **Deployed** versions are pinned in the chart's `values.yaml` in this repo; a
+  **chart version** (`chart/vX.Y.Z`) names that set, and the infrastructure repo
+  pins the chart version it installs (ADR-0024, supersedes the deployment part
+  of ADR-0003; backlog item 52 carries out the move).
+- Generic defaults (ports, schedules, resources) are chart defaults; **site
+  values** (Modbus host `<dongle-ip>`, device IDs, DB endpoints, secrets) stay in
+  the infrastructure repo.
 - Local dev: `tilt up` per CLAUDE.md. Tilt (including the mock server) is the
   **intended environment for developing larger changes** (confirmed
   2026-08-07) — but it has rotted: the Tiltfile references a

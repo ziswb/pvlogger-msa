@@ -186,6 +186,24 @@ next release; it changes nothing for them.
     and Tilt (item 23) tests exactly what goes live. Infrastructure keeps only the site values (`values.yaml.j2`,
     1Password lookups) and the install task, and consumes the chart by release tag (OCI, item 53). Record as an
     ADR here and in infrastructure.
+
+    *Decided 2026-11-15 (grill), [ADR-0024](adr/0024-helm-chart-lives-here-site-values-stay-private.md),
+    infrastructure ADR-0032:* the chart pins the image tags; tag `chart/vX.Y.Z` from `1.0.0`, no `appVersion`.
+    `values-dev.yaml` goes to `deploy/dev/` (not into the chart directory, so it is never packaged), together with a
+    plain dev Postgres that Tilt deploys. Steps:
+    1. One commit here: copy the chart and clean it in the same commit (the unsanitized copy must never reach the
+       public history). Hard-coded NFS paths, device IDs and hostnames in templates become values; in-cluster service
+       hosts are computed from the release; generic defaults move from the role into `values.yaml`; neutral comments.
+    2. `chart.yml` workflow (path filter `deploy/**`): `helm lint` (defaults and `values-dev.yaml`), `helm template`
+       with a CI values file that enables every optional template, `kubeconform` (CRDs skipped), and a check that
+       `Chart.yaml` `version` changed when anything under the chart changed since the last `chart/v*` tag.
+    3. Infrastructure: `values.yaml.j2` and defaults shrink to site values, the role extracts the chart with
+       `git archive chart/vX.Y.Z` from the local clone (`pvlogger_chart_version`), the chart copy is deleted.
+    4. Acceptance: `helm template` of the old chart with today's site values equals the new chart with the new site
+       file (only chart-version labels differ), rendered in a scratch directory, never committed.
+    5. The role's `IMPROVEMENTS.md` open items move here as backlog items (neutral wording); its item 5 is done by
+       step 1, item 2 joins item 54. Update CLAUDE.md, the release flow and the frontend README/docs that name the
+       old chart path.
 53. 🟡 **CI and releases on GitHub Actions** (added 2026-11-14)
 
     On push/PR: Gradle build + tests (Testcontainers), Go build + lint, frontend build, gitleaks with the repo's
@@ -198,6 +216,13 @@ next release; it changes nothing for them.
     `npm run build:ci`), `gitleaks.yml` (full history, pinned + checksummed binary). Path filters per stack,
     superseded runs cancelled, actions pinned to commit SHAs. Open: part 2, tag-triggered GHCR releases
     (`ghcr.io/ziswb/pvlogger-<module>`, chart `oci://ghcr.io/ziswb/charts/pvlogger`), after item 52.
+54. ⚪ **Chart: `existingSecret` instead of secrets in values** (added 2026-11-15, from the item 52 grill)
+
+    The chart renders its Secrets (Postgres, FusionSolar, heartbeat URL, KPI export token) from values, so the
+    deployer has to put the secrets into a values file and Helm keeps them in its release record in the cluster.
+    Add an `existingSecret` name per secret: when it is set, the chart only references that Secret and infra creates
+    it itself (from 1Password). Values stay the default, so Tilt keeps working from one `values-dev.yaml`. Kept out of
+    item 52 on purpose: the move does not change behaviour.
 
 ## Done (resolved, superseded or moot)
 

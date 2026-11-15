@@ -1,6 +1,6 @@
 # 0003 — Image versioning and deployment flow
 
-- Status: accepted (recorded retroactively; decision visible in the code)
+- Status: deployment part superseded by 0024 (2026-11-15); the image-version part stands (was: accepted, recorded retroactively; decision visible in the code)
 - Date: 2026-08-06
 
 ## Context
