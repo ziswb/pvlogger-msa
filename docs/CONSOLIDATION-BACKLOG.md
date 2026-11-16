@@ -20,8 +20,6 @@ collector and heartbeat runs completed. The repo is on GitHub, private until the
 
 In order:
 
-- **Item 58:** deploy the infrastructure change that enforces Pod Security `restricted` on the namespace, check that
-  the next runs of every CronJob start, then move it to Done.
 - **Item 56:** `tilt up` on an amd64 host, then move it to Done.
 - **Item 51:** README screenshots from the Tilt dashboard (synthetic data only), then move it to Done.
 - **Item 53 part 2:** tag-triggered multi-arch GHCR releases; the chart's image defaults then point there.
@@ -220,37 +218,6 @@ next release; it changes nothing for them.
     carries a `GOARCH=amd64` binary; `make build` passes in all eight Go modules. No image bump: an arm64 build
     produces the same binary, so the next release of each image carries the change. Open: `tilt up` on an amd64
     host (the user's call), then move to Done.
-58. ⚪ **Hardening and hygiene deferred from the review** (added 2026-11-16, split out of item 57)
-
-    None is a defect; each was found by the item 57 reviews and left out of that fix on purpose.
-    - Container hardening: `distroless/static-debian13:nonroot`, `readOnlyRootFilesystem`,
-      `automountServiceAccountToken: false`, base images pinned by digest, the timezone hostPath dropped everywhere
-      (Go embeds tzdata, the JVM reads `TZ`), so the namespace can enforce Pod Security `restricted`.
-    - Image builds: BuildKit cache mounts in the Go Dockerfiles, and a CI job that builds the Dockerfiles (with
-      item 53 part 2).
-    - One raw-row DTO in `pvlogger-shared-modbus` for the fast collector and the backfill, with a field-name drift
-      test against the Kotlin `RawKpiRegisterValues`.
-    - fusionsolar-auth's Role can `create` any Secret: pre-create `fusionsolar-token-secret` and drop `create`.
-    - gitleaks on PRs reads the PR's own `.gitleaks.toml`: use the base branch's (or CODEOWNERS on it).
-    - Tilt: its own namespace (`pvlogger-dev`), so a mistaken `--k8s-context` cannot overwrite a `pvlogger` release.
-
-    *Status 2026-11-16:* all six parts committed and verified in Tilt (`tilt ci` healthy, every collector, dashboard);
-    release chart 3.0.0 with every image patch-bumped. Also: the Modbus connect retries a refusal (the same startup
-    race, against the dev mock). Deployed 2026-11-16 (chart 3.0.0, then 3.0.1 for the Prometheus regression of
-    finding 60): pods ready without restarts, collectors and the nightly backup complete, scrapes up. The first
-    `restricted` dry run flagged only the 10 jobs completed before the deploy (they still mount the timezone
-    hostPath). Open: repeat `kubectl label --dry-run=server --overwrite ns pvlogger
-    pod-security.kubernetes.io/enforce=restricted` once those have aged out (after the next device and backup
-    runs); clean means enforcing is the owner's call. Then move this item to Done.
-
-    *Status 2026-11-16 (after chart 4.0.0):* checked the templates instead of waiting for the old pods to age out.
-    Every live pod template (7 CronJobs, 4 Deployments, the pre-pull DaemonSet) and every workload the chart renders
-    with all options on (20, fusionsolar included) meets `restricted`: no hostPath or other disallowed volume,
-    non-root, no privilege escalation, all capabilities dropped, seccomp `RuntimeDefault`. The server dry run flags
-    only the 8 completed pods of the nightly jobs from before chart 3.0.0 (`timezone` hostPath), which enforcement
-    does not touch. The owner chose to enforce: the infrastructure role labels the namespace after each deploy
-    (enforce `restricted` pinned to v1.37, warn/audit at latest), and its fsdata runbook's throwaway psql pod got a
-    compliant security context. Open: deploy that, then the next run of each CronJob must start.
 60. ⚪ **Follow-ups from the review of the 2026-11-15/16 work** (added 2026-11-16; five read-only reviews of
     `a302fb1^..522ccc5`, criteria: nothing private leaks to GitHub, the system serves the same purposes as before
     the move, the public repo is a good showcase)
@@ -1371,6 +1338,42 @@ next release; it changes nothing for them.
     (200, `allow-intra-namespace`). All Deployments ready without restarts; the collector runs after the deploy
     completed, with no `retrying` or `job failed` log lines. A host-network pod (plex) cannot resolve cluster DNS
     and is no test of the policy.
+58. ~~⚪ **Hardening and hygiene deferred from the review**~~ (added 2026-11-16, split out of item 57)
+
+    None is a defect; each was found by the item 57 reviews and left out of that fix on purpose.
+    - Container hardening: `distroless/static-debian13:nonroot`, `readOnlyRootFilesystem`,
+      `automountServiceAccountToken: false`, base images pinned by digest, the timezone hostPath dropped everywhere
+      (Go embeds tzdata, the JVM reads `TZ`), so the namespace can enforce Pod Security `restricted`.
+    - Image builds: BuildKit cache mounts in the Go Dockerfiles, and a CI job that builds the Dockerfiles (with
+      item 53 part 2).
+    - One raw-row DTO in `pvlogger-shared-modbus` for the fast collector and the backfill, with a field-name drift
+      test against the Kotlin `RawKpiRegisterValues`.
+    - fusionsolar-auth's Role can `create` any Secret: pre-create `fusionsolar-token-secret` and drop `create`.
+    - gitleaks on PRs reads the PR's own `.gitleaks.toml`: use the base branch's (or CODEOWNERS on it).
+    - Tilt: its own namespace (`pvlogger-dev`), so a mistaken `--k8s-context` cannot overwrite a `pvlogger` release.
+
+    *Status 2026-11-16:* all six parts committed and verified in Tilt (`tilt ci` healthy, every collector, dashboard);
+    release chart 3.0.0 with every image patch-bumped. Also: the Modbus connect retries a refusal (the same startup
+    race, against the dev mock). Deployed 2026-11-16 (chart 3.0.0, then 3.0.1 for the Prometheus regression of
+    finding 60): pods ready without restarts, collectors and the nightly backup complete, scrapes up. The first
+    `restricted` dry run flagged only the 10 jobs completed before the deploy (they still mount the timezone
+    hostPath). Open: repeat `kubectl label --dry-run=server --overwrite ns pvlogger
+    pod-security.kubernetes.io/enforce=restricted` once those have aged out (after the next device and backup
+    runs); clean means enforcing is the owner's call. Then move this item to Done.
+
+    *Status 2026-11-16 (after chart 4.0.0):* checked the templates instead of waiting for the old pods to age out.
+    Every live pod template (7 CronJobs, 4 Deployments, the pre-pull DaemonSet) and every workload the chart renders
+    with all options on (20, fusionsolar included) meets `restricted`: no hostPath or other disallowed volume,
+    non-root, no privilege escalation, all capabilities dropped, seccomp `RuntimeDefault`. The server dry run flags
+    only the 8 completed pods of the nightly jobs from before chart 3.0.0 (`timezone` hostPath), which enforcement
+    does not touch. The owner chose to enforce: the infrastructure role labels the namespace after each deploy
+    (enforce `restricted` pinned to v1.37, warn/audit at latest), and its fsdata runbook's throwaway psql pod got a
+    compliant security context.
+
+    **Done 2026-11-16 ~09:00:** deployed; the namespace carries enforce `restricted` (v1.37), warn/audit `restricted`
+    (latest). A server dry-run Pod create from each of the 12 live workload templates is admitted under enforcement,
+    so is the runbook's psql pod; a plain non-compliant pod is rejected (`violates PodSecurity "restricted:v1.37"`).
+    The fast collector and heartbeat runs after the label completed; no FailedCreate or PodSecurity events.
 59. ~~🟡 **Database clients survive the policy race, so the DB policy can drop its pod-CIDR rule**~~ (added 2026-11-16,
     follows security finding 60 / item 57)
 
