@@ -1,0 +1,188 @@
+# Releases (backlog 53 part 2, ADR-0027): the chart tag chart/vX.Y.Z publishes
+# every image the chart pins, for linux/amd64 and linux/arm64, to
+# ghcr.io/<owner>/<module>:<version>, then the chart to
+# oci://ghcr.io/<owner>/charts/pvlogger. Published versions are immutable: an
+# image or chart version already in the registry is kept, not rebuilt, so a
+# rerun (or a dispatch for an older tag) only fills in what is missing.
+name: Release
+
+on:
+  push:
+    tags: ["chart/v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to publish, e.g. chart/v4.0.0"
+        required: true
+
+permissions:
+  contents: read
+
+env:
+  # How the registry says "no such image/chart version" (see the images job).
+  ABSENT: "not found|manifest unknown|name unknown|denied|403 Forbidden"
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      sha: ${{ steps.check.outputs.sha }}
+      version: ${{ steps.check.outputs.version }}
+      registry: ${{ steps.check.outputs.registry }}
+      images: ${{ steps.check.outputs.images }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: refs/tags/${{ inputs.tag || github.ref_name }}
+          # The tag must be on main.
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check the tag
+        id: check
+        env:
+          TAG: ${{ inputs.tag || github.ref_name }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          case "$TAG" in
+            chart/v[0-9]*.[0-9]*.[0-9]*) ;;
+            *) echo "::error::$TAG is not a chart/vX.Y.Z tag"; exit 1 ;;
+          esac
+          version=${TAG#chart/v}
+          chart=$(sed -n 's/^version: *//p' deploy/helm/pvlogger/Chart.yaml)
+          if [ "$chart" != "$version" ]; then
+            echo "::error::$TAG, but Chart.yaml says version $chart"
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor HEAD origin/main; then
+            echo "::error::$TAG is not on main"
+            exit 1
+          fi
+          # The chart pulls from its default registry (ADR-0026); publish there.
+          registry="ghcr.io/${OWNER,,}"
+          default=$(sed -n 's/^  imageRegistry: *"\(.*\)"/\1/p' deploy/helm/pvlogger/values.yaml)
+          if [ "$default" != "$registry" ]; then
+            echo "::error::the chart's global.imageRegistry is '$default', this workflow publishes to $registry"
+            exit 1
+          fi
+          # Fails unless every pinned tag is its Dockerfile's version; prints "module version".
+          pairs=$(scripts/check-chart-tags.sh)
+          images=$(echo "$pairs" | jq -Rnc '[inputs | split(" ") | {module: .[0], version: .[1]}]')
+          {
+            echo "sha=$(git rev-parse HEAD)"
+            echo "version=$version"
+            echo "registry=$registry"
+            echo "images=$images"
+          } >> "$GITHUB_OUTPUT"
+          echo "$pairs"
+
+  images:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.images) }}
+    env:
+      IMAGE: ${{ needs.plan.outputs.registry }}/${{ matrix.module }}:${{ matrix.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.plan.outputs.sha }}
+          persist-credentials: false
+      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # Only "not found" means absent; any other failure stops the job, so a
+      # registry hiccup never leads to overwriting a released tag. GHCR refuses
+      # even an authenticated read of a package that does not exist yet (403);
+      # that counts as absent too: a token that cannot read could not push.
+      - name: Already published?
+        id: exists
+        run: |
+          if out=$(docker buildx imagetools inspect "$IMAGE" 2>&1); then
+            echo "::notice::$IMAGE is already published; kept as it is"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          elif echo "$out" | grep -qiE "$ABSENT"; then
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "$out"
+            exit 1
+          fi
+      # The build stages run natively and cross-compile (Go) or produce
+      # platform-independent output (JVM, Angular); QEMU runs only the few RUN
+      # steps of the arm64 runtime stages.
+      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+        if: steps.exists.outputs.skip == 'false'
+        with:
+          platforms: arm64
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+        if: steps.exists.outputs.skip == 'false'
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        if: steps.exists.outputs.skip == 'false'
+        with:
+          context: .
+          file: ${{ matrix.module }}/docker/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ env.IMAGE }}
+          labels: |
+            org.opencontainers.image.title=${{ matrix.module }}
+            org.opencontainers.image.version=${{ matrix.version }}
+            org.opencontainers.image.revision=${{ needs.plan.outputs.sha }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.licenses=Apache-2.0
+      - name: Both platforms present
+        if: steps.exists.outputs.skip == 'false'
+        run: |
+          out=$(docker buildx imagetools inspect "$IMAGE")
+          echo "$out"
+          for platform in linux/amd64 linux/arm64; do
+            echo "$out" | grep -q "Platform: *$platform" \
+              || { echo "::error::$IMAGE has no $platform image"; exit 1; }
+          done
+
+  chart:
+    needs: [plan, images]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.plan.outputs.sha }}
+          persist-credentials: false
+      # Same Helm as chart.yml.
+      - uses: azure/setup-helm@2f5e7bc67f1f9972ab16657bb795f36d8f04de0e # v5.1.0
+        with:
+          version: v4.3.1
+      - name: Publish the chart
+        env:
+          VERSION: ${{ needs.plan.outputs.version }}
+          REGISTRY: ${{ needs.plan.outputs.registry }}
+          ACTOR: ${{ github.actor }}
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "$TOKEN" | helm registry login ghcr.io -u "$ACTOR" --password-stdin
+          ref="oci://$REGISTRY/charts/pvlogger"
+          if out=$(helm show chart "$ref" --version "$VERSION" 2>&1); then
+            echo "::notice::$ref $VERSION is already published; kept as it is"
+            exit 0
+          elif ! echo "$out" | grep -qiE "$ABSENT"; then
+            echo "$out"
+            exit 1
+          fi
+          helm package deploy/helm/pvlogger -d "$RUNNER_TEMP"
+          helm push "$RUNNER_TEMP/pvlogger-$VERSION.tgz" "oci://$REGISTRY/charts"

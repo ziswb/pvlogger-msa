@@ -1,9 +1,9 @@
 # Every image builds from its Dockerfile (backlog 58). Code changes are built
 # and tested by jvm.yml, go.yml and frontend.yml; this catches what only the
 # image build exercises: the Dockerfile, the build context (.dockerignore) and
-# the build stage's own steps (make prod). Nothing is pushed (GHCR releases: backlog 53
-# part 2). The Go images cross-compile for the target platform (backlog 56), so
-# the runner builds working amd64 images.
+# the build stage's own steps (make prod). Nothing is pushed: release.yml
+# publishes on a chart tag (ADR-0027). The Go images cross-compile for the
+# target platform (backlog 56), so the runner builds working amd64 images.
 name: Images
 
 on:

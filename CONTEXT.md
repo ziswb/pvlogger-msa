@@ -84,7 +84,8 @@ themselves pragmatically — default to a job/endpoint in an existing service
   browser is connected (ADR-0019).
 - **Chart version** — one release of the pvlogger Helm chart, tagged
   `chart/vX.Y.Z`: its templates plus the pinned image version of every
-  component. It is what an installation deploys (ADR-0024).
+  component. It is what an installation deploys (ADR-0024); the tag publishes
+  the images and the chart to GHCR (ADR-0027).
   _Avoid_: "release" alone (ambiguous with a component's image version).
 - **Site values** — what only one installation knows (hosts, device IDs,
   accounts, secrets, ingress names). They never enter this repo; this

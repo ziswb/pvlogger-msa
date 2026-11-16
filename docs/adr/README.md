@@ -32,6 +32,8 @@ old one. Half a page max; the point is the *why*. Template: see
 - [0023 — Database roles live in CloudNativePG; migrations only GRANT](0023-db-roles-in-cnpg-migrations-only-grant.md)
 - [0024 — The Helm chart lives here and pins the deployed versions; site values stay private](0024-helm-chart-lives-here-site-values-stay-private.md)
 - [0025 — One synthetic plant in Go feeds the mock server and the history backfill](0025-synthetic-plant-in-go-mock-and-backfill.md)
+- [0026 — Image names: the registry value carries the owner; the default is GHCR](0026-image-names-registry-carries-owner-ghcr-default.md)
+- [0027 — The chart tag publishes the images and the chart to GHCR](0027-chart-tag-publishes-images-and-chart-to-ghcr.md)
 
 ## Candidate ADRs (implicit decisions worth writing down)
 

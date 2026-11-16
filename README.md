@@ -60,7 +60,7 @@ See [CONTEXT.md](CONTEXT.md) for the domain vocabulary and data flow, and
 
 ## Engineering notes
 
-- **Decisions are written down.** 26 [ADRs](docs/adr/), a
+- **Decisions are written down.** 27 [ADRs](docs/adr/), a
   [consolidation backlog](docs/CONSOLIDATION-BACKLOG.md) of verified defects and
   divergences, [open questions](docs/OPEN-QUESTIONS.md) and
   [security findings](docs/SECURITY-FINDINGS.md), open ones included. References
@@ -77,6 +77,10 @@ See [CONTEXT.md](CONTEXT.md) for the domain vocabulary and data flow, and
   `RuntimeDefault`; default-deny NetworkPolicies and an ingress allowlist
   ([ADR-0020](docs/adr/0020-trust-boundary-ingress-allowlist.md)); base images and
   CI actions are pinned by digest/SHA.
+- **One tag releases everything.** Pushing `chart/vX.Y.Z` publishes every image the
+  chart pins, for amd64 and arm64, and the chart itself to GHCR; released
+  versions are never overwritten
+  ([ADR-0027](docs/adr/0027-chart-tag-publishes-images-and-chart-to-ghcr.md)).
 - **Public code, private configuration**, enforced by a three-layer leak guard
   (see below).
 - **AI-assisted.** Much of the recent work was done with Claude Code as a pair

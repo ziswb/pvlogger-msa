@@ -58,19 +58,26 @@ or a new values key is a minor; a removed or renamed key, or a changed default
 that existing installs notice, is a major. CI fails when the chart changed but
 its version did not.
 
-Steps, until the GHCR release workflow exists (backlog 53 part 2):
+Steps ([ADR-0027](../../../docs/adr/0027-chart-tag-publishes-images-and-chart-to-ghcr.md)):
 
-1. Fix commit(s), then one bump commit as above. Check first that the new image
-   tag is not in the registry yet; `scripts/build.sh` refuses to overwrite one
-   without `-f`.
-2. Build and push the changed images with `scripts/build.sh <module>` (or
-   `scripts/build-all.sh`). The registry comes from `DOCKER_REGISTRY` in
-   `~/.config/pvlogger/local.env`; the platform defaults to `linux/arm64`
-   (`PVLOGGER_PLATFORM` overrides it).
-3. Push the commits; once `chart.yml` is green, tag the bump commit
+1. Fix commit(s), then one bump commit as above.
+2. Push the commits; once `chart.yml` is green, tag the bump commit
    `chart/vX.Y.Z` and push the tag.
+3. The tag runs `.github/workflows/release.yml`: every pinned image that is not
+   on GHCR yet is built for `linux/amd64` and `linux/arm64` and pushed as
+   `ghcr.io/ziswb/<module>:<version>`, then the chart as
+   `oci://ghcr.io/ziswb/charts/pvlogger`. Versions already there are kept, so a
+   failed run can be rerun; the workflow can also be started by hand for an
+   existing tag.
 4. The installation pins that chart version and deploys it (in this project: the
    private infrastructure repository).
+
+Until production pulls from GHCR, it still gets its images from a private
+registry: `scripts/build.sh <module>` (or `scripts/build-all.sh`) builds and
+pushes them there before step 4. The registry comes from `DOCKER_REGISTRY` in
+`~/.config/pvlogger/local.env`; the platform defaults to `linux/arm64`
+(`PVLOGGER_PLATFORM` overrides it). It refuses to overwrite an existing tag
+without `-f`.
 
 `PersistentVolume`s have `Retain`: uninstalling the release leaves the dumps on
 the NFS export.

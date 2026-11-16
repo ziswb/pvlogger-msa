@@ -22,7 +22,8 @@ In order:
 
 - **Item 56:** `tilt up` on an amd64 host, then move it to Done.
 - **Item 51:** README screenshots from the Tilt dashboard (synthetic data only), then move it to Done.
-- **Item 53 part 2:** tag-triggered multi-arch GHCR releases; the chart's image defaults then point there.
+- **Item 53 part 2:** release workflow in code (ADR-0027); open: its first run, then production via a GHCR
+  pull-through cache.
 - **Item 60:** the follow-ups deferred from the 2026-11-16 review.
 - **From about 2027-01-25:** item 42, drop the unused `modbus_response_data` indexes.
 - Item 45 stays open until the next drain + power-off of the primary's node.
@@ -173,6 +174,17 @@ next release; it changes nothing for them.
     `npm run build:ci`), `gitleaks.yml` (full history, pinned + checksummed binary). Path filters per stack,
     superseded runs cancelled, actions pinned to commit SHAs. Open: part 2, tag-triggered GHCR releases
     (`ghcr.io/ziswb/pvlogger-<module>`, chart `oci://ghcr.io/ziswb/charts/pvlogger`), after item 52.
+
+    *Part 2 in code 2026-11-16 (ADR-0027):* `.github/workflows/release.yml`. The chart tag `chart/vX.Y.Z` is the one
+    trigger (no per-module tags): it checks tag on `main`, `Chart.yaml` version and `scripts/check-chart-tags.sh`,
+    then publishes every pinned image not yet on GHCR as `ghcr.io/ziswb/<module>:<version>` (bare names, ADR-0026)
+    for amd64 + arm64, then the chart. Existing versions are kept, never overwritten; `workflow_dispatch` takes an
+    existing tag. The Gradle and Angular build stages now run `FROM --platform=$BUILDPLATFORM` (platform-independent
+    output; checked: an amd64 masterdata image cross-built on arm64 starts its JVM). No image bump: the native
+    build produces the same JAR. Chart README "Release" and CLAUDE.md updated; chart 4.0.1 (its README only, nothing
+    to deploy). Open: the first run (tag `chart/v4.0.1`; it publishes all ten images, as none is on GHCR yet), each GHCR package's visibility at the publication launch, then production
+    pulls from GHCR through the private registry as a pull-through cache (infrastructure), and `scripts/build.sh`
+    leaves the release steps.
 54. ⚪ **Chart: `existingSecret` instead of secrets in values** (added 2026-11-15, from the item 52 grill)
 
     The chart renders its Secrets (Postgres, FusionSolar, heartbeat URL, KPI export token) from values, so the

@@ -64,7 +64,9 @@ cd pvlogger-fusionsolar && make build
 
 `.github/workflows/`: `jvm.yml`, `go.yml`, `frontend.yml`, `chart.yml` (path-filtered per
 stack; `chart.yml` also fails a chart change without a `Chart.yaml` version bump),
-`images.yml` (builds every Dockerfile when a Dockerfile, a module Makefile or `.dockerignore` changes) and
+`images.yml` (builds every Dockerfile when a Dockerfile, a module Makefile or `.dockerignore` changes),
+`release.yml` (a `chart/vX.Y.Z` tag publishes the pinned images for amd64 + arm64 and the chart to GHCR,
+skipping versions already there — ADR-0027) and
 `gitleaks.yml` (every push/PR, full history, rules from `main`). Actions are pinned to commit SHAs with the tag
 as a comment; bump them together with the tools they mirror (JDK, Go, golangci-lint, Node,
 Helm, kubeconform, gitleaks; see docs/UPGRADING.md).

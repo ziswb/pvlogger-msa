@@ -1,4 +1,6 @@
-FROM gradle:9-jdk25-alpine@sha256:0ae8e5ac9d253704444bb8acb7f905928d09b2e5ac5e05c42737f74e261f6623 AS build
+# Native on the build host: the fat JAR is platform-independent (multi-arch
+# releases, ADR-0027); only the runtime stage is per platform.
+FROM --platform=$BUILDPLATFORM gradle:9-jdk25-alpine@sha256:0ae8e5ac9d253704444bb8acb7f905928d09b2e5ac5e05c42737f74e261f6623 AS build
 
 ENV GRADLE_USER_HOME="/workspace/gradle_home"
 ADD . /workspace
