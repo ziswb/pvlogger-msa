@@ -1,7 +1,7 @@
 # Multi-arch: the cluster runs arm64, the relay on the receiver's server
 # usually amd64. The build stage runs natively and cross-compiles.
 FROM --platform=$BUILDPLATFORM golang:1.27.4@sha256:5e8afd493a7124a8586e134d9b532731161d4b9becf9dee5a5956b107426f93d AS golang
-ARG TARGETARCH=arm64
+ARG TARGETARCH
 
 COPY . /
 WORKDIR /pvlogger-kpi-exporter

@@ -54,8 +54,7 @@ tilt up --context rancher-desktop
 
 This builds every image, installs the chart with a dev database and a synthetic PV
 plant in place of the real inverter, writes 30 days of history, and serves the
-dashboard on `http://localhost/`. The Go images are arm64-only for now (backlog 56),
-so this needs an Apple Silicon or other arm64 host.
+dashboard on `http://localhost/`. It works on arm64 and amd64 hosts.
 
 ## Contributing
 

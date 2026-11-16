@@ -173,8 +173,12 @@ PUSH_LOCK_FILE="${SCRIPT_DIR}/../build/.docker-push.lock"
 
 # Only the version tag: no :latest. Every deployment pins a version, and a
 # moving :latest only leaves untagged manifests behind in the registry.
+# The cluster runs arm64. The Go images cross-compile for the target platform
+# since backlog 56, so the platform is pinned here instead of following the
+# build host. PVLOGGER_PLATFORM overrides it (e.g. linux/amd64).
 $DOCKER_CMD build \
 --network host \
+--platform "${PVLOGGER_PLATFORM:-linux/arm64}" \
 -t "${registry}/${REGISTRY_PATH}/${PV_LOGGER_COMPONENT}:${version}" \
 -f "${SCRIPT_DIR}/../${PV_LOGGER_COMPONENT}/docker/Dockerfile" \
 "${SCRIPT_DIR}/../"

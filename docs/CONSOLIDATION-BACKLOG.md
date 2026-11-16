@@ -207,6 +207,15 @@ next release; it changes nothing for them.
     `make prod GOARCH=${TARGETARCH}`, with the Makefiles taking `GOARCH` from the caller (default: the host's,
     `go env GOARCH`, for `make build` too). Also the `-darwin` local builds hard-code arm64. Prerequisite for the
     multi-arch GHCR images of item 53 part 2 and for the public "try it" path (item 23).
+
+    *Status 2026-11-16:* done in code. Every Go Dockerfile builds `FROM --platform=$BUILDPLATFORM` and runs
+    `make prod GOARCH=${TARGETARCH}`; every Makefile defaults `GOARCH` to the host's and runs its tests for the host
+    (`env -u GOARCH`); the `-darwin` builds use the host's arch. `scripts/build.sh` now pins
+    `--platform ${PVLOGGER_PLATFORM:-linux/arm64}`, because the Makefiles no longer force arm64: without the pin an amd64
+    build host would produce amd64 images for the arm64 cluster. Checked: an amd64 mock image cross-built on arm64
+    carries a `GOARCH=amd64` binary; `make build` passes in all eight Go modules. No image bump: an arm64 build
+    produces the same binary, so the next release of each image carries the change. Open: `tilt up` on an amd64
+    host (the user's call), then move to Done.
 58. ⚪ **Hardening and hygiene deferred from the review** (added 2026-11-16, split out of item 57)
 
     None is a defect; each was found by the item 57 reviews and left out of that fix on purpose.

@@ -1,9 +1,12 @@
 BINARY_NAME=exporter
 BIN_PATH := ./build
 CMD_PATH := ./cmd/exporter
-GOARCH ?= arm64
+# Target architecture of the linux binary: the host's by default; the image
+# build passes the platform's (make prod GOARCH=$(TARGETARCH), backlog 56).
+HOSTARCH := $(shell env -u GOARCH go env GOARCH)
+GOARCH ?= $(HOSTARCH)
 LINUX_BUILD_OPTIONS := CGO_ENABLED=0 GOARCH=$(GOARCH) GOOS=linux
-MACOS_BUILD_OPTIONS := CGO_ENABLED=0 GOARCH=arm64 GOOS=darwin
+MACOS_BUILD_OPTIONS := CGO_ENABLED=0 GOARCH=$(HOSTARCH) GOOS=darwin
 
 .PHONY: build clean lint prod test relay-bundle
 
