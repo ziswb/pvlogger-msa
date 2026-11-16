@@ -23,7 +23,6 @@ In order:
 - **Item 53 part 2:** release workflow live (ADR-0027, first run `chart/v4.0.1` green); open: package visibility
   at the publication launch, then production via a GHCR pull-through cache.
 - **Item 60:** the follow-ups deferred from the 2026-11-16 review.
-- **Item 61:** match Modbus replies to their request (transaction ID, unit, function); back off on busy.
 - **From about 2027-01-25:** item 42, drop the unused `modbus_response_data` indexes.
 - Item 45 stays open until the next drain + power-off of the primary's node.
 
@@ -309,37 +308,6 @@ next release; it changes nothing for them.
     `pvlogger`; `/health/ready` answers `ok` in the data accessor and the masterdata server; the fast collector runs
     after the rollout completed. The only probe failures were startup probes while the JVMs started (connection
     refused, one 5 s timeout of the masterdata server), which is what the startup probe absorbs.
-
-61. 🔴 **Modbus replies are not matched to their request** (added 2026-11-16, reported from the infrastructure
-    side; one occurrence so far)
-
-    Production, 2026-11-16 13:02 local, `pv-full-data-collector` 0.8.7: reading register 32106 (accumulated energy
-    yield, function 0x03, 4 bytes) of logic device 16, attempts 1 and 2 got exception 0x83/0x06 (slave device busy),
-    each followed by close and reconnect; attempt 3 got a reply within 0.1 ms with a byte count of 62, and the run
-    failed with "incomplete register values: byte count 62, payload 62 bytes, want 4". Most likely a late answer to
-    another, larger request the device had queued while busy. Refusing to store it was right; accepting the frame as
-    the answer was not. The later full runs succeeded. Same family as the 2026-11-14 case that made every retry use
-    a fresh connection (comment on `ExecuteRequest` in `pvlogger-shared-modbus/tcp-handler.go`).
-
-    `TcpHandler.exchange` takes the next frame without comparing its MBAP transaction ID, unit ID or function code
-    with the request. To do:
-    - Check transaction ID, unit ID and function code (or its exception form) against the request; skip a
-      mismatched frame and keep reading until the read deadline instead of failing the job.
-    - Back off before retrying a 0x06 (busy) exception, e.g. with the `pv-logger/retry` pattern; that helper covers
-      only refused connections today.
-    - Whether a fresh connection right after a busy device is the right retry, given it can still deliver stale
-      frames; with the ID check above the stale frame would be skipped either way.
-    - A test with a fake device that answers a busy exception, then a foreign frame, then the right reply.
-
-    *Fixed in code 2026-11-17:* `exchange` compares each reply's transaction ID, unit ID and function code (or its
-    exception form) with the request, logs and skips a frame that answers another request and reads on until the
-    read deadline (at most 16 skipped frames). Every request carries its own transaction ID (the collectors count
-    them per run), so a late reply to an earlier request no longer matches. A busy exception (0x06) waits 1 s before
-    the second attempt and 2 s before the third. Retries stay on a fresh connection: a stale frame there is now
-    skipped too. Tests: a foreign frame before the reply, another unit's frame, another request's exception, only
-    foreign frames (an error), and the 2026-11-16 sequence (busy, busy, foreign frame, reply); four of them fail
-    against the old handler, the fifth (another unit) once its frame carries a different value. Images: fast 0.13.8,
-    full 0.8.9, device 3.7.8; chart 4.1.1.
 
 ## Done (resolved, superseded or moot)
 
@@ -1517,3 +1485,38 @@ next release; it changes nothing for them.
     *Done 2026-11-16:* a manual db-backup run (00:21) hit the race: its first `pg_isready` got no response ("not
     reachable yet, waiting..."), the next answered, it dumped from the standby as intended and finished all 3
     databases. The fusionsolar retry goes live when fusionsolar is re-enabled (infrastructure backlog 104).
+
+61. 🔴 **Modbus replies are not matched to their request** (added 2026-11-16, reported from the infrastructure
+    side; one occurrence so far)
+
+    Production, 2026-11-16 13:02 local, `pv-full-data-collector` 0.8.7: reading register 32106 (accumulated energy
+    yield, function 0x03, 4 bytes) of logic device 16, attempts 1 and 2 got exception 0x83/0x06 (slave device busy),
+    each followed by close and reconnect; attempt 3 got a reply within 0.1 ms with a byte count of 62, and the run
+    failed with "incomplete register values: byte count 62, payload 62 bytes, want 4". Most likely a late answer to
+    another, larger request the device had queued while busy. Refusing to store it was right; accepting the frame as
+    the answer was not. The later full runs succeeded. Same family as the 2026-11-14 case that made every retry use
+    a fresh connection (comment on `ExecuteRequest` in `pvlogger-shared-modbus/tcp-handler.go`).
+
+    `TcpHandler.exchange` takes the next frame without comparing its MBAP transaction ID, unit ID or function code
+    with the request. To do:
+    - Check transaction ID, unit ID and function code (or its exception form) against the request; skip a
+      mismatched frame and keep reading until the read deadline instead of failing the job.
+    - Back off before retrying a 0x06 (busy) exception, e.g. with the `pv-logger/retry` pattern; that helper covers
+      only refused connections today.
+    - Whether a fresh connection right after a busy device is the right retry, given it can still deliver stale
+      frames; with the ID check above the stale frame would be skipped either way.
+    - A test with a fake device that answers a busy exception, then a foreign frame, then the right reply.
+
+    *Fixed in code 2026-11-17:* `exchange` compares each reply's transaction ID, unit ID and function code (or its
+    exception form) with the request, logs and skips a frame that answers another request and reads on until the
+    read deadline (at most 16 skipped frames). Every request carries its own transaction ID (the collectors count
+    them per run), so a late reply to an earlier request no longer matches. A busy exception (0x06) waits 1 s before
+    the second attempt and 2 s before the third. Retries stay on a fresh connection: a stale frame there is now
+    skipped too. Tests: a foreign frame before the reply, another unit's frame, another request's exception, only
+    foreign frames (an error), and the 2026-11-16 sequence (busy, busy, foreign frame, reply); four of them fail
+    against the old handler, the fifth (another unit) once its frame carries a different value. Images: fast 0.13.8,
+    full 0.8.9, device 3.7.8; chart 4.1.1.
+
+    *Deployed 2026-11-17 00:15 (chart 4.1.1, Helm revision 91):* all collector CronJobs on the new images; the first
+    fast collector run on 0.13.8 completed with no error and no skipped frame. The full collector's first run on 0.8.9
+    is the next hourly one; a skipped frame logs "skipping a modbus frame that answers another request".
