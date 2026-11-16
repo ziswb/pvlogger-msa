@@ -36,22 +36,31 @@ spec:
               value: "pvlogger-modbus-data-accessor-service.{{ .Release.Namespace }}.svc.cluster.local"
             - name: DATA_ACCESSOR_PORT
               value: {{ .Values.dataAccessor.port | quote }}
+          # Backlog 60: the startup probe covers the start (the database connect
+          # retries for minutes before the server listens); after it, liveness
+          # restarts a hung process and readiness drops the pod from the Service
+          # while its dependencies fail.
+          startupProbe:
+            httpGet:
+              path: /health/live
+              port: {{ .Values.frontend.port }}
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 60
           livenessProbe:
             httpGet:
-              path: /metrics
+              path: /health/live
               port: {{ .Values.frontend.port }}
-            initialDelaySeconds: 30
             periodSeconds: 30
             timeoutSeconds: 10
-            failureThreshold: 6
+            failureThreshold: 4
           readinessProbe:
             httpGet:
-              path: /metrics
+              path: /health/ready
               port: {{ .Values.frontend.port }}
-            initialDelaySeconds: 15
-            periodSeconds: 20
-            timeoutSeconds: 10
-            failureThreshold: 9
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
           resources:
             {{- toYaml .Values.frontend.resources | nindent 12 }}
           volumeMounts:

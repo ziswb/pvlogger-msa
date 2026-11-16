@@ -2,6 +2,8 @@ package ch.bziswiler
 
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_API_V1_PATH
 import ch.bziswiler.pvlogger.shared.rest.DataAccessorPaths.DATA_ACCESSOR_READ_LATEST_REGISTER_VALUE_PATH
+import ch.bziswiler.pvlogger.shared.ktor.HEALTH_LIVE_PATH
+import ch.bziswiler.pvlogger.shared.ktor.HEALTH_READY_PATH
 import ch.bziswiler.testutils.TestBase
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
@@ -21,6 +23,16 @@ class ApplicationTest : TestBase() {
         }.apply {
             assertEquals(HttpStatusCode.NotFound, status)
             assertTrue(bodyAsText().isEmpty())
+        }
+    }
+
+    // Backlog 60: the probes the chart uses; ready means the pool reaches the database.
+    @Test
+    fun `health endpoints answer and readiness checks the database`() = withApp {
+        assertEquals(HttpStatusCode.OK, client.get(HEALTH_LIVE_PATH).status)
+        client.get(HEALTH_READY_PATH).apply {
+            assertEquals(HttpStatusCode.OK, status)
+            assertEquals("ok", bodyAsText())
         }
     }
 

@@ -60,6 +60,9 @@ The SPA needs exactly three things through the ingress: its static files, the
   `pvlogger-shared-ktor` (probes and scraping move with it) or Tailscale traffic
   routed through Traefik's rules. Tracked in finding 18; low severity (JVM and
   HTTP meters only).
+  *(Since then the Tailscale ingress routes `/metrics` to an endpoint-less
+  Service, finding 18. The probe paths `/health/live` and `/health/ready`, added
+  2026-11-16 in backlog 60, are excluded the same way on both ingresses.)*
 - The ingress rules become security-relevant configuration: a change that
   widens them needs the same review as a new endpoint.
 - Supersedes nothing. A later decision to add authentication inside the cluster

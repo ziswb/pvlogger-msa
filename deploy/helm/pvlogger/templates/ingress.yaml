@@ -41,8 +41,9 @@ spec:
           port: pvlogger-data-accessor
           nativeLB: true
     - kind: Rule
-      # /metrics is for Prometheus in-cluster, not for the LAN.
-      match: "Host(`{{ .Values.ingress.traefik.host }}`) && (PathPrefix(`/`) || PathPrefix(`/livedata`)) && !PathPrefix(`/metrics`)"
+      # /metrics is for Prometheus and /health for the kubelet, both in-cluster,
+      # not for the LAN.
+      match: "Host(`{{ .Values.ingress.traefik.host }}`) && (PathPrefix(`/`) || PathPrefix(`/livedata`)) && !PathPrefix(`/metrics`) && !PathPrefix(`/health`)"
       priority: 10
       services:
         - kind: Service
@@ -82,13 +83,20 @@ spec:
   ingressClassName: tailscale
   # Same allowlist as the IngressRoute above, as far as an Ingress can express
   # it: only /v1/daydata to the data accessor (no method match here). The
-  # frontend's /metrics is cut out of the "/" prefix by a longer path to a
+  # frontend's /metrics and /health are cut out of the "/" prefix by longer paths to a
   # Service without endpoints, so the proxy cannot reach it (security
   # finding 18; Prometheus scrapes the pod directly).
   rules:
     - http:
         paths:
           - path: /metrics
+            pathType: Prefix
+            backend:
+              service:
+                name: pvlogger-blackhole
+                port:
+                  number: 80
+          - path: /health
             pathType: Prefix
             backend:
               service:

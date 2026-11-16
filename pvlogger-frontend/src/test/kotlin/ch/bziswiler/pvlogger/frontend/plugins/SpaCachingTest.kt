@@ -1,5 +1,8 @@
 package ch.bziswiler.pvlogger.frontend.plugins
 
+import ch.bziswiler.pvlogger.shared.ktor.HEALTH_LIVE_PATH
+import ch.bziswiler.pvlogger.shared.ktor.HEALTH_READY_PATH
+import ch.bziswiler.pvlogger.shared.ktor.configureHealth
 import io.ktor.client.request.get
 import io.ktor.client.request.head
 import io.ktor.client.request.header
@@ -24,6 +27,20 @@ class SpaCachingTest {
             routing { spaResources("spa-fixture") }
         }
         block()
+    }
+
+    @Test
+    fun `the health probes are not swallowed by the SPA fallback`() = testApplication {
+        application {
+            configureHTTP()
+            configureHealth()
+            routing { spaResources("spa-fixture") }
+        }
+        for (path in listOf(HEALTH_LIVE_PATH, HEALTH_READY_PATH)) {
+            val response = client.get(path)
+            assertEquals(HttpStatusCode.OK, response.status, path)
+            assertEquals("ok", response.bodyAsText(), path)
+        }
     }
 
     @Test

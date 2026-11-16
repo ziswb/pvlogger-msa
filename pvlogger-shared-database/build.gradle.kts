@@ -23,6 +23,9 @@ dependencies {
     // Logging
     implementation(libs.kotlin.logging)
 
+    // Coroutines (api: dbTransaction is suspend)
+    api(libs.kotlinx.coroutines.core)
+
     // Database
     implementation(libs.exposed.core)
     implementation(libs.exposed.dao)

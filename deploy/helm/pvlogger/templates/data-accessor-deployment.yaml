@@ -48,22 +48,31 @@ spec:
             - configMapRef:
                 name: db-config
                 optional: false
+          # Backlog 60: the startup probe covers the start (the database connect
+          # retries for minutes before the server listens); after it, liveness
+          # restarts a hung process and readiness drops the pod from the Service
+          # while its dependencies fail.
+          startupProbe:
+            httpGet:
+              path: /health/live
+              port: {{ .Values.dataAccessor.port }}
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 60
           livenessProbe:
             httpGet:
-              path: /metrics
+              path: /health/live
               port: {{ .Values.dataAccessor.port }}
-            initialDelaySeconds: 60
             periodSeconds: 30
             timeoutSeconds: 10
-            failureThreshold: 8
+            failureThreshold: 4
           readinessProbe:
             httpGet:
-              path: /metrics
+              path: /health/ready
               port: {{ .Values.dataAccessor.port }}
-            initialDelaySeconds: 30
-            periodSeconds: 20
-            timeoutSeconds: 10
-            failureThreshold: 12
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
           resources:
             {{- toYaml .Values.dataAccessor.resources | nindent 12 }}
           volumeMounts:

@@ -123,7 +123,7 @@ Angular SPA → /livedata WebSocket → frontend Ktor → modbus-data-accessor (
 relay (receiver's server) → Tailscale, bearer token → kpi-exporter serve → modbus-data-accessor (latest KPI)
 ```
 
-Kubernetes DNS handles inter-service discovery. The ingress (Traefik on the LAN, Tailscale Ingress on the tailnet) passes only an allowlist (ADR-0020): `/v1/daydata` to the Data Accessor (Traefik also requires GET), `/` and `/livedata` to the Frontend (`/metrics` excluded). The KPI export has its own Tailscale ingress `pvlogger-export`.
+Kubernetes DNS handles inter-service discovery. The ingress (Traefik on the LAN, Tailscale Ingress on the tailnet) passes only an allowlist (ADR-0020): `/v1/daydata` to the Data Accessor (Traefik also requires GET), `/` and `/livedata` to the Frontend (`/metrics` and `/health` excluded). The KPI export has its own Tailscale ingress `pvlogger-export`.
 
 ### Data Storage
 

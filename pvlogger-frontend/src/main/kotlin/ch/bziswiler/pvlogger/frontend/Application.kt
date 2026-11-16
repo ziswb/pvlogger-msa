@@ -7,6 +7,7 @@ import ch.bziswiler.pvlogger.frontend.plugins.configureHTTP
 import ch.bziswiler.pvlogger.frontend.plugins.configureRouting
 import ch.bziswiler.pvlogger.frontend.plugins.configureSerialization
 import ch.bziswiler.pvlogger.frontend.plugins.configureWebSockets
+import ch.bziswiler.pvlogger.shared.ktor.configureHealth
 import ch.bziswiler.pvlogger.shared.ktor.configureMonitoring
 import ch.bziswiler.pvlogger.shared.ktor.configureStatusPages
 import io.ktor.server.application.Application
@@ -35,6 +36,9 @@ fun Application.configureApplication() {
     readConfiguration()
     configureStatusPages()
     configureMonitoring()
+    // No readiness check: the dashboard serves its page even while the data
+    // accessor is away, and its readiness must not follow the data accessor's.
+    configureHealth()
     configureWebSockets()
     configureHTTP()
     configureSerialization()

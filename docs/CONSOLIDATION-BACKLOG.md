@@ -283,6 +283,18 @@ next release; it changes nothing for them.
     Images: fast 0.13.7, full 0.8.8, device 3.7.7, fusionsolar 3.5.7, mock 1.0.3; fusionsolar-auth and the KPI
     exporter contain none of it. Chart 4.0.2.
 
+    *Group 3 plan 2026-11-16:* (a) `configureHealth` in `pvlogger-shared-ktor`: `/health/live` (the process answers)
+    and `/health/ready` (named checks with a timeout; 503 lists only the failed names, details go to the log). The
+    data accessor and the masterdata server check their pool (`DatabaseFactory.isReachable`, `isValid` on a pooled
+    connection); the frontend has no check (its readiness must not follow the data accessor's). Chart: probes on
+    those paths plus a startupProbe instead of the long `initialDelaySeconds`; the ingresses cut `/health` out of the
+    frontend's `/` like `/metrics`. (b) `dbTransaction` in `pvlogger-shared-database`: a JDBC transaction on
+    `Dispatchers.IO`; the DAOs become `suspend`, so no Ktor request thread blocks on the database. (c) Dockerfiles:
+    `COPY` instead of `ADD`, a Gradle cache mount, user `pvlogger` (uid 1000 as before), no namespace-specific
+    `DATA_ACCESSOR_HOST` default in the frontend image (the chart sets it). OCI labels come from `release.yml`
+    (ADR-0027). Deferred: `-XX:MaxRAMPercentage` (needs a measurement in production first). Bumps: the three JVM
+    images minor, chart minor.
+
 ## Done (resolved, superseded or moot)
 
 1. ~~**masterdata-server prod config DB-name mismatch**~~
