@@ -54,7 +54,7 @@ Create the image name
 {{- define "pvlogger.image" -}}
 {{- $registry := .global.imageRegistry -}}
 {{- $repository := .image.repository -}}
-{{- /* No fallback to "latest": build.sh pushes semver tags only (infrastructure backlog 58) */ -}}
+{{- /* No fallback to "latest": build.sh pushes semver tags only */ -}}
 {{- $tag := required (printf "image.tag is not set for %s" $repository) .image.tag -}}
 {{- if $registry -}}
 {{- printf "%s/%s:%s" $registry $repository $tag -}}
@@ -111,7 +111,7 @@ timestamps go with the mock server, which only a dev environment enables.
 {{- end }}
 
 {{/*
-Container hardening for the JVM services (infrastructure security finding 25). The images
+Container hardening for the JVM services. The images
 already run as 1000:1000 with no capabilities; this pins that and forbids
 privilege escalation.
 */}}
@@ -129,7 +129,7 @@ securityContext:
 {{- end }}
 
 {{/*
-Container hardening for the Go jobs (infrastructure security finding 25). Their images are
+Container hardening for the Go jobs. Their images are
 distroless :nonroot; the network clients and the KPI exporter write nothing, so
 the root filesystem is read-only. Pass the uid: (dict "uid" .Values.global.runAsUid).
 */}}

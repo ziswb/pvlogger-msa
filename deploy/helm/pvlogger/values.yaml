@@ -14,7 +14,8 @@
 
 global:
   # Registry host (and optional path) in front of each image repository.
-  # Empty: the repository alone, i.e. Docker Hub.
+  # Empty: the bare repository names, as Tilt builds them locally. The images
+  # are not published yet (backlog 53): push them to your registry first.
   imageRegistry: ""
   imagePullPolicy: IfNotPresent
   timezone: "UTC"
@@ -284,7 +285,7 @@ kpiExportServe:
 # Nightly pg_dump of the three databases to an NFS export. Off by default.
 dbBackup:
   enabled: false
-  image: "postgres:18.6-trixie"
+  image: "postgres:18.6-trixie@sha256:e3d24f6906d0760bf4da0dae872415391ededefad23fd471c47dc53b0ddf3c42"
   schedule: "15 2 * * *"
   # Where pg_dump connects, e.g. a read-only standby. Empty: database.host.
   host: ""
@@ -351,6 +352,8 @@ ingress:
 # Keeps every pinned image on every node, so pods start while the registry is
 # down (image volumes; needs Kubernetes with the ImageVolume feature). holdImage
 # should be an image already on every node, e.g. the sandbox (pause) image.
+# Pinned by tag only, on purpose: the node's copy (k3s imports it) may carry no
+# repo digest, and a digest reference would then need the registry.
 imagePrepull:
   enabled: false
   holdImage: "docker.io/rancher/mirrored-pause:3.10.2"
@@ -360,7 +363,7 @@ imagePrepull:
 # images lack, hence its own image. Off by default.
 heartbeat:
   enabled: false
-  image: "docker.io/curlimages/curl:8.23.0"
+  image: "docker.io/curlimages/curl:8.23.0@sha256:3fb7e13e5d179a845c97d78204f3f1064d1907037f26a3ebf91710571151fd93"
   schedule: "*/5 * * * *"
   maxAgeSeconds: 600
   resources:

@@ -13,7 +13,7 @@ namespace. What only your installation knows goes into your own values file:
 
 | Key | Required | What |
 |---|---|---|
-| `global.imageRegistry` | | Registry in front of the image repositories (empty: Docker Hub) |
+| `global.imageRegistry` | | Registry in front of the image repositories. Empty: the bare repository names, as Tilt builds them locally. The images are not published yet (backlog 53): build and push them to your registry (`scripts/build-all.sh`) and set it here |
 | `global.timezone` | | Zone of the cron schedules and the containers (default `UTC`) |
 | `global.runAsUid` | | Run-as uid/gid of the Go jobs (default `1000`) |
 | `secrets.postgresPassword` | yes | Password of `database.username` |
@@ -57,6 +57,20 @@ highest bump among its changes: an image patch is a chart patch; an image minor
 or a new values key is a minor; a removed or renamed key, or a changed default
 that existing installs notice, is a major. CI fails when the chart changed but
 its version did not.
+
+Steps, until the GHCR release workflow exists (backlog 53 part 2):
+
+1. Fix commit(s), then one bump commit as above. Check first that the new image
+   tag is not in the registry yet; `scripts/build.sh` refuses to overwrite one
+   without `-f`.
+2. Build and push the changed images with `scripts/build.sh <module>` (or
+   `scripts/build-all.sh`). The registry comes from `DOCKER_REGISTRY` in
+   `~/.config/pvlogger/local.env`; the platform defaults to `linux/arm64`
+   (`PVLOGGER_PLATFORM` overrides it).
+3. Push the commits; once `chart.yml` is green, tag the bump commit
+   `chart/vX.Y.Z` and push the tag.
+4. The installation pins that chart version and deploys it (in this project: the
+   private infrastructure repository).
 
 `PersistentVolume`s have `Retain`: uninstalling the release leaves the dumps on
 the NFS export.

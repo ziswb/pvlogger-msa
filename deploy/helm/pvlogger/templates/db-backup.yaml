@@ -74,7 +74,7 @@ data:
         local DB="$1"
         # zstd on all cores, not single-threaded gzip: the dump reads the whole
         # database from a standby's NVMe, which etcd shares, and the shorter
-        # it runs, the fewer of that drive's stalls it causes (infrastructure backlog 96).
+        # it runs, the fewer of that drive's stalls it causes.
         # Dumps up to 2026-10-31 are .sql.gz; restore with zstd -dc or gunzip -c.
         local file="${DB}-$(date +%Y-%m-%d_%Hh-%Mm-%Ss).sql.zst"
 
@@ -84,7 +84,7 @@ data:
         # Dump straight into the backup directory under a hidden temporary name,
         # then rename it in place. The old way (dump to /tmp, then mv to NFS)
         # wrote every dump twice through the page cache, which counts against
-        # the memory limit (infrastructure backlog 89). The dot keeps a partial file out of
+        # the memory limit. The dot keeps a partial file out of
         # the pruning below; a leftover from a killed run is removed first.
         local partial="${BACKUP_DIR}/.${file}.partial"
         rm -f "${BACKUP_DIR}/.${DB}-"*.partial
@@ -98,7 +98,7 @@ data:
 
         mv "${partial}" "${BACKUP_DIR}/${file}" || return 1
         echo "-> Database backup ${file} successfully written to ${BACKUP_DIR}"
-        # No chown: the export all_squashes to the job's own uid (infrastructure ADR-0009), so
+        # No chown: the export all_squashes to the job's own uid, so
         # the dump already carries the right owner — and a chown to anything
         # else is refused by the server, which would fail every database.
         echo "-> Finished creating database backup for database '${DB}' at $(date +'%d.%m.%Y %H:%M:%S')"

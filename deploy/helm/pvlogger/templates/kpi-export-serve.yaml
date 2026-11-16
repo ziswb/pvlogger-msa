@@ -39,7 +39,7 @@ spec:
     spec:
       automountServiceAccountToken: false
       # The token Secret is mounted 0440: fsGroup makes its group the run-as
-      # uid's, so the non-root exporter can read it (infrastructure security finding 25).
+      # uid's, so the non-root exporter can read it.
       securityContext:
         fsGroup: {{ .Values.kpiExporter.uid }}
       containers:
