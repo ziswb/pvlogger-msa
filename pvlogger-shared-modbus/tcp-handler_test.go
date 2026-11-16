@@ -124,6 +124,9 @@ func newTestHandler(t *testing.T, address string) *TcpHandler {
 	t.Helper()
 	h := NewTcpHandler(address, time.Second, 0)
 	h.readTimeout = 100 * time.Millisecond
+	saved := busyWait
+	busyWait = 10 * time.Millisecond
+	t.Cleanup(func() { busyWait = saved })
 	if err := h.Connect(); err != nil {
 		t.Fatalf("connect: %v", err)
 	}
@@ -235,5 +238,88 @@ func TestTcpHandler_ConnectContextStopsRetrying(t *testing.T) {
 	}
 	if took := time.Since(start); took > 2*time.Second {
 		t.Fatalf("returned after %s", took)
+	}
+}
+
+// foreignFrame answers another request (transaction 5) with 62 register bytes,
+// like the frame the full collector took for its 4-byte answer on 2026-11-16.
+var foreignFrame = append([]byte{0x00, 0x05, 0x00, 0x00, 0x00, 0x41, 0x01, 0x03, 0x3e}, make([]byte, 62)...)
+
+func answers(frames ...[]byte) func(net.Conn) {
+	return func(c net.Conn) {
+		for _, f := range frames {
+			_, _ = c.Write(f)
+		}
+	}
+}
+
+func TestTcpHandler_AFrameForAnotherRequestIsSkipped(t *testing.T) {
+	address, connections := serve(t, answers(foreignFrame, okResponse))
+	h := newTestHandler(t, address)
+
+	_, pdu, err := h.ExecuteRequest(request)
+	if err != nil {
+		t.Fatalf("ExecuteRequest: %v", err)
+	}
+	if want := okResponse[7:]; !bytes.Equal(pdu, want) {
+		t.Errorf("pdu = % x, want % x", pdu, want)
+	}
+	if got := connections(); got != 1 {
+		t.Errorf("connections = %d, want 1 (the right reply follows on the same connection)", got)
+	}
+}
+
+func TestTcpHandler_AFrameForAnotherUnitIsSkipped(t *testing.T) {
+	otherUnit := bytes.Clone(okResponse)
+	otherUnit[6] = 0x02
+	otherUnit[9] = 0x99 // a different value, so taking it would show
+	address, _ := serve(t, answers(otherUnit, okResponse))
+	h := newTestHandler(t, address)
+
+	if _, pdu, err := h.ExecuteRequest(request); err != nil || !bytes.Equal(pdu, okResponse[7:]) {
+		t.Fatalf("got % x, %v; want the reply of unit 1", pdu, err)
+	}
+}
+
+// The 2026-11-16 sequence: busy, busy, then a foreign frame before the reply.
+func TestTcpHandler_BusyTwiceThenAForeignFrameStillGetsTheReply(t *testing.T) {
+	busy := answer(exceptionResponse)
+	address, connections := serve(t, busy, busy, answers(foreignFrame, okResponse))
+	h := newTestHandler(t, address)
+
+	start := time.Now()
+	_, pdu, err := h.ExecuteRequest(request)
+	if err != nil {
+		t.Fatalf("ExecuteRequest: %v", err)
+	}
+	if !bytes.Equal(pdu, okResponse[7:]) {
+		t.Errorf("pdu = % x, want % x", pdu, okResponse[7:])
+	}
+	if got := connections(); got != 3 {
+		t.Errorf("connections = %d, want 3", got)
+	}
+	// Two busy waits before the retries: busyWait, then twice that.
+	if took := time.Since(start); took < 3*busyWait {
+		t.Errorf("took %s, want at least %s of busy waits", took, 3*busyWait)
+	}
+}
+
+func TestTcpHandler_OnlyForeignFramesIsAnError(t *testing.T) {
+	address, _ := serve(t, answers(foreignFrame))
+	h := newTestHandler(t, address)
+
+	if _, _, err := h.ExecuteRequest(request); err == nil {
+		t.Fatal("a reply to another request was accepted")
+	}
+}
+
+func TestTcpHandler_AnExceptionForAnotherRequestIsSkipped(t *testing.T) {
+	otherException := bytes.Clone(exceptionResponse)
+	otherException[1] = 0x05
+	address, _ := serve(t, answers(otherException, okResponse))
+	h := newTestHandler(t, address)
+
+	if _, pdu, err := h.ExecuteRequest(request); err != nil || !bytes.Equal(pdu, okResponse[7:]) {
+		t.Fatalf("got % x, %v; want the reply after skipping the other request's exception", pdu, err)
 	}
 }

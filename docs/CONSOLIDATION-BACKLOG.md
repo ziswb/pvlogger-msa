@@ -331,6 +331,16 @@ next release; it changes nothing for them.
       frames; with the ID check above the stale frame would be skipped either way.
     - A test with a fake device that answers a busy exception, then a foreign frame, then the right reply.
 
+    *Fixed in code 2026-11-17:* `exchange` compares each reply's transaction ID, unit ID and function code (or its
+    exception form) with the request, logs and skips a frame that answers another request and reads on until the
+    read deadline (at most 16 skipped frames). Every request carries its own transaction ID (the collectors count
+    them per run), so a late reply to an earlier request no longer matches. A busy exception (0x06) waits 1 s before
+    the second attempt and 2 s before the third. Retries stay on a fresh connection: a stale frame there is now
+    skipped too. Tests: a foreign frame before the reply, another unit's frame, another request's exception, only
+    foreign frames (an error), and the 2026-11-16 sequence (busy, busy, foreign frame, reply); four of them fail
+    against the old handler, the fifth (another unit) once its frame carries a different value. Images: fast 0.13.8,
+    full 0.8.9, device 3.7.8; chart 4.1.1.
+
 ## Done (resolved, superseded or moot)
 
 1. ~~**masterdata-server prod config DB-name mismatch**~~
