@@ -1,5 +1,5 @@
-// Package serve is the cluster side of the KPI export (infrastructure ADR-0024,
-// pvlogger-msa ADR-0021): a token-protected endpoint that returns the latest
+// Package serve is the cluster side of the KPI export (ADR-0021):
+// a token-protected endpoint that returns the latest
 // KPI row as the finished export file.
 package serve
 

@@ -170,7 +170,7 @@ cluster `pvlogger-db` (namespace `pvlogger`, three instances; infrastructure ADR
 Services connect to `pvlogger-db-rw` with TLS required (`sslmode=require`); the
 battery simulator reads from the standbys at `<db-host>:5432` (LAN only).
 Before that they were on the central server (`<central-host>:5434`), which
-still serves other homelab apps; its PVLogger copies are dropped around 2026-11-01.
+still serves other homelab apps; its PVLogger databases were dropped on 2026-11-01.
 Database roles are managed by CloudNativePG; migrations only GRANT to them (ADR-0023).
 Each database is owned by exactly one service, which also owns its migrations (Flyway; tern for `fsdata`):
 
@@ -192,7 +192,7 @@ All three are dumped nightly by the chart's db-backup CronJob (`dbBackup.enabled
 - **Deployed** versions are pinned in the chart's `values.yaml` in this repo; a
   **chart version** (`chart/vX.Y.Z`) names that set, and the infrastructure repo
   pins the chart version it installs (ADR-0024, supersedes the deployment part
-  of ADR-0003; backlog item 52 carries out the move).
+  of ADR-0003; backlog item 52 carried out the move on 2026-11-15).
 - Generic defaults (ports, schedules, resources) are chart defaults; **site
   values** (Modbus host `<dongle-ip>`, device IDs, DB endpoints, secrets) stay in
   the infrastructure repo.

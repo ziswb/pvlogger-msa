@@ -35,5 +35,5 @@ placeholders.
 - No `:latest` tag (dropped 2026-10-23, infrastructure backlog 58): nothing
   deployed it, and each push re-pointed it and left an untagged manifest in the
   registry. The chart fails on a missing tag instead of falling back to `latest`.
-- ⚠️ GAP: no changelog or tag/commit convention marks releases in git; the LABEL
-  bump commit is the only trace. Acceptable, or worth a lightweight convention?
+- ~~GAP: no changelog or tag/commit convention marks releases in git.~~ Resolved by
+  ADR-0024: each chart release is the git tag `chart/vX.Y.Z` on its bump commit.

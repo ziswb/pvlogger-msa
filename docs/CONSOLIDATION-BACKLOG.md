@@ -12,23 +12,20 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
 
 ## Next up
 
-**Status 2026-10-26.** The CloudNativePG move (item 40) is done: since the cutover on 2026-10-25 (21:07–21:31) every
-service connects to the in-cluster cluster `pvlogger-db` with TLS required, and security finding 3 is closed. Every
-deployed image matches its Dockerfile LABEL (checked live 2026-10-26: data accessor 3.12.3, masterdata server
-3.5.1, frontend 3.11.2, fusionsolar 3.5.0, fusionsolar-auth 3.4.1, device collector 3.7.2, fast collector 0.13.2,
-full collector 0.8.2, KPI exporter 3.5.0), so no release is waiting. Since the same day, database roles are created
-by CloudNativePG and migrations only GRANT (ADR-0023).
+**Status 2026-11-16.** Chart 3.0.1 is deployed (every image as pinned in `values.yaml`); chart 3.0.2 (heartbeat
+retry, item 60) is committed and not yet released. The repo is on GitHub, private until the publication launch.
 
-Dated items, in order:
+In order:
 
-- **About 2026-11-01, infrastructure side:** runbook part D drops the three PVLogger databases on the old server
-  (`<central-host>:5434`) and its ExternalName service. The server itself stays for other homelab apps.
-  Nothing here still points at it; afterwards, trim the "old server" note in the battery simulator README.
-- **Next:** item 45, connection timeouts so a CNPG switchover does not hang the services (2026-11-05).
+- **Item 58:** repeat the Pod Security `restricted` dry run, then move it to Done.
+- **Item 56:** `tilt up` on an amd64 host, then move it to Done.
+- **Item 51:** README screenshots from the Tilt dashboard (synthetic data only), then move it to Done.
+- **Item 53 part 2:** tag-triggered multi-arch GHCR releases; the chart's image defaults then point there.
+- **Item 60:** the follow-ups deferred from the 2026-11-16 review.
 - **From about 2027-01-25:** item 42, drop the unused `modbus_response_data` indexes.
+- Item 45 stays open until the next drain + power-off of the primary's node.
 
-Everything else open here is low priority hygiene. Items 23 and 30 (Tilt, synthetic plant) were done on 2026-11-15
-(chart 1.1.0); item 57 (review follow-ups, incl. security finding 60) on 2026-11-16 (chart 2.0.0, deployed).
+Everything else open here is low priority hygiene (items 54, 55).
 
 ### Status 2026-10-21 (end of the 2026-10-20 session)
 
@@ -159,6 +156,9 @@ next release; it changes nothing for them.
     root `README`; a `.gitleaks.toml` with pattern rules for site data (run in CI, item 53) and a local pre-commit +
     commit-msg hook; a CLAUDE.md rule that this repo is public and takes placeholders only. The battery summary at
     the root is replaced by an English "Why" in the battery simulator README.
+
+    *Status 2026-11-16:* all done except the README's screenshots (the diagram, badges and engineering notes went in
+    with item 60). Take them from the Tilt dashboard, synthetic data only, then move this item to Done.
 53. 🟡 **CI and releases on GitHub Actions** (added 2026-11-14)
 
     On push/PR: Gradle build + tests (Testcontainers), Go build + lint, frontend build, gitleaks with the repo's
@@ -238,6 +238,52 @@ next release; it changes nothing for them.
     hostPath). Open: repeat `kubectl label --dry-run=server --overwrite ns pvlogger
     pod-security.kubernetes.io/enforce=restricted` once those have aged out (after the next device and backup
     runs); clean means enforcing is the owner's call. Then move this item to Done.
+60. ⚪ **Follow-ups from the review of the 2026-11-15/16 work** (added 2026-11-16; five read-only reviews of
+    `df5a469^..3697cd8`, criteria: nothing private leaks to GitHub, the system serves the same purposes as before
+    the move, the public repo is a good showcase)
+
+    Fixed with this item: the pre-push leak guard skipped a ref unscanned when the remote tip was not in the local
+    clone, and now fails closed; it also checks file names, author/committer identities (noreply only in a
+    maintainer clone) and annotated tag messages. The heartbeat retries a refused first connection (the backlog 59
+    race sent false `/fail` pings; chart 3.0.2). The chart CI's dev-settings check asserts the failure reason. Item
+    56 (multi-arch Go images). Third-party chart images pinned by digest. Comments in the chart no longer cite
+    private-repo items. Stale docs (backlog "Next up", old-server drop, ADR-0003's release-tag gap, the chart's
+    "Docker Hub" default). README: badges, diagram, engineering notes. Release steps in the chart README.
+
+    Deferred, none a defect:
+    - **One retry helper.** The refused-connection retry exists three times (`httpclient/client.go`,
+      fusionsolar `database/connection.go`, `tcp-handler.go`) with fixed delays; the Modbus one uses `Dial` and
+      `time.Sleep`, so it ignores cancellation. One helper in `pv-logger` with backoff, jitter and a context;
+      `DialContext` for Modbus.
+    - **fusionsolar DSN:** built with `Sprintf`, so a password with a space or quote breaks it. Use
+      `pgx.ParseConfig` and set the password field.
+    - **Health endpoints:** the JVM probes hit `/metrics`; add `/health/live` and `/health/ready` (pool + `SELECT 1`)
+      in `pvlogger-shared-ktor`, and a startupProbe.
+    - **JVM Dockerfiles:** `COPY` instead of `ADD`, a Gradle cache mount, a `pvlogger` user (same uid 1000) instead
+      of the owner's login name, OCI `org.opencontainers.image.*` labels, no namespace-specific `DATA_ACCESSOR_HOST`
+      default in the frontend image, and `-XX:MaxRAMPercentage` sized against the 350Mi limit (measure first).
+      Each is an image bump.
+    - **Blocking DB calls** on Ktor request threads: Exposed `transaction {}` from routes; a suspend transaction on
+      `Dispatchers.IO` in the DAOs or one wrapper in `pvlogger-shared-database`.
+    - **Go graceful shutdown:** `signal.NotifyContext` in the mock server and backfill commands, ctx down to `Serve`.
+    - **Image builds rerun the tests** (`prod: test`) that CI already ran.
+    - **CI shape:** path-filtered workflows cannot be required status checks; one always-on workflow with a
+      paths-filter job and a final aggregator job could be. Dependabot (actions, gomod, gradle, npm, docker),
+      grouped weekly, as the policy in `docs/UPGRADING.md` stays.
+    - **Chart:** component labels and selectors (selectors are immutable: a major), `values.schema.json`,
+      `helm-unittest` for the guards, `kpiExporter.uid`/`fsGroup`/`filePrefix` leftovers of the removed export job
+      (a major), the mock's Kubernetes name `pvlogger-modbus-mock-server` vs the module `pvlogger-modbus-mock`
+      (dev only). These join item 55.
+    - **NetworkPolicies** admit whole Traefik/Tailscale namespaces; narrow them with a `podSelector` for the proxy
+      pods. No egress policies (item 55 #15).
+    - **Dev guard:** `devAcceptClientTimestamps` is allowed whenever the mock is on; the data accessor could refuse
+      it in its prod profile too.
+    - **Go module paths** are bare names (`module pv-logger`), not `github.com/ziswb/pvlogger-msa/<module>`;
+      works through `go.work`, but is unusual in a public Go repo.
+    - **Backfill reruns** fill the minutes the fast collector skips (02–04 of each hour); dev only, values match the
+      plant.
+    - **Repo hygiene:** `.claude/statusline.sh` and `.claude/settings.json` are tracked (personal tooling); a root
+      `.editorconfig`, CODEOWNERS.
 
 ## Done (resolved, superseded or moot)
 
@@ -1331,7 +1377,7 @@ next release; it changes nothing for them.
     *Status 2026-11-16:* chart 2.0.1 deployed, then the DB policy (infrastructure backlog 105); in the cluster only
     the LAN `ipBlock` is left on 5432, and a pod in `default` gets no response from `pvlogger-db-rw` (rc 2). Fusionsolar is disabled (infrastructure backlog 104), its retry goes live with
     the re-enable. Found on the way: the `checksum/*` annotations (item 57) hashed the `helm.sh/chart` label, so every
-    chart release restarted the data accessor, masterdata server and KPI exporter; fixed in chart 2.0.2.
+    chart release restarted the data accessor, masterdata server and KPI exporter; fixed in chart 2.0.2 (never tagged; released as 3.0.0).
 
     *Done 2026-11-16:* a manual db-backup run (00:21) hit the race: its first `pg_isready` got no response ("not
     reachable yet, waiting..."), the next answered, it dumped from the standby as intended and finished all 3

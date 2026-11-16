@@ -1,5 +1,13 @@
 # PVLogger
 
+[![JVM](https://github.com/ziswb/pvlogger-msa/actions/workflows/jvm.yml/badge.svg)](https://github.com/ziswb/pvlogger-msa/actions/workflows/jvm.yml)
+[![Go](https://github.com/ziswb/pvlogger-msa/actions/workflows/go.yml/badge.svg)](https://github.com/ziswb/pvlogger-msa/actions/workflows/go.yml)
+[![Frontend](https://github.com/ziswb/pvlogger-msa/actions/workflows/frontend.yml/badge.svg)](https://github.com/ziswb/pvlogger-msa/actions/workflows/frontend.yml)
+[![Chart](https://github.com/ziswb/pvlogger-msa/actions/workflows/chart.yml/badge.svg)](https://github.com/ziswb/pvlogger-msa/actions/workflows/chart.yml)
+[![Images](https://github.com/ziswb/pvlogger-msa/actions/workflows/images.yml/badge.svg)](https://github.com/ziswb/pvlogger-msa/actions/workflows/images.yml)
+[![Gitleaks](https://github.com/ziswb/pvlogger-msa/actions/workflows/gitleaks.yml/badge.svg)](https://github.com/ziswb/pvlogger-msa/actions/workflows/gitleaks.yml)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+
 Monitoring and data collection for a home photovoltaic installation (Huawei SUN2000
 inverters), built as a small polyglot microservice system on Kubernetes.
 
@@ -11,12 +19,26 @@ inverters), built as a small polyglot microservice system on Kubernetes.
 - **Simulates** a home battery against the measured history before buying one
   ([battery simulator](pvlogger-battery-simulator/README.md)).
 
-> Status: personal project, running in production on a home k3s cluster. An
-> architecture diagram and screenshots will follow.
+> Status: personal project, running in production on a home k3s cluster.
 
 ## Architecture
 
 Kotlin/Ktor services hold the data and serve the UI; Go CronJobs do the collecting.
+
+```mermaid
+flowchart LR
+    MB[Inverters + meter<br/>Modbus TCP] -->|every minute| FAST[fast collector]
+    MB -->|hourly| FULL[full collector]
+    MB -->|nightly| DEV[device collector]
+    MD[masterdata server] -->|register definitions| FULL & DEV
+    FAST & FULL & DEV -->|REST| DA[data accessor]
+    DA --> PVDB[(pvdata)]
+    MD --> MDDB[(pvmasterdata)]
+    FS[FusionSolar API] --> FSC[fusionsolar jobs] -->|SQL| FSDB[(fsdata)]
+    DA -->|latest KPI| FE[frontend] -->|WebSocket| SPA[Angular dashboard]
+    DA -->|day history| SPA
+    DA -->|latest KPI| EXP[KPI exporter] -->|bearer token| REL[relay at the receiver]
+```
 
 | Component | Language | Role |
 |---|---|---|
@@ -36,11 +58,37 @@ which pins every image version.
 See [CONTEXT.md](CONTEXT.md) for the domain vocabulary and data flow, and
 [docs/adr/](docs/adr/) for the decisions behind it.
 
+## Engineering notes
+
+- **Decisions are written down.** 25 [ADRs](docs/adr/), a
+  [consolidation backlog](docs/CONSOLIDATION-BACKLOG.md) of verified defects and
+  divergences, [open questions](docs/OPEN-QUESTIONS.md) and
+  [security findings](docs/SECURITY-FINDINGS.md), open ones included. References
+  to "infrastructure ADR/backlog N" point to the private repository that holds the
+  site configuration.
+- **Tests against the real thing.** JVM services test against PostgreSQL 18 in
+  Testcontainers ([ADR-0009](docs/adr/0009-data-accessor-tests-on-real-postgresql.md)), never
+  an in-memory stand-in; DST and time-zone edge cases have their own regression tests.
+- **A deterministic synthetic plant** ([ADR-0025](docs/adr/0025-synthetic-plant-in-go-mock-and-backfill.md))
+  replaces the inverter in development: the same Go model serves Modbus TCP and
+  backfills 30 days of history, so the dashboard shows realistic data on a laptop.
+- **Hardened deployment.** One Helm chart pins every image version; workloads run
+  non-root with a read-only root filesystem, no capabilities and seccomp
+  `RuntimeDefault`; default-deny NetworkPolicies and an ingress allowlist
+  ([ADR-0020](docs/adr/0020-trust-boundary-ingress-allowlist.md)); base images and
+  CI actions are pinned by digest/SHA.
+- **Public code, private configuration**, enforced by a three-layer leak guard
+  (see below).
+- **AI-assisted.** Much of the recent work was done with Claude Code as a pair
+  programmer; [CLAUDE.md](CLAUDE.md) holds its project instructions, and the
+  commits it co-wrote say so in a `Co-Authored-By` trailer.
+
 ## Build
 
 ```bash
-./gradlew build         # JVM services (tests need Docker for Testcontainers)
-./gradlew makeGoBuild   # Go services
+./gradlew build                     # JVM services (tests need Docker for Testcontainers)
+./gradlew makeGoBuild               # Go services (each module: make test / make lint)
+cd pvlogger-frontend/src/web && npm ci && npm run build:ci   # Angular SPA
 ```
 
 ## Try it locally
