@@ -22,8 +22,10 @@ relay-bundle: test
 	@cd $(BIN_PATH) && COPYFILE_DISABLE=1 tar -czf $(RELAY_BUNDLE).tar.gz $(RELAY_BUNDLE)
 	@shasum -a 256 $(BIN_PATH)/$(RELAY_BUNDLE).tar.gz
 
+# Tests run on the build host: `make prod GOARCH=arm64` exports GOARCH to the
+# recipes, and arm64 test binaries cannot run on an amd64 builder (CI images.yml).
 test:
-	@go test ./...
+	@env -u GOARCH go test ./...
 
 build: test
 	@$(MACOS_BUILD_OPTIONS) go build -o ${BIN_PATH}/${BINARY_NAME}-darwin $(CMD_PATH)

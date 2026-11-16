@@ -1,7 +1,7 @@
 # Every image builds from its Dockerfile (backlog 58). Code changes are built
 # and tested by jvm.yml, go.yml and frontend.yml; this catches what only the
 # image build exercises: the Dockerfile, the build context (.dockerignore) and
-# the build stage's own steps. Nothing is pushed (GHCR releases: backlog 53
+# the build stage's own steps (make prod). Nothing is pushed (GHCR releases: backlog 53
 # part 2). The Go binaries are arm64 until backlog 56; building them on the
 # amd64 runner still checks the Dockerfile.
 name: Images
@@ -11,6 +11,8 @@ on:
     branches: [main]
     paths: &paths
       - "*/docker/Dockerfile"
+      # `make prod` runs in the build stage.
+      - "*/Makefile"
       - ".dockerignore"
       - ".github/workflows/images.yml"
   pull_request:
