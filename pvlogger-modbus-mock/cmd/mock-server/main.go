@@ -7,8 +7,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 	// The distroless image has no zoneinfo; TZ needs the embedded database.
 	_ "time/tzdata"
@@ -37,7 +41,16 @@ func main() {
 	}
 	logging.Info("serving the synthetic plant over Modbus TCP",
 		"port", port, "dongle_unit", dongleUnit, "time_zone", time.Local.String())
+	// Pod deletion sends SIGTERM: stop accepting and exit at once instead of
+	// waiting for the grace period's SIGKILL.
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, os.Interrupt)
+	defer stop()
+	go func() {
+		<-ctx.Done()
+		_ = ln.Close()
+	}()
 	if err := mock.NewServer(p, dongleUnit, time.Now).Serve(ln); err != nil {
 		logging.Fatal("mock server stopped", "error", err)
 	}
+	logging.Info("mock server shut down")
 }

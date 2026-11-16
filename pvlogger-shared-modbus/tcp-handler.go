@@ -1,14 +1,15 @@
 package modbus
 
 import (
+	"context"
 	"encoding/binary"
 	"errors"
 	"fmt"
 	"io"
 	"net"
 	"pv-logger/logging"
+	"pv-logger/retry"
 	"pvlogger-shared-modbus/model"
-	"syscall"
 	"time"
 )
 
@@ -43,9 +44,19 @@ func (h *TcpHandler) Close() error {
 	return conn.Close()
 }
 
+// Connect is ConnectContext without cancellation.
 func (h *TcpHandler) Connect() error {
+	return h.ConnectContext(context.Background())
+}
+
+// ConnectContext connects to the device, retrying a refused connect
+// (refusedPolicy) until ctx ends.
+func (h *TcpHandler) ConnectContext(ctx context.Context) error {
 	logging.Info("connecting to modbus device", "address", h.address)
-	conn, err := dialRetryingRefused(&net.Dialer{Timeout: h.timeout, KeepAlive: 30 * time.Second}, h.address)
+	d := &net.Dialer{Timeout: h.timeout, KeepAlive: 30 * time.Second}
+	conn, err := retry.OnRefused(ctx, refusedPolicy, "modbus connect", func(ctx context.Context) (net.Conn, error) {
+		return d.DialContext(ctx, "tcp", h.address)
+	}, "address", h.address)
 	if err != nil {
 		return err
 	}
@@ -64,25 +75,11 @@ func (h *TcpHandler) Connect() error {
 	return nil
 }
 
-// refusedAttempts × refusedWait bounds how long a refused connect is retried.
-// In the cluster a new pod reaches an in-namespace server (the dev mock) only
-// once kube-router has admitted its IP, a moment after the start (backlog
-// 58); a busy device may refuse briefly too. Variables for the tests.
-var (
-	refusedAttempts = 10
-	refusedWait     = 500 * time.Millisecond
-)
-
-func dialRetryingRefused(d *net.Dialer, address string) (net.Conn, error) {
-	for attempt := 1; ; attempt++ {
-		conn, err := d.Dial("tcp", address)
-		if err == nil || !errors.Is(err, syscall.ECONNREFUSED) || attempt >= refusedAttempts {
-			return conn, err
-		}
-		logging.Warn("modbus connection refused, retrying", "address", address, "attempt", attempt)
-		time.Sleep(refusedWait)
-	}
-}
+// refusedPolicy bounds how long a refused connect is retried. In the cluster a
+// new pod reaches an in-namespace server (the dev mock) only once kube-router
+// has admitted its IP, a moment after the start (backlog 58); a busy device may
+// refuse briefly too. A variable for the tests.
+var refusedPolicy = retry.Refused
 
 // maxAttempts is how often ExecuteRequest tries a request before giving up.
 const maxAttempts = 3

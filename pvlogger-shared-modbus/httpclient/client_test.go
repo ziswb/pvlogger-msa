@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"pv-logger/retry"
 )
 
 // freeAddr returns a local address nothing listens on (yet).
@@ -24,7 +26,7 @@ func freeAddr(t *testing.T) string {
 func fastClient() *http.Client {
 	return &http.Client{
 		Timeout:   5 * time.Second,
-		Transport: &retryRefused{next: http.DefaultTransport, attempts: 10, wait: 50 * time.Millisecond},
+		Transport: &retryRefused{next: http.DefaultTransport, policy: retry.Policy{Attempts: 10, Initial: 50 * time.Millisecond, Max: 50 * time.Millisecond}},
 	}
 }
 
@@ -65,7 +67,8 @@ func TestRefusalsStopAfterTheLastAttempt(t *testing.T) {
 	if err == nil {
 		t.Fatal("no error from a server that never listens")
 	}
-	if took := time.Since(start); took < 9*50*time.Millisecond || took > 3*time.Second {
-		t.Errorf("gave up after %s, want about 9 waits of 50ms", took)
+	// 9 waits, each jittered to 25–50 ms.
+	if took := time.Since(start); took < 9*25*time.Millisecond || took > 3*time.Second {
+		t.Errorf("gave up after %s, want 9 waits of 25–50ms", took)
 	}
 }

@@ -10,6 +10,11 @@
 package main
 
 import (
+	"context"
+	"errors"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 	// The distroless image has no zoneinfo; TZ needs the embedded database.
 	_ "time/tzdata"
@@ -32,7 +37,16 @@ func main() {
 	today := time.Date(until.Year(), until.Month(), until.Day(), 0, 0, 0, 0, time.Local)
 	from := today.AddDate(0, 0, -days)
 	logging.Info("backfilling the synthetic plant", "from", from, "until", until, "time_zone", time.Local.String())
-	if err := backfill.Run(plant.New(plant.Config{Location: time.Local}), client, from, until); err != nil {
+	// Pod deletion sends SIGTERM: stop between two minutes, a rerun completes it.
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, os.Interrupt)
+	defer stop()
+	err := backfill.Run(ctx, plant.New(plant.Config{Location: time.Local}), client, from, until)
+	if errors.Is(err, context.Canceled) {
+		logging.Warn("backfill interrupted; a rerun completes it", "duration", time.Since(until).Round(time.Second))
+		stop()
+		os.Exit(1)
+	}
+	if err != nil {
 		logging.Fatal("backfill failed", "error", err)
 	}
 	logging.Info("backfill finished", "duration", time.Since(until).Round(time.Second))

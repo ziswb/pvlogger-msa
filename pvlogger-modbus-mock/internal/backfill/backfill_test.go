@@ -1,7 +1,9 @@
 package backfill
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"math"
 	"net/http"
 	"net/http/httptest"
@@ -122,7 +124,7 @@ func TestEveryMinuteGetsTheReadingAndTheDaysEnergy(t *testing.T) {
 	from := time.Date(2025, 6, 20, 23, 0, 0, 0, loc)
 	until := time.Date(2025, 6, 21, 13, 0, 0, 0, loc)
 
-	if err := Run(p, client, from, until); err != nil {
+	if err := Run(context.Background(), p, client, from, until); err != nil {
 		t.Fatal(err)
 	}
 
@@ -172,7 +174,7 @@ func TestOnlyMinutesWithoutARowAreFilled(t *testing.T) {
 		da.kpis[ms] = kpiRow{DateCreated: ms}
 	}
 
-	if err := Run(p, client, from, until); err != nil {
+	if err := Run(context.Background(), p, client, from, until); err != nil {
 		t.Fatal(err)
 	}
 	// 4 hours minus the 30 live minutes.
@@ -186,7 +188,7 @@ func TestOnlyMinutesWithoutARowAreFilled(t *testing.T) {
 	}
 
 	stored := len(da.raw)
-	if err := Run(p, client, from, until); err != nil {
+	if err := Run(context.Background(), p, client, from, until); err != nil {
 		t.Fatal(err)
 	}
 	if len(da.raw) != stored {
@@ -202,11 +204,11 @@ func TestARerunCompletesAnInterruptedRun(t *testing.T) {
 	until := time.Date(2025, 6, 21, 6, 0, 0, 0, loc)
 
 	da.failAfter = 100
-	if err := Run(p, client, from, until); err == nil {
+	if err := Run(context.Background(), p, client, from, until); err == nil {
 		t.Fatal("the interrupted run reported no error")
 	}
 	da.failAfter = 0
-	if err := Run(p, client, from, until); err != nil {
+	if err := Run(context.Background(), p, client, from, until); err != nil {
 		t.Fatal(err)
 	}
 	if len(da.raw) != 360 || len(da.kpis) != 360 {
@@ -221,7 +223,7 @@ func TestYesterdayIsFilledFirst(t *testing.T) {
 	from := time.Date(2025, 6, 18, 23, 0, 0, 0, loc)
 	until := time.Date(2025, 6, 21, 0, 30, 0, 0, loc)
 
-	if err := Run(p, client, from, until); err != nil {
+	if err := Run(context.Background(), p, client, from, until); err != nil {
 		t.Fatal(err)
 	}
 	var days []string
@@ -247,7 +249,7 @@ func TestDaysStayAlignedWhereMidnightIsSkipped(t *testing.T) {
 	from := time.Date(2025, 9, 6, 22, 0, 0, 0, loc)
 	until := time.Date(2025, 9, 8, 2, 0, 0, 0, loc)
 
-	if err := Run(p, client, from, until); err != nil {
+	if err := Run(context.Background(), p, client, from, until); err != nil {
 		t.Fatal(err)
 	}
 	if minutes := int(until.Sub(from).Minutes()); len(da.raw) != minutes {
@@ -267,5 +269,29 @@ func near(t *testing.T, at time.Time, what string, got, want float64) {
 	t.Helper()
 	if math.Abs(got-want) > 1e-6 {
 		t.Errorf("%s: %s = %v, want %v", at.Format(time.DateTime), what, got, want)
+	}
+}
+
+// SIGTERM ends a run between two minutes; a rerun completes the history.
+func TestACancelledRunStopsAndARerunCompletesIt(t *testing.T) {
+	loc := zone(t)
+	p := plant.New(plant.Config{Location: loc})
+	da, client := newFakeDataAccessor(t, loc)
+	from := time.Date(2025, 6, 21, 0, 0, 0, 0, loc)
+	until := time.Date(2025, 6, 21, 6, 0, 0, 0, loc)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if err := Run(ctx, p, client, from, until); !errors.Is(err, context.Canceled) {
+		t.Fatalf("got %v, want context.Canceled", err)
+	}
+	if len(da.raw) != 0 {
+		t.Fatalf("a cancelled run stored %d raw rows", len(da.raw))
+	}
+	if err := Run(context.Background(), p, client, from, until); err != nil {
+		t.Fatal(err)
+	}
+	if len(da.raw) != 360 || len(da.kpis) != 360 {
+		t.Errorf("stored %d raw and %d KPI rows, want 360 each", len(da.raw), len(da.kpis))
 	}
 }

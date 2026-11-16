@@ -269,6 +269,19 @@ next release; it changes nothing for them.
     `github.workflow` is the caller's name, so per-stack groups would cancel each other). README badges: CI +
     Gitleaks. Open: the first `ci.yml` runs (a docs-only push must end with `ci-ok` green and every stack skipped),
     then branch protection requiring `ci-ok` + Gitleaks `scan` and Dependabot security updates at launch (Phase 5).
+    First run failed in `changes`: on a push, paths-filter fetched the previous tip, which needs the stored
+    credentials; fixed with full history in that job (`bdb5c300`).
+
+    *Group 2 in code 2026-11-16:* `pv-logger/retry` (`OnRefused` + `retry.Refused`: 10 attempts, waits doubling
+    from 0.2 s to at most 2 s, jittered to 50–100 %, at most 15 s in total, stops when the context ends) replaces
+    the three copies: the collectors' HTTP transport, the Modbus connect (now `DialContext`, plus
+    `TcpHandler.ConnectContext`; the collectors still call `Connect` without a context, wiring a signal context
+    through the jobs is not part of this) and the fusionsolar DB connect. fusionsolar builds its settings with
+    quoted values via `pgx.ParseConfig` and sets the password on the parsed config (tests with spaces, quotes,
+    backslashes). The mock server closes its listener on SIGTERM and exits 0 (checked locally); the backfill stops
+    between two minutes and exits 1 ("a rerun completes it"). `make test` + `make lint` pass in all Go modules.
+    Images: fast 0.13.7, full 0.8.8, device 3.7.7, fusionsolar 3.5.7, mock 1.0.3; fusionsolar-auth and the KPI
+    exporter contain none of it. Chart 4.0.2.
 
 ## Done (resolved, superseded or moot)
 

@@ -2,12 +2,15 @@ package modbus
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"io"
 	"net"
 	"sync"
 	"testing"
 	"time"
+
+	"pv-logger/retry"
 )
 
 // listen starts a TCP server that accepts connections and holds them until
@@ -180,8 +183,9 @@ func TestTcpHandler_ExceptionThenSuccess(t *testing.T) {
 // A device that starts listening only after the first attempts were refused,
 // as an in-namespace server does for a pod kube-router has not admitted yet.
 func TestTcpHandler_ConnectRetriesARefusedConnection(t *testing.T) {
-	refusedWait = 50 * time.Millisecond
-	t.Cleanup(func() { refusedWait = 500 * time.Millisecond })
+	saved := refusedPolicy
+	refusedPolicy = retry.Policy{Attempts: 10, Initial: 50 * time.Millisecond, Max: 50 * time.Millisecond}
+	t.Cleanup(func() { refusedPolicy = saved })
 
 	probe, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
@@ -207,4 +211,29 @@ func TestTcpHandler_ConnectRetriesARefusedConnection(t *testing.T) {
 		t.Fatalf("Connect: %v", err)
 	}
 	_ = h.Close()
+}
+
+// A cancelled context ends the retries of a refused connect at once.
+func TestTcpHandler_ConnectContextStopsRetrying(t *testing.T) {
+	saved := refusedPolicy
+	refusedPolicy = retry.Policy{Attempts: 10, Initial: time.Hour, Max: time.Hour}
+	t.Cleanup(func() { refusedPolicy = saved })
+
+	probe, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	addr := probe.Addr().String()
+	_ = probe.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+	start := time.Now()
+	err = NewTcpHandler(addr, time.Second, 0).ConnectContext(ctx)
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("got %v, want context.DeadlineExceeded", err)
+	}
+	if took := time.Since(start); took > 2*time.Second {
+		t.Fatalf("returned after %s", took)
+	}
 }

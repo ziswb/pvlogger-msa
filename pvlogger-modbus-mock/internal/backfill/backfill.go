@@ -4,6 +4,7 @@
 package backfill
 
 import (
+	"context"
 	"fmt"
 	"slices"
 	"time"
@@ -30,7 +31,10 @@ type dayRow struct {
 // The day before until's day goes first: until its last raw row exists, the
 // live data accessor has no midnight baseline and the live KPI rows it stores
 // meanwhile record no exported or imported energy for today.
-func Run(p *plant.Plant, client *persistence.PersistingService, from, until time.Time) error {
+//
+// Run stops between two minutes once ctx ends (SIGTERM on pod deletion); a
+// rerun completes the history.
+func Run(ctx context.Context, p *plant.Plant, client *persistence.PersistingService, from, until time.Time) error {
 	loc := p.Location()
 	start := from.In(loc).Truncate(time.Minute)
 	for _, day := range dayOrder(plant.StartOfDay(start), until) {
@@ -46,7 +50,7 @@ func Run(p *plant.Plant, client *persistence.PersistingService, from, until time
 		if err != nil {
 			return err
 		}
-		stored, err := fill(p, client, begin, end, have)
+		stored, err := fill(ctx, p, client, begin, end, have)
 		if err != nil {
 			return err
 		}
@@ -88,9 +92,12 @@ func minutesWithRows(client *persistence.PersistingService, day time.Time) (map[
 // fill stores the rows of every minute in [begin, end) not in have and
 // returns how many minutes it stored. A refused raw row (400) usually means
 // the data accessor runs without DEV_ACCEPT_CLIENT_TIMESTAMPS.
-func fill(p *plant.Plant, client *persistence.PersistingService, begin, end time.Time, have map[int64]bool) (int, error) {
+func fill(ctx context.Context, p *plant.Plant, client *persistence.PersistingService, begin, end time.Time, have map[int64]bool) (int, error) {
 	stored := 0
 	for at := begin; at.Before(end); at = at.Add(time.Minute) {
+		if err := ctx.Err(); err != nil {
+			return stored, err
+		}
 		if have[at.UnixMilli()] {
 			continue
 		}
