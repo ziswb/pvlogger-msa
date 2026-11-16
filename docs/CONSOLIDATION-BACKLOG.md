@@ -223,9 +223,12 @@ next release; it changes nothing for them.
 
     *Status 2026-11-16:* all six parts committed and verified in Tilt (`tilt ci` healthy, every collector, dashboard);
     release chart 3.0.0 with every image patch-bumped. Also: the Modbus connect retries a refusal (the same startup
-    race, against the dev mock). Open: release (tag `chart/v3.0.0`, infrastructure pin; its adoption task for the
-    token secret is committed there), deploy, live check (pods ready, collectors run, a db-backup run), then a
-    server-side dry run of Pod Security `restricted` on the namespace before deciding to enforce it.
+    race, against the dev mock). Deployed 2026-11-16 (chart 3.0.0, then 3.0.1 for the Prometheus regression of
+    finding 60): pods ready without restarts, collectors and the nightly backup complete, scrapes up. The first
+    `restricted` dry run flagged only the 10 jobs completed before the deploy (they still mount the timezone
+    hostPath). Open: repeat `kubectl label --dry-run=server --overwrite ns pvlogger
+    pod-security.kubernetes.io/enforce=restricted` once those have aged out (after the next device and backup
+    runs); clean means enforcing is the owner's call. Then move this item to Done.
 
 ## Done (resolved, superseded or moot)
 
