@@ -20,9 +20,8 @@ collector and heartbeat runs completed. The repo is on GitHub, private until the
 
 In order:
 
-- **Item 58:** repeat the Pod Security `restricted` dry run after the nightly runs of 2026-11-18 (on 2026-11-16 08:30
-  only the 8 pods of the nightly jobs from before chart 3.0.0 still flagged, all `timezone` hostPath; history limit
-  2), then move it to Done.
+- **Item 58:** deploy the infrastructure change that enforces Pod Security `restricted` on the namespace, check that
+  the next runs of every CronJob start, then move it to Done.
 - **Item 56:** `tilt up` on an amd64 host, then move it to Done.
 - **Item 51:** README screenshots from the Tilt dashboard (synthetic data only), then move it to Done.
 - **Item 53 part 2:** tag-triggered multi-arch GHCR releases; the chart's image defaults then point there.
@@ -243,6 +242,15 @@ next release; it changes nothing for them.
     hostPath). Open: repeat `kubectl label --dry-run=server --overwrite ns pvlogger
     pod-security.kubernetes.io/enforce=restricted` once those have aged out (after the next device and backup
     runs); clean means enforcing is the owner's call. Then move this item to Done.
+
+    *Status 2026-11-16 (after chart 4.0.0):* checked the templates instead of waiting for the old pods to age out.
+    Every live pod template (7 CronJobs, 4 Deployments, the pre-pull DaemonSet) and every workload the chart renders
+    with all options on (20, fusionsolar included) meets `restricted`: no hostPath or other disallowed volume,
+    non-root, no privilege escalation, all capabilities dropped, seccomp `RuntimeDefault`. The server dry run flags
+    only the 8 completed pods of the nightly jobs from before chart 3.0.0 (`timezone` hostPath), which enforcement
+    does not touch. The owner chose to enforce: the infrastructure role labels the namespace after each deploy
+    (enforce `restricted` pinned to v1.37, warn/audit at latest), and its fsdata runbook's throwaway psql pod got a
+    compliant security context. Open: deploy that, then the next run of each CronJob must start.
 60. ⚪ **Follow-ups from the review of the 2026-11-15/16 work** (added 2026-11-16; five read-only reviews of
     `a302fb1^..522ccc5`, criteria: nothing private leaks to GitHub, the system serves the same purposes as before
     the move, the public repo is a good showcase)
