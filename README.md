@@ -21,6 +21,16 @@ inverters), built as a small polyglot microservice system on Kubernetes.
 
 > Status: personal project, running in production on a home k3s cluster.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-dark.png">
+  <img alt="PVLogger dashboard: today's energy totals per flow, the per-minute power curve and the cumulative daily energy of one day" src="docs/images/dashboard-light.png" width="800">
+</picture>
+
+*The dashboard on one day of the synthetic plant from the local development
+environment (see [Try it locally](#try-it-locally)): a partly cloudy November day.
+The tiles are German (Verbrauch = consumption, Produktion = production,
+Eigenverbrauch = self-consumption).*
+
 ## Architecture
 
 Kotlin/Ktor services hold the data and serve the UI; Go CronJobs do the collecting.

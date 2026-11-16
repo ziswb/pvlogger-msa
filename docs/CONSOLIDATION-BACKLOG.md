@@ -21,7 +21,6 @@ collector and heartbeat runs completed. The repo is on GitHub, private until the
 In order:
 
 - **Item 56:** `tilt up` on an amd64 host, then move it to Done.
-- **Item 51:** README screenshots from the Tilt dashboard (synthetic data only), then move it to Done.
 - **Item 53 part 2:** release workflow live (ADR-0027, first run `chart/v4.0.1` green); open: package visibility
   at the publication launch, then production via a GHCR pull-through cache.
 - **Item 60:** the follow-ups deferred from the 2026-11-16 review.
@@ -150,18 +149,6 @@ next release; it changes nothing for them.
     the next drain + power-off of the primary's node** (the case from 10:23): pass = no kubelet restart of the data
     accessor, at most one failed fast run, DB errors (`An I/O error occurred`, SQLState 08006) for at most ~60 s.
 
-51. 🟡 **Prepare the repo for publication on GitHub** (added 2026-11-14)
-
-    Decision: this repo goes public as the working repo ("public-first"); site specifics (hosts, network, site
-    identifiers, credentials) live only in the private infrastructure repo. To do before the first push:
-    placeholders (`<tailnet>`, `<db-host>`, `<lan-ip>`, `<site-lat>`/`<site-lon>`) instead of site values in docs;
-    untrack `.idea/`; Apache-2.0 `LICENSE` plus a `NOTICE` (Huawei register definitions attribution, trademarks);
-    root `README`; a `.gitleaks.toml` with pattern rules for site data (run in CI, item 53) and a local pre-commit +
-    commit-msg hook; a CLAUDE.md rule that this repo is public and takes placeholders only. The battery summary at
-    the root is replaced by an English "Why" in the battery simulator README.
-
-    *Status 2026-11-16:* all done except the README's screenshots (the diagram, badges and engineering notes went in
-    with item 60). Take them from the Tilt dashboard, synthetic data only, then move this item to Done.
 53. 🟡 **CI and releases on GitHub Actions** (added 2026-11-14)
 
     On push/PR: Gradle build + tests (Testcontainers), Go build + lint, frontend build, gitleaks with the repo's
@@ -1306,6 +1293,24 @@ next release; it changes nothing for them.
     `main-6AKHNOJ4.js`, `/v1/daydata` → `200`. The CDP background-tab repro against the live site, 3 runs: axes while
     hidden, all lines 3 s after switching to the tab (on 3.13.9 they stayed empty for good). Open until the owner
     confirms the iPhone Home Screen app.
+
+51. 🟡 **Prepare the repo for publication on GitHub** (added 2026-11-14)
+
+    Decision: this repo goes public as the working repo ("public-first"); site specifics (hosts, network, site
+    identifiers, credentials) live only in the private infrastructure repo. To do before the first push:
+    placeholders (`<tailnet>`, `<db-host>`, `<lan-ip>`, `<site-lat>`/`<site-lon>`) instead of site values in docs;
+    untrack `.idea/`; Apache-2.0 `LICENSE` plus a `NOTICE` (Huawei register definitions attribution, trademarks);
+    root `README`; a `.gitleaks.toml` with pattern rules for site data (run in CI, item 53) and a local pre-commit +
+    commit-msg hook; a CLAUDE.md rule that this repo is public and takes placeholders only. The battery summary at
+    the root is replaced by an English "Why" in the battery simulator README.
+
+    *Status 2026-11-16:* all done except the README's screenshots (the diagram, badges and engineering notes went in
+    with item 60). Take them from the Tilt dashboard, synthetic data only, then move this item to Done.
+
+    *Done 2026-11-16:* `docs/images/dashboard-{light,dark}.png`, one full day of the synthetic plant from `tilt up`
+    (headless Chrome, 1280 px at 2x, `prefers-color-scheme` emulated), shown by the README in a `<picture>` that
+    follows the reader's colour scheme.
+
 57. ~~🟡 **Review of the 2026-11-15 work**~~ (added 2026-11-15; five read-only reviews of `9d354c5..fb77144`:
     security, consistency, correctness, completeness, best practices)
 
