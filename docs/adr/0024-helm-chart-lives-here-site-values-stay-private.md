@@ -3,6 +3,7 @@
 - Status: accepted (2026-11-15); the move is backlog item 52
 - Date: 2026-11-15
 - Supersedes: the deployment part of 0003 (the image-version part stands)
+- Amended by: 0026 (image names: bare module names, the registry value carries the owner, default GHCR)
 
 ## Context
 

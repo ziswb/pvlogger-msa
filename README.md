@@ -60,7 +60,7 @@ See [CONTEXT.md](CONTEXT.md) for the domain vocabulary and data flow, and
 
 ## Engineering notes
 
-- **Decisions are written down.** 25 [ADRs](docs/adr/), a
+- **Decisions are written down.** 26 [ADRs](docs/adr/), a
   [consolidation backlog](docs/CONSOLIDATION-BACKLOG.md) of verified defects and
   divergences, [open questions](docs/OPEN-QUESTIONS.md) and
   [security findings](docs/SECURITY-FINDINGS.md), open ones included. References

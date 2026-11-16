@@ -5,12 +5,12 @@
 set -eu
 values=deploy/helm/pvlogger/values.yaml
 status=0
-# "repository: bziswiler/<module>" followed by "tag: <version>"
+# "repository: <module>" followed by "tag: <version>" (bare module names, ADR-0026)
 pairs=$(awk '
-  /repository: *"bziswiler\// { gsub(/.*bziswiler\/|"/, ""); repo = $0; next }
+  /^ +repository: *"[a-z0-9-]+"/ { gsub(/.*repository: *|"/, ""); repo = $0; next }
   repo != "" && /tag:/ { gsub(/.*tag: *|"/, ""); print repo, $0; repo = "" }
 ' "$values")
-[ -n "$pairs" ] || { echo "no bziswiler/* images found in $values" >&2; exit 1; }
+[ -n "$pairs" ] || { echo "no module images found in $values" >&2; exit 1; }
 echo "$pairs" | while read -r module tag; do
   dockerfile="$module/docker/Dockerfile"
   if [ ! -f "$dockerfile" ]; then

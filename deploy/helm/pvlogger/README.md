@@ -13,7 +13,7 @@ namespace. What only your installation knows goes into your own values file:
 
 | Key | Required | What |
 |---|---|---|
-| `global.imageRegistry` | | Registry in front of the image repositories. Empty: the bare repository names, as Tilt builds them locally. The images are not published yet (backlog 53): build and push them to your registry (`scripts/build-all.sh`) and set it here |
+| `global.imageRegistry` | | Registry host and owner path in front of the image repositories, which are the bare module names (default `ghcr.io/ziswb`, [ADR-0026](../../../docs/adr/0026-image-names-registry-carries-owner-ghcr-default.md)). The GHCR images are not published yet (backlog 53 part 2): until then, build and push them to your registry (`scripts/build-all.sh`) and set it here, e.g. `<registry-host>/<owner>` |
 | `global.timezone` | | Zone of the cron schedules and the containers (default `UTC`) |
 | `global.runAsUid` | | Run-as uid/gid of the Go jobs (default `1000`) |
 | `secrets.postgresPassword` | yes | Password of `database.username` |
@@ -74,3 +74,12 @@ Steps, until the GHCR release workflow exists (backlog 53 part 2):
 
 `PersistentVolume`s have `Retain`: uninstalling the release leaves the dumps on
 the NFS export.
+
+## Upgrading
+
+**To 4.0.0** ([ADR-0026](../../../docs/adr/0026-image-names-registry-carries-owner-ghcr-default.md)):
+the image repositories lost their owner prefix (`bziswiler/pvlogger-frontend` is
+now `pvlogger-frontend`), and `global.imageRegistry` defaults to `ghcr.io/ziswb`.
+An install that set `global.imageRegistry: <registry-host>` sets
+`<registry-host>/bziswiler` instead to keep pulling the same images. Nothing
+else changed since 3.0.2.

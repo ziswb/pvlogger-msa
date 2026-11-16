@@ -22,7 +22,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: backfill
-          image: bziswiler/pvlogger-modbus-mock
+          image: ghcr.io/ziswb/pvlogger-modbus-mock
           command: ["/backfill"]
           securityContext:
             runAsUser: 1000

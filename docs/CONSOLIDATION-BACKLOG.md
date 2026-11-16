@@ -12,12 +12,16 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
 
 ## Next up
 
-**Status 2026-11-16.** Chart 3.0.1 is deployed (every image as pinned in `values.yaml`); chart 3.0.2 (heartbeat
-retry, item 60) is committed and not yet released. The repo is on GitHub, private until the publication launch.
+**Status 2026-11-16.** Chart 3.0.2 is deployed (Helm revision 87; heartbeat retry and digest pins of item 60, every
+image as pinned in `values.yaml`; the first heartbeat run hit the startup race and its retry got through). Chart 4.0.0
+(ADR-0026 image names, nothing else) is committed and not yet released. Its release needs the infrastructure values to set `imageRegistry: <registry-host>/bziswiler` in the same
+change as the chart version bump. The repo is on GitHub, private until the publication launch.
 
 In order:
 
-- **Item 58:** repeat the Pod Security `restricted` dry run, then move it to Done.
+- **Item 58:** repeat the Pod Security `restricted` dry run after the nightly runs of 2026-11-18 (on 2026-11-16 08:30
+  only the 8 pods of the nightly jobs from before chart 3.0.0 still flagged, all `timezone` hostPath; history limit
+  2), then move it to Done.
 - **Item 56:** `tilt up` on an amd64 host, then move it to Done.
 - **Item 51:** README screenshots from the Tilt dashboard (synthetic data only), then move it to Done.
 - **Item 53 part 2:** tag-triggered multi-arch GHCR releases; the chart's image defaults then point there.
@@ -246,7 +250,8 @@ next release; it changes nothing for them.
     clone, and now fails closed; it also checks file names, author/committer identities (noreply only in a
     maintainer clone) and annotated tag messages. The heartbeat retries a refused first connection (the backlog 59
     race sent false `/fail` pings; chart 3.0.2). The chart CI's dev-settings check asserts the failure reason. Item
-    56 (multi-arch Go images). Third-party chart images pinned by digest. Comments in the chart no longer cite
+    56 (multi-arch Go images). Third-party chart images pinned by digest. The chart's default image names no longer
+    fall through to a Docker Hub namespace the project does not own (ADR-0026, chart 4.0.0). Comments in the chart no longer cite
     private-repo items. Stale docs (backlog "Next up", old-server drop, ADR-0003's release-tag gap, the chart's
     "Docker Hub" default). README: badges, diagram, engineering notes. Release steps in the chart README.
 

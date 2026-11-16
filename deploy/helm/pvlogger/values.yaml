@@ -13,10 +13,11 @@
 # in that zone, not in kube-controller-manager's.
 
 global:
-  # Registry host (and optional path) in front of each image repository.
-  # Empty: the bare repository names, as Tilt builds them locally. The images
-  # are not published yet (backlog 53): push them to your registry first.
-  imageRegistry: ""
+  # Registry host and owner path in front of each image repository; the
+  # repositories are the bare module names (ADR-0026). The default is the
+  # project's GHCR namespace, where releases are published (backlog 53 part 2;
+  # until then, push the images to your own registry and set it here).
+  imageRegistry: "ghcr.io/ziswb"
   imagePullPolicy: IfNotPresent
   timezone: "UTC"
   # Run-as uid/gid of the Go jobs (their distroless :nonroot images default
@@ -64,7 +65,7 @@ pushgateway:
 frontend:
   enabled: true
   image:
-    repository: "bziswiler/pvlogger-frontend"
+    repository: "pvlogger-frontend"
     tag: "3.14.2"
   replicas: 1
   port: 8085
@@ -79,7 +80,7 @@ frontend:
 dataAccessor:
   enabled: true
   image:
-    repository: "bziswiler/pvlogger-modbus-data-accessor"
+    repository: "pvlogger-modbus-data-accessor"
     tag: "3.14.2"
   replicas: 1
   port: 8083
@@ -105,7 +106,7 @@ dataAccessor:
 masterdataServer:
   enabled: true
   image:
-    repository: "bziswiler/pvlogger-masterdata-server"
+    repository: "pvlogger-masterdata-server"
     tag: "3.6.2"
   replicas: 1
   port: 8081
@@ -122,7 +123,7 @@ masterdataServer:
 fusionsolarAuth:
   enabled: false
   image:
-    repository: "bziswiler/pvlogger-fusionsolar-auth"
+    repository: "pvlogger-fusionsolar-auth"
     tag: "3.4.4"
   schedule: "*/20 * * * *"
   # Site values: the FusionSolar API account and its regional host.
@@ -142,7 +143,7 @@ fusionsolarAuth:
 fusionsolar:
   enabled: false
   image:
-    repository: "bziswiler/pvlogger-fusionsolar"
+    repository: "pvlogger-fusionsolar"
     tag: "3.5.6"
   # Site values: the FusionSolar API account, plant and devices.
   username: ""
@@ -195,7 +196,7 @@ fusionsolar:
 pvDeviceDataCollector:
   enabled: true
   image:
-    repository: "bziswiler/pv-device-data-collector"
+    repository: "pv-device-data-collector"
     tag: "3.7.6"
   logLevel: "debug"
   resources:
@@ -227,7 +228,7 @@ pvDeviceDataCollector:
 pvFastDataCollector:
   enabled: true
   image:
-    repository: "bziswiler/pv-fast-data-collector"
+    repository: "pv-fast-data-collector"
     tag: "0.13.6"
   schedule: "0-1,5-59 * * * *"
   logLevel: "debug"
@@ -243,7 +244,7 @@ pvFastDataCollector:
 pvFullDataCollector:
   enabled: true
   image:
-    repository: "bziswiler/pv-full-data-collector"
+    repository: "pv-full-data-collector"
     tag: "0.8.7"
   schedule: "2 1-23 * * *"
   logLevel: "debug"
@@ -260,7 +261,7 @@ kpiExporter:
   enabled: true
   uid: 1000
   image:
-    repository: "bziswiler/pvlogger-kpi-exporter"
+    repository: "pvlogger-kpi-exporter"
     tag: "3.5.3"
   restPath: "/v1/read-latest-kpi"
   # Name prefix of the export file the receiver gets (ADR-0021).
@@ -314,7 +315,7 @@ dbBackup:
 modbusMockServer:
   enabled: false
   image:
-    repository: "bziswiler/pvlogger-modbus-mock"
+    repository: "pvlogger-modbus-mock"
     tag: "1.0.2"
   replicas: 1
   # Service port, the Modbus default; the container listens unprivileged on

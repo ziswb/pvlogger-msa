@@ -52,9 +52,10 @@ def dev_manifest(path):
 
 # --- Images -----------------------------------------------------------------
 # Every Dockerfile builds from the repository root. `only` keeps a change in one
-# stack from rebuilding the other's images. Repositories match the chart's
-# image.repository values (no registry: Rancher Desktop's moby engine shares
-# its images with the cluster, nothing is pushed).
+# stack from rebuilding the other's images. Image names are the ones the chart
+# renders by default (ADR-0026); Tilt swaps in its local builds. Nothing is
+# pulled or pushed: Rancher Desktop's moby engine shares its images with the
+# cluster.
 
 # settings.gradle.kts includes every JVM project, so each JVM build needs all of them.
 JVM_COMMON = [
@@ -87,16 +88,16 @@ GO_COMMON = [
 ]
 
 JVM_IMAGES = {
-    'bziswiler/pvlogger-frontend': 'pvlogger-frontend',
-    'bziswiler/pvlogger-modbus-data-accessor': 'pvlogger-modbus-data-accessor',
-    'bziswiler/pvlogger-masterdata-server': 'pvlogger-masterdata-server',
+    'ghcr.io/ziswb/pvlogger-frontend': 'pvlogger-frontend',
+    'ghcr.io/ziswb/pvlogger-modbus-data-accessor': 'pvlogger-modbus-data-accessor',
+    'ghcr.io/ziswb/pvlogger-masterdata-server': 'pvlogger-masterdata-server',
 }
 
 GO_IMAGES = {
-    'bziswiler/pv-fast-data-collector': 'pv-fast-data-collector',
-    'bziswiler/pv-full-data-collector': 'pv-full-data-collector',
-    'bziswiler/pv-device-data-collector': 'pv-device-data-collector',
-    'bziswiler/pvlogger-modbus-mock': 'pvlogger-modbus-mock',
+    'ghcr.io/ziswb/pv-fast-data-collector': 'pv-fast-data-collector',
+    'ghcr.io/ziswb/pv-full-data-collector': 'pv-full-data-collector',
+    'ghcr.io/ziswb/pv-device-data-collector': 'pv-device-data-collector',
+    'ghcr.io/ziswb/pvlogger-modbus-mock': 'pvlogger-modbus-mock',
 }
 
 # The backends ignore the Angular sources: an SPA edit rebuilds only the frontend.
