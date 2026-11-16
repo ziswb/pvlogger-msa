@@ -6,6 +6,8 @@ gradle_home/
 build/
 
 /.claude/settings.local.json
+# Personal Claude Code status line, referenced from settings.local.json (backlog 60)
+/.claude/statusline.sh
 
 # IDE project files (.idea/ untracked for publication, backlog 51; it held local data-source hosts)
 .idea/

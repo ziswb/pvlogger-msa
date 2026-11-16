@@ -1,0 +1,16 @@
+# Weekly update PRs for the GitHub Actions pins (commit SHA + tag comment), all
+# in one grouped PR (backlog 60). The other ecosystems (Gradle, Go, npm, base
+# images) follow docs/UPGRADING.md, which bumps related pins together; for them
+# only Dependabot security updates (a repository setting) open PRs.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: "CI"

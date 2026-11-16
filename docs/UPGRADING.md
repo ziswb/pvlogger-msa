@@ -28,7 +28,7 @@ It covers libraries, major versions and tooling (JDK, Go, Gradle, Node/Angular, 
 | Go toolchain | `go.work`, each `go.mod` `go` line, `FROM golang:*` in Dockerfiles, `.golangci.yml` / golangci-lint version |
 | Frontend | `pvlogger-frontend/src/web/package.json` (+ lockfile) |
 | Base images | Every `FROM` in `*/docker/Dockerfile` is pinned as `image:tag@sha256:<digest>` (backlog 58): `golang`, `distroless/static-debian*:nonroot`, `gradle:*-jdk*-alpine`, `eclipse-temurin:*-ubi*-minimal`, `node:*-alpine`. Change tag and digest together; the digest is the multi-arch index's (`docker buildx imagetools inspect <image:tag>`). A new digest for the same tag (a rebuilt base) is a patch bump of every image built on it. The chart's third-party images (`dbBackup.image`, `heartbeat.image` in `values.yaml`, the dev `deploy/dev/postgres.yaml`) are pinned the same way, a chart bump; `imagePrepull.holdImage` stays tag-only (see its comment) |
-| CI | `.github/workflows/*.yml`: action SHAs (+ tag comment), `java-version`, golangci-lint `version`, `node-version`, Helm `version`, `KUBECONFORM_VERSION` + `KUBECONFORM_SHA256`, `GITLEAKS_VERSION` + `GITLEAKS_SHA256` (`go-version-file: go.work` follows by itself) |
+| CI | `.github/workflows/*.yml`: action SHAs (+ tag comment; Dependabot proposes these weekly in one grouped PR, `.github/dependabot.yml`), `java-version`, golangci-lint `version`, `node-version`, Helm `version`, `KUBECONFORM_VERSION` + `KUBECONFORM_SHA256`, `GITLEAKS_VERSION` + `GITLEAKS_SHA256` (`go-version-file: go.work` follows by itself) |
 | Chart images | `deploy/helm/pvlogger/values.yaml`: `dbBackup.image` (Postgres client, same major as production), `heartbeat.image` (curl), `imagePrepull.holdImage` (pause) |
 | Tilt | `deploy/dev/postgres.yaml` (dev Postgres image), the Tiltfile's `version_settings` constraint |
 | Test/dev DB | Testcontainers `postgres:18` (3 test bases), `pvlogger-database/docker/docker-compose.yaml`, `pvlogger-database/scripts/run-db-container.sh`, `deploy/dev/postgres.yaml` |
@@ -68,7 +68,7 @@ The test and dev Postgres versions should match production's major version.
 7. **Version bumps**: every image whose content changed gets a new `LABEL version` in its Dockerfile
    (ADR-0003), and the same commit sets that tag in `deploy/helm/pvlogger/values.yaml` and bumps `version` in
    `Chart.yaml` (ADR-0024; the chart's bump is the highest among its changes, see the chart README). CI
-   (`chart.yml`, `scripts/check-chart-tags.sh`) fails when a Dockerfile and its chart tag disagree. A dependency or base-image change counts, even without code changes. Otherwise
+   (`chart.yml` via `ci.yml`, `scripts/check-chart-tags.sh`) fails when a Dockerfile and its chart tag disagree. A dependency or base-image change counts, even without code changes. Otherwise
    `scripts/build-all.sh` skips the image ("version already in registry"). Never use `-f` for this: it would
    overwrite the tag production runs and take away the rollback target. Patch for dependency/base-only changes,
    minor for a runtime or framework major (JDK, Angular). Before committing, check the tags are free:

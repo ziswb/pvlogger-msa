@@ -1,0 +1,27 @@
+# Editor settings, see https://editorconfig.org. They describe the style the
+# code already has; the Angular app has its own file (pvlogger-frontend/src/web).
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{kt,kts,sql,py}]
+indent_style = space
+indent_size = 4
+
+[*.{yml,yaml,toml,tpl}]
+indent_style = space
+indent_size = 2
+
+[{*.go,go.mod,go.work,Makefile,*.mk}]
+indent_style = tab
+
+[*.md]
+# Two trailing spaces are a Markdown line break.
+trim_trailing_whitespace = false
+
+[*.bat]
+end_of_line = crlf

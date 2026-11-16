@@ -3,27 +3,12 @@
 # The Go modules have their own workflow, so the Gradle hook into make is skipped here.
 name: JVM
 
+# Called by ci.yml when its paths changed (backlog 60); the path list lives there.
 on:
-  push:
-    branches: [main]
-    paths: &paths
-      - "**/*.kt"
-      - "**/*.kts"
-      - "**/src/main/resources/**"
-      - "**/src/test/resources/**"
-      - "gradle/**"
-      - "gradlew"
-      - ".github/workflows/jvm.yml"
-  pull_request:
-    paths: *paths
+  workflow_call:
 
 permissions:
   contents: read
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  # Superseded PR runs only: every commit pushed to a branch gets its own result.
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:

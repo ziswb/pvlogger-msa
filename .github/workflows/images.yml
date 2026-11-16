@@ -6,25 +6,12 @@
 # target platform (backlog 56), so the runner builds working amd64 images.
 name: Images
 
+# Called by ci.yml when its paths changed (backlog 60); the path list lives there.
 on:
-  push:
-    branches: [main]
-    paths: &paths
-      - "*/docker/Dockerfile"
-      # `make prod` runs in the build stage.
-      - "*/Makefile"
-      - ".dockerignore"
-      - ".github/workflows/images.yml"
-  pull_request:
-    paths: *paths
+  workflow_call:
 
 permissions:
   contents: read
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  # Superseded PR runs only: every commit pushed to a branch gets its own result.
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:

@@ -62,14 +62,16 @@ cd pvlogger-fusionsolar && make build
 
 ### CI (GitHub Actions)
 
-`.github/workflows/`: `jvm.yml`, `go.yml`, `frontend.yml`, `chart.yml` (path-filtered per
-stack; `chart.yml` also fails a chart change without a `Chart.yaml` version bump),
-`images.yml` (builds every Dockerfile when a Dockerfile, a module Makefile or `.dockerignore` changes),
+`.github/workflows/`: `ci.yml` runs on every push to `main` and every PR, detects the changed paths and calls
+the reusable per-stack workflows `jvm.yml`, `go.yml`, `frontend.yml`, `chart.yml` (also fails a chart change
+without a `Chart.yaml` version bump) and `images.yml` (builds every Dockerfile when a Dockerfile, a module
+Makefile or `.dockerignore` changes); its final job `ci-ok` is the one check to require. Also
 `release.yml` (a `chart/vX.Y.Z` tag publishes the pinned images for amd64 + arm64 and the chart to GHCR,
 skipping versions already there — ADR-0027) and
 `gitleaks.yml` (every push/PR, full history, rules from `main`). Actions are pinned to commit SHAs with the tag
 as a comment; bump them together with the tools they mirror (JDK, Go, golangci-lint, Node,
-Helm, kubeconform, gitleaks; see docs/UPGRADING.md).
+Helm, kubeconform, gitleaks; see docs/UPGRADING.md). Dependabot (`.github/dependabot.yml`) opens one grouped
+PR per week for the action pins only.
 
 ### Local Development
 

@@ -1,10 +1,6 @@
 # PVLogger
 
-[![JVM](https://github.com/ziswb/pvlogger-msa/actions/workflows/jvm.yml/badge.svg)](https://github.com/ziswb/pvlogger-msa/actions/workflows/jvm.yml)
-[![Go](https://github.com/ziswb/pvlogger-msa/actions/workflows/go.yml/badge.svg)](https://github.com/ziswb/pvlogger-msa/actions/workflows/go.yml)
-[![Frontend](https://github.com/ziswb/pvlogger-msa/actions/workflows/frontend.yml/badge.svg)](https://github.com/ziswb/pvlogger-msa/actions/workflows/frontend.yml)
-[![Chart](https://github.com/ziswb/pvlogger-msa/actions/workflows/chart.yml/badge.svg)](https://github.com/ziswb/pvlogger-msa/actions/workflows/chart.yml)
-[![Images](https://github.com/ziswb/pvlogger-msa/actions/workflows/images.yml/badge.svg)](https://github.com/ziswb/pvlogger-msa/actions/workflows/images.yml)
+[![CI](https://github.com/ziswb/pvlogger-msa/actions/workflows/ci.yml/badge.svg)](https://github.com/ziswb/pvlogger-msa/actions/workflows/ci.yml)
 [![Gitleaks](https://github.com/ziswb/pvlogger-msa/actions/workflows/gitleaks.yml/badge.svg)](https://github.com/ziswb/pvlogger-msa/actions/workflows/gitleaks.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 

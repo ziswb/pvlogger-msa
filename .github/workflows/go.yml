@@ -4,33 +4,12 @@
 # (darwin + linux) for nothing.
 name: Go
 
+# Called by ci.yml when its paths changed (backlog 60); the path list lives there.
 on:
-  push:
-    branches: [main]
-    paths: &paths
-      - "**/*.go"
-      - "**/go.mod"
-      - "**/go.sum"
-      - "go.work"
-      - "go.work.sum"
-      - "**/Makefile"
-      - ".golangci.yml"
-      - ".github/workflows/go.yml"
-      # Read by the Go drift tests (paths_drift_test.go, masterdata_drift_test.go,
-      # raw_kpi_drift_test.go).
-      - "pvlogger-shared-rest/src/main/kotlin/**/rest/*Paths.kt"
-      - "pvlogger-modbus-data-accessor/src/main/kotlin/**/RawKpiRegisterValues.kt"
-      - "pvlogger-masterdata-server/src/main/resources/db/migration/V2__DongleAggregateBlock.sql"
-  pull_request:
-    paths: *paths
+  workflow_call:
 
 permissions:
   contents: read
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  # Superseded PR runs only: every commit pushed to a branch gets its own result.
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:

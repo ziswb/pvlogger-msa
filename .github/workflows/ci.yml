@@ -1,0 +1,125 @@
+# One always-on entry point (backlog 60): detect which stacks a push or PR
+# touches, run their reusable workflows, and end in `ci-ok`, the one check
+# branch protection requires. Path-filtered workflows cannot be required: a
+# docs-only PR would wait forever for a check that never starts. gitleaks.yml
+# stays separate (every branch, full history) and is the second required check.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Superseded PR runs only: every commit pushed to main gets its own result.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      # paths-filter lists a PR's files through the API.
+      pull-requests: read
+    outputs:
+      jvm: ${{ steps.filter.outputs.jvm }}
+      go: ${{ steps.filter.outputs.go }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      chart: ${{ steps.filter.outputs.chart }}
+      images: ${{ steps.filter.outputs.images }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: filter
+        with:
+          # A change to this file runs everything.
+          filters: |
+            ci: &ci
+              - ".github/workflows/ci.yml"
+            jvm:
+              - *ci
+              - "**/*.kt"
+              - "**/*.kts"
+              - "**/src/main/resources/**"
+              - "**/src/test/resources/**"
+              - "gradle/**"
+              - "gradlew"
+              - ".github/workflows/jvm.yml"
+            go:
+              - *ci
+              - "**/*.go"
+              - "**/go.mod"
+              - "**/go.sum"
+              - "go.work"
+              - "go.work.sum"
+              - "**/Makefile"
+              - ".golangci.yml"
+              - ".github/workflows/go.yml"
+              # Read by the Go drift tests (paths_drift_test.go,
+              # masterdata_drift_test.go, raw_kpi_drift_test.go).
+              - "pvlogger-shared-rest/src/main/kotlin/**/rest/*Paths.kt"
+              - "pvlogger-modbus-data-accessor/src/main/kotlin/**/RawKpiRegisterValues.kt"
+              - "pvlogger-masterdata-server/src/main/resources/db/migration/V2__DongleAggregateBlock.sql"
+            frontend:
+              - *ci
+              - "pvlogger-frontend/src/web/**"
+              - ".github/workflows/frontend.yml"
+            chart:
+              - *ci
+              - "deploy/**"
+              - "*/docker/Dockerfile"
+              - "scripts/check-chart-tags.sh"
+              - ".github/workflows/chart.yml"
+            images:
+              - *ci
+              - "*/docker/Dockerfile"
+              # `make prod` runs in the build stage.
+              - "*/Makefile"
+              - ".dockerignore"
+              - ".github/workflows/images.yml"
+
+  jvm:
+    needs: changes
+    if: needs.changes.outputs.jvm == 'true'
+    uses: ./.github/workflows/jvm.yml
+  go:
+    needs: changes
+    if: needs.changes.outputs.go == 'true'
+    uses: ./.github/workflows/go.yml
+  frontend:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    uses: ./.github/workflows/frontend.yml
+  chart:
+    needs: changes
+    if: needs.changes.outputs.chart == 'true'
+    uses: ./.github/workflows/chart.yml
+  images:
+    needs: changes
+    if: needs.changes.outputs.images == 'true'
+    uses: ./.github/workflows/images.yml
+
+  ci-ok:
+    if: always()
+    needs: [changes, jvm, go, frontend, chart, images]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # Skipped (stack untouched) counts as passed; failed or cancelled does not.
+      - name: All stacks passed
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          echo "$RESULTS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
+          failed=$(echo "$RESULTS" | jq -r '[to_entries[] | select(.value.result != "success" and .value.result != "skipped") | .key] | join(" ")')
+          if [ -n "$failed" ]; then
+            echo "::error::failed: $failed"
+            exit 1
+          fi

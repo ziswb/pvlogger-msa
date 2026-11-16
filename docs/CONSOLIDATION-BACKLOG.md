@@ -248,6 +248,28 @@ next release; it changes nothing for them.
     - **Repo hygiene:** `.claude/statusline.sh` and `.claude/settings.json` are tracked (personal tooling); a root
       `.editorconfig`, CODEOWNERS.
 
+    *Plan 2026-11-16 (the user picked all four groups, in this order):*
+    1. **Repo hygiene + CI** (no image or chart bump): untrack the `.claude` status line (it moves to the ignored
+       `.claude/settings.local.json`; `CLAUDE.md` stays); a root `.editorconfig`; `.github/CODEOWNERS` (`*` → the
+       owner); Dependabot for GitHub Actions only, weekly, one grouped PR (security updates for the other ecosystems
+       are a repository setting, Phase 5); one always-on `ci.yml` that detects the changed paths, calls the
+       per-stack workflows (now reusable, `workflow_call`) and ends in one `ci-ok` job that branch protection can
+       require. `gitleaks.yml` stays a separate always-on workflow (second required check).
+    2. **Go robustness:** the retry helper, the fusionsolar DSN, graceful shutdown. Image bumps + chart patch.
+    3. **JVM services:** health endpoints + startupProbe, Dockerfile cleanup, non-blocking DB calls. Image bumps +
+       chart minor.
+    4. **Chart + policies:** `values.schema.json`, `helm-unittest`, narrower NetworkPolicy sources, the prod-profile
+       dev guard. Chart minor. Selector and leftover-key cleanup stays with item 55 (a major).
+
+    *Group 1 in code 2026-11-16:* `.claude/settings.json` + `statusline.sh` untracked (the status line now lives in
+    the ignored `settings.local.json`); `.editorconfig` (UTF-8, LF, final newline; Kotlin/SQL/Python 4 spaces,
+    YAML/TOML 2, Go and Makefiles tabs; the Angular app keeps its own); `.github/CODEOWNERS`;
+    `.github/dependabot.yml` (actions only, weekly, grouped); `ci.yml` with `dorny/paths-filter` and `ci-ok`, the
+    five stack workflows now `workflow_call` only (their concurrency moved to `ci.yml`: inside a called workflow
+    `github.workflow` is the caller's name, so per-stack groups would cancel each other). README badges: CI +
+    Gitleaks. Open: the first `ci.yml` runs (a docs-only push must end with `ci-ok` green and every stack skipped),
+    then branch protection requiring `ci-ok` + Gitleaks `scan` and Dependabot security updates at launch (Phase 5).
+
 ## Done (resolved, superseded or moot)
 
 1. ~~**masterdata-server prod config DB-name mismatch**~~

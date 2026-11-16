@@ -3,24 +3,12 @@
 # without a chart version bump.
 name: Chart
 
+# Called by ci.yml when its paths changed (backlog 60); the path list lives there.
 on:
-  push:
-    branches: [main]
-    paths: &paths
-      - "deploy/**"
-      - "*/docker/Dockerfile"
-      - "scripts/check-chart-tags.sh"
-      - ".github/workflows/chart.yml"
-  pull_request:
-    paths: *paths
+  workflow_call:
 
 permissions:
   contents: read
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  # Superseded PR runs only: every commit pushed to a branch gets its own result.
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   CHART: deploy/helm/pvlogger
