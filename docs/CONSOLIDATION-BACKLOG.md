@@ -295,6 +295,14 @@ next release; it changes nothing for them.
     (ADR-0027). Deferred: `-XX:MaxRAMPercentage` (needs a measurement in production first). Bumps: the three JVM
     images minor, chart minor.
 
+    *Group 3 in code 2026-11-16:* (a) `8f9a4a58`, (b) `ebb2b0e0`, (c) Dockerfiles as planned (npm cache mount too).
+    Checked: `./gradlew build` (75 JVM tests, a data accessor test reads `/health/ready` against Testcontainers, a
+    frontend test that the SPA fallback does not swallow the probe paths), `helm lint` + render (three services
+    with startup/liveness/readiness probes, `/health` excluded on both ingresses), local image builds of the
+    masterdata server and the frontend (user `pvlogger`, uid/gid 1000, no `DATA_ACCESSOR_HOST` in the image).
+    Images: data accessor 3.15.0, masterdata server 3.7.0, frontend 3.15.0; chart 4.1.0. Still open in item 60:
+    `-XX:MaxRAMPercentage` (measure first) and group 4.
+
 ## Done (resolved, superseded or moot)
 
 1. ~~**masterdata-server prod config DB-name mismatch**~~
