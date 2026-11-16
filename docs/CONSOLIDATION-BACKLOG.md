@@ -23,6 +23,7 @@ In order:
 - **Item 53 part 2:** release workflow live (ADR-0027, first run `chart/v4.0.1` green); open: package visibility
   at the publication launch, then production via a GHCR pull-through cache.
 - **Item 60:** the follow-ups deferred from the 2026-11-16 review.
+- **Item 61:** match Modbus replies to their request (transaction ID, unit, function); back off on busy.
 - **From about 2027-01-25:** item 42, drop the unused `modbus_response_data` indexes.
 - Item 45 stays open until the next drain + power-off of the primary's node.
 
@@ -302,6 +303,27 @@ next release; it changes nothing for them.
     masterdata server and the frontend (user `pvlogger`, uid/gid 1000, no `DATA_ACCESSOR_HOST` in the image).
     Images: data accessor 3.15.0, masterdata server 3.7.0, frontend 3.15.0; chart 4.1.0. Still open in item 60:
     `-XX:MaxRAMPercentage` (measure first) and group 4.
+
+61. 🔴 **Modbus replies are not matched to their request** (added 2026-11-16, reported from the infrastructure
+    side; one occurrence so far)
+
+    Production, 2026-11-16 13:02 local, `pv-full-data-collector` 0.8.7: reading register 32106 (accumulated energy
+    yield, function 0x03, 4 bytes) of logic device 16, attempts 1 and 2 got exception 0x83/0x06 (slave device busy),
+    each followed by close and reconnect; attempt 3 got a reply within 0.1 ms with a byte count of 62, and the run
+    failed with "incomplete register values: byte count 62, payload 62 bytes, want 4". Most likely a late answer to
+    another, larger request the device had queued while busy. Refusing to store it was right; accepting the frame as
+    the answer was not. The later full runs succeeded. Same family as the 2026-11-14 case that made every retry use
+    a fresh connection (comment on `ExecuteRequest` in `pvlogger-shared-modbus/tcp-handler.go`).
+
+    `TcpHandler.exchange` takes the next frame without comparing its MBAP transaction ID, unit ID or function code
+    with the request. To do:
+    - Check transaction ID, unit ID and function code (or its exception form) against the request; skip a
+      mismatched frame and keep reading until the read deadline instead of failing the job.
+    - Back off before retrying a 0x06 (busy) exception, e.g. with the `pv-logger/retry` pattern; that helper covers
+      only refused connections today.
+    - Whether a fresh connection right after a busy device is the right retry, given it can still deliver stale
+      frames; with the ID check above the stale frame would be skipped either way.
+    - A test with a fake device that answers a busy exception, then a foreign frame, then the right reply.
 
 ## Done (resolved, superseded or moot)
 
