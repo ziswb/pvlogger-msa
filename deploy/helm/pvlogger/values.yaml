@@ -374,3 +374,9 @@ heartbeat:
 # Default-deny ingress plus the allows the components need. On by default.
 networkPolicies:
   enabled: true
+  # Prometheus, which scrapes the Ktor services' /metrics (frontend, data
+  # accessor, masterdata server). An empty namespace drops the allow.
+  prometheus:
+    namespace: monitoring
+    podLabels:
+      app.kubernetes.io/name: prometheus

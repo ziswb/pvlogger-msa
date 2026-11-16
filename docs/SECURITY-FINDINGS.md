@@ -209,6 +209,11 @@ with sunrise-sunset on 2026-08-27).
     server 1 ms after start. The shared Go HTTP client (`pvlogger-shared-modbus/httpclient`)
     now retries a refused connection for up to 5 s. The infrastructure repo's DB policy
     uses the same pod-CIDR `ipBlock` for 5432 (logins still need a password and TLS).
+    Regression: the policy had also been Prometheus's only way in, so from the chart 2.0.0
+    deploy (2026-11-16 00:00) every scrape of the three Ktor services was refused and
+    `PvloggerServiceTargetDown` fired all night. Tilt has no Prometheus, so the test missed
+    it. Chart 3.0.1 adds `allow-metrics-from-prometheus` (namespace
+    `networkPolicies.prometheus.namespace`, Prometheus pods only, the three metrics ports).
 
 ## Withdrawn
 

@@ -32,6 +32,46 @@ spec:
 # ipBlock for them would have to be the pod CIDR, and that admits every pod in
 # the cluster (security finding 60, backlog 57).
 ---
+# Prometheus scrapes /metrics of the three Ktor services. It used to get in
+# only through the pod-CIDR ipBlock above; removing that (chart 2.0.0) left
+# every scrape refused and PvloggerServiceTargetDown firing. Admit the
+# monitoring namespace's Prometheus pods on exactly those ports.
+{{- with .Values.networkPolicies.prometheus }}
+{{- if .namespace }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-metrics-from-prometheus
+  namespace: {{ $.Release.Namespace }}
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - pvlogger-frontend
+          - pvlogger-modbus-data-accessor
+          - pvlogger-masterdata-server
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .namespace }}
+          podSelector:
+            matchLabels:
+              {{- toYaml .podLabels | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: {{ $.Values.frontend.port }}
+        - protocol: TCP
+          port: {{ $.Values.dataAccessor.port }}
+        - protocol: TCP
+          port: {{ $.Values.masterdataServer.port }}
+{{- end }}
+{{- end }}
+---
 # Allow Traefik ingress controller to reach the frontend and data accessor.
 # Traefik terminates TLS and routes external traffic to these services.
 {{- if .Values.ingress.traefik.enabled }}
