@@ -14,8 +14,8 @@ PORT="${POSTGRESQL_PORT:-5432}"
 # Found by title in any vault of the account (items move between vaults).
 OP_ITEM="${OP_ITEM:-PVLogger battery_sim_ro}"
 # The item lives in the personal account. Deliberately NOT named OP_ACCOUNT:
-# the shell exports OP_ACCOUNT=<work-op-account> (work default), which would
-# silently win over any fallback here.
+# a shell that exports OP_ACCOUNT for another account would silently win over
+# any fallback here.
 PVLOGGER_OP_ACCOUNT="${PVLOGGER_OP_ACCOUNT:-my.1password.com}"
 
 PASSWORD="$(op item get "$OP_ITEM" --account "$PVLOGGER_OP_ACCOUNT" --fields label=password --reveal --format json | jq -r .value)"

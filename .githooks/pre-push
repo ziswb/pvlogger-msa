@@ -1,7 +1,9 @@
 #!/bin/sh
 # Leak guard, last local layer (see .githooks/README.md): scans every commit
-# about to be pushed, patches and messages, before it becomes public. Catches
-# what pre-commit/commit-msg never saw (rebase, cherry-pick, am, GUI clients).
+# about to be pushed, patches, file names, messages and identities, and the
+# message of a pushed annotated tag, before it becomes public. Catches what
+# pre-commit/commit-msg never saw (rebase, cherry-pick, am, GUI clients).
+# Fails closed: a range it cannot compute refuses the push.
 set -e
 hooks_dir=$(dirname "$0")
 . "$hooks_dir/lib.sh"
@@ -14,16 +16,31 @@ have_gitleaks pre-push && check=1
 # shellcheck disable=SC2086 # $range is several rev-list arguments, split on purpose
 while read -r _ local_sha _ remote_sha; do
   [ "$local_sha" = "$zero" ] && continue # a deletion pushes nothing
-  if [ "$remote_sha" = "$zero" ]; then
-    range="$local_sha --not --remotes=$remote" # new ref: what the remote lacks
-  else
+  if [ "$remote_sha" != "$zero" ] && git cat-file -e "$remote_sha^{commit}" 2>/dev/null; then
     range="$remote_sha..$local_sha"
+  else
+    # New ref, or a remote tip this clone has not fetched (force push from a
+    # stale clone): scan everything the remote-tracking refs do not have.
+    range="$local_sha --not --remotes=$remote"
   fi
-  [ -z "$(git rev-list $range)" ] && continue
+  if ! commits=$(git rev-list $range); then
+    echo "pre-push: cannot list the commits to push ($range); refusing to push unscanned" >&2
+    exit 1
+  fi
+  if [ "$(git cat-file -t "$local_sha")" = tag ]; then
+    tagfile=$(mktemp)
+    git cat-file -p "$local_sha" >"$tagfile"
+    [ "$check" = 1 ] &&
+      gitleaks stdin --redact=100 --no-banner --log-level warn --config .gitleaks.toml <"$tagfile"
+    python3 "$hooks_dir/blocklist-check.py" --message "$tagfile" || { rm -f "$tagfile"; exit 1; }
+    rm -f "$tagfile"
+  fi
+  [ -z "$commits" ] && continue
   if [ "$check" = 1 ]; then
     gitleaks git --log-opts="$range" --redact=100 --no-banner --log-level warn --config .gitleaks.toml
     git log --format=%B $range |
       gitleaks stdin --redact=100 --no-banner --log-level warn --config .gitleaks.toml
   fi
+  require_noreply_range pre-push $range
   python3 "$hooks_dir/blocklist-check.py" --range $range
 done

@@ -17,9 +17,9 @@ The hooks run both checks:
 
 | Hook | Scans |
 |---|---|
-| `pre-commit` | the staged additions |
+| `pre-commit` | the staged additions; in a maintainer clone also that `user.email` is a GitHub noreply address |
 | `commit-msg` | the message (not the `git commit -v` diff below the scissors) |
-| `pre-push` | every commit being pushed, patches and messages: also what the other hooks never saw (rebase, cherry-pick, `git am`, GUI clients) |
+| `pre-push` | every commit being pushed: patches, file names, messages and author/committer identities (noreply only, in a maintainer clone), plus the message of a pushed annotated tag; also what the other hooks never saw (rebase, cherry-pick, `git am`, GUI clients). It fails closed: a push whose range it cannot compute is refused |
 
 CI runs after the push, when the content is already public, so `pre-push` is the
 last check that can still stop a leak.

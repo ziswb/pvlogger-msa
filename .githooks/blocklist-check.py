@@ -92,9 +92,21 @@ def range_lines(rev_args):
         ).stdout
         for i, line in enumerate(message.splitlines(), 1):
             yield f"message of {sha[:10]}", i, line
+        identity = subprocess.run(
+            ["git", "log", "-1", "--format=%an <%ae>%n%cn <%ce>", sha],
+            capture_output=True, text=True, errors="replace", check=True,
+        ).stdout
+        for i, line in enumerate(identity.splitlines(), 1):
+            yield f"author/committer of {sha[:10]}", i, line
         parent = [f"{sha}^"] if subprocess.run(
             ["git", "rev-parse", "--verify", "--quiet", f"{sha}^"], capture_output=True,
         ).returncode == 0 else ["4b825dc642cb6eb9a060e54bf8d69288fbee4904"]  # the empty tree
+        names = subprocess.run(
+            ["git", "diff", "--name-only", "--no-renames", *parent, sha],
+            capture_output=True, text=True, errors="replace", check=True,
+        ).stdout
+        for name in names.splitlines():
+            yield f"{sha[:10]} file name", 0, name
         for path, lineno, text in diff_additions([*parent, sha]):
             yield f"{sha[:10]} {path}", lineno, text
 
