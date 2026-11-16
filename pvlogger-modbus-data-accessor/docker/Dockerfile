@@ -14,7 +14,7 @@ FROM eclipse-temurin:25-jre-ubi10-minimal@sha256:2e8ee3e5f7ee514713aaae37ccaa790
 
 LABEL author="Bruno Ziswiler"
 LABEL description="PV Logger Data Accessor"
-LABEL version="3.14.2"
+LABEL version="3.15.0"
 
 RUN mkdir -p "/opt/pvlogger/"
 COPY --from=build "/workspace/pvlogger-modbus-data-accessor/build/libs/pvlogger-modbus-data-accessor-all.jar" "/opt/pvlogger/data-accessor.jar"
