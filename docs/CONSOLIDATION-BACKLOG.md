@@ -304,6 +304,12 @@ next release; it changes nothing for them.
     Images: data accessor 3.15.0, masterdata server 3.7.0, frontend 3.15.0; chart 4.1.0. Still open in item 60:
     `-XX:MaxRAMPercentage` (measure first) and group 4.
 
+    *Deployed:* group 2 as chart 4.0.2 (Helm revision 89, 23:32), group 3 as chart 4.1.0 (revision 90,
+    2026-11-16 23:54): the three JVM pods 1/1 Ready, 0 restarts, on the new images with the `/health` probes; user
+    `pvlogger`; `/health/ready` answers `ok` in the data accessor and the masterdata server; the fast collector runs
+    after the rollout completed. The only probe failures were startup probes while the JVMs started (connection
+    refused, one 5 s timeout of the masterdata server), which is what the startup probe absorbs.
+
 61. 🔴 **Modbus replies are not matched to their request** (added 2026-11-16, reported from the infrastructure
     side; one occurrence so far)
 
