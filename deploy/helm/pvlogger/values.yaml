@@ -144,7 +144,7 @@ fusionsolar:
   enabled: false
   image:
     repository: "pvlogger-fusionsolar"
-    tag: "3.5.6"
+    tag: "3.5.7"
   # Site values: the FusionSolar API account, plant and devices.
   username: ""
   stationCode: ""
@@ -197,7 +197,7 @@ pvDeviceDataCollector:
   enabled: true
   image:
     repository: "pv-device-data-collector"
-    tag: "3.7.6"
+    tag: "3.7.7"
   logLevel: "debug"
   resources:
     limits:
@@ -229,7 +229,7 @@ pvFastDataCollector:
   enabled: true
   image:
     repository: "pv-fast-data-collector"
-    tag: "0.13.6"
+    tag: "0.13.7"
   schedule: "0-1,5-59 * * * *"
   logLevel: "debug"
   resources:
@@ -245,7 +245,7 @@ pvFullDataCollector:
   enabled: true
   image:
     repository: "pv-full-data-collector"
-    tag: "0.8.7"
+    tag: "0.8.8"
   schedule: "2 1-23 * * *"
   logLevel: "debug"
   resources:
@@ -316,7 +316,7 @@ modbusMockServer:
   enabled: false
   image:
     repository: "pvlogger-modbus-mock"
-    tag: "1.0.2"
+    tag: "1.0.3"
   replicas: 1
   # Service port, the Modbus default; the container listens unprivileged on
   # containerPort.
