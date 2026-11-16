@@ -22,8 +22,8 @@ In order:
 
 - **Item 56:** `tilt up` on an amd64 host, then move it to Done.
 - **Item 51:** README screenshots from the Tilt dashboard (synthetic data only), then move it to Done.
-- **Item 53 part 2:** release workflow in code (ADR-0027); open: its first run, then production via a GHCR
-  pull-through cache.
+- **Item 53 part 2:** release workflow live (ADR-0027, first run `chart/v4.0.1` green); open: package visibility
+  at the publication launch, then production via a GHCR pull-through cache.
 - **Item 60:** the follow-ups deferred from the 2026-11-16 review.
 - **From about 2027-01-25:** item 42, drop the unused `modbus_response_data` indexes.
 - Item 45 stays open until the next drain + power-off of the primary's node.
@@ -182,7 +182,9 @@ next release; it changes nothing for them.
     existing tag. The Gradle and Angular build stages now run `FROM --platform=$BUILDPLATFORM` (platform-independent
     output; checked: an amd64 masterdata image cross-built on arm64 starts its JVM). No image bump: the native
     build produces the same JAR. Chart README "Release" and CLAUDE.md updated; chart 4.0.1 (its README only, nothing
-    to deploy). Open: the first run (tag `chart/v4.0.1`; it publishes all ten images, as none is on GHCR yet), each GHCR package's visibility at the publication launch, then production
+    to deploy). First run 2026-11-16 on tag `chart/v4.0.1`, green in 10.5 min: all ten images published with
+    `linux/amd64` + `linux/arm64` (plus the provenance attestation entry), then the chart `pvlogger:4.0.1`; GHCR
+    answered the presence check of a not-yet-existing package as expected. Open: each GHCR package's visibility at the publication launch, then production
     pulls from GHCR through the private registry as a pull-through cache (infrastructure), and `scripts/build.sh`
     leaves the release steps.
 54. ⚪ **Chart: `existingSecret` instead of secrets in values** (added 2026-11-15, from the item 52 grill)
