@@ -76,7 +76,9 @@ spec:
                 - |
                   set -u
                   ping() { curl -fsS -m 10 --retry 3 -o /dev/null --data-raw "$2" "$HC_PING_URL$1"; }
-                  if ! body=$(curl -fsS -m 20 "$KPI_URL"); then
+                  # First call into the namespace: retry a refused connection while
+                  # the NetworkPolicy catches up with the new pod (backlog 59).
+                  if ! body=$(curl -fsS -m 20 --retry 5 --retry-connrefused --retry-delay 1 "$KPI_URL"); then
                     echo "data-accessor did not answer"
                     ping /fail "data-accessor did not answer ($KPI_URL)"
                     exit
