@@ -20,7 +20,6 @@ collector and heartbeat runs completed. The repo is on GitHub, private until the
 
 In order:
 
-- **Item 56:** `tilt up` on an amd64 host, then move it to Done.
 - **Item 53 part 2:** release workflow live (ADR-0027, first run `chart/v4.0.1` green); open: package visibility
   at the publication launch, then production via a GHCR pull-through cache.
 - **Item 60:** the follow-ups deferred from the 2026-11-16 review.
@@ -201,24 +200,6 @@ next release; it changes nothing for them.
 
     Done by item 52: old 3 (service hosts derived from the release) and 5 (site values out of the templates). Old 2
     (secret management) continues as item 54.
-56. 🟡 **Go images hard-code arm64** (added 2026-11-15, found while rebuilding Tilt, item 23)
-
-    Every Go Makefile except the KPI exporter's sets `GOARCH=arm64` in `LINUX_BUILD_OPTIONS`, and their Dockerfiles
-    build in a `golang` stage of the target platform. On an amd64 host (a public user's `tilt up`, an amd64 CI
-    runner) the images build but their binary does not start (exec format error). Do it like
-    `pvlogger-kpi-exporter/docker/Dockerfile`: build stage `FROM --platform=$BUILDPLATFORM`, `ARG TARGETARCH`, and
-    `make prod GOARCH=${TARGETARCH}`, with the Makefiles taking `GOARCH` from the caller (default: the host's,
-    `go env GOARCH`, for `make build` too). Also the `-darwin` local builds hard-code arm64. Prerequisite for the
-    multi-arch GHCR images of item 53 part 2 and for the public "try it" path (item 23).
-
-    *Status 2026-11-16:* done in code. Every Go Dockerfile builds `FROM --platform=$BUILDPLATFORM` and runs
-    `make prod GOARCH=${TARGETARCH}`; every Makefile defaults `GOARCH` to the host's and runs its tests for the host
-    (`env -u GOARCH`); the `-darwin` builds use the host's arch. `scripts/build.sh` now pins
-    `--platform ${PVLOGGER_PLATFORM:-linux/arm64}`, because the Makefiles no longer force arm64: without the pin an amd64
-    build host would produce amd64 images for the arm64 cluster. Checked: an amd64 mock image cross-built on arm64
-    carries a `GOARCH=amd64` binary; `make build` passes in all eight Go modules. No image bump: an arm64 build
-    produces the same binary, so the next release of each image carries the change. Open: `tilt up` on an amd64
-    host (the user's call), then move to Done.
 60. ⚪ **Follow-ups from the review of the 2026-11-15/16 work** (added 2026-11-16; five read-only reviews of
     `a302fb1^..522ccc5`, criteria: nothing private leaks to GitHub, the system serves the same purposes as before
     the move, the public repo is a good showcase)
@@ -1310,6 +1291,31 @@ next release; it changes nothing for them.
     *Done 2026-11-16:* `docs/images/dashboard-{light,dark}.png`, one full day of the synthetic plant from `tilt up`
     (headless Chrome, 1280 px at 2x, `prefers-color-scheme` emulated), shown by the README in a `<picture>` that
     follows the reader's colour scheme.
+
+56. 🟡 **Go images hard-code arm64** (added 2026-11-15, found while rebuilding Tilt, item 23)
+
+    Every Go Makefile except the KPI exporter's sets `GOARCH=arm64` in `LINUX_BUILD_OPTIONS`, and their Dockerfiles
+    build in a `golang` stage of the target platform. On an amd64 host (a public user's `tilt up`, an amd64 CI
+    runner) the images build but their binary does not start (exec format error). Do it like
+    `pvlogger-kpi-exporter/docker/Dockerfile`: build stage `FROM --platform=$BUILDPLATFORM`, `ARG TARGETARCH`, and
+    `make prod GOARCH=${TARGETARCH}`, with the Makefiles taking `GOARCH` from the caller (default: the host's,
+    `go env GOARCH`, for `make build` too). Also the `-darwin` local builds hard-code arm64. Prerequisite for the
+    multi-arch GHCR images of item 53 part 2 and for the public "try it" path (item 23).
+
+    *Status 2026-11-16:* done in code. Every Go Dockerfile builds `FROM --platform=$BUILDPLATFORM` and runs
+    `make prod GOARCH=${TARGETARCH}`; every Makefile defaults `GOARCH` to the host's and runs its tests for the host
+    (`env -u GOARCH`); the `-darwin` builds use the host's arch. `scripts/build.sh` now pins
+    `--platform ${PVLOGGER_PLATFORM:-linux/arm64}`, because the Makefiles no longer force arm64: without the pin an amd64
+    build host would produce amd64 images for the arm64 cluster. Checked: an amd64 mock image cross-built on arm64
+    carries a `GOARCH=amd64` binary; `make build` passes in all eight Go modules. No image bump: an arm64 build
+    produces the same binary, so the next release of each image carries the change. Open: `tilt up` on an amd64
+    host (the user's call), then move to Done.
+
+    *Done 2026-11-16:* `tilt up --context rancher-desktop` on an amd64 host (x86_64, Ubuntu, Rancher Desktop):
+    every resource ok, the mock server serves the synthetic plant (no `exec format error` anywhere), fast collector
+    runs complete, the backfill Job runs and stores values, `http://localhost/` answers 200. One early fast collector
+    run timed out posting to the data accessor while that pod was still starting (the known first-start race, not
+    the architecture). The backfill takes noticeably longer on that host than the ~2 min on Apple silicon.
 
 57. ~~🟡 **Review of the 2026-11-15 work**~~ (added 2026-11-15; five read-only reviews of `9d354c5..fb77144`:
     security, consistency, correctness, completeness, best practices)
