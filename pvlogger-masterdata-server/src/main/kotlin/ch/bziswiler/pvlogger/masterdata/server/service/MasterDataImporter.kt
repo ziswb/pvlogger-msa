@@ -35,18 +35,18 @@ class MasterDataImporter(appConfig: AppConfig, private val dao: MasterDataDao) {
     private val inverterMasterDataPath = appConfig.masterDataImportConfig.inverterMasterDataPath
     private val devIdsMasterDataPath = appConfig.masterDataImportConfig.deviceIdentifiersMasterDataPath
 
-    fun importMeterRegister() = storeMasterData(METER, readMasterData(meterMasterDataPath))
+    suspend fun importMeterRegister() = storeMasterData(METER, readMasterData(meterMasterDataPath))
 
-    fun importInverterRegister() = storeMasterData(INVERTER, readMasterData(inverterMasterDataPath))
+    suspend fun importInverterRegister() = storeMasterData(INVERTER, readMasterData(inverterMasterDataPath))
 
-    fun importDeviceIdentifiers() = storeMasterData(INVERTER, readMasterData(devIdsMasterDataPath))
+    suspend fun importDeviceIdentifiers() = storeMasterData(INVERTER, readMasterData(devIdsMasterDataPath))
 
     private fun readMasterData(path: String): List<CSVRecord> = CSVFormat.Builder.create(CSVFormat.DEFAULT)
         .apply { setIgnoreSurroundingSpaces(true) }
         .build().parse(FileInputStream(path).reader())
         .drop(IDX_NAME) // Dropping the header
 
-    fun storeMasterData(devType: DeviceType, csvRecord: List<CSVRecord>) = dao.insertBatch(devType, mapToModbusRegisterDefinitions(csvRecord))
+    suspend fun storeMasterData(devType: DeviceType, csvRecord: List<CSVRecord>) = dao.insertBatch(devType, mapToModbusRegisterDefinitions(csvRecord))
 
     private fun mapToModbusRegisterDefinitions(csvRecords: List<CSVRecord>) = csvRecords.map {
         ModbusRegisterDefinition(

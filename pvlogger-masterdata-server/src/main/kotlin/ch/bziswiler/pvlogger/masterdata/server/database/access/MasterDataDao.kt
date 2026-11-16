@@ -12,13 +12,13 @@ import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import ch.bziswiler.pvlogger.shared.database.dbTransaction
 
 class MasterDataDao {
 
-    private fun <T> dbQuery(block: () -> T): T = transaction { block() }
+    private suspend fun <T> dbQuery(block: () -> T): T = dbTransaction { block() }
 
-    fun insertBatch(devType: DeviceType, registerDefinitions: List<ModbusRegisterDefinition>) = dbQuery {
+    suspend fun insertBatch(devType: DeviceType, registerDefinitions: List<ModbusRegisterDefinition>) = dbQuery {
         MasterDataTable.batchInsert(registerDefinitions, ignore = true, shouldReturnGeneratedValues = false) {
             this[MasterDataTable.deviceType] = devType
             this[MasterDataTable.no] = it.no
@@ -34,7 +34,7 @@ class MasterDataDao {
         }
     }
 
-    fun registerDefinitionList(whereCondition: Op<Boolean>) = dbQuery {
+    suspend fun registerDefinitionList(whereCondition: Op<Boolean>) = dbQuery {
         MasterDataTable
             .selectAll()
             .where { whereCondition }
@@ -42,7 +42,7 @@ class MasterDataDao {
             .map { modbusRegisterDefinition(it) }
     }
 
-    fun registerDefinition(address: Int) = dbQuery {
+    suspend fun registerDefinition(address: Int) = dbQuery {
         MasterDataTable
             .selectAll()
             .where(MasterDataTable.address eq address)

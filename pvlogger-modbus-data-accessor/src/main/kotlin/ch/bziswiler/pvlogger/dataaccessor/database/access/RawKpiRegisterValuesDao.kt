@@ -6,6 +6,7 @@ import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
+import ch.bziswiler.pvlogger.shared.database.dbTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.time.Instant
 
@@ -17,7 +18,7 @@ object RawKpiRegisterValuesDao {
      * Stores a raw row, dated on arrival; with [acceptClientTimestamp] (the dev
      * setting, ADR-0025) a row that carries its own dateCreated keeps it.
      */
-    fun store(values: RawKpiRegisterValues, acceptClientTimestamp: Boolean = false) = transaction {
+    suspend fun store(values: RawKpiRegisterValues, acceptClientTimestamp: Boolean = false) = dbTransaction {
         logger.trace { "Storing raw KPI register values '$values'" }
         RawKpiRegisterValuesTable.insert {
             if (acceptClientTimestamp && values.dateCreated != null) {
@@ -41,7 +42,7 @@ object RawKpiRegisterValuesDao {
         PRODUCED("inverter_accumulated_yield", zeroIsNoData = true),
     }
 
-    fun energyToday(): EnergyToday = transaction {
+    suspend fun energyToday(): EnergyToday = dbTransaction {
         logger.info { "computing energy today" }
         EnergyToday(
             exportedEnergyToday = computeEnergyDelta(EnergyColumn.EXPORTED) ?: 0.0,

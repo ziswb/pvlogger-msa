@@ -17,6 +17,7 @@ import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.jdbc.select
+import ch.bziswiler.pvlogger.shared.database.dbTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 object RegisterValueDao {
@@ -26,7 +27,15 @@ object RegisterValueDao {
     private val responseTimeDescending = ResponseTable.response_time to DESC
     private val idDescending = ResponseTable.id to DESC
 
-    fun readLatestRegisterValue(
+    suspend fun readLatestRegisterValue(
+        type: Type,
+        deviceId: Int,
+        registerAddress: RegisterAddress,
+        jobId: JobId,
+    ): Any? = dbTransaction { latestRegisterValue(type, deviceId, registerAddress, jobId) }
+
+    /** [readLatestRegisterValue] inside the caller's transaction (tests attach an SQL logger to it). */
+    internal fun latestRegisterValue(
         type: Type,
         deviceId: Int,
         registerAddress: RegisterAddress,

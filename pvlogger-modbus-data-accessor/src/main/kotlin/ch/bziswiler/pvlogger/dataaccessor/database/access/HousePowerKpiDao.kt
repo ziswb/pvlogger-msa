@@ -21,6 +21,7 @@ import org.jetbrains.exposed.v1.core.greaterEq
 import org.jetbrains.exposed.v1.core.less
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
+import ch.bziswiler.pvlogger.shared.database.dbTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.math.RoundingMode
 import java.text.DecimalFormat
@@ -39,7 +40,7 @@ object HousePowerKpiDao {
         rounder.roundingMode = RoundingMode.HALF_UP
     }
 
-    fun store(kpis: PvLoggerKpiData) = transaction {
+    suspend fun store(kpis: PvLoggerKpiData) = dbTransaction {
         logger.trace { "Storing KPIs '$kpis'" }
         HousePowerKpiTable.insert {
             it[jobId] = kpis.jobId
@@ -57,7 +58,7 @@ object HousePowerKpiDao {
         }
     }
 
-    fun todaysKpis() = transaction {
+    suspend fun todaysKpis() = dbTransaction {
         logger.info { "getting today's KPIs" }
         val todayStart = now(LOCAL_ZONE).atStartOfDay(LOCAL_ZONE).toInstant()
         HousePowerKpiTable
@@ -68,7 +69,7 @@ object HousePowerKpiDao {
             .toList()
     }
 
-    fun latestKpi() = transaction {
+    suspend fun latestKpi() = dbTransaction {
         logger.info { "getting latest KPI" }
         HousePowerKpiTable
             .selectAll()
@@ -78,7 +79,7 @@ object HousePowerKpiDao {
             ?.let { toKpiValuesDto(it) }
     }
 
-    fun kpisOf(date: LocalDate) = transaction {
+    suspend fun kpisOf(date: LocalDate) = dbTransaction {
         logger.info { "getting KPIs of date '$date'" }
         val dayStart = date.atStartOfDay(LOCAL_ZONE).toInstant()
         val dayEnd = date.plusDays(1).atStartOfDay(LOCAL_ZONE).toInstant()

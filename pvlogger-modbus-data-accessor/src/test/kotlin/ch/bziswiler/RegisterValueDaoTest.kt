@@ -1,5 +1,6 @@
 package ch.bziswiler
 
+import ch.bziswiler.pvlogger.dataaccessor.database.access.RegisterValueDao.latestRegisterValue
 import ch.bziswiler.pvlogger.dataaccessor.database.access.RegisterValueDao.readLatestRegisterValue
 import ch.bziswiler.pvlogger.shared.job.meta.JobId
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.RegisterAddress
@@ -43,7 +44,7 @@ class RegisterValueDaoTest : TestBase() {
         seedUIntegerValue(responseId = 5, registerAddress = 37500, value = 999u)
     }
 
-    private fun read(type: Type, address: Int, job: String = "run-A") =
+    private suspend fun read(type: Type, address: Int, job: String = "run-A") =
         readLatestRegisterValue(type, dongle.toInt(), RegisterAddress(address), JobId(job))
 
     @Test
@@ -84,7 +85,7 @@ class RegisterValueDaoTest : TestBase() {
                         }
                     },
                 )
-                read(Type.I32, 37516)
+                latestRegisterValue(Type.I32, dongle.toInt(), RegisterAddress(37516), JobId("run-A"))
             }
 
         assertEquals(2, value)

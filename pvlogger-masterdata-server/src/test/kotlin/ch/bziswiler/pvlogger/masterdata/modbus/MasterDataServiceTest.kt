@@ -31,7 +31,7 @@ class MasterDataServiceTest : BaseApplicationTest() {
     private val appConfig by inject<AppConfig>()
     private val dao by inject<MasterDataDao>()
 
-    private fun setUpDatabase() {
+    private suspend fun setUpDatabase() {
         val csvRecords = TestRecordBuilder.createTestRecords()
         MasterDataImporter(appConfig, dao).storeMasterData(INVERTER, csvRecords)
     }

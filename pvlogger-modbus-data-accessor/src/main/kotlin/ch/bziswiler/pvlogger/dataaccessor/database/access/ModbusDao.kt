@@ -22,6 +22,7 @@ import ch.bziswiler.pvlogger.shared.modbus.tcp.response.ReadDeviceIdentifiersRes
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
+import ch.bziswiler.pvlogger.shared.database.dbTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.time.ZoneOffset
 
@@ -29,8 +30,8 @@ object ModbusDao {
 
     private val logger = KotlinLogging.logger {}
 
-    fun store(data: ModbusRegisterValueResponse) = transaction { storeValues(data, storeHeader(data)) }
-    fun store(data: ReadDeviceIdentifiersResponse) = transaction { storeValues(data, storeHeader(data)) }
+    suspend fun store(data: ModbusRegisterValueResponse) = dbTransaction { storeValues(data, storeHeader(data)) }
+    suspend fun store(data: ReadDeviceIdentifiersResponse) = dbTransaction { storeValues(data, storeHeader(data)) }
 
     private fun storeValues(data: ModbusRegisterValueResponse, headerId: EntityID<Int>) =
         data.registerValues.forEach { registerValue: ModbusRegisterValue<*> ->
