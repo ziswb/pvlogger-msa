@@ -12,16 +12,20 @@ zero=0000000000000000000000000000000000000000
 
 check=0
 have_gitleaks pre-push && check=1
+# Tips already scanned in this push: a later ref skips their commits (a push
+# of every branch and tag would otherwise rescan the shared history per ref).
+scanned=""
 
 # shellcheck disable=SC2086 # $range is several rev-list arguments, split on purpose
 while read -r _ local_sha _ remote_sha; do
   [ "$local_sha" = "$zero" ] && continue # a deletion pushes nothing
   if [ "$remote_sha" != "$zero" ] && git cat-file -e "$remote_sha^{commit}" 2>/dev/null; then
-    range="$remote_sha..$local_sha"
+    range="$remote_sha..$local_sha$scanned"
   else
     # New ref, or a remote tip this clone has not fetched (force push from a
     # stale clone): scan everything the remote-tracking refs do not have.
-    range="$local_sha --not --remotes=$remote"
+    # $scanned goes before --not, which would flip its ^ exclusions.
+    range="$local_sha$scanned --not --remotes=$remote"
   fi
   if ! commits=$(git rev-list $range); then
     echo "pre-push: cannot list the commits to push ($range); refusing to push unscanned" >&2
@@ -43,4 +47,5 @@ while read -r _ local_sha _ remote_sha; do
   fi
   require_noreply_range pre-push $range
   python3 "$hooks_dir/blocklist-check.py" --range $range
+  scanned="$scanned ^$local_sha"
 done
