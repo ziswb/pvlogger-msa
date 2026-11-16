@@ -14,8 +14,9 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
 
 **Status 2026-11-16.** Chart 3.0.2 is deployed (Helm revision 87; heartbeat retry and digest pins of item 60, every
 image as pinned in `values.yaml`; the first heartbeat run hit the startup race and its retry got through). Chart 4.0.0
-(ADR-0026 image names, nothing else) is committed and not yet released. Its release needs the infrastructure values to set `imageRegistry: <registry-host>/bziswiler` in the same
-change as the chart version bump. The repo is on GitHub, private until the publication launch.
+(ADR-0026 image names, nothing else) deployed 2026-11-16 08:50 (revision 88) with `imageRegistry:
+<registry-host>/bziswiler` from the infrastructure values: the same images as before, no pod restarted, the next fast
+collector and heartbeat runs completed. The repo is on GitHub, private until the publication launch.
 
 In order:
 
