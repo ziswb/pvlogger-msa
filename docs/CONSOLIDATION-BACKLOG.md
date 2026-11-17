@@ -14,6 +14,8 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
 
 **Status 2026-11-17.** Chart 4.2.1 deployed (Helm revision 94): items 60 and 62 closed, the pre-launch code review's
 findings in production. Next: the publication launch checklist.
+Later the same day: item 63 closed (third history rewrite, repository recreated, chart 5.0.0 deployed as Helm
+revision 95); the launch's fresh-clone `tilt up` passed on amd64 (follow-ups: item 64).
 
 **Status 2026-11-16.** Chart 3.0.2 is deployed (Helm revision 87; heartbeat retry and digest pins of item 60, every
 image as pinned in `values.yaml`; the first heartbeat run hit the startup race and its retry got through). Chart 4.0.0
@@ -202,24 +204,18 @@ next release; it changes nothing for them.
 
     Done by item 52: old 3 (service hosts derived from the release) and 5 (site values out of the templates). Old 2
     (secret management) continues as item 54.
-63. 🔴 **A site name in the code, docs and history** (added 2026-11-17; the pre-launch exact-value scan matched a
-    personal value from the owner's password manager that no pattern or blocklist rule knew)
+64. ⚪ **Tilt on a fresh clone: Gradle cache lock collision, and a namespace-deleting trigger** (added 2026-11-17,
+    from the publication launch's fresh-clone `tilt up` on an amd64 laptop, which passed)
 
-    The street of the site was in the app title (`index.html`, the KPI chart component) and, as the receiver's JSON
-    key prefix, compiled into the KPI exporter's struct tags and quoted in seven docs: 14 files at HEAD, 21 commits
-    and 3 commit messages. A screenshot check found nothing in the README images (no title shown, no text chunks).
+    1. **Parallel JVM image builds can collide on the Gradle cache.** The three JVM Dockerfiles (frontend, data
+       accessor, masterdata server) share the BuildKit cache mount `target=/workspace/gradle_home/caches`. Two builds
+       running at once both had Gradle as PID 47 in their containers, so the second could not tell the lock owner was
+       another process: "Timeout waiting to lock journal cache … Owner PID: 47, Our PID: 47". A rebuild on its own
+       passed. Likely fix: `sharing=locked` on that mount (serializes the Gradle step of parallel builds).
+    2. **`tilt trigger uncategorized` deletes the dev namespace.** The `pvlogger-dev` Namespace object is in Tilt's
+       `uncategorized` resource, so re-triggering it force-deletes the namespace and with it the dev Postgres PVC
+       (the 30-day backfill). Either move the Namespace into its own resource or say so in the dev docs.
 
-    *In code 2026-11-17:* the title is "PV Logger". The key prefix is configuration like the file prefix:
-    `KPI_KEY_PREFIX`, chart `kpiExporter.keyPrefix`, required with `kpiExportServe` and without default (a
-    deployment must not silently send keys the receiver does not know); the infrastructure values set the
-    receiver's. `MarshalJSON` writes the keys in the old order; a golden test pins the wire format against the
-    output of the old code (prefix swapped), a config test the required prefix, two chart tests the guard and the
-    ConfigMap entry. Docs say `<keyPrefix>_*`; ADR-0021 amended. Images: KPI exporter 3.6.0 (new required
-    setting), frontend 3.15.1; chart **5.0.0** (a newly required value). The private blocklist now has the name.
-
-    Open: the history still has it. Plan (owner's decision): a third history rewrite, then the GitHub repository is
-    deleted and recreated, which also drops the commits the 2026-11-16 force-push left reachable by hash and the
-    Actions runs that link them.
 ## Done (resolved, superseded or moot)
 
 1. ~~**masterdata-server prod config DB-name mismatch**~~
@@ -1629,3 +1625,27 @@ next release; it changes nothing for them.
     3.7.1 Ready, 0 restarts, `/health/ready` answering 200 only; the CronJobs on fast 0.13.9, full 0.8.10, device
     3.7.9; the fast collector runs without errors or refusals; Traefik `/` and `/v1/daydata` 200; the export
     relay keeps getting 200. `tilt ci` passed with the changes before the release.
+
+63. ~~🔴 **A site name in the code, docs and history**~~ (added 2026-11-17; the pre-launch exact-value scan matched a
+    personal value from the owner's password manager that no pattern or blocklist rule knew)
+
+    The street of the site was in the app title (`index.html`, the KPI chart component) and, as the receiver's JSON
+    key prefix, compiled into the KPI exporter's struct tags and quoted in seven docs: 14 files at HEAD, 21 commits
+    and 3 commit messages. A screenshot check found nothing in the README images (no title shown, no text chunks).
+
+    *In code 2026-11-17:* the title is "PV Logger". The key prefix is configuration like the file prefix:
+    `KPI_KEY_PREFIX`, chart `kpiExporter.keyPrefix`, required with `kpiExportServe` and without default (a
+    deployment must not silently send keys the receiver does not know); the infrastructure values set the
+    receiver's. `MarshalJSON` writes the keys in the old order; a golden test pins the wire format against the
+    output of the old code (prefix swapped), a config test the required prefix, two chart tests the guard and the
+    ConfigMap entry. Docs say `<keyPrefix>_*`; ADR-0021 amended. Images: KPI exporter 3.6.0 (new required
+    setting), frontend 3.15.1; chart **5.0.0** (a newly required value). The private blocklist now has the name.
+
+    Open: the history still has it. Plan (owner's decision): a third history rewrite, then the GitHub repository is
+    deleted and recreated, which also drops the commits the 2026-11-16 force-push left reachable by hash and the
+    Actions runs that link them.
+
+    **Resolved 2026-11-17:** the third history rewrite removed the name from every commit and message (verified on the
+    rewritten mirror: gitleaks, the blocklist over all refs, the exact-value scan); the GitHub repository was deleted
+    and recreated and now serves none of the old commits. Deployed as chart 5.0.0 (Helm revision 95): the KPI export
+    answers with the same keys as before. The hashes cited in this file were remapped to the rewritten history.
