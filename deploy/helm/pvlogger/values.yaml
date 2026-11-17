@@ -338,12 +338,17 @@ ingress:
     tls: true
     # cert-manager ClusterIssuer for the Traefik host's certificate.
     clusterIssuer: ""
-    # Namespace of the Traefik pods, for the NetworkPolicy.
+    # Namespace and labels of the Traefik pods, for the NetworkPolicy: only
+    # these pods may reach the frontend and the data accessor.
     namespace: "traefik"
+    podLabels:
+      app.kubernetes.io/name: traefik
   tailscale:
     enabled: false
     hostname: ""
     # Namespace of the Tailscale operator's proxies, for the NetworkPolicies.
+    # Within it only the proxies of this release's two ingresses get in
+    # (selected by the labels the operator sets, see _helpers.tpl).
     namespace: "tailscale"
 
 # Keeps every pinned image on every node, so pods start while the registry is

@@ -1,0 +1,113 @@
+# Default-deny ingress plus narrow allows: the ingress proxies get in by pod
+# labels, not by whole namespace (backlog 60).
+suite: network policies
+templates:
+  - templates/network-policies.yaml
+values:
+  - values/required.yaml
+release:
+  name: pvlogger
+  namespace: pvlogger-test
+tests:
+  - it: denies all ingress by default
+    documentSelector:
+      path: metadata.name
+      value: default-deny-ingress
+    asserts:
+      - equal:
+          path: spec.podSelector
+          value: {}
+      - notExists:
+          path: spec.ingress
+
+  - it: renders nothing when disabled
+    set:
+      networkPolicies.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: admits only the Prometheus pods of the monitoring namespace
+    documentSelector:
+      path: metadata.name
+      value: allow-metrics-from-prometheus
+    asserts:
+      - equal:
+          path: spec.ingress[0].from[0]
+          value:
+            namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: monitoring
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: prometheus
+
+  - it: drops the Prometheus allow with an empty namespace
+    set:
+      networkPolicies.prometheus.namespace: ""
+    documentSelector:
+      path: metadata.name
+      value: allow-metrics-from-prometheus
+      skipEmptyTemplates: true
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: admits only the Traefik pods, not the whole namespace
+    set:
+      ingress.enabled: true
+      ingress.traefik.enabled: true
+      ingress.traefik.namespace: kube-system
+    documentSelector:
+      path: metadata.name
+      value: allow-ingress-from-traefik
+    asserts:
+      - equal:
+          path: spec.ingress[0].from[0]
+          value:
+            namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: kube-system
+            podSelector:
+              matchLabels:
+                app.kubernetes.io/name: traefik
+
+  - it: admits only the Tailscale proxy of this release's ingress
+    set:
+      ingress.enabled: true
+      ingress.tailscale.enabled: true
+    documentSelector:
+      path: metadata.name
+      value: allow-ingress-from-tailscale
+    asserts:
+      - equal:
+          path: spec.ingress[0].from[0]
+          value:
+            namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: tailscale
+            podSelector:
+              matchLabels:
+                tailscale.com/managed: "true"
+                tailscale.com/parent-resource-type: ingress
+                tailscale.com/parent-resource: pvlogger
+                tailscale.com/parent-resource-ns: pvlogger-test
+
+  - it: admits only the export ingress's proxy to the export endpoint (ADR-0021)
+    set:
+      kpiExportServe.enabled: true
+    documentSelector:
+      path: metadata.name
+      value: allow-export-from-tailscale
+    asserts:
+      - equal:
+          path: spec.ingress[0].from[0].podSelector.matchLabels
+          value:
+            tailscale.com/managed: "true"
+            tailscale.com/parent-resource-type: ingress
+            tailscale.com/parent-resource: pvlogger-export
+            tailscale.com/parent-resource-ns: pvlogger-test
+      - equal:
+          path: spec.podSelector.matchLabels
+          value:
+            app: pvlogger-kpi-exporter-serve

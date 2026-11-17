@@ -1,0 +1,691 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "pvlogger chart values",
+  "description": "Types and key names of values.yaml. Unknown keys fail, so a typo does not pass silently. Values a template needs only when a component is on stay checked by the templates' required (their messages name the key).",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "image": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "repository": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tag": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "repository",
+        "tag"
+      ]
+    },
+    "quantity": {
+      "type": [
+        "string",
+        "number"
+      ]
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cpu": {
+              "$ref": "#/$defs/quantity"
+            },
+            "memory": {
+              "$ref": "#/$defs/quantity"
+            }
+          }
+        },
+        "requests": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cpu": {
+              "$ref": "#/$defs/quantity"
+            },
+            "memory": {
+              "$ref": "#/$defs/quantity"
+            }
+          }
+        }
+      }
+    },
+    "numberOrString": {
+      "type": [
+        "string",
+        "integer"
+      ],
+      "description": "Rendered quoted into an env var: a number or its string."
+    },
+    "labels": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "minProperties": 1
+    }
+  },
+  "properties": {
+    "global": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "imageRegistry": {
+          "type": "string"
+        },
+        "imagePullPolicy": {
+          "enum": [
+            "Always",
+            "IfNotPresent",
+            "Never"
+          ]
+        },
+        "timezone": {
+          "type": "string",
+          "minLength": 1
+        },
+        "runAsUid": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "secrets": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "postgresPassword": {
+          "type": "string"
+        },
+        "fusionsolarPassword": {
+          "type": "string"
+        },
+        "heartbeatPingUrl": {
+          "type": "string"
+        },
+        "kpiExportToken": {
+          "type": "string"
+        }
+      }
+    },
+    "database": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "host": {
+          "type": "string"
+        },
+        "port": {
+          "$ref": "#/$defs/numberOrString"
+        },
+        "username": {
+          "type": "string"
+        },
+        "sslmode": {
+          "enum": [
+            "disable",
+            "allow",
+            "prefer",
+            "require",
+            "verify-ca",
+            "verify-full"
+          ]
+        }
+      }
+    },
+    "modbus": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "host": {
+          "type": "string"
+        },
+        "port": {
+          "$ref": "#/$defs/numberOrString"
+        },
+        "timeout": {
+          "$ref": "#/$defs/numberOrString"
+        },
+        "connectionSleepMs": {
+          "$ref": "#/$defs/numberOrString"
+        },
+        "meterDeviceIds": {
+          "$ref": "#/$defs/numberOrString"
+        },
+        "inverterDeviceIds": {
+          "$ref": "#/$defs/numberOrString"
+        },
+        "dongleDeviceId": {
+          "$ref": "#/$defs/numberOrString"
+        }
+      }
+    },
+    "pushgateway": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "host": {
+          "type": "string"
+        },
+        "port": {
+          "$ref": "#/$defs/numberOrString"
+        },
+        "protocol": {
+          "enum": [
+            "http",
+            "https"
+          ]
+        }
+      }
+    },
+    "frontend": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "image": {
+          "$ref": "#/$defs/image"
+        },
+        "resources": {
+          "$ref": "#/$defs/resources"
+        },
+        "replicas": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        }
+      }
+    },
+    "dataAccessor": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "image": {
+          "$ref": "#/$defs/image"
+        },
+        "resources": {
+          "$ref": "#/$defs/resources"
+        },
+        "replicas": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        }
+      }
+    },
+    "masterdataServer": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "image": {
+          "$ref": "#/$defs/image"
+        },
+        "resources": {
+          "$ref": "#/$defs/resources"
+        },
+        "replicas": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "masterdataPath": {
+          "type": "string"
+        }
+      }
+    },
+    "fusionsolarAuth": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "image": {
+          "$ref": "#/$defs/image"
+        },
+        "resources": {
+          "$ref": "#/$defs/resources"
+        },
+        "schedule": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        },
+        "fsHost": {
+          "type": "string"
+        },
+        "fsPath": {
+          "type": "string"
+        },
+        "fsProtocol": {
+          "enum": [
+            "http",
+            "https"
+          ]
+        },
+        "logLevel": {
+          "type": "string"
+        }
+      }
+    },
+    "fusionsolar": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "image": {
+          "$ref": "#/$defs/image"
+        },
+        "resources": {
+          "$ref": "#/$defs/resources"
+        },
+        "username": {
+          "type": "string"
+        },
+        "stationCode": {
+          "$ref": "#/$defs/numberOrString"
+        },
+        "devTypeId": {
+          "$ref": "#/$defs/numberOrString"
+        },
+        "maxPoolSize": {
+          "$ref": "#/$defs/numberOrString"
+        },
+        "dbName": {
+          "type": "string"
+        },
+        "driverClass": {
+          "type": "string"
+        },
+        "cronjobs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "schedule": {
+                "type": "string"
+              },
+              "jobName": {
+                "type": "string"
+              },
+              "backoffLimit": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "startingDeadlineSeconds": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "name",
+              "schedule",
+              "jobName"
+            ]
+          }
+        }
+      }
+    },
+    "pvDeviceDataCollector": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "image": {
+          "$ref": "#/$defs/image"
+        },
+        "resources": {
+          "$ref": "#/$defs/resources"
+        },
+        "logLevel": {
+          "type": "string"
+        },
+        "cronjobs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "cronjobName": {
+                "type": "string"
+              },
+              "schedule": {
+                "type": "string"
+              },
+              "jobName": {
+                "type": "string"
+              },
+              "backoffLimit": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "name",
+              "cronjobName",
+              "schedule",
+              "jobName"
+            ]
+          }
+        }
+      }
+    },
+    "pvFastDataCollector": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "image": {
+          "$ref": "#/$defs/image"
+        },
+        "resources": {
+          "$ref": "#/$defs/resources"
+        },
+        "schedule": {
+          "type": "string"
+        },
+        "logLevel": {
+          "type": "string"
+        }
+      }
+    },
+    "pvFullDataCollector": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "image": {
+          "$ref": "#/$defs/image"
+        },
+        "resources": {
+          "$ref": "#/$defs/resources"
+        },
+        "schedule": {
+          "type": "string"
+        },
+        "logLevel": {
+          "type": "string"
+        }
+      }
+    },
+    "kpiExporter": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "uid": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "image": {
+          "$ref": "#/$defs/image"
+        },
+        "restPath": {
+          "type": "string"
+        },
+        "filePrefix": {
+          "type": "string"
+        }
+      }
+    },
+    "kpiExportServe": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "tailscaleHostname": {
+          "type": "string"
+        },
+        "tailscaleTag": {
+          "type": "string"
+        },
+        "resources": {
+          "$ref": "#/$defs/resources"
+        }
+      }
+    },
+    "dbBackup": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "image": {
+          "type": "string",
+          "minLength": 1
+        },
+        "schedule": {
+          "type": "string"
+        },
+        "host": {
+          "type": "string"
+        },
+        "affinity": {
+          "type": "object"
+        },
+        "uid": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "persistence": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "nfsServer": {
+              "type": "string"
+            },
+            "nfsPath": {
+              "type": "string"
+            },
+            "nfsMountOptions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "size": {
+              "type": "string"
+            }
+          }
+        },
+        "resources": {
+          "$ref": "#/$defs/resources"
+        }
+      }
+    },
+    "modbusMockServer": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "image": {
+          "$ref": "#/$defs/image"
+        },
+        "resources": {
+          "$ref": "#/$defs/resources"
+        },
+        "replicas": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "containerPort": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        }
+      }
+    },
+    "ingress": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "traefik": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "host": {
+              "type": "string"
+            },
+            "tls": {
+              "type": "boolean"
+            },
+            "clusterIssuer": {
+              "type": "string"
+            },
+            "namespace": {
+              "type": "string",
+              "minLength": 1
+            },
+            "podLabels": {
+              "$ref": "#/$defs/labels"
+            }
+          }
+        },
+        "tailscale": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "hostname": {
+              "type": "string"
+            },
+            "namespace": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "imagePrepull": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "holdImage": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "heartbeat": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "image": {
+          "type": "string",
+          "minLength": 1
+        },
+        "schedule": {
+          "type": "string"
+        },
+        "maxAgeSeconds": {
+          "type": "integer",
+          "minimum": 60
+        },
+        "resources": {
+          "$ref": "#/$defs/resources"
+        }
+      }
+    },
+    "networkPolicies": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "prometheus": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "namespace": {
+              "type": "string"
+            },
+            "podLabels": {
+              "$ref": "#/$defs/labels"
+            }
+          }
+        }
+      }
+    }
+  }
+}

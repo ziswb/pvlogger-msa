@@ -1,0 +1,54 @@
+# The chart's render-time guards: a missing site value or image tag fails the
+# render with a message that names the key (README "A missing required value").
+suite: guards
+templates:
+  # Loaded for the data accessor Deployment's checksum of it; no test here
+  # asserts on it (its guards are in configmaps-guards_test.yaml).
+  - templates/configmaps.yaml
+  - templates/secrets.yaml
+  - templates/data-accessor-deployment.yaml
+  - templates/kpi-export-serve.yaml
+  - templates/ingress.yaml
+values:
+  - values/required.yaml
+tests:
+  - it: needs secrets.postgresPassword
+    template: templates/secrets.yaml
+    set:
+      secrets.postgresPassword: ""
+    asserts:
+      - failedTemplate:
+          errorPattern: "secrets.postgresPassword is required"
+
+  - it: needs the export token when the export endpoint is on (ADR-0021)
+    template: templates/kpi-export-serve.yaml
+    set:
+      kpiExportServe.enabled: true
+      kpiExportServe.tailscaleHostname: "export"
+      kpiExportServe.tailscaleTag: "tag:export"
+    asserts:
+      - failedTemplate:
+          errorPattern: "secrets.kpiExportToken is empty"
+
+  - it: needs the Traefik host when the Traefik ingress is on
+    template: templates/ingress.yaml
+    set:
+      ingress.enabled: true
+      ingress.traefik.enabled: true
+      ingress.traefik.clusterIssuer: "issuer"
+    asserts:
+      - failedTemplate:
+          errorPattern: "ingress.traefik.host is required"
+
+  # ADR-0025: the dev switch for client timestamps is a build arg of the image,
+  # never something the chart sets, not even with the mock server on.
+  - it: never sets a client-timestamp switch on the data accessor
+    template: templates/data-accessor-deployment.yaml
+    set:
+      modbusMockServer.enabled: true
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: DEV_ACCEPT_CLIENT_TIMESTAMPS
+            value: "true"

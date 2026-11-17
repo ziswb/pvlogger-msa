@@ -320,6 +320,26 @@ next release; it changes nothing for them.
     and started with the old env var set (release build: no dev warning; dev build: the warning). Images: data
     accessor 3.16.0, mock 1.0.4 (backfill error text); chart 4.2.0, which the rest of group 4 joins.
 
+    *Group 4, rest, in code 2026-11-17:* (a) NetworkPolicies admit pods, not namespaces: Traefik by
+    `ingress.traefik.podLabels` (default `app.kubernetes.io/name: traefik`, the label of both the k3s and the
+    Rancher Desktop Traefik), Tailscale only the operator's proxies of this release's ingresses `pvlogger` and
+    `pvlogger-export` (`tailscale.com/managed`, `parent-resource-type: ingress`, `parent-resource`,
+    `parent-resource-ns`; helper `pvlogger.tailscaleProxyLabels`), so other apps' proxies in the operator's
+    namespace stay out. Checked read-only that the production proxies and Traefik carry exactly these labels.
+    (b) `values.schema.json` (draft 2020-12): every key of `values.yaml`, unknown keys refused, numeric env values
+    as number or string, enums for pull policy, sslmode and protocols; free-form only `affinity` and the label
+    maps. The production release's values pass it (checked with `helm get values`, only violation paths printed:
+    none). The templates keep their `required` messages. (c) helm-unittest 1.2.1 (`deploy/helm/pvlogger/tests/`,
+    left out of the package by `.helmignore`): the render guards, the NetworkPolicies, the schema, and that the
+    chart never sets the client-timestamp switch. `chart.yml` unpacks the pinned, checksummed archive into the
+    plugin directory and runs `helm unittest --strict`; 19 tests in four suites pass locally, and the Traefik test
+    fails against the old namespace-wide allow. A `required` in `configmaps.yaml` surfaces from whichever
+    Deployment that hashes it (`pvlogger.configChecksums`) renders first, so its suite switches those off.
+    Checked end to end with `tilt ci` on Rancher Desktop: the backfill's dated rows accepted (dev build), the
+    dashboard and a backfilled `/v1/daydata` day through Traefik with the narrowed policy. Joins chart 4.2.0.
+    Still open in item 60:
+    `-XX:MaxRAMPercentage` (measure first).
+
 ## Done (resolved, superseded or moot)
 
 1. ~~**masterdata-server prod config DB-name mismatch**~~

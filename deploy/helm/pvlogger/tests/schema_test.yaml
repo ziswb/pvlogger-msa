@@ -1,0 +1,31 @@
+# values.schema.json: unknown keys and wrong types fail before any template runs.
+suite: values schema
+templates:
+  - templates/configmaps.yaml
+values:
+  - values/required.yaml
+tests:
+  - it: refuses a misspelt key
+    set:
+      frontend.prot: 8085
+    asserts:
+      - failedTemplate: {}
+
+  - it: refuses a string where a boolean belongs
+    set:
+      ingress.enabled: "yes"
+    asserts:
+      - failedTemplate: {}
+
+  - it: refuses an unknown sslmode
+    set:
+      database.sslmode: "required"
+    asserts:
+      - failedTemplate: {}
+
+  # No fallback to "latest" (pvlogger.image also requires a tag).
+  - it: refuses an empty image tag
+    set:
+      dataAccessor.image.tag: ""
+    asserts:
+      - failedTemplate: {}

@@ -1,0 +1,39 @@
+# The required site values in the ConfigMaps. The data accessor and masterdata
+# Deployments embed a checksum of configmaps.yaml (pvlogger.configChecksums), so
+# with them on, Helm reports a failed `required` from whichever of them renders
+# first; switched off here, the error comes from configmaps.yaml itself.
+suite: configmap guards
+templates:
+  - templates/configmaps.yaml
+values:
+  - values/required.yaml
+set:
+  dataAccessor.enabled: false
+  masterdataServer.enabled: false
+tests:
+  - it: renders with the required values
+    asserts:
+      - notFailedTemplate: {}
+
+  - it: needs database.host
+    set:
+      database.host: ""
+    asserts:
+      - failedTemplate:
+          errorPattern: "database.host is required"
+
+  - it: needs modbus.host
+    set:
+      modbus.host: ""
+    asserts:
+      - failedTemplate:
+          errorPattern: "modbus.host is required"
+
+  - it: needs the FusionSolar station code when fusionsolar is on
+    set:
+      fusionsolar.enabled: true
+      fusionsolar.username: "user"
+      secrets.fusionsolarPassword: "test-placeholder"
+    asserts:
+      - failedTemplate:
+          errorPattern: "fusionsolar.stationCode is required"

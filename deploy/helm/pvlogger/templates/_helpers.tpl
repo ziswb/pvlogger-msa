@@ -151,3 +151,15 @@ writes its perf data and Netty its native library there, db-backup its
 - name: tmp
   mountPath: /tmp
 {{- end }}
+
+{{/*
+Labels the Tailscale operator puts on the proxy pod of one Ingress, for the
+NetworkPolicies: only that ingress's proxy, not every proxy in the operator's
+namespace. Args: root (the chart context), ingress (the Ingress name).
+*/}}
+{{- define "pvlogger.tailscaleProxyLabels" -}}
+tailscale.com/managed: "true"
+tailscale.com/parent-resource-type: ingress
+tailscale.com/parent-resource: {{ .ingress }}
+tailscale.com/parent-resource-ns: {{ .root.Release.Namespace }}
+{{- end }}

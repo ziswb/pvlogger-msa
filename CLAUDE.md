@@ -70,7 +70,7 @@ Makefile or `.dockerignore` changes); its final job `ci-ok` is the one check to 
 skipping versions already there — ADR-0027) and
 `gitleaks.yml` (every push/PR, full history, rules from `main`). Actions are pinned to commit SHAs with the tag
 as a comment; bump them together with the tools they mirror (JDK, Go, golangci-lint, Node,
-Helm, kubeconform, gitleaks; see docs/UPGRADING.md). Dependabot (`.github/dependabot.yml`) opens one grouped
+Helm, kubeconform, helm-unittest, gitleaks; see docs/UPGRADING.md). Dependabot (`.github/dependabot.yml`) opens one grouped
 PR per week for the action pins only.
 
 ### Local Development

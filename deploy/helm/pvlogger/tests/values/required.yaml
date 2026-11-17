@@ -1,0 +1,8 @@
+# The site values every render needs (placeholders); each suite adds or
+# blanks what it tests.
+secrets:
+  postgresPassword: "test-placeholder"
+database:
+  host: "db.example.invalid"
+modbus:
+  host: "modbus.example.invalid"

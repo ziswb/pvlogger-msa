@@ -72,8 +72,9 @@ spec:
 {{- end }}
 {{- end }}
 ---
-# Allow Traefik ingress controller to reach the frontend and data accessor.
-# Traefik terminates TLS and routes external traffic to these services.
+# Allow the Traefik pods to reach the frontend and data accessor. Traefik
+# terminates TLS and routes external traffic to these services. Only pods with
+# ingress.traefik.podLabels, not the whole namespace.
 {{- if .Values.ingress.traefik.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -95,6 +96,9 @@ spec:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: {{ .Values.ingress.traefik.namespace }}
+          podSelector:
+            matchLabels:
+              {{- toYaml .Values.ingress.traefik.podLabels | nindent 14 }}
       ports:
         - protocol: TCP
           port: {{ .Values.frontend.port }}
@@ -102,7 +106,9 @@ spec:
           port: {{ .Values.dataAccessor.port }}
 {{- end }}
 ---
-# Allow Tailscale ingress to reach the frontend and data accessor.
+# Allow the Tailscale proxy of this release's ingress "pvlogger" to reach the
+# frontend and data accessor; the operator's proxies for other apps' ingresses
+# live in the same namespace and stay out.
 {{- if .Values.ingress.tailscale.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -124,6 +130,9 @@ spec:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: {{ .Values.ingress.tailscale.namespace }}
+          podSelector:
+            matchLabels:
+              {{- include "pvlogger.tailscaleProxyLabels" (dict "root" . "ingress" "pvlogger") | nindent 14 }}
       ports:
         - protocol: TCP
           port: {{ .Values.frontend.port }}
@@ -131,8 +140,8 @@ spec:
           port: {{ .Values.dataAccessor.port }}
 {{- end }}
 ---
-# The export endpoint's own Tailscale ingress (ADR-0021): the Tailscale
-# namespace may reach the serve pod on its port, nothing else.
+# The export endpoint's own Tailscale ingress (ADR-0021): only its proxy may
+# reach the serve pod, on its port.
 {{- if .Values.kpiExportServe.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -150,6 +159,9 @@ spec:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: {{ .Values.ingress.tailscale.namespace }}
+          podSelector:
+            matchLabels:
+              {{- include "pvlogger.tailscaleProxyLabels" (dict "root" . "ingress" "pvlogger-export") | nindent 14 }}
       ports:
         - protocol: TCP
           port: {{ .Values.kpiExportServe.port }}

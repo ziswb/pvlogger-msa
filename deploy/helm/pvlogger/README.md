@@ -34,9 +34,14 @@ Optional components, all off by default except the network policies:
 | Data-freshness heartbeat | `heartbeat.enabled` | `secrets.heartbeatPingUrl` |
 | Image pre-pull on every node | `imagePrepull.enabled` | Kubernetes with image volumes |
 | Modbus mock server (dev only) | `modbusMockServer.enabled` | `modbus.host: pvlogger-modbus-mock-server-service`, so the collectors read it |
-| Network policies | on (`networkPolicies.enabled`) | A policy controller that admits node-local traffic (kubelet probes), as k3s's kube-router does |
+| Network policies | on (`networkPolicies.enabled`) | A policy controller that admits node-local traffic (kubelet probes), as k3s's kube-router does. The ingress allows admit pods, not namespaces: Traefik by `ingress.traefik.podLabels`, Tailscale only the operator's proxies of this release's two ingresses (by the `tailscale.com/parent-resource*` labels the operator sets) |
 
 A missing required value fails the render with a message that names the key.
+[`values.schema.json`](values.schema.json) refuses unknown keys and wrong types,
+so a misspelt key fails instead of being ignored. The guards, the
+NetworkPolicies and the schema have unit tests in [`tests/`](tests/)
+(`helm unittest deploy/helm/pvlogger`, [helm-unittest](https://github.com/helm-unittest/helm-unittest)
+at the version `chart.yml` pins).
 The ingress exposes an allowlist only ([ADR-0020](../../../docs/adr/0020-trust-boundary-ingress-allowlist.md)).
 
 Secrets are rendered from values (an `existingSecret` option is backlog item 54).
