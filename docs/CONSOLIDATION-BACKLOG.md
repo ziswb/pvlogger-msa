@@ -12,6 +12,8 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
 
 ## Next up
 
+**Status 2026-11-17.** Chart 4.2.0 deployed (Helm revision 93): item 60 closed, all its groups in production.
+
 **Status 2026-11-16.** Chart 3.0.2 is deployed (Helm revision 87; heartbeat retry and digest pins of item 60, every
 image as pinned in `values.yaml`; the first heartbeat run hit the startup race and its retry got through). Chart 4.0.0
 (ADR-0026 image names, nothing else) deployed 2026-11-16 08:50 (revision 88) with `imageRegistry:
@@ -22,7 +24,6 @@ In order:
 
 - **Item 53 part 2:** release workflow live (ADR-0027, first run `chart/v4.0.1` green); open: package visibility
   at the publication launch, then production via a GHCR pull-through cache.
-- **Item 60:** the follow-ups deferred from the 2026-11-16 review.
 - **From about 2027-01-25:** item 42, drop the unused `modbus_response_data` indexes.
 - Item 45 stays open until the next drain + power-off of the primary's node.
 
@@ -200,151 +201,6 @@ next release; it changes nothing for them.
 
     Done by item 52: old 3 (service hosts derived from the release) and 5 (site values out of the templates). Old 2
     (secret management) continues as item 54.
-60. ⚪ **Follow-ups from the review of the 2026-11-15/16 work** (added 2026-11-16; five read-only reviews of
-    `a302fb1^..522ccc5`, criteria: nothing private leaks to GitHub, the system serves the same purposes as before
-    the move, the public repo is a good showcase)
-
-    Fixed with this item: the pre-push leak guard skipped a ref unscanned when the remote tip was not in the local
-    clone, and now fails closed; it also checks file names, author/committer identities (noreply only in a
-    maintainer clone) and annotated tag messages. The heartbeat retries a refused first connection (the backlog 59
-    race sent false `/fail` pings; chart 3.0.2). The chart CI's dev-settings check asserts the failure reason. Item
-    56 (multi-arch Go images). Third-party chart images pinned by digest. The chart's default image names no longer
-    fall through to a Docker Hub namespace the project does not own (ADR-0026, chart 4.0.0). Comments in the chart no longer cite
-    private-repo items. Stale docs (backlog "Next up", old-server drop, ADR-0003's release-tag gap, the chart's
-    "Docker Hub" default). README: badges, diagram, engineering notes. Release steps in the chart README.
-
-    Deferred, none a defect:
-    - **One retry helper.** The refused-connection retry exists three times (`httpclient/client.go`,
-      fusionsolar `database/connection.go`, `tcp-handler.go`) with fixed delays; the Modbus one uses `Dial` and
-      `time.Sleep`, so it ignores cancellation. One helper in `pv-logger` with backoff, jitter and a context;
-      `DialContext` for Modbus.
-    - **fusionsolar DSN:** built with `Sprintf`, so a password with a space or quote breaks it. Use
-      `pgx.ParseConfig` and set the password field.
-    - **Health endpoints:** the JVM probes hit `/metrics`; add `/health/live` and `/health/ready` (pool + `SELECT 1`)
-      in `pvlogger-shared-ktor`, and a startupProbe.
-    - **JVM Dockerfiles:** `COPY` instead of `ADD`, a Gradle cache mount, a `pvlogger` user (same uid 1000) instead
-      of the owner's login name, OCI `org.opencontainers.image.*` labels, no namespace-specific `DATA_ACCESSOR_HOST`
-      default in the frontend image, and `-XX:MaxRAMPercentage` sized against the 350Mi limit (measure first).
-      Each is an image bump.
-    - **Blocking DB calls** on Ktor request threads: Exposed `transaction {}` from routes; a suspend transaction on
-      `Dispatchers.IO` in the DAOs or one wrapper in `pvlogger-shared-database`.
-    - **Go graceful shutdown:** `signal.NotifyContext` in the mock server and backfill commands, ctx down to `Serve`.
-    - **Image builds rerun the tests** (`prod: test`) that CI already ran.
-    - **CI shape:** path-filtered workflows cannot be required status checks; one always-on workflow with a
-      paths-filter job and a final aggregator job could be. Dependabot (actions, gomod, gradle, npm, docker),
-      grouped weekly, as the policy in `docs/UPGRADING.md` stays.
-    - **Chart:** component labels and selectors (selectors are immutable: a major), `values.schema.json`,
-      `helm-unittest` for the guards, `kpiExporter.uid`/`fsGroup`/`filePrefix` leftovers of the removed export job
-      (a major), the mock's Kubernetes name `pvlogger-modbus-mock-server` vs the module `pvlogger-modbus-mock`
-      (dev only). These join item 55.
-    - **NetworkPolicies** admit whole Traefik/Tailscale namespaces; narrow them with a `podSelector` for the proxy
-      pods. No egress policies (item 55 #15).
-    - **Dev guard:** `devAcceptClientTimestamps` is allowed whenever the mock is on; the data accessor could refuse
-      it in its prod profile too.
-    - **Go module paths** are bare names (`module pv-logger`), not `github.com/ziswb/pvlogger-msa/<module>`;
-      works through `go.work`, but is unusual in a public Go repo.
-    - **Backfill reruns** fill the minutes the fast collector skips (02–04 of each hour); dev only, values match the
-      plant.
-    - **Repo hygiene:** `.claude/statusline.sh` and `.claude/settings.json` are tracked (personal tooling); a root
-      `.editorconfig`, CODEOWNERS.
-
-    *Plan 2026-11-16 (the user picked all four groups, in this order):*
-    1. **Repo hygiene + CI** (no image or chart bump): untrack the `.claude` status line (it moves to the ignored
-       `.claude/settings.local.json`; `CLAUDE.md` stays); a root `.editorconfig`; `.github/CODEOWNERS` (`*` → the
-       owner); Dependabot for GitHub Actions only, weekly, one grouped PR (security updates for the other ecosystems
-       are a repository setting, Phase 5); one always-on `ci.yml` that detects the changed paths, calls the
-       per-stack workflows (now reusable, `workflow_call`) and ends in one `ci-ok` job that branch protection can
-       require. `gitleaks.yml` stays a separate always-on workflow (second required check).
-    2. **Go robustness:** the retry helper, the fusionsolar DSN, graceful shutdown. Image bumps + chart patch.
-    3. **JVM services:** health endpoints + startupProbe, Dockerfile cleanup, non-blocking DB calls. Image bumps +
-       chart minor.
-    4. **Chart + policies:** `values.schema.json`, `helm-unittest`, narrower NetworkPolicy sources, the prod-profile
-       dev guard. Chart minor. Selector and leftover-key cleanup stays with item 55 (a major).
-
-    *Group 1 in code 2026-11-16:* `.claude/settings.json` + `statusline.sh` untracked (the status line now lives in
-    the ignored `settings.local.json`); `.editorconfig` (UTF-8, LF, final newline; Kotlin/SQL/Python 4 spaces,
-    YAML/TOML 2, Go and Makefiles tabs; the Angular app keeps its own); `.github/CODEOWNERS`;
-    `.github/dependabot.yml` (actions only, weekly, grouped); `ci.yml` with `dorny/paths-filter` and `ci-ok`, the
-    five stack workflows now `workflow_call` only (their concurrency moved to `ci.yml`: inside a called workflow
-    `github.workflow` is the caller's name, so per-stack groups would cancel each other). README badges: CI +
-    Gitleaks. Open: the first `ci.yml` runs (a docs-only push must end with `ci-ok` green and every stack skipped),
-    then branch protection requiring `ci-ok` + Gitleaks `scan` and Dependabot security updates at launch (Phase 5).
-    First run failed in `changes`: on a push, paths-filter fetched the previous tip, which needs the stored
-    credentials; fixed with full history in that job (`bdb5c300`).
-
-    *Group 2 in code 2026-11-16:* `pv-logger/retry` (`OnRefused` + `retry.Refused`: 10 attempts, waits doubling
-    from 0.2 s to at most 2 s, jittered to 50–100 %, at most 15 s in total, stops when the context ends) replaces
-    the three copies: the collectors' HTTP transport, the Modbus connect (now `DialContext`, plus
-    `TcpHandler.ConnectContext`; the collectors still call `Connect` without a context, wiring a signal context
-    through the jobs is not part of this) and the fusionsolar DB connect. fusionsolar builds its settings with
-    quoted values via `pgx.ParseConfig` and sets the password on the parsed config (tests with spaces, quotes,
-    backslashes). The mock server closes its listener on SIGTERM and exits 0 (checked locally); the backfill stops
-    between two minutes and exits 1 ("a rerun completes it"). `make test` + `make lint` pass in all Go modules.
-    Images: fast 0.13.7, full 0.8.8, device 3.7.7, fusionsolar 3.5.7, mock 1.0.3; fusionsolar-auth and the KPI
-    exporter contain none of it. Chart 4.0.2.
-
-    *Group 3 plan 2026-11-16:* (a) `configureHealth` in `pvlogger-shared-ktor`: `/health/live` (the process answers)
-    and `/health/ready` (named checks with a timeout; 503 lists only the failed names, details go to the log). The
-    data accessor and the masterdata server check their pool (`DatabaseFactory.isReachable`, `isValid` on a pooled
-    connection); the frontend has no check (its readiness must not follow the data accessor's). Chart: probes on
-    those paths plus a startupProbe instead of the long `initialDelaySeconds`; the ingresses cut `/health` out of the
-    frontend's `/` like `/metrics`. (b) `dbTransaction` in `pvlogger-shared-database`: a JDBC transaction on
-    `Dispatchers.IO`; the DAOs become `suspend`, so no Ktor request thread blocks on the database. (c) Dockerfiles:
-    `COPY` instead of `ADD`, a Gradle cache mount, user `pvlogger` (uid 1000 as before), no namespace-specific
-    `DATA_ACCESSOR_HOST` default in the frontend image (the chart sets it). OCI labels come from `release.yml`
-    (ADR-0027). Deferred: `-XX:MaxRAMPercentage` (needs a measurement in production first). Bumps: the three JVM
-    images minor, chart minor.
-
-    *Group 3 in code 2026-11-16:* (a) `8f9a4a58`, (b) `ebb2b0e0`, (c) Dockerfiles as planned (npm cache mount too).
-    Checked: `./gradlew build` (75 JVM tests, a data accessor test reads `/health/ready` against Testcontainers, a
-    frontend test that the SPA fallback does not swallow the probe paths), `helm lint` + render (three services
-    with startup/liveness/readiness probes, `/health` excluded on both ingresses), local image builds of the
-    masterdata server and the frontend (user `pvlogger`, uid/gid 1000, no `DATA_ACCESSOR_HOST` in the image).
-    Images: data accessor 3.15.0, masterdata server 3.7.0, frontend 3.15.0; chart 4.1.0. Still open in item 60:
-    `-XX:MaxRAMPercentage` (measure first) and group 4.
-
-    *Deployed:* group 2 as chart 4.0.2 (Helm revision 89, 23:32), group 3 as chart 4.1.0 (revision 90,
-    2026-11-16 23:54): the three JVM pods 1/1 Ready, 0 restarts, on the new images with the `/health` probes; user
-    `pvlogger`; `/health/ready` answers `ok` in the data accessor and the masterdata server; the fast collector runs
-    after the rollout completed. The only probe failures were startup probes while the JVMs started (connection
-    refused, one 5 s timeout of the masterdata server), which is what the startup probe absorbs.
-
-    *Group 4, dev guard, decided 2026-11-17:* a data accessor check "in its prod profile" cannot work, Tilt runs the
-    same image with the same `application-prod.conf`. Instead the switch moved into the image (ADR-0025 amended):
-    the Dockerfile's build arg `DEV_ACCEPT_CLIENT_TIMESTAMPS` (default `false`, anything but true/false fails the
-    build) writes `/opt/pvlogger/image.conf`, included last by `application-prod.conf`, which has no environment
-    override any more (`ProdProfileTest`). Only the Tiltfile passes `true`. Dropped: the chart value
-    `dataAccessor.devAcceptClientTimestamps`, the `pvlogger.devGuard` render guard, the env var in the Deployment
-    and the CI step that tested the guard. A row with `dateCreated` is still refused (400) by any other build.
-    Checked: data accessor tests (31, Testcontainers), `helm lint` with the dev values, both image variants built
-    and started with the old env var set (release build: no dev warning; dev build: the warning). Images: data
-    accessor 3.16.0, mock 1.0.4 (backfill error text); chart 4.2.0, which the rest of group 4 joins.
-
-    *Group 4, rest, in code 2026-11-17:* (a) NetworkPolicies admit pods, not namespaces: Traefik by
-    `ingress.traefik.podLabels` (default `app.kubernetes.io/name: traefik`, the label of both the k3s and the
-    Rancher Desktop Traefik), Tailscale only the operator's proxies of this release's ingresses `pvlogger` and
-    `pvlogger-export` (`tailscale.com/managed`, `parent-resource-type: ingress`, `parent-resource`,
-    `parent-resource-ns`; helper `pvlogger.tailscaleProxyLabels`), so other apps' proxies in the operator's
-    namespace stay out. Checked read-only that the production proxies and Traefik carry exactly these labels.
-    (b) `values.schema.json` (draft 2020-12): every key of `values.yaml`, unknown keys refused, numeric env values
-    as number or string, enums for pull policy, sslmode and protocols; free-form only `affinity` and the label
-    maps. The production release's values pass it (checked with `helm get values`, only violation paths printed:
-    none). The templates keep their `required` messages. (c) helm-unittest 1.2.1 (`deploy/helm/pvlogger/tests/`,
-    left out of the package by `.helmignore`): the render guards, the NetworkPolicies, the schema, and that the
-    chart never sets the client-timestamp switch. `chart.yml` unpacks the pinned, checksummed archive into the
-    plugin directory and runs `helm unittest --strict`; 19 tests in four suites pass locally, and the Traefik test
-    fails against the old namespace-wide allow. A `required` in `configmaps.yaml` surfaces from whichever
-    Deployment that hashes it (`pvlogger.configChecksums`) renders first, so its suite switches those off.
-    Checked end to end with `tilt ci` on Rancher Desktop: the backfill's dated rows accepted (dev build), the
-    dashboard and a backfilled `/v1/daydata` day through Traefik with the narrowed policy. Joins chart 4.2.0.
-
-    *Deployed:* chart 4.2.0 (Helm revision 93, 2026-11-17; revision 92 failed, `context canceled`, before the
-    data accessor image was in the registry). Data accessor 3.16.0 Ready, 0 restarts, no dev-build warning; the
-    three NetworkPolicies carry the pod selectors; through Traefik `/` and `/v1/daydata` answer 200 and `/metrics`
-    404; through the Tailscale ingress `/` and `/v1/daydata` 200; the export endpoint answers through its proxy
-    and the relay's requests keep getting 200; the fast collector runs. Still open in item 60:
-    `-XX:MaxRAMPercentage` (measure first).
-
 ## Done (resolved, superseded or moot)
 
 1. ~~**masterdata-server prod config DB-name mismatch**~~
@@ -1521,6 +1377,162 @@ next release; it changes nothing for them.
     *Done 2026-11-16:* a manual db-backup run (00:21) hit the race: its first `pg_isready` got no response ("not
     reachable yet, waiting..."), the next answered, it dumped from the standby as intended and finished all 3
     databases. The fusionsolar retry goes live when fusionsolar is re-enabled (infrastructure backlog 104).
+
+60. ~~⚪ **Follow-ups from the review of the 2026-11-15/16 work**~~ (added 2026-11-16; five read-only reviews of
+    `a302fb1^..522ccc5`, criteria: nothing private leaks to GitHub, the system serves the same purposes as before
+    the move, the public repo is a good showcase)
+
+    Fixed with this item: the pre-push leak guard skipped a ref unscanned when the remote tip was not in the local
+    clone, and now fails closed; it also checks file names, author/committer identities (noreply only in a
+    maintainer clone) and annotated tag messages. The heartbeat retries a refused first connection (the backlog 59
+    race sent false `/fail` pings; chart 3.0.2). The chart CI's dev-settings check asserts the failure reason. Item
+    56 (multi-arch Go images). Third-party chart images pinned by digest. The chart's default image names no longer
+    fall through to a Docker Hub namespace the project does not own (ADR-0026, chart 4.0.0). Comments in the chart no longer cite
+    private-repo items. Stale docs (backlog "Next up", old-server drop, ADR-0003's release-tag gap, the chart's
+    "Docker Hub" default). README: badges, diagram, engineering notes. Release steps in the chart README.
+
+    Deferred, none a defect:
+    - **One retry helper.** The refused-connection retry exists three times (`httpclient/client.go`,
+      fusionsolar `database/connection.go`, `tcp-handler.go`) with fixed delays; the Modbus one uses `Dial` and
+      `time.Sleep`, so it ignores cancellation. One helper in `pv-logger` with backoff, jitter and a context;
+      `DialContext` for Modbus.
+    - **fusionsolar DSN:** built with `Sprintf`, so a password with a space or quote breaks it. Use
+      `pgx.ParseConfig` and set the password field.
+    - **Health endpoints:** the JVM probes hit `/metrics`; add `/health/live` and `/health/ready` (pool + `SELECT 1`)
+      in `pvlogger-shared-ktor`, and a startupProbe.
+    - **JVM Dockerfiles:** `COPY` instead of `ADD`, a Gradle cache mount, a `pvlogger` user (same uid 1000) instead
+      of the owner's login name, OCI `org.opencontainers.image.*` labels, no namespace-specific `DATA_ACCESSOR_HOST`
+      default in the frontend image, and `-XX:MaxRAMPercentage` sized against the 350Mi limit (measure first).
+      Each is an image bump.
+    - **Blocking DB calls** on Ktor request threads: Exposed `transaction {}` from routes; a suspend transaction on
+      `Dispatchers.IO` in the DAOs or one wrapper in `pvlogger-shared-database`.
+    - **Go graceful shutdown:** `signal.NotifyContext` in the mock server and backfill commands, ctx down to `Serve`.
+    - **Image builds rerun the tests** (`prod: test`) that CI already ran.
+    - **CI shape:** path-filtered workflows cannot be required status checks; one always-on workflow with a
+      paths-filter job and a final aggregator job could be. Dependabot (actions, gomod, gradle, npm, docker),
+      grouped weekly, as the policy in `docs/UPGRADING.md` stays.
+    - **Chart:** component labels and selectors (selectors are immutable: a major), `values.schema.json`,
+      `helm-unittest` for the guards, `kpiExporter.uid`/`fsGroup`/`filePrefix` leftovers of the removed export job
+      (a major), the mock's Kubernetes name `pvlogger-modbus-mock-server` vs the module `pvlogger-modbus-mock`
+      (dev only). These join item 55.
+    - **NetworkPolicies** admit whole Traefik/Tailscale namespaces; narrow them with a `podSelector` for the proxy
+      pods. No egress policies (item 55 #15).
+    - **Dev guard:** `devAcceptClientTimestamps` is allowed whenever the mock is on; the data accessor could refuse
+      it in its prod profile too.
+    - **Go module paths** are bare names (`module pv-logger`), not `github.com/ziswb/pvlogger-msa/<module>`;
+      works through `go.work`, but is unusual in a public Go repo.
+    - **Backfill reruns** fill the minutes the fast collector skips (02–04 of each hour); dev only, values match the
+      plant.
+    - **Repo hygiene:** `.claude/statusline.sh` and `.claude/settings.json` are tracked (personal tooling); a root
+      `.editorconfig`, CODEOWNERS.
+
+    *Plan 2026-11-16 (the user picked all four groups, in this order):*
+    1. **Repo hygiene + CI** (no image or chart bump): untrack the `.claude` status line (it moves to the ignored
+       `.claude/settings.local.json`; `CLAUDE.md` stays); a root `.editorconfig`; `.github/CODEOWNERS` (`*` → the
+       owner); Dependabot for GitHub Actions only, weekly, one grouped PR (security updates for the other ecosystems
+       are a repository setting, Phase 5); one always-on `ci.yml` that detects the changed paths, calls the
+       per-stack workflows (now reusable, `workflow_call`) and ends in one `ci-ok` job that branch protection can
+       require. `gitleaks.yml` stays a separate always-on workflow (second required check).
+    2. **Go robustness:** the retry helper, the fusionsolar DSN, graceful shutdown. Image bumps + chart patch.
+    3. **JVM services:** health endpoints + startupProbe, Dockerfile cleanup, non-blocking DB calls. Image bumps +
+       chart minor.
+    4. **Chart + policies:** `values.schema.json`, `helm-unittest`, narrower NetworkPolicy sources, the prod-profile
+       dev guard. Chart minor. Selector and leftover-key cleanup stays with item 55 (a major).
+
+    *Group 1 in code 2026-11-16:* `.claude/settings.json` + `statusline.sh` untracked (the status line now lives in
+    the ignored `settings.local.json`); `.editorconfig` (UTF-8, LF, final newline; Kotlin/SQL/Python 4 spaces,
+    YAML/TOML 2, Go and Makefiles tabs; the Angular app keeps its own); `.github/CODEOWNERS`;
+    `.github/dependabot.yml` (actions only, weekly, grouped); `ci.yml` with `dorny/paths-filter` and `ci-ok`, the
+    five stack workflows now `workflow_call` only (their concurrency moved to `ci.yml`: inside a called workflow
+    `github.workflow` is the caller's name, so per-stack groups would cancel each other). README badges: CI +
+    Gitleaks. Open: the first `ci.yml` runs (a docs-only push must end with `ci-ok` green and every stack skipped),
+    then branch protection requiring `ci-ok` + Gitleaks `scan` and Dependabot security updates at launch (Phase 5).
+    First run failed in `changes`: on a push, paths-filter fetched the previous tip, which needs the stored
+    credentials; fixed with full history in that job (`bdb5c300`).
+
+    *Group 2 in code 2026-11-16:* `pv-logger/retry` (`OnRefused` + `retry.Refused`: 10 attempts, waits doubling
+    from 0.2 s to at most 2 s, jittered to 50–100 %, at most 15 s in total, stops when the context ends) replaces
+    the three copies: the collectors' HTTP transport, the Modbus connect (now `DialContext`, plus
+    `TcpHandler.ConnectContext`; the collectors still call `Connect` without a context, wiring a signal context
+    through the jobs is not part of this) and the fusionsolar DB connect. fusionsolar builds its settings with
+    quoted values via `pgx.ParseConfig` and sets the password on the parsed config (tests with spaces, quotes,
+    backslashes). The mock server closes its listener on SIGTERM and exits 0 (checked locally); the backfill stops
+    between two minutes and exits 1 ("a rerun completes it"). `make test` + `make lint` pass in all Go modules.
+    Images: fast 0.13.7, full 0.8.8, device 3.7.7, fusionsolar 3.5.7, mock 1.0.3; fusionsolar-auth and the KPI
+    exporter contain none of it. Chart 4.0.2.
+
+    *Group 3 plan 2026-11-16:* (a) `configureHealth` in `pvlogger-shared-ktor`: `/health/live` (the process answers)
+    and `/health/ready` (named checks with a timeout; 503 lists only the failed names, details go to the log). The
+    data accessor and the masterdata server check their pool (`DatabaseFactory.isReachable`, `isValid` on a pooled
+    connection); the frontend has no check (its readiness must not follow the data accessor's). Chart: probes on
+    those paths plus a startupProbe instead of the long `initialDelaySeconds`; the ingresses cut `/health` out of the
+    frontend's `/` like `/metrics`. (b) `dbTransaction` in `pvlogger-shared-database`: a JDBC transaction on
+    `Dispatchers.IO`; the DAOs become `suspend`, so no Ktor request thread blocks on the database. (c) Dockerfiles:
+    `COPY` instead of `ADD`, a Gradle cache mount, user `pvlogger` (uid 1000 as before), no namespace-specific
+    `DATA_ACCESSOR_HOST` default in the frontend image (the chart sets it). OCI labels come from `release.yml`
+    (ADR-0027). Deferred: `-XX:MaxRAMPercentage` (needs a measurement in production first). Bumps: the three JVM
+    images minor, chart minor.
+
+    *Group 3 in code 2026-11-16:* (a) `8f9a4a58`, (b) `ebb2b0e0`, (c) Dockerfiles as planned (npm cache mount too).
+    Checked: `./gradlew build` (75 JVM tests, a data accessor test reads `/health/ready` against Testcontainers, a
+    frontend test that the SPA fallback does not swallow the probe paths), `helm lint` + render (three services
+    with startup/liveness/readiness probes, `/health` excluded on both ingresses), local image builds of the
+    masterdata server and the frontend (user `pvlogger`, uid/gid 1000, no `DATA_ACCESSOR_HOST` in the image).
+    Images: data accessor 3.15.0, masterdata server 3.7.0, frontend 3.15.0; chart 4.1.0. Still open in item 60:
+    `-XX:MaxRAMPercentage` (measure first) and group 4.
+
+    *Deployed:* group 2 as chart 4.0.2 (Helm revision 89, 23:32), group 3 as chart 4.1.0 (revision 90,
+    2026-11-16 23:54): the three JVM pods 1/1 Ready, 0 restarts, on the new images with the `/health` probes; user
+    `pvlogger`; `/health/ready` answers `ok` in the data accessor and the masterdata server; the fast collector runs
+    after the rollout completed. The only probe failures were startup probes while the JVMs started (connection
+    refused, one 5 s timeout of the masterdata server), which is what the startup probe absorbs.
+
+    *Group 4, dev guard, decided 2026-11-17:* a data accessor check "in its prod profile" cannot work, Tilt runs the
+    same image with the same `application-prod.conf`. Instead the switch moved into the image (ADR-0025 amended):
+    the Dockerfile's build arg `DEV_ACCEPT_CLIENT_TIMESTAMPS` (default `false`, anything but true/false fails the
+    build) writes `/opt/pvlogger/image.conf`, included last by `application-prod.conf`, which has no environment
+    override any more (`ProdProfileTest`). Only the Tiltfile passes `true`. Dropped: the chart value
+    `dataAccessor.devAcceptClientTimestamps`, the `pvlogger.devGuard` render guard, the env var in the Deployment
+    and the CI step that tested the guard. A row with `dateCreated` is still refused (400) by any other build.
+    Checked: data accessor tests (31, Testcontainers), `helm lint` with the dev values, both image variants built
+    and started with the old env var set (release build: no dev warning; dev build: the warning). Images: data
+    accessor 3.16.0, mock 1.0.4 (backfill error text); chart 4.2.0, which the rest of group 4 joins.
+
+    *Group 4, rest, in code 2026-11-17:* (a) NetworkPolicies admit pods, not namespaces: Traefik by
+    `ingress.traefik.podLabels` (default `app.kubernetes.io/name: traefik`, the label of both the k3s and the
+    Rancher Desktop Traefik), Tailscale only the operator's proxies of this release's ingresses `pvlogger` and
+    `pvlogger-export` (`tailscale.com/managed`, `parent-resource-type: ingress`, `parent-resource`,
+    `parent-resource-ns`; helper `pvlogger.tailscaleProxyLabels`), so other apps' proxies in the operator's
+    namespace stay out. Checked read-only that the production proxies and Traefik carry exactly these labels.
+    (b) `values.schema.json` (draft 2020-12): every key of `values.yaml`, unknown keys refused, numeric env values
+    as number or string, enums for pull policy, sslmode and protocols; free-form only `affinity` and the label
+    maps. The production release's values pass it (checked with `helm get values`, only violation paths printed:
+    none). The templates keep their `required` messages. (c) helm-unittest 1.2.1 (`deploy/helm/pvlogger/tests/`,
+    left out of the package by `.helmignore`): the render guards, the NetworkPolicies, the schema, and that the
+    chart never sets the client-timestamp switch. `chart.yml` unpacks the pinned, checksummed archive into the
+    plugin directory and runs `helm unittest --strict`; 19 tests in four suites pass locally, and the Traefik test
+    fails against the old namespace-wide allow. A `required` in `configmaps.yaml` surfaces from whichever
+    Deployment that hashes it (`pvlogger.configChecksums`) renders first, so its suite switches those off.
+    Checked end to end with `tilt ci` on Rancher Desktop: the backfill's dated rows accepted (dev build), the
+    dashboard and a backfilled `/v1/daydata` day through Traefik with the narrowed policy. Joins chart 4.2.0.
+
+    *Deployed:* chart 4.2.0 (Helm revision 93, 2026-11-17; revision 92 failed, `context canceled`, before the
+    data accessor image was in the registry). Data accessor 3.16.0 Ready, 0 restarts, no dev-build warning; the
+    three NetworkPolicies carry the pod selectors; through Traefik `/` and `/v1/daydata` answer 200 and `/metrics`
+    404; through the Tailscale ingress `/` and `/v1/daydata` 200; the export endpoint answers through its proxy
+    and the relay's requests keep getting 200; the fast collector runs. 
+
+    *`-XX:MaxRAMPercentage`, measured 2026-11-17 and left at the default:* all three JVMs run Serial GC with the
+    default 25 %, a heap cap of 126 MiB. Maxima over 14 days (Prometheus): heap used 39 / 26 / 27 MiB (data
+    accessor / masterdata server / frontend), non-heap (metaspace, code cache) 106 / 95 / 88 MiB, container
+    working set 259 / 224 / 217 MiB against limits of 350 / 300 / 350 Mi. No OOM kill (the only restarts, on
+    2026-11-05, ended with `Error`). The heap uses under a third of its cap and non-heap is the larger share, so a
+    higher percentage would only let the heap grow into headroom nothing needs; no flag set.
+
+    **Resolved 2026-11-17:** all four groups done and deployed (chart 4.2.0), `MaxRAMPercentage` measured and
+    not needed. The deferred chart items (component labels and selectors, the export job's leftover keys, the
+    mock's Kubernetes name) are with item 55, the bare Go module paths and the backfill's 02–04 minutes stay as
+    they are (dev only, works through `go.work`).
 
 61. 🔴 **Modbus replies are not matched to their request** (added 2026-11-16, reported from the infrastructure
     side; one occurrence so far)
