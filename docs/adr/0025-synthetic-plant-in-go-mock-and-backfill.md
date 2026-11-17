@@ -32,14 +32,25 @@ rows itself; KPI rows already carry the collector's `dateCreated`.
    code; daily energy comes from the plant's own counters, not from the data
    accessor's day-difference SQL (which only computes for today and is exercised
    by the live path every minute).
-4. **The raw-row store accepts a client `dateCreated` only behind a dev setting**
-   (`DEV_ACCEPT_CLIENT_TIMESTAMPS`, off by default and in production). Without it a
-   raw row that carries the field is refused (400), not stored as of now:
-   *amended 2026-11-15 (backlog 57)*, it was ignored at first, so a backfill against
-   a stock data accessor silently dated a month of raw rows today. The chart
-   refuses the setting unless the mock server is on. With raw rows from the
-   backfill, today's day-difference has its midnight baseline and the switch from
-   backfill to live data is seamless.
+4. **The raw-row store accepts a client `dateCreated` only in a dev build of the
+   data accessor.** Without it a raw row that carries the field is refused (400),
+   not stored as of now: *amended 2026-11-15 (backlog 57)*, it was ignored at
+   first, so a backfill against a stock data accessor silently dated a month of
+   raw rows today. With raw rows from the backfill, today's day-difference has its
+   midnight baseline and the switch from backfill to live data is seamless.
+
+   *Amended 2026-11-17 (backlog 60):* the switch is fixed when the image is
+   built, not set at deploy time. The Dockerfile's build arg
+   `DEV_ACCEPT_CLIENT_TIMESTAMPS` (default `false`) writes
+   `/opt/pvlogger/image.conf`, which `application-prod.conf` includes last; the
+   profile has no environment override for it. Only the Tiltfile passes `true`;
+   CI, releases and `scripts/build.sh` build the default. This replaces the
+   chart value `dataAccessor.devAcceptClientTimestamps`, which became an env var
+   and needed a render guard (only with the mock server) and a CI check of that
+   guard: the safety sat in configuration, and the data accessor could not tell
+   Tilt from production, both run `application-prod.conf`. Now a released image
+   cannot accept the timestamps whatever the values say. The local
+   `application-dev.conf` (a Gradle run, never in an image) turns it on.
 
 ## Consequences
 
@@ -47,8 +58,11 @@ rows itself; KPI rows already carry the collector's `dateCreated`.
   (backfill) come from one model, so the dashboard looks continuous and the KPI
   identities hold everywhere.
 - The Kotlin mock server and its masterdata-driven random values go away.
-- Production behaviour is unchanged; the dev setting is one more thing a
-  deployment must leave off.
+- Production behaviour is unchanged. The data accessor Tilt runs differs from
+  the release image by this one build arg, on purpose.
+- Someone who can edit the Deployment can still mount their own
+  `image.conf` or run a dev image; that is the same trust as the KPI store
+  below, not a new hole.
 - The KPI store already trusts a client `dateCreated`: any in-cluster caller can
   write KPI rows into the past. That is within ADR-0020's trust model (in-cluster
   calls are trusted) and not new.

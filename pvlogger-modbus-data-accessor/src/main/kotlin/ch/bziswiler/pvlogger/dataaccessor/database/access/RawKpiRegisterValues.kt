@@ -13,7 +13,7 @@ data class RawKpiRegisterValues(
     val meterImportedEnergy: Double = 0.0,
     /**
      * When the row was read, epoch milliseconds. Honoured only with the dev
-     * setting DEV_ACCEPT_CLIENT_TIMESTAMPS (the history backfill, ADR-0025);
+     * setting dev.acceptClientTimestamps (the history backfill, ADR-0025);
      * otherwise a row that carries it is refused (400). Without it the row is
      * dated on arrival.
      */

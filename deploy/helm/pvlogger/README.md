@@ -34,7 +34,6 @@ Optional components, all off by default except the network policies:
 | Data-freshness heartbeat | `heartbeat.enabled` | `secrets.heartbeatPingUrl` |
 | Image pre-pull on every node | `imagePrepull.enabled` | Kubernetes with image volumes |
 | Modbus mock server (dev only) | `modbusMockServer.enabled` | `modbus.host: pvlogger-modbus-mock-server-service`, so the collectors read it |
-| Backdated raw rows for the history backfill (dev only) | `dataAccessor.devAcceptClientTimestamps` | `modbusMockServer.enabled` (the render fails without it); the backfill Job itself is `deploy/dev/backfill-job.yaml` |
 | Network policies | on (`networkPolicies.enabled`) | A policy controller that admits node-local traffic (kubelet probes), as k3s's kube-router does |
 
 A missing required value fails the render with a message that names the key.

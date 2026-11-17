@@ -101,9 +101,16 @@ GO_IMAGES = {
 }
 
 # The backends ignore the Angular sources: an SPA edit rebuilds only the frontend.
+# The data accessor is a dev build: it keeps the backfill's dated raw rows
+# (ADR-0025). Only Tilt passes this; every other build refuses them.
+DEV_BUILD_ARGS = {
+    'pvlogger-modbus-data-accessor': {'DEV_ACCEPT_CLIENT_TIMESTAMPS': 'true'},
+}
+
 for repo, module in JVM_IMAGES.items():
     docker_build(repo, '.', dockerfile=module + '/docker/Dockerfile', only=JVM_COMMON,
-                 ignore=[] if module == 'pvlogger-frontend' else ['pvlogger-frontend/src/web'])
+                 ignore=[] if module == 'pvlogger-frontend' else ['pvlogger-frontend/src/web'],
+                 build_args=DEV_BUILD_ARGS.get(module, {}))
 
 for repo, module in GO_IMAGES.items():
     docker_build(repo, '.', dockerfile=module + '/docker/Dockerfile', only=GO_COMMON)

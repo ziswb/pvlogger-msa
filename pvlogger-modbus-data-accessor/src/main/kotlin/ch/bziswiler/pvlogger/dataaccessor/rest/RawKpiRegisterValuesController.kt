@@ -24,7 +24,7 @@ fun Routing.rawKpiRegisterValues() {
             // accessor without the dev setting would otherwise date a month of
             // raw rows "now" and today's energy would show the whole month.
             if (values.dateCreated != null && !appConfig.serverConfig.acceptClientTimestamps) {
-                call.respond(HttpStatusCode.BadRequest, "dateCreated needs DEV_ACCEPT_CLIENT_TIMESTAMPS")
+                call.respond(HttpStatusCode.BadRequest, "dateCreated needs a dev build of the data accessor (ADR-0025)")
                 return@post
             }
             RawKpiRegisterValuesDao.store(values, acceptClientTimestamp = appConfig.serverConfig.acceptClientTimestamps)

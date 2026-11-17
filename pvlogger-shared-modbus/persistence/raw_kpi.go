@@ -13,7 +13,7 @@ type RawKpiRegisterValues struct {
 	MeterExportedEnergy      float64 `json:"meterExportedEnergy"`
 	MeterImportedEnergy      float64 `json:"meterImportedEnergy"`
 	// DateCreated (epoch ms) is for the dev backfill only: the data accessor
-	// refuses it unless DEV_ACCEPT_CLIENT_TIMESTAMPS is on (ADR-0025), so it
-	// must stay absent (nil) for the collectors.
+	// refuses it unless it is a dev build (ADR-0025), so it must stay
+	// absent (nil) for the collectors.
 	DateCreated *int64 `json:"dateCreated,omitempty"`
 }

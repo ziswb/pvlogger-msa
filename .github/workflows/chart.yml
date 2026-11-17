@@ -63,15 +63,6 @@ jobs:
             sed -e 's/__NAMESPACE__/pvlogger/g' -e 's|__TIMEZONE__|Etc/UTC|g' "$f"
             echo "---"
           done | "$RUNNER_TEMP/kubeconform" -strict -summary
-      # Dev-only settings must not render without the mock server (ADR-0025).
-      - name: Dev settings need the mock
-        run: |
-          if out=$(helm template t "$CHART" -f deploy/dev/values-dev.yaml \
-               --set modbusMockServer.enabled=false 2>&1); then
-            echo "::error::devAcceptClientTimestamps rendered without modbusMockServer"
-            exit 1
-          fi
-          echo "$out" | grep -q "devAcceptClientTimestamps"
       # ADR-0024: the chart pins exactly the versions the Dockerfiles build.
       - name: Image tags match the Dockerfiles
         run: scripts/check-chart-tags.sh

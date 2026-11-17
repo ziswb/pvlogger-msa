@@ -91,7 +91,7 @@ func minutesWithRows(client *persistence.PersistingService, day time.Time) (map[
 
 // fill stores the rows of every minute in [begin, end) not in have and
 // returns how many minutes it stored. A refused raw row (400) usually means
-// the data accessor runs without DEV_ACCEPT_CLIENT_TIMESTAMPS.
+// the data accessor is not a dev build (DEV_ACCEPT_CLIENT_TIMESTAMPS, ADR-0025).
 func fill(ctx context.Context, p *plant.Plant, client *persistence.PersistingService, begin, end time.Time, have map[int64]bool) (int, error) {
 	stored := 0
 	for at := begin; at.Before(end); at = at.Add(time.Minute) {
@@ -105,7 +105,7 @@ func fill(ctx context.Context, p *plant.Plant, client *persistence.PersistingSer
 		midnight := mock.ReadingOf(p.At(plant.StartOfDay(at)))
 		jobId := "backfill-" + at.UTC().Format("20060102T1504")
 		if err := client.StoreValues(rawRowOf(jobId, at, r), sharedconfig.StoreRawKpiRegisterValuesPath); err != nil {
-			return stored, fmt.Errorf("storing the raw row of %s (does the data accessor run with DEV_ACCEPT_CLIENT_TIMESTAMPS?): %w", at.Format(time.DateTime), err)
+			return stored, fmt.Errorf("storing the raw row of %s (is the data accessor a dev build, DEV_ACCEPT_CLIENT_TIMESTAMPS=true?): %w", at.Format(time.DateTime), err)
 		}
 		if err := client.StoreValues(kpiRowOf(jobId, at, r, midnight), sharedconfig.StoreKpiValuesPath); err != nil {
 			return stored, fmt.Errorf("storing the KPI row of %s: %w", at.Format(time.DateTime), err)
@@ -125,7 +125,7 @@ func rawRowOf(jobId string, at time.Time, r mock.Reading) *persistence.RawKpiReg
 		InverterAccumulatedYield: r.YieldTotalKWh,
 		MeterExportedEnergy:      r.ExportedTotalKWh,
 		MeterImportedEnergy:      r.ImportedTotalKWh,
-		// Accepted only with DEV_ACCEPT_CLIENT_TIMESTAMPS (ADR-0025).
+		// Accepted only by a dev build of the data accessor (ADR-0025).
 		DateCreated: &ms,
 	}
 }

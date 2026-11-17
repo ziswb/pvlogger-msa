@@ -14,9 +14,16 @@ FROM eclipse-temurin:25-jre-ubi10-minimal@sha256:2e8ee3e5f7ee514713aaae37ccaa790
 
 LABEL author="Bruno Ziswiler"
 LABEL description="PV Logger Data Accessor"
-LABEL version="3.15.0"
+LABEL version="3.16.0"
 
-RUN mkdir -p "/opt/pvlogger/"
+# Dev only (ADR-0025): Tilt builds with DEV_ACCEPT_CLIENT_TIMESTAMPS=true, so
+# the history backfill can date raw KPI rows itself. Every other build (CI,
+# releases, scripts/build.sh) leaves the default: the image refuses them. Fixed
+# at build time on purpose, not an env var a Deployment could set.
+ARG DEV_ACCEPT_CLIENT_TIMESTAMPS=false
+RUN mkdir -p "/opt/pvlogger/" && \
+    case "$DEV_ACCEPT_CLIENT_TIMESTAMPS" in true|false) ;; *) echo "DEV_ACCEPT_CLIENT_TIMESTAMPS must be true or false" >&2; exit 1 ;; esac && \
+    echo "dev.acceptClientTimestamps = $DEV_ACCEPT_CLIENT_TIMESTAMPS" > /opt/pvlogger/image.conf
 COPY --from=build "/workspace/pvlogger-modbus-data-accessor/build/libs/pvlogger-modbus-data-accessor-all.jar" "/opt/pvlogger/data-accessor.jar"
 # A neutral service user; uid 1000 as before (the chart sets its own uid too).
 RUN useradd -u 1000 pvlogger

@@ -1,4 +1,3 @@
-{{- include "pvlogger.devGuard" . }}
 {{- if .Values.dataAccessor.enabled }}
 apiVersion: apps/v1
 kind: Deployment
@@ -40,10 +39,6 @@ spec:
                 secretKeyRef:
                   name: postgresql-secret
                   key: POSTGRES_PASSWORD
-            {{- if .Values.dataAccessor.devAcceptClientTimestamps }}
-            - name: DEV_ACCEPT_CLIENT_TIMESTAMPS
-              value: "true"
-            {{- end }}
           envFrom:
             - configMapRef:
                 name: db-config

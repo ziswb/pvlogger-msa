@@ -101,16 +101,6 @@ checksum/secrets: {{ include "pvlogger.checksum" (dict "root" . "file" "/secrets
 {{- end }}
 
 {{/*
-Dev-only settings must not reach a real deployment (ADR-0025): the client
-timestamps go with the mock server, which only a dev environment enables.
-*/}}
-{{- define "pvlogger.devGuard" -}}
-{{- if and .Values.dataAccessor.devAcceptClientTimestamps (not .Values.modbusMockServer.enabled) }}
-{{- fail "dataAccessor.devAcceptClientTimestamps is dev only (ADR-0025): it needs modbusMockServer.enabled" }}
-{{- end }}
-{{- end }}
-
-{{/*
 Container hardening for the JVM services. The images
 already run as 1000:1000 with no capabilities; this pins that and forbids
 privilege escalation.

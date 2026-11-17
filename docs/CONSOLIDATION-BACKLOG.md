@@ -309,6 +309,17 @@ next release; it changes nothing for them.
     after the rollout completed. The only probe failures were startup probes while the JVMs started (connection
     refused, one 5 s timeout of the masterdata server), which is what the startup probe absorbs.
 
+    *Group 4, dev guard, decided 2026-11-17:* a data accessor check "in its prod profile" cannot work, Tilt runs the
+    same image with the same `application-prod.conf`. Instead the switch moved into the image (ADR-0025 amended):
+    the Dockerfile's build arg `DEV_ACCEPT_CLIENT_TIMESTAMPS` (default `false`, anything but true/false fails the
+    build) writes `/opt/pvlogger/image.conf`, included last by `application-prod.conf`, which has no environment
+    override any more (`ProdProfileTest`). Only the Tiltfile passes `true`. Dropped: the chart value
+    `dataAccessor.devAcceptClientTimestamps`, the `pvlogger.devGuard` render guard, the env var in the Deployment
+    and the CI step that tested the guard. A row with `dateCreated` is still refused (400) by any other build.
+    Checked: data accessor tests (31, Testcontainers), `helm lint` with the dev values, both image variants built
+    and started with the old env var set (release build: no dev warning; dev build: the warning). Images: data
+    accessor 3.16.0, mock 1.0.4 (backfill error text); chart 4.2.0, which the rest of group 4 joins.
+
 ## Done (resolved, superseded or moot)
 
 1. ~~**masterdata-server prod config DB-name mismatch**~~

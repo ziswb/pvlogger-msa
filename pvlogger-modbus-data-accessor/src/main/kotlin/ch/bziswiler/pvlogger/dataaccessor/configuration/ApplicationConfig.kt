@@ -14,8 +14,10 @@ data class ServerConfig(
     val isProd: Boolean,
     /**
      * Dev only (ADR-0025): store a raw KPI row with the client's dateCreated,
-     * so the history backfill can write the past. Off by default and in
-     * production, where in-cluster callers must not backdate raw rows.
+     * so the history backfill can write the past. Off by default; only an
+     * image built with DEV_ACCEPT_CLIENT_TIMESTAMPS=true (Tilt) or the local
+     * dev profile turns it on. In production in-cluster callers must not
+     * backdate raw rows.
      */
     val acceptClientTimestamps: Boolean = false,
 )
@@ -32,7 +34,7 @@ private fun Application.readServerConfig(appConfig: AppConfig) {
     val acceptClientTimestamps =
         environment.config.propertyOrNull("dev.acceptClientTimestamps")?.getString().toBoolean()
     if (acceptClientTimestamps) {
-        logger.warn { "DEV_ACCEPT_CLIENT_TIMESTAMPS is on: raw KPI rows take the client's dateCreated. Never in production." }
+        logger.warn { "dev.acceptClientTimestamps is on (a dev build): raw KPI rows take the client's dateCreated. Never in production." }
     }
     appConfig.serverConfig = ServerConfig(
         isProd = environment.config.property("ktor.server.isProd").getString().toBoolean(),

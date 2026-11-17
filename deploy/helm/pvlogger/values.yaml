@@ -81,13 +81,9 @@ dataAccessor:
   enabled: true
   image:
     repository: "pvlogger-modbus-data-accessor"
-    tag: "3.15.0"
+    tag: "3.16.0"
   replicas: 1
   port: 8083
-  # Dev only (ADR-0025): raw KPI rows keep the client's dateCreated, so the
-  # history backfill can write the past. Never in production; the render
-  # fails unless modbusMockServer.enabled.
-  devAcceptClientTimestamps: false
   # CPU limit far above the request on purpose: its load is bursty. With a
   # 100m limit and the default 100 ms CFS period it got 10 ms of CPU per
   # period and was throttled in 80% of them (measured 2026-08-26), adding
@@ -316,7 +312,7 @@ modbusMockServer:
   enabled: false
   image:
     repository: "pvlogger-modbus-mock"
-    tag: "1.0.3"
+    tag: "1.0.4"
   replicas: 1
   # Service port, the Modbus default; the container listens unprivileged on
   # containerPort.
