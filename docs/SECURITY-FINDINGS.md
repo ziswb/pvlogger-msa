@@ -1,7 +1,7 @@
 # Security Findings — pvlogger-msa
 
 Application-code findings from the full security review of 2026-03-13, **re-verified
-against the working tree on 2026-08-17** (HEAD `08c2051f`). Each item cites the files,
+against the working tree on 2026-08-17** (HEAD `2ea51726`). Each item cites the files,
 so it can be picked up independently. When an item is resolved with a "from now on we
 always do X" outcome, record that outcome as an ADR.
 
@@ -11,7 +11,7 @@ shared across both documents** — gaps in the sequence here mean the item belon
 other repo (or was withdrawn), never that a number is free for reuse. Items 40+ were
 added by the 2026-08-17 re-verification.
 
-**Status re-checked 2026-10-19** against HEAD `9d850e37`: every open item still holds in the code. Open items sit
+**Status re-checked 2026-10-19** against HEAD `6c20908b`: every open item still holds in the code. Open items sit
 under **Open** by severity; finished ones under **Resolved**, sorted by number. What to do next is decided in
 `CONSOLIDATION-BACKLOG.md` → *Next up*. (Item 3 closed 2026-10-25 with backlog item 40.)
 
@@ -63,7 +63,7 @@ None.
 ## Resolved
 
 2. ~~**SQL string interpolation in raw queries**~~ — **still fixed**, re-verified
-   2026-08-17. `RegisterReader.kt` no longer exists; commit `943670f9` moved it to
+   2026-08-17. `RegisterReader.kt` no longer exists; commit `ffdcd387` moved it to
    `pvlogger-modbus-data-accessor/.../database/access/RegisterValueDao.kt`, which now uses
    the Exposed typed DSL end to end (lines 100-113) — the `PreparedStatement` the original
    fix introduced is gone because there is no raw SQL left to parameterize.
@@ -93,7 +93,7 @@ None.
    `extra` hook (`configuration/StatusPages.kt:14-17`).
 7. ~~**HTTP client `LogLevel.ALL` in production**~~ — **still fixed**, re-verified
    2026-08-17. `pvlogger-shared-ktor/.../PvHttpClient.kt:14` sets `LogLevel.INFO`; the
-   per-service copies were deduplicated into the shared library in commit `c2988abe`
+   per-service copies were deduplicated into the shared library in commit `f30094e0`
    (**ADR-0018**). The last per-service `HttpClient(` was in sunrise-sunset and went with
    that module on 2026-08-27, so the shared client is now the only one. No
    `LogLevel.ALL`/`BODY`/`HEADERS` anywhere.
@@ -192,8 +192,8 @@ None.
     used, nothing beyond what `/v1/daydata` serves.
 
 Also fixed before the 2026-03-13 review and still holding: **CORS lockdown** (commits
-`d65a5eb8`, `fc9b7a40`, `5a581055` — see the note above) and **`development = false` in all
-`application-prod.conf` files** (commit `25b57578`; re-verified 2026-08-17 at line 2 of
+`b7f2d9aa`, `ad334409`, `f607ad31` — see the note above) and **`development = false` in all
+`application-prod.conf` files** (commit `27e86e7b`; re-verified 2026-08-17 at line 2 of
 every prod config, with `true` only in dev configs — the one test-config instance went
 with sunrise-sunset on 2026-08-27).
 

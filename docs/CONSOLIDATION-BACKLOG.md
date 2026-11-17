@@ -3,7 +3,7 @@
 Verified divergences and defects from a full repo review (2026-08-06), with file references. When an item is resolved
 with a "from now on we always do X" outcome, record it as an ADR.
 
-**Re-verified 2026-10-19** against HEAD `9d850e37`. Open items are under **Open**; resolved, superseded and moot
+**Re-verified 2026-10-19** against HEAD `6c20908b`. Open items are under **Open**; resolved, superseded and moot
 items under **Done**. Both sections are sorted by item number. Item numbers are stable IDs — never renumber or reuse
 one. The old category headings (defects / Go / Kotlin / hygiene) were dropped: the legend marker on each item
 carries the same information.
@@ -40,7 +40,7 @@ it: `fusionsolarAuth` 3.4.1, `pvDeviceDataCollector` 3.7.1, `pvFastDataCollector
 0.8.2, `kpiExporter` 3.5.0. *Deployed 2026-10-21 00:26* — every Deployment and CronJob runs the versions above
 (checked with `kubectl`). Note: a build started before the version bumps overwrote the tags fusionsolar-auth 3.4.0,
 fast collector 0.13.1, device collector 3.7.0 and full collector 0.8.1 with Go 1.27.3 rebuilds of the same source;
-`build.sh` now refuses that without `-f` (`184a8ae1`). *Verified 2026-10-21 18:50:* every pvlogger Job since the
+`build.sh` now refuses that without `-f` (`03401598`). *Verified 2026-10-21 18:50:* every pvlogger Job since the
 deploy completed (no failed Jobs, no Warning events); fast and full collectors store KPIs and push metrics, the
 device collectors, fusionsolar-auth and the exporter CronJob run cleanly. The only WARN is the device collectors'
 pre-existing "modbus connection already closed" (a double close, also in the runs before the deploy). *Fixed
@@ -1087,7 +1087,7 @@ next release; it changes nothing for them.
     - a reconnect gets only the server's single cached value (ADR-0019), so the missed minutes are never fetched →
       straight lines across the gap;
     - after sleep or a network change the socket can be dead without a close event, so `retry` never fires → stale;
-    - a failed history fetch gives up after two retries and stays empty; and the midnight day switch (`66ce15fd`)
+    - a failed history fetch gives up after two retries and stays empty; and the midnight day switch (`60a825eb`)
       waits for a live value, so a dead socket leaves the tab on yesterday → empty or stale.
 
     To do (frontend, `KpiDataSourceService`): on `visibilitychange` to visible, after the tab was hidden for at least
@@ -1107,7 +1107,7 @@ next release; it changes nothing for them.
     `visibilitychange` (resync after 60 s hidden), `KpiFetchServiceService.refreshDataFor` merges the day without
     clearing. Unit tests cover the merge, the short-flick skip, the missed midnight and a picked past day.
 
-    **Resolved 2026-11-11** with frontend 3.13.4 (`565ffe6d`, `b7fcb202`; infrastructure `3ba22f0`). Deployed and
+    **Resolved 2026-11-11** with frontend 3.13.4 (`78c164fa`, `41580424`; infrastructure `3ba22f0`). Deployed and
     checked by the operator in the browser: back from a background tab, the dashboard fetches the day again and
     reconnects the live data.
 
@@ -1130,7 +1130,7 @@ next release; it changes nothing for them.
     and a SHA-256 `ETag`; `ConditionalHeaders` replaces `CachingHeaders` and answers the `304`. `SpaCachingTest`
     covers both rules and the `304` through the real plugin chain with gzip.
 
-    **Resolved 2026-11-11** with frontend 3.13.5 (`3f25b551`, `bb34c951`; infrastructure `10ee324`). Checked live with
+    **Resolved 2026-11-11** with frontend 3.13.5 (`f07aae6f`, `94da07b8`; infrastructure `10ee324`). Checked live with
     GET: `/` → `no-cache` + `ETag`, `/main-BHBFA2FT.js` → `public, max-age=31536000, immutable`, `/` with
     `If-None-Match` → `304`. `curl -I` sent HEAD, which the static route did not answer (404, never enabled):
     fixed the same day in frontend 3.13.6 (`enableAutoHeadResponse()` in `spaResources`, regression test in
@@ -1151,7 +1151,7 @@ next release; it changes nothing for them.
     `ConditionalHeaders` turns versions into headers; `SpaCachingTest` checks there is no `Last-Modified` and that
     a date-only check gets `200`.
 
-    **Resolved 2026-11-11** with frontend 3.13.7 (`dc2e7038`, `b1737316`; infrastructure `2e52b62`). Checked live:
+    **Resolved 2026-11-11** with frontend 3.13.7 (`082c2ea7`, `17659917`; infrastructure `2e52b62`). Checked live:
     `curl -sI` shows no `last-modified`; date only → `200`, matching ETag → `304`.
 
 49. ~~⚪ **Major/toolchain bumps left over from the 2026-11-12 upgrade run**~~ (added 2026-11-12, then awaiting the owner's
@@ -1177,7 +1177,7 @@ next release; it changes nothing for them.
     - Node 26: the Docker `web` stage's `dist` is byte-identical between `node:24-alpine` and `node:26-alpine`;
       `engines` raised to `>=26`. The image starts and serves `/`.
 
-    **Resolved 2026-11-12** with frontend 3.13.9 (`79b6592d`..`27ae3141`; infrastructure `9218b3e`). Checked live:
+    **Resolved 2026-11-12** with frontend 3.13.9 (`e5b79e19`..`bc0b6d36`; infrastructure `9218b3e`). Checked live:
     `/` serves the new bundle `main-P436D6YI.js`, `/v1/daydata` → `200`, `/livedata` sends a current KPI frame; the
     owner checked the dashboard in the browser. TypeScript 7 stays blocked until Angular supports it (next upgrade
     run).
@@ -1208,14 +1208,14 @@ next release; it changes nothing for them.
        step 1, item 2 joins item 54. Update CLAUDE.md, the release flow and the frontend README/docs that name the
        old chart path.
 
-    *Steps 1-5 done 2026-11-15:* `a18fe21` (chart, `deploy/dev/values-dev.yaml`, `deploy/ci/values-all-enabled.yaml`),
-    `75814c6` (`chart.yml`), infrastructure `36404c5` (site values only, `git archive` install, chart copy and
+    *Steps 1-5 done 2026-11-15:* `1952fb5` (chart, `deploy/dev/values-dev.yaml`, `deploy/ci/values-all-enabled.yaml`),
+    `89e4709` (`chart.yml`), infrastructure `36404c5` (site values only, `git archive` install, chart copy and
     `IMPROVEMENTS.md` removed, `registry-prune.sh` reads the chart from the clone), item 55 for the open improvement
     ideas. Acceptance diff: only the dropped `app.kubernetes.io/version` label and comments differ. Open: tag
     `chart/v1.0.0` on the pushed commit once `chart.yml` is green, deploy with `pvlogger_chart_version: 1.0.0`, check
     live, then move this item to Done.
 
-    **Resolved 2026-11-15** with chart `chart/v1.0.0` (`bbd9f8c`; infrastructure `36404c5`). CI green on `bbd9f8c`
+    **Resolved 2026-11-15** with chart `chart/v1.0.0` (`68cc300`; infrastructure `36404c5`). CI green on `68cc300`
     (Chart, JVM, Frontend, Gitleaks). `--check --diff` showed only the dropped `app.kubernetes.io/version` label and
     comments. Checked live: Helm revision 81 `deployed` on `pvlogger-1.0.0` without app version, no Deployment pod
     recreated (0 restarts), the first fast-collector and heartbeat runs after the upgrade `Completed`, `db-config`
@@ -1228,7 +1228,7 @@ next release; it changes nothing for them.
     reload. Reproduced in Chrome by opening the dashboard as a real background tab over CDP (Playwright fakes
     `visible`) and switching to it: the charts never filled, not even with the next live values.
 
-    Cause: since frontend 3.13.1 (`c0ed96eb`) `AppBus.kpiValues` emits on animation frames, so a chart component gets
+    Cause: since frontend 3.13.1 (`82969de3`) `AppBus.kpiValues` emits on animation frames, so a chart component gets
     its first value — and with it its `chartOptions` with series — one frame after `ngOnInit`, and in a hidden tab
     only once it is shown. If Highcharts loaded before that (always in a hidden tab; a race in a visible one, made
     likelier by the cached chunk since item 47), highcharts-angular creates the chart from `{}`. Highcharts'
@@ -1242,7 +1242,7 @@ next release; it changes nothing for them.
     *Status 2026-11-13:* implemented, not released. `ng test` 70/70 green, `ng build` OK; the CDP background-tab
     repro against a local dev server shows axes while hidden and all lines 3 s after switching to the tab.
 
-    *Status 2026-11-13:* live with frontend 3.13.10 (`d0233e62`, `c0257671`; infrastructure `6e9ea9e`). `/` serves
+    *Status 2026-11-13:* live with frontend 3.13.10 (`bf75c0e8`, `d725afcc`; infrastructure `6e9ea9e`). `/` serves
     `main-6AKHNOJ4.js`, `/v1/daydata` → `200`. The CDP background-tab repro against the live site, 3 runs: axes while
     hidden, all lines 3 s after switching to the tab (on 3.13.9 they stayed empty for good). Open until the owner
     confirms the iPhone Home Screen app.
@@ -1289,7 +1289,7 @@ next release; it changes nothing for them.
     run timed out posting to the data accessor while that pod was still starting (the known first-start race, not
     the architecture). The backfill takes noticeably longer on that host than the ~2 min on Apple silicon.
 
-57. ~~🟡 **Review of the 2026-11-15 work**~~ (added 2026-11-15; five read-only reviews of `9d354c5..fb77144`:
+57. ~~🟡 **Review of the 2026-11-15 work**~~ (added 2026-11-15; five read-only reviews of `b4492b5..acc7cd4`:
     security, consistency, correctness, completeness, best practices)
 
     Fixed in the follow-up commits (data accessor 3.14.1, mock 1.0.1, collectors fast 0.13.5 / full 0.8.6 /
@@ -1329,7 +1329,7 @@ next release; it changes nothing for them.
     12 device collector runs without the policy, 6 hit the refusal, each recovered after one retry (500 ms), no
     errors; the curl from `default` is refused. Chart 2.0.0 (a removed values key is a major).
 
-    *Done 2026-11-16:* chart/v2.0.0 (CI green on `2b576cc`), infrastructure `pvlogger_chart_version` 2.0.0, deployed
+    *Done 2026-11-16:* chart/v2.0.0 (CI green on `d4208b4`), infrastructure `pvlogger_chart_version` 2.0.0, deployed
     2026-11-16 ~00:00. Live check: a curl pod in `default` to the data accessor Service got no connection (`000`,
     pod terminated with an error; before the fix this answered 200), while a pod inside `pvlogger` still reaches it
     (200, `allow-intra-namespace`). All Deployments ready without restarts; the collector runs after the deploy
@@ -1398,7 +1398,7 @@ next release; it changes nothing for them.
     databases. The fusionsolar retry goes live when fusionsolar is re-enabled (infrastructure backlog 104).
 
 60. ~~⚪ **Follow-ups from the review of the 2026-11-15/16 work**~~ (added 2026-11-16; five read-only reviews of
-    `a302fb1^..522ccc5`, criteria: nothing private leaks to GitHub, the system serves the same purposes as before
+    `ac4b7ba^..7f7d503`, criteria: nothing private leaks to GitHub, the system serves the same purposes as before
     the move, the public repo is a good showcase)
 
     Fixed with this item: the pre-push leak guard skipped a ref unscanned when the remote tip was not in the local
@@ -1467,7 +1467,7 @@ next release; it changes nothing for them.
     Gitleaks. Open: the first `ci.yml` runs (a docs-only push must end with `ci-ok` green and every stack skipped),
     then branch protection requiring `ci-ok` + Gitleaks `scan` and Dependabot security updates at launch (Phase 5).
     First run failed in `changes`: on a push, paths-filter fetched the previous tip, which needs the stored
-    credentials; fixed with full history in that job (`bdb5c300`).
+    credentials; fixed with full history in that job (`fb97bde6`).
 
     *Group 2 in code 2026-11-16:* `pv-logger/retry` (`OnRefused` + `retry.Refused`: 10 attempts, waits doubling
     from 0.2 s to at most 2 s, jittered to 50–100 %, at most 15 s in total, stops when the context ends) replaces
@@ -1492,7 +1492,7 @@ next release; it changes nothing for them.
     (ADR-0027). Deferred: `-XX:MaxRAMPercentage` (needs a measurement in production first). Bumps: the three JVM
     images minor, chart minor.
 
-    *Group 3 in code 2026-11-16:* (a) `8f9a4a58`, (b) `ebb2b0e0`, (c) Dockerfiles as planned (npm cache mount too).
+    *Group 3 in code 2026-11-16:* (a) `ffb2f0a5`, (b) `865780fe`, (c) Dockerfiles as planned (npm cache mount too).
     Checked: `./gradlew build` (75 JVM tests, a data accessor test reads `/health/ready` against Testcontainers, a
     frontend test that the SPA fallback does not swallow the probe paths), `helm lint` + render (three services
     with startup/liveness/readiness probes, `/health` excluded on both ingresses), local image builds of the
@@ -1587,7 +1587,7 @@ next release; it changes nothing for them.
     *Deployed 2026-11-17 00:15 (chart 4.1.1, Helm revision 91):* all collector CronJobs on the new images; the first
     fast collector run on 0.13.8 completed with no error and no skipped frame. The full collector's first run on 0.8.9
     is the next hourly one; a skipped frame logs "skipping a modbus frame that answers another request".
-62. ~~🟡 **Findings of the pre-launch code review**~~ (added 2026-11-17; `/code-review high 522ccc5..HEAD`, the 32 commits
+62. ~~🟡 **Findings of the pre-launch code review**~~ (added 2026-11-17; `/code-review high 7f7d503..HEAD`, the 32 commits
     after the 2026-11-16 reviews; checked against the code; to fix before the publication launch, the user's call)
 
     1. **Readiness check can neither time out nor tell busy from down.** `DatabaseFactory.checkReachable` blocks in
