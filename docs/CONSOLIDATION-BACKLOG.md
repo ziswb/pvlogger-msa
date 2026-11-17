@@ -12,7 +12,8 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
 
 ## Next up
 
-**Status 2026-11-17.** Chart 4.2.0 deployed (Helm revision 93): item 60 closed, all its groups in production.
+**Status 2026-11-17.** Chart 4.2.1 deployed (Helm revision 94): items 60 and 62 closed, the pre-launch code review's
+findings in production. Next: the publication launch checklist.
 
 **Status 2026-11-16.** Chart 3.0.2 is deployed (Helm revision 87; heartbeat retry and digest pins of item 60, every
 image as pinned in `values.yaml`; the first heartbeat run hit the startup race and its retry got through). Chart 4.0.0
@@ -201,43 +202,6 @@ next release; it changes nothing for them.
 
     Done by item 52: old 3 (service hosts derived from the release) and 5 (site values out of the templates). Old 2
     (secret management) continues as item 54.
-62. 🟡 **Findings of the pre-launch code review** (added 2026-11-17; `/code-review high 522ccc5..HEAD`, the 32 commits
-    after the 2026-11-16 reviews; checked against the code; to fix before the publication launch, the user's call)
-
-    1. **Readiness check can neither time out nor tell busy from down.** `DatabaseFactory.checkReachable` blocks in
-       Hikari's `getConnection()` (up to `connectionTimeout`, 10 s) inside `withContext(Dispatchers.IO)`, so
-       `configureHealth`'s 3 s `withTimeout` cannot cancel it; the probe (5 s) times out instead of the check.
-    2. **Modbus reconnects inherited the 15 s refused-retry budget.** `refusedPolicy = retry.Refused` is the policy
-       for in-cluster calls; `ExecuteRequest` reconnects on attempts 2 and 3, so a dongle that keeps refusing costs
-       about 30 s per request (before: about 4.5 s per connect) and a fast-collector run can overrun its minute.
-    3. **`TcpHandler.ConnectContext` is called only by its test**: the cancellation path is unused API.
-    4. **`RegisterValueDao`:** a nested `transaction {}` inside `dbTransaction`, and two functions named
-       `readLatestRegisterValue` (suspend wrapper and private query).
-    5. **`MasterDataImporter`:** reads the CSV files on the request thread and never closes the streams (three
-       file handles per import).
-    6. **Frontend startupProbe comment** cites a database connect the frontend does not have.
-    7. **Unused `transaction` imports** in `HousePowerKpiDao` and `ModbusDao`.
-    8. **`.githooks/pre-push`:** when gitleaks flags an annotated tag's message, `set -e` exits before the temp file
-       holding the message is removed.
-    9. **`retry.OnRefused`:** `append(attrs, "attempt", …)` can write into the caller's slice.
-
-    None is a security issue or leaks anything; 1 and 2 change behaviour in production, the rest is cleanup.
-
-    *In code 2026-11-17:* (1) `checkReachable` runs in `runInterruptible`, so the caller's timeout interrupts the
-    wait for a pool connection; Hikari's resulting "Interrupted during connection acquisition" is reported as the
-    timeout. A pool busy for the whole timeout counts as not ready (requests would wait as long). Tests: an idle pool
-    answers; with the only connection held, the check stops at 500 ms (it failed before the fix). (2) The Modbus
-    connect has its own `refusedPolicy`: 4 attempts, at most 3.5 s of waiting (before 2026-11-16 about 4.5 s, then
-    15 s); the `retry.Refused` comment no longer claims the 15 s fit a run. (3) `ConnectContext` removed, `Connect`
-    dials with `context.Background()` (one short job per run); its test went with it. (4) `queryLatestValue` (was the
-    private `readLatestRegisterValue`) runs in the caller's transaction; the same nesting in
-    `RawKpiRegisterValuesDao.computeEnergyDelta`, which the review did not list, fixed the same way. (5) CSV reading on
-    `Dispatchers.IO`, the parser closed with `use`. (6) The frontend's startupProbe comment says what it covers, and
-    its budget is 3 min instead of 10 (the JVM starts in seconds). (7) Imports removed. (8) The hook removes the temp
-    file before exiting on a gitleaks finding. (9) `append(attrs[:len(attrs):len(attrs)], …)`; a test fails without
-    it. Checked: `./gradlew build` (155 tests), `make test lint` in every Go module, `helm lint` + `helm unittest`
-    (19). Images: data accessor 3.16.1, masterdata server 3.7.1, fast 0.13.9, full 0.8.10, device 3.7.9, fusionsolar
-    3.5.8, mock 1.0.5; chart 4.2.1.
 ## Done (resolved, superseded or moot)
 
 1. ~~**masterdata-server prod config DB-name mismatch**~~
@@ -1605,3 +1569,45 @@ next release; it changes nothing for them.
     *Deployed 2026-11-17 00:15 (chart 4.1.1, Helm revision 91):* all collector CronJobs on the new images; the first
     fast collector run on 0.13.8 completed with no error and no skipped frame. The full collector's first run on 0.8.9
     is the next hourly one; a skipped frame logs "skipping a modbus frame that answers another request".
+62. ~~🟡 **Findings of the pre-launch code review**~~ (added 2026-11-17; `/code-review high 522ccc5..HEAD`, the 32 commits
+    after the 2026-11-16 reviews; checked against the code; to fix before the publication launch, the user's call)
+
+    1. **Readiness check can neither time out nor tell busy from down.** `DatabaseFactory.checkReachable` blocks in
+       Hikari's `getConnection()` (up to `connectionTimeout`, 10 s) inside `withContext(Dispatchers.IO)`, so
+       `configureHealth`'s 3 s `withTimeout` cannot cancel it; the probe (5 s) times out instead of the check.
+    2. **Modbus reconnects inherited the 15 s refused-retry budget.** `refusedPolicy = retry.Refused` is the policy
+       for in-cluster calls; `ExecuteRequest` reconnects on attempts 2 and 3, so a dongle that keeps refusing costs
+       about 30 s per request (before: about 4.5 s per connect) and a fast-collector run can overrun its minute.
+    3. **`TcpHandler.ConnectContext` is called only by its test**: the cancellation path is unused API.
+    4. **`RegisterValueDao`:** a nested `transaction {}` inside `dbTransaction`, and two functions named
+       `readLatestRegisterValue` (suspend wrapper and private query).
+    5. **`MasterDataImporter`:** reads the CSV files on the request thread and never closes the streams (three
+       file handles per import).
+    6. **Frontend startupProbe comment** cites a database connect the frontend does not have.
+    7. **Unused `transaction` imports** in `HousePowerKpiDao` and `ModbusDao`.
+    8. **`.githooks/pre-push`:** when gitleaks flags an annotated tag's message, `set -e` exits before the temp file
+       holding the message is removed.
+    9. **`retry.OnRefused`:** `append(attrs, "attempt", …)` can write into the caller's slice.
+
+    None is a security issue or leaks anything; 1 and 2 change behaviour in production, the rest is cleanup.
+
+    *In code 2026-11-17:* (1) `checkReachable` runs in `runInterruptible`, so the caller's timeout interrupts the
+    wait for a pool connection; Hikari's resulting "Interrupted during connection acquisition" is reported as the
+    timeout. A pool busy for the whole timeout counts as not ready (requests would wait as long). Tests: an idle pool
+    answers; with the only connection held, the check stops at 500 ms (it failed before the fix). (2) The Modbus
+    connect has its own `refusedPolicy`: 4 attempts, at most 3.5 s of waiting (before 2026-11-16 about 4.5 s, then
+    15 s); the `retry.Refused` comment no longer claims the 15 s fit a run. (3) `ConnectContext` removed, `Connect`
+    dials with `context.Background()` (one short job per run); its test went with it. (4) `queryLatestValue` (was the
+    private `readLatestRegisterValue`) runs in the caller's transaction; the same nesting in
+    `RawKpiRegisterValuesDao.computeEnergyDelta`, which the review did not list, fixed the same way. (5) CSV reading on
+    `Dispatchers.IO`, the parser closed with `use`. (6) The frontend's startupProbe comment says what it covers, and
+    its budget is 3 min instead of 10 (the JVM starts in seconds). (7) Imports removed. (8) The hook removes the temp
+    file before exiting on a gitleaks finding. (9) `append(attrs[:len(attrs):len(attrs)], …)`; a test fails without
+    it. Checked: `./gradlew build` (155 tests), `make test lint` in every Go module, `helm lint` + `helm unittest`
+    (19). Images: data accessor 3.16.1, masterdata server 3.7.1, fast 0.13.9, full 0.8.10, device 3.7.9, fusionsolar
+    3.5.8, mock 1.0.5; chart 4.2.1.
+
+    **Resolved 2026-11-17:** deployed as chart 4.2.1 (Helm revision 94). Data accessor 3.16.1 and masterdata server
+    3.7.1 Ready, 0 restarts, `/health/ready` answering 200 only; the CronJobs on fast 0.13.9, full 0.8.10, device
+    3.7.9; the fast collector runs without errors or refusals; Traefik `/` and `/v1/daydata` 200; the export
+    relay keeps getting 200. `tilt ci` passed with the changes before the release.
