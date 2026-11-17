@@ -7,7 +7,11 @@ COPY . /workspace
 
 WORKDIR /workspace
 # Dependency cache survives between builds (BuildKit, backlog 60).
-RUN --mount=type=cache,target=/workspace/gradle_home/caches \
+# sharing=locked: the three JVM images share this cache, and Gradle in two
+# parallel builds can have the same PID, so its own lock cannot tell them
+# apart ("Owner PID: 47, Our PID: 47"). BuildKit serializes the step instead
+# (backlog 64).
+RUN --mount=type=cache,target=/workspace/gradle_home/caches,sharing=locked \
     gradle :pvlogger-modbus-data-accessor:clean :pvlogger-modbus-data-accessor:buildFatJar
 
 FROM eclipse-temurin:25-jre-ubi10-minimal@sha256:2e8ee3e5f7ee514713aaae37ccaa7902a1c24c0532dcc8712312d8a002214828

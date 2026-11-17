@@ -17,6 +17,7 @@ findings in production. Next: the publication launch checklist.
 Later the same day: item 63 closed (third history rewrite, repository recreated, chart 5.0.0 deployed as Helm
 revision 95); the launch's fresh-clone `tilt up` passed on amd64 (follow-ups: item 64). The repository went public;
 item 53 closed: production pulls chart and images from GHCR through a pull-through cache (Helm revision 96).
+Evening: item 64 closed (Gradle cache mount `sharing=locked`; the Tiltfile applies the dev namespace at load time).
 
 **Status 2026-11-16.** Chart 3.0.2 is deployed (Helm revision 87; heartbeat retry and digest pins of item 60, every
 image as pinned in `values.yaml`; the first heartbeat run hit the startup race and its retry got through). Chart 4.0.0
@@ -26,7 +27,6 @@ collector and heartbeat runs completed. The repo is on GitHub, private until the
 
 In order:
 
-- **Item 64:** the fresh-clone Tilt follow-ups.
 - **From about 2027-01-25:** item 42, drop the unused `modbus_response_data` indexes.
 - Item 45 stays open until the next drain + power-off of the primary's node.
 
@@ -179,18 +179,6 @@ next release; it changes nothing for them.
 
     Done by item 52: old 3 (service hosts derived from the release) and 5 (site values out of the templates). Old 2
     (secret management) continues as item 54.
-64. ⚪ **Tilt on a fresh clone: Gradle cache lock collision, and a namespace-deleting trigger** (added 2026-11-17,
-    from the publication launch's fresh-clone `tilt up` on an amd64 laptop, which passed)
-
-    1. **Parallel JVM image builds can collide on the Gradle cache.** The three JVM Dockerfiles (frontend, data
-       accessor, masterdata server) share the BuildKit cache mount `target=/workspace/gradle_home/caches`. Two builds
-       running at once both had Gradle as PID 47 in their containers, so the second could not tell the lock owner was
-       another process: "Timeout waiting to lock journal cache … Owner PID: 47, Our PID: 47". A rebuild on its own
-       passed. Likely fix: `sharing=locked` on that mount (serializes the Gradle step of parallel builds).
-    2. **`tilt trigger uncategorized` deletes the dev namespace.** The `pvlogger-dev` Namespace object is in Tilt's
-       `uncategorized` resource, so re-triggering it force-deletes the namespace and with it the dev Postgres PVC
-       (the 30-day backfill). Either move the Namespace into its own resource or say so in the dev docs.
-
 ## Done (resolved, superseded or moot)
 
 1. ~~**masterdata-server prod config DB-name mismatch**~~
@@ -1656,3 +1644,25 @@ next release; it changes nothing for them.
     rewritten mirror: gitleaks, the blocklist over all refs, the exact-value scan); the GitHub repository was deleted
     and recreated and now serves none of the old commits. Deployed as chart 5.0.0 (Helm revision 95): the KPI export
     answers with the same keys as before. The hashes cited in this file were remapped to the rewritten history.
+
+64. ~~⚪ **Tilt on a fresh clone: Gradle cache lock collision, and a namespace-deleting trigger**~~ (added 2026-11-17,
+    from the publication launch's fresh-clone `tilt up` on an amd64 laptop, which passed)
+
+    1. **Parallel JVM image builds can collide on the Gradle cache.** The three JVM Dockerfiles (frontend, data
+       accessor, masterdata server) share the BuildKit cache mount `target=/workspace/gradle_home/caches`. Two builds
+       running at once both had Gradle as PID 47 in their containers, so the second could not tell the lock owner was
+       another process: "Timeout waiting to lock journal cache … Owner PID: 47, Our PID: 47". A rebuild on its own
+       passed. Likely fix: `sharing=locked` on that mount (serializes the Gradle step of parallel builds).
+    2. **`tilt trigger uncategorized` deletes the dev namespace.** The `pvlogger-dev` Namespace object is in Tilt's
+       `uncategorized` resource, so re-triggering it force-deletes the namespace and with it the dev Postgres PVC
+       (the 30-day backfill). Either move the Namespace into its own resource or say so in the dev docs.
+
+    **Resolved 2026-11-17.** (1) The three JVM Dockerfiles mount the Gradle cache with `sharing=locked`, so BuildKit
+    runs the Gradle step of parallel builds one after the other. (2) The Tiltfile applies the `pvlogger-dev`
+    Namespace with `kubectl apply` at load time, after the context guard. No Tilt resource owns it any more, so no
+    trigger can delete it, and `tilt down` keeps it as before. The dev database's PVC was never at risk on its own:
+    it comes from the StatefulSet's `volumeClaimTemplates`, not from Tilt. Verified on Rancher Desktop: `tilt up`
+    built all images (three JVM builds in parallel, no lock timeout; the collision was intermittent, so this only
+    shows no regression); every resource came up; `tilt trigger uncategorized` left the namespace and the PVC in
+    place (both still from 2026-11-15, all pods running); `uncategorized` no longer lists a Namespace.
+

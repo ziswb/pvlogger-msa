@@ -117,12 +117,13 @@ for repo, module in GO_IMAGES.items():
 
 # --- Manifests --------------------------------------------------------------
 
-k8s_yaml(blob("""
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: %s
-""" % NAMESPACE))
+# The namespace is applied here, at load time, and owned by no Tilt resource:
+# triggering a resource deletes and recreates its objects, and when the
+# Namespace sat in "uncategorized", `tilt trigger uncategorized` deleted the
+# whole environment with the dev database (backlog 64). apply never deletes;
+# tilt down leaves the namespace as well (it deletes no namespaces by default).
+local("kubectl --context %s apply -f - <<'EOF'\napiVersion: v1\nkind: Namespace\nmetadata:\n  name: %s\nEOF" % (
+    expected_context, NAMESPACE), quiet=True)
 
 k8s_yaml(helm(
     'deploy/helm/pvlogger',
