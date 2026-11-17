@@ -337,7 +337,12 @@ next release; it changes nothing for them.
     Deployment that hashes it (`pvlogger.configChecksums`) renders first, so its suite switches those off.
     Checked end to end with `tilt ci` on Rancher Desktop: the backfill's dated rows accepted (dev build), the
     dashboard and a backfilled `/v1/daydata` day through Traefik with the narrowed policy. Joins chart 4.2.0.
-    Still open in item 60:
+
+    *Deployed:* chart 4.2.0 (Helm revision 93, 2026-11-17; revision 92 failed, `context canceled`, before the
+    data accessor image was in the registry). Data accessor 3.16.0 Ready, 0 restarts, no dev-build warning; the
+    three NetworkPolicies carry the pod selectors; through Traefik `/` and `/v1/daydata` answer 200 and `/metrics`
+    404; through the Tailscale ingress `/` and `/v1/daydata` 200; the export endpoint answers through its proxy
+    and the relay's requests keep getting 200; the fast collector runs. Still open in item 60:
     `-XX:MaxRAMPercentage` (measure first).
 
 ## Done (resolved, superseded or moot)
