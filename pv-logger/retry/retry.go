@@ -27,8 +27,9 @@ type Policy struct {
 }
 
 // Refused is the policy of the in-cluster calls: 10 attempts with at most
-// 0.2+0.4+0.8+1.6+6×2 = 15 s of waiting, enough for kube-router and short
-// against the collectors' one-minute window.
+// 0.2+0.4+0.8+1.6+6×2 = 15 s of waiting, enough for kube-router. Meant for a
+// call made once per run; the Modbus connect, repeated on every request retry,
+// has a shorter policy of its own (backlog 62).
 var Refused = Policy{Attempts: 10, Initial: 200 * time.Millisecond, Max: 2 * time.Second}
 
 // IsRefused reports whether err is a refused connection.
@@ -46,7 +47,9 @@ func OnRefused[T any](ctx context.Context, p Policy, what string, fn func(ctx co
 		if err == nil || !IsRefused(err) || attempt >= p.Attempts {
 			return v, err
 		}
-		logging.Warn(what+": connection refused, retrying", append(attrs, "attempt", attempt)...)
+		// attrs[:len:len] makes append copy instead of writing into spare
+		// capacity of the caller's slice.
+		logging.Warn(what+": connection refused, retrying", append(attrs[:len(attrs):len(attrs)], "attempt", attempt)...)
 		timer := time.NewTimer(jitter(wait))
 		select {
 		case <-ctx.Done():

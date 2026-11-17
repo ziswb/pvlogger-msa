@@ -36,17 +36,18 @@ spec:
               value: "pvlogger-modbus-data-accessor-service.{{ .Release.Namespace }}.svc.cluster.local"
             - name: DATA_ACCESSOR_PORT
               value: {{ .Values.dataAccessor.port | quote }}
-          # Backlog 60: the startup probe covers the start (the database connect
-          # retries for minutes before the server listens); after it, liveness
-          # restarts a hung process and readiness drops the pod from the Service
-          # while its dependencies fail.
+          # Backlog 60/62: the startup probe covers the JVM start (seconds; 3 min
+          # leaves room for a cold or loaded node). The frontend has no database
+          # and its readiness no dependency checks, on purpose: it must stay in
+          # the Service while the data accessor is down. Liveness restarts a hung
+          # process.
           startupProbe:
             httpGet:
               path: /health/live
               port: {{ .Values.frontend.port }}
             periodSeconds: 10
             timeoutSeconds: 5
-            failureThreshold: 60
+            failureThreshold: 18
           livenessProbe:
             httpGet:
               path: /health/live

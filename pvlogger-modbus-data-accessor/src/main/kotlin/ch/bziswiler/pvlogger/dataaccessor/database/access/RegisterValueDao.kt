@@ -18,7 +18,6 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.jdbc.select
 import ch.bziswiler.pvlogger.shared.database.dbTransaction
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 object RegisterValueDao {
     private const val ONE = 1
@@ -43,7 +42,7 @@ object RegisterValueDao {
     ): Any? =
         when (type) {
             Type.U16, Type.BITFIELD_16 -> {
-                readLatestRegisterValue(
+                queryLatestValue(
                     UShortValueTable,
                     UShortValueTable.register_value,
                     UShortValueTable.register_address,
@@ -55,7 +54,7 @@ object RegisterValueDao {
             }
 
             Type.U32, Type.BITFIELD_32 -> {
-                readLatestRegisterValue(
+                queryLatestValue(
                     UIntegerValueTable,
                     UIntegerValueTable.register_value,
                     UIntegerValueTable.register_address,
@@ -67,7 +66,7 @@ object RegisterValueDao {
             }
 
             Type.I16 -> {
-                readLatestRegisterValue(
+                queryLatestValue(
                     ShortValueTable,
                     ShortValueTable.register_value,
                     ShortValueTable.register_address,
@@ -79,7 +78,7 @@ object RegisterValueDao {
             }
 
             Type.I32 -> {
-                readLatestRegisterValue(
+                queryLatestValue(
                     IntegerValueTable,
                     IntegerValueTable.register_value,
                     IntegerValueTable.register_address,
@@ -91,7 +90,7 @@ object RegisterValueDao {
             }
 
             Type.STR -> {
-                readLatestRegisterValue(
+                queryLatestValue(
                     StringValuesTable,
                     StringValuesTable.register_value,
                     StringValuesTable.register_address,
@@ -113,9 +112,10 @@ object RegisterValueDao {
      * Two statements on purpose, never a join (backlog 38/41). With stale planner statistics the joined query
      * could pick a nested loop that ran 29.6 s; here each statement reads one table through its own composite index
      * (V11 `(job_id, logic_device_id)`, V4/V11 `(register_address, response_id)`), so no join order is left to get
-     * wrong. A run has only a few responses per device, so the id list stays short.
+     * wrong. A run has only a few responses per device, so the id list stays short. Runs in the caller's
+     * transaction.
      */
-    private fun <T> readLatestRegisterValue(
+    private fun <T> queryLatestValue(
         valueTable: Table,
         valueColumn: Column<T?>,
         registerAddressColumn: Column<Int>,
@@ -123,37 +123,36 @@ object RegisterValueDao {
         registerAddress: RegisterAddress,
         deviceId: Int,
         jobId: JobId,
-    ): T? =
-        transaction {
-            val responseIdsNewestFirst =
-                ResponseTable
-                    .select(ResponseTable.id)
-                    .where(
-                        ResponseTable.job_id
-                            .eq(jobId.id)
-                            .and(ResponseTable.logic_device_id.eq(deviceId.toUByte())),
-                    ).orderBy(responseTimeDescending, idDescending)
-                    .map { row -> row[ResponseTable.id].value }
+    ): T? {
+        val responseIdsNewestFirst =
+            ResponseTable
+                .select(ResponseTable.id)
+                .where(
+                    ResponseTable.job_id
+                        .eq(jobId.id)
+                        .and(ResponseTable.logic_device_id.eq(deviceId.toUByte())),
+                ).orderBy(responseTimeDescending, idDescending)
+                .map { row -> row[ResponseTable.id].value }
 
-            val valuesByResponseId =
-                if (responseIdsNewestFirst.isEmpty()) {
-                    emptyMap()
-                } else {
-                    valueTable
-                        .select(responseIdColumn, valueColumn)
-                        .where(
-                            registerAddressColumn
-                                .eq(registerAddress.value)
-                                .and(responseIdColumn.inList(responseIdsNewestFirst)),
-                        ).associate { row -> row[responseIdColumn] to row[valueColumn] }
-                }
-
-            val latestResponseId = responseIdsNewestFirst.firstOrNull { it in valuesByResponseId }
-            if (latestResponseId == null) {
-                logger.info { "No register value found for device ID '$deviceId' and register address '$registerAddress'." }
-                null
+        val valuesByResponseId =
+            if (responseIdsNewestFirst.isEmpty()) {
+                emptyMap()
             } else {
-                valuesByResponseId[latestResponseId]
+                valueTable
+                    .select(responseIdColumn, valueColumn)
+                    .where(
+                        registerAddressColumn
+                            .eq(registerAddress.value)
+                            .and(responseIdColumn.inList(responseIdsNewestFirst)),
+                    ).associate { row -> row[responseIdColumn] to row[valueColumn] }
             }
+
+        val latestResponseId = responseIdsNewestFirst.firstOrNull { it in valuesByResponseId }
+        return if (latestResponseId == null) {
+            logger.info { "No register value found for device ID '$deviceId' and register address '$registerAddress'." }
+            null
+        } else {
+            valuesByResponseId[latestResponseId]
         }
+    }
 }

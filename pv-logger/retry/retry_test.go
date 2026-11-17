@@ -79,3 +79,17 @@ func TestRefused_TotalWaitIsBounded(t *testing.T) {
 		t.Fatalf("worst-case wait %v, documented as at most 15 s", total)
 	}
 }
+
+// The "attempt" attribute must not land in spare capacity of the caller's
+// slice (backlog 62).
+func TestOnRefused_LeavesTheCallersAttrsAlone(t *testing.T) {
+	base := make([]any, 2, 8)
+	base[0], base[1] = "key", "value"
+	fn, _ := calls(errRefused, errRefused)
+	if _, err := OnRefused(context.Background(), fast, "test", fn, base...); err != nil {
+		t.Fatal(err)
+	}
+	if spare := base[:cap(base)][2]; spare != nil {
+		t.Fatalf("the caller's backing array was written: %v", spare)
+	}
+}

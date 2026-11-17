@@ -7,7 +7,7 @@ import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
 import ch.bziswiler.pvlogger.shared.database.dbTransaction
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import java.time.Instant
 
 object RawKpiRegisterValuesDao {
@@ -64,7 +64,8 @@ object RawKpiRegisterValuesDao {
             .firstOrNull()
             ?.get(RawKpiRegisterValuesTable.inverterDailyYield)
 
-    private fun computeEnergyDelta(column: EnergyColumn): Double? {
+    // Runs in the caller's transaction (energyToday's dbTransaction).
+    private fun JdbcTransaction.computeEnergyDelta(column: EnergyColumn): Double? {
         val kWhColumn = 2
         val valueExpr = if (column.zeroIsNoData) "NULLIF(r.${column.dbColumn}, 0)" else "r.${column.dbColumn}"
         // "Today" is anchored on the newest raw row (the caller stores its raw
@@ -86,15 +87,13 @@ object RawKpiRegisterValuesDao {
                 ORDER BY dt DESC
                 LIMIT 1;
                 """.trimIndent()
-        return transaction {
-            // explicit type: Exposed misclassifies WITH-prefixed SQL as an update
-            exec(query, explicitStatementType = StatementType.SELECT) { resultSet ->
-                if (resultSet.next()) {
-                    val kwh = resultSet.getDouble(kWhColumn)
-                    if (resultSet.wasNull()) null else kwh
-                } else {
-                    null
-                }
+        // explicit type: Exposed misclassifies WITH-prefixed SQL as an update
+        return exec(query, explicitStatementType = StatementType.SELECT) { resultSet ->
+            if (resultSet.next()) {
+                val kwh = resultSet.getDouble(kWhColumn)
+                if (resultSet.wasNull()) null else kwh
+            } else {
+                null
             }
         }
     }

@@ -17,7 +17,7 @@ FROM gcr.io/distroless/static-debian13:nonroot@sha256:aafe993665bf6200db38a02c11
 
 LABEL author="Bruno Ziswiler"
 LABEL description="PV Full Data Collector - reads all dynamic Modbus register values on demand"
-LABEL version="0.8.9"
+LABEL version="0.8.10"
 
 COPY --from=golang /full-data-collector /full-data-collector
 

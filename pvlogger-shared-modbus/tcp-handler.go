@@ -44,14 +44,10 @@ func (h *TcpHandler) Close() error {
 	return conn.Close()
 }
 
-// Connect is ConnectContext without cancellation.
+// Connect connects to the device, retrying a refused connect (refusedPolicy).
+// No context: the collectors run one short job and exit (backlog 62).
 func (h *TcpHandler) Connect() error {
-	return h.ConnectContext(context.Background())
-}
-
-// ConnectContext connects to the device, retrying a refused connect
-// (refusedPolicy) until ctx ends.
-func (h *TcpHandler) ConnectContext(ctx context.Context) error {
+	ctx := context.Background()
 	logging.Info("connecting to modbus device", "address", h.address)
 	d := &net.Dialer{Timeout: h.timeout, KeepAlive: 30 * time.Second}
 	conn, err := retry.OnRefused(ctx, refusedPolicy, "modbus connect", func(ctx context.Context) (net.Conn, error) {
@@ -78,8 +74,11 @@ func (h *TcpHandler) ConnectContext(ctx context.Context) error {
 // refusedPolicy bounds how long a refused connect is retried. In the cluster a
 // new pod reaches an in-namespace server (the dev mock) only once kube-router
 // has admitted its IP, a moment after the start (backlog 58); a busy device may
-// refuse briefly too. A variable for the tests.
-var refusedPolicy = retry.Refused
+// refuse briefly too. Shorter than retry.Refused (15 s) on purpose: every
+// retry of ExecuteRequest reconnects, so a device that keeps refusing would
+// cost a request two such budgets and push a run past its minute (backlog 62).
+// 4 attempts, at most 0.5+1+2 = 3.5 s of waiting. A variable for the tests.
+var refusedPolicy = retry.Policy{Attempts: 4, Initial: 500 * time.Millisecond, Max: 2 * time.Second}
 
 // maxAttempts is how often ExecuteRequest tries a request before giving up.
 const maxAttempts = 3

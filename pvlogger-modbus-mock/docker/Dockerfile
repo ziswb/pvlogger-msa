@@ -17,7 +17,7 @@ FROM gcr.io/distroless/static-debian13:nonroot@sha256:aafe993665bf6200db38a02c11
 
 LABEL author="Bruno Ziswiler"
 LABEL description="PVLogger Modbus mock - the synthetic plant over Modbus TCP and its history backfill, for local development"
-LABEL version="1.0.4"
+LABEL version="1.0.5"
 
 COPY --from=golang /mock-server /mock-server
 # The history backfill runs from the same image: command /backfill.

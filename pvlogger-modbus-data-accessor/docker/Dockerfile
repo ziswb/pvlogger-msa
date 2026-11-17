@@ -14,7 +14,7 @@ FROM eclipse-temurin:25-jre-ubi10-minimal@sha256:2e8ee3e5f7ee514713aaae37ccaa790
 
 LABEL author="Bruno Ziswiler"
 LABEL description="PV Logger Data Accessor"
-LABEL version="3.16.0"
+LABEL version="3.16.1"
 
 # Dev only (ADR-0025): Tilt builds with DEV_ACCEPT_CLIENT_TIMESTAMPS=true, so
 # the history backfill can date raw KPI rows itself. Every other build (CI,

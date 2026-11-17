@@ -81,7 +81,7 @@ dataAccessor:
   enabled: true
   image:
     repository: "pvlogger-modbus-data-accessor"
-    tag: "3.16.0"
+    tag: "3.16.1"
   replicas: 1
   port: 8083
   # CPU limit far above the request on purpose: its load is bursty. With a
@@ -103,7 +103,7 @@ masterdataServer:
   enabled: true
   image:
     repository: "pvlogger-masterdata-server"
-    tag: "3.7.0"
+    tag: "3.7.1"
   replicas: 1
   port: 8081
   masterdataPath: "/opt/pvlogger/masterdata/"
@@ -140,7 +140,7 @@ fusionsolar:
   enabled: false
   image:
     repository: "pvlogger-fusionsolar"
-    tag: "3.5.7"
+    tag: "3.5.8"
   # Site values: the FusionSolar API account, plant and devices.
   username: ""
   stationCode: ""
@@ -193,7 +193,7 @@ pvDeviceDataCollector:
   enabled: true
   image:
     repository: "pv-device-data-collector"
-    tag: "3.7.8"
+    tag: "3.7.9"
   logLevel: "debug"
   resources:
     limits:
@@ -225,7 +225,7 @@ pvFastDataCollector:
   enabled: true
   image:
     repository: "pv-fast-data-collector"
-    tag: "0.13.8"
+    tag: "0.13.9"
   schedule: "0-1,5-59 * * * *"
   logLevel: "debug"
   resources:
@@ -241,7 +241,7 @@ pvFullDataCollector:
   enabled: true
   image:
     repository: "pv-full-data-collector"
-    tag: "0.8.9"
+    tag: "0.8.10"
   schedule: "2 1-23 * * *"
   logLevel: "debug"
   resources:
@@ -312,7 +312,7 @@ modbusMockServer:
   enabled: false
   image:
     repository: "pvlogger-modbus-mock"
-    tag: "1.0.4"
+    tag: "1.0.5"
   replicas: 1
   # Service port, the Modbus default; the container listens unprivileged on
   # containerPort.

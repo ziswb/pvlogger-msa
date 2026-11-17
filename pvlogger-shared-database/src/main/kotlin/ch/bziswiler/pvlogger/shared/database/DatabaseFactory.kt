@@ -5,7 +5,9 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.runInterruptible
 import org.flywaydb.core.Flyway.configure
 import org.jetbrains.exposed.v1.jdbc.Database.Companion.connect
 import java.lang.Thread.sleep
@@ -42,12 +44,26 @@ class DatabaseFactory(
      * Whether a pooled connection answers within [timeoutSeconds]: the readiness
      * check of the services (configureHealth in pvlogger-shared-ktor). Throws when
      * it does not, so the log gets the reason.
+     *
+     * Interruptible (backlog 62): the caller's timeout interrupts the wait for a
+     * pool connection, which Hikari would otherwise sit out for its whole
+     * connectionTimeout (10 s, longer than the probe's). A pool that stays fully
+     * busy for the caller's timeout counts as not ready: requests would wait as
+     * long.
      */
-    suspend fun checkReachable(timeoutSeconds: Int = 2) =
-        withContext(Dispatchers.IO) {
-            val pool = checkNotNull(datasource) { "not connected" }
-            pool.connection.use { check(it.isValid(timeoutSeconds)) { "connection not valid" } }
+    suspend fun checkReachable(timeoutSeconds: Int = 2) {
+        try {
+            runInterruptible(Dispatchers.IO) {
+                val pool = checkNotNull(datasource) { "not connected" }
+                pool.connection.use { check(it.isValid(timeoutSeconds)) { "connection not valid" } }
+            }
+        } catch (e: SQLException) {
+            // Hikari answers the interrupt with "Interrupted during connection
+            // acquisition": report the caller's timeout instead.
+            currentCoroutineContext().ensureActive()
+            throw e
         }
+    }
 
     // Closes the connection pool. Services register this for shutdown
     // (closeOnShutdown in pvlogger-shared-ktor, security finding 29).

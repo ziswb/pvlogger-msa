@@ -2,7 +2,6 @@ package modbus
 
 import (
 	"bytes"
-	"context"
 	"errors"
 	"io"
 	"net"
@@ -214,31 +213,6 @@ func TestTcpHandler_ConnectRetriesARefusedConnection(t *testing.T) {
 		t.Fatalf("Connect: %v", err)
 	}
 	_ = h.Close()
-}
-
-// A cancelled context ends the retries of a refused connect at once.
-func TestTcpHandler_ConnectContextStopsRetrying(t *testing.T) {
-	saved := refusedPolicy
-	refusedPolicy = retry.Policy{Attempts: 10, Initial: time.Hour, Max: time.Hour}
-	t.Cleanup(func() { refusedPolicy = saved })
-
-	probe, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Fatal(err)
-	}
-	addr := probe.Addr().String()
-	_ = probe.Close()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-	defer cancel()
-	start := time.Now()
-	err = NewTcpHandler(addr, time.Second, 0).ConnectContext(ctx)
-	if !errors.Is(err, context.DeadlineExceeded) {
-		t.Fatalf("got %v, want context.DeadlineExceeded", err)
-	}
-	if took := time.Since(start); took > 2*time.Second {
-		t.Fatalf("returned after %s", took)
-	}
 }
 
 // foreignFrame answers another request (transaction 5) with 62 register bytes,

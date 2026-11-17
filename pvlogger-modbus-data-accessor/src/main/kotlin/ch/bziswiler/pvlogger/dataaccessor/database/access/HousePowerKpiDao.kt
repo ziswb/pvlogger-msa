@@ -22,7 +22,6 @@ import org.jetbrains.exposed.v1.core.less
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import ch.bziswiler.pvlogger.shared.database.dbTransaction
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.math.RoundingMode
 import java.text.DecimalFormat
 import java.time.Instant

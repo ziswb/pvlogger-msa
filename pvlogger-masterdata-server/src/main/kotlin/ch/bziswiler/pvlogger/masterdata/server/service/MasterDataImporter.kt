@@ -14,6 +14,8 @@ import ch.bziswiler.pvlogger.shared.masterdata.modbus.Scope
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Type
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.Unit
 import ch.bziswiler.pvlogger.shared.masterdata.modbus.dto.ModbusRegisterDefinition
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVRecord
 import java.io.FileInputStream
@@ -41,10 +43,16 @@ class MasterDataImporter(appConfig: AppConfig, private val dao: MasterDataDao) {
 
     suspend fun importDeviceIdentifiers() = storeMasterData(INVERTER, readMasterData(devIdsMasterDataPath))
 
-    private fun readMasterData(path: String): List<CSVRecord> = CSVFormat.Builder.create(CSVFormat.DEFAULT)
-        .apply { setIgnoreSurroundingSpaces(true) }
-        .build().parse(FileInputStream(path).reader())
-        .drop(IDX_NAME) // Dropping the header
+    // File I/O on Dispatchers.IO, not on a Ktor request thread (backlog 62);
+    // the parser closes the reader and with it the file.
+    private suspend fun readMasterData(path: String): List<CSVRecord> =
+        withContext(Dispatchers.IO) {
+            CSVFormat.Builder.create(CSVFormat.DEFAULT)
+                .apply { setIgnoreSurroundingSpaces(true) }
+                .build()
+                .parse(FileInputStream(path).reader())
+                .use { parser -> parser.drop(IDX_NAME) } // Dropping the header
+        }
 
     suspend fun storeMasterData(devType: DeviceType, csvRecord: List<CSVRecord>) = dao.insertBatch(devType, mapToModbusRegisterDefinitions(csvRecord))
 

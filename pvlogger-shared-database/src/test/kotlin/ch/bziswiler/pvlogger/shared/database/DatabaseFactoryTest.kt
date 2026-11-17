@@ -1,15 +1,22 @@
 package ch.bziswiler.pvlogger.shared.database
 
 import ch.bziswiler.pvlogger.shared.configuration.DatabaseConfig
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.Test
 import org.testcontainers.postgresql.PostgreSQLContainer
 import java.sql.DriverManager
 import java.sql.SQLException
+import java.util.concurrent.CountDownLatch
+import kotlin.concurrent.thread
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 // The services must start as an application role, not only as the postgres
 // superuser (backlog 40, infrastructure ADR-0022). No database is named after
@@ -76,6 +83,44 @@ class DatabaseFactoryTest {
 
             assertTrue(System.nanoTime() - started < 5_000_000_000, "should fail at the socket timeout, not after the sleep")
             assertContains(generateSequence<Throwable>(error) { it.cause }.joinToString { it.message.orEmpty() }, "I/O error")
+        }
+    }
+
+    @Test
+    fun `the readiness check answers on an idle pool`() {
+        superuser("CREATE ROLE ready LOGIN CREATEDB PASSWORD 'pw'")
+
+        DatabaseFactory(config(user = "ready", dbName = "ready_db")).use {
+            it.connect()
+            runBlocking { withTimeout(5.seconds) { it.checkReachable() } }
+        }
+    }
+
+    @Test
+    fun `the readiness check gives up at the caller's timeout while the pool is exhausted`() {
+        // Backlog 62: the wait for a pool connection used to ignore the timeout and
+        // last Hikari's connectionTimeout (10 s), longer than the kubelet probe's.
+        superuser("CREATE ROLE busy LOGIN CREATEDB PASSWORD 'pw'")
+
+        DatabaseFactory(config(user = "busy", dbName = "busy_db")).use { factory ->
+            factory.connect()
+            val holding = CountDownLatch(1)
+            val holder = thread {
+                transaction {
+                    exec("SELECT 1") // takes the pool's only connection
+                    holding.countDown()
+                    Thread.sleep(4_000)
+                }
+            }
+            holding.await()
+            val started = System.nanoTime()
+
+            assertFailsWith<TimeoutCancellationException> {
+                runBlocking { withTimeout(500.milliseconds) { factory.checkReachable() } }
+            }
+
+            assertTrue(System.nanoTime() - started < 2_000_000_000, "should stop at the caller's timeout")
+            holder.join()
         }
     }
 

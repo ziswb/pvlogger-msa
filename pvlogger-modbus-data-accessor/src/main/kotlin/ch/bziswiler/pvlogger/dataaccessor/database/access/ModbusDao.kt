@@ -23,7 +23,6 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import ch.bziswiler.pvlogger.shared.database.dbTransaction
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.time.ZoneOffset
 
 object ModbusDao {
