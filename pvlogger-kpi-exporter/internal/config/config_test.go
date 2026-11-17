@@ -8,6 +8,7 @@ import (
 func TestLoad_Defaults(t *testing.T) {
 	t.Setenv("KPI_EXPORT_PATH", "/tmp/export")
 	t.Setenv("KPI_FILE_PREFIX", "kpi")
+	t.Setenv("KPI_KEY_PREFIX", "site")
 
 	_ = os.Unsetenv("REST_HOST")
 	_ = os.Unsetenv("REST_PORT")
@@ -39,6 +40,7 @@ func TestLoad_Defaults(t *testing.T) {
 func TestLoad_CustomValues(t *testing.T) {
 	t.Setenv("KPI_EXPORT_PATH", "/data/kpis")
 	t.Setenv("KPI_FILE_PREFIX", "solar")
+	t.Setenv("KPI_KEY_PREFIX", "site")
 	t.Setenv("REST_HOST", "data-accessor")
 	t.Setenv("REST_PORT", "9090")
 	t.Setenv("REST_PATH", "/v2/kpi")
@@ -76,13 +78,14 @@ func TestMode_DefaultsToExport(t *testing.T) {
 }
 
 func TestLoadServe_Defaults(t *testing.T) {
-	t.Setenv("KPI_FILE_PREFIX", "site")
+	t.Setenv("KPI_FILE_PREFIX", "pv")
+	t.Setenv("KPI_KEY_PREFIX", "site")
 	_ = os.Unsetenv("HTTP_PORT")
 	_ = os.Unsetenv("KPI_EXPORT_TOKEN_FILE")
 
 	cfg := LoadServe()
 
-	if cfg.HTTPPort != "8080" || cfg.TokenFile != "/etc/pvlogger-export/token" || cfg.FilePrefix != "site" {
+	if cfg.HTTPPort != "8080" || cfg.TokenFile != "/etc/pvlogger-export/token" || cfg.FilePrefix != "pv" || cfg.KeyPrefix != "site" {
 		t.Errorf("unexpected serve defaults: %+v", cfg)
 	}
 	if cfg.RestPath != "/v1/read-latest-kpi" {
@@ -111,4 +114,17 @@ func TestLoadRelay_DefaultsAndRequired(t *testing.T) {
 		}
 	}()
 	LoadRelay()
+}
+
+// The receiver's key prefix has no default (ADR-0021): a deployment that
+// forgets it must not start with keys the receiver does not know.
+func TestLoadServe_RequiresTheKeyPrefix(t *testing.T) {
+	t.Setenv("KPI_FILE_PREFIX", "pv")
+	_ = os.Unsetenv("KPI_KEY_PREFIX")
+	defer func() {
+		if recover() == nil {
+			t.Error("expected a panic without KPI_KEY_PREFIX")
+		}
+	}()
+	LoadServe()
 }

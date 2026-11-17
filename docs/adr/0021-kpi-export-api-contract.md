@@ -46,7 +46,7 @@ today, and returns the JSON. Only the latest state matters; no catch-up.
 
 ## Consequences
 
-- `pv_verb_akt_w` changed meaning with this release: it was export + import,
+- `<keyPrefix>_verb_akt_w` changed meaning with this release: it was export + import,
   now the measured consumption (`ownConsumption`, register 37500 — what the
   dashboard shows). The receiver is told.
 - The exporter image is multi-arch (linux/arm64 for the cluster, linux/amd64 for
@@ -56,3 +56,11 @@ today, and returns the JSON. Only the latest state matters; no catch-up.
   drops it and the OneDrive volume (infrastructure side).
 - The endpoint is the system's first authenticated interface. Widening what it
   returns is an API change: the relay writes whatever the cluster sends.
+
+*Amended 2026-11-17 (backlog 63):* the receiver's JSON key prefix
+(`<keyPrefix>_prod_akt_w`, …) was compiled into the struct tags; it named the
+site, which a public repository must not. It is now configuration like the file
+prefix: `KPI_KEY_PREFIX` (chart `kpiExporter.keyPrefix`, required with
+`kpiExportServe`, no default, so a deployment cannot silently send other keys).
+The wire format is otherwise unchanged and pinned by a golden test (key order,
+number format).

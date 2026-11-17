@@ -59,7 +59,7 @@ next release; it changes nothing for them.
   `tag:pvlogger-relay`, created just before the install.
 - Relay tested 2026-10-21 as the systemd unit on an x86_64 Ubuntu laptop: tsnet join, `/export` 200, file written,
   rejoin after restart without the key (README).
-- Operator: tell him `pv_verb_akt_w` changed (export + import → measured consumption; reaches his OneDrive files
+- Operator: tell him `<keyPrefix>_verb_akt_w` changed (export + import → measured consumption; reaches his OneDrive files
   with 3.5.0 already); then install the relay and run it in parallel with OneDrive until he switches. His answer
   (2026-10-21): `x86_64`, no Docker or Podman, so the relay runs as a systemd service from an amd64 binary
   (`pvlogger-kpi-exporter/systemd/`, README; infrastructure ADR-0024 amendment 2026-10-21). Afterwards the CronJob mode and the OneDrive volume go.
@@ -202,6 +202,24 @@ next release; it changes nothing for them.
 
     Done by item 52: old 3 (service hosts derived from the release) and 5 (site values out of the templates). Old 2
     (secret management) continues as item 54.
+63. 🔴 **A site name in the code, docs and history** (added 2026-11-17; the pre-launch exact-value scan matched a
+    personal value from the owner's password manager that no pattern or blocklist rule knew)
+
+    The street of the site was in the app title (`index.html`, the KPI chart component) and, as the receiver's JSON
+    key prefix, compiled into the KPI exporter's struct tags and quoted in seven docs: 14 files at HEAD, 21 commits
+    and 3 commit messages. A screenshot check found nothing in the README images (no title shown, no text chunks).
+
+    *In code 2026-11-17:* the title is "PV Logger". The key prefix is configuration like the file prefix:
+    `KPI_KEY_PREFIX`, chart `kpiExporter.keyPrefix`, required with `kpiExportServe` and without default (a
+    deployment must not silently send keys the receiver does not know); the infrastructure values set the
+    receiver's. `MarshalJSON` writes the keys in the old order; a golden test pins the wire format against the
+    output of the old code (prefix swapped), a config test the required prefix, two chart tests the guard and the
+    ConfigMap entry. Docs say `<keyPrefix>_*`; ADR-0021 amended. Images: KPI exporter 3.6.0 (new required
+    setting), frontend 3.15.1; chart **5.0.0** (a newly required value). The private blocklist now has the name.
+
+    Open: the history still has it. Plan (owner's decision): a third history rewrite, then the GitHub repository is
+    deleted and recreated, which also drops the commits the 2026-11-16 force-push left reachable by hash and the
+    Actions runs that link them.
 ## Done (resolved, superseded or moot)
 
 1. ~~**masterdata-server prod config DB-name mismatch**~~

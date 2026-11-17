@@ -24,7 +24,7 @@ start_jar "$(jar_of pvlogger-masterdata-server)" "$S/logs/masterdata.log" "${DB_
 start_jar "$(jar_of pvlogger-frontend)" "$S/logs/frontend.log" -P:ktor.deployment.port=18085 -P:pvlogger.dataaccessor.port=18083
 echo -n "upgrade-check-token" > "$S/logs/token"
 # The exporter refuses to format timestamps without TZ (production sets it).
-TZ=Europe/Zurich KPI_EXPORTER_MODE=serve KPI_FILE_PREFIX=site HTTP_PORT=18090 REST_PORT=18083 \
+TZ=Europe/Zurich KPI_EXPORTER_MODE=serve KPI_FILE_PREFIX=pv KPI_KEY_PREFIX=site HTTP_PORT=18090 REST_PORT=18083 \
   KPI_EXPORT_TOKEN_FILE="$S/logs/token" "$S/logs/exporter" > "$S/logs/exporter.log" 2>&1 &
 PIDS+=($!)
 

@@ -17,7 +17,7 @@ FROM gcr.io/distroless/static-debian13:nonroot@sha256:aafe993665bf6200db38a02c11
 
 LABEL author="Bruno Ziswiler"
 LABEL description="PV Logger KPI Exporter"
-LABEL version="3.5.3"
+LABEL version="3.6.0"
 
 COPY --from=golang /exporter /exporter
 

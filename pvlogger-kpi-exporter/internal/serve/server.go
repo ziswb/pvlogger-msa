@@ -26,7 +26,7 @@ type FetchFunc func() (*kpi.Values, error)
 // NewHandler serves the export endpoint and an unauthenticated health check.
 // The token is read from tokenFile on every request, so a rotated Secret takes
 // effect without a restart; a missing or empty file rejects every request.
-func NewHandler(tokenFile, filePrefix string, fetch FetchFunc) http.Handler {
+func NewHandler(tokenFile, filePrefix, keyPrefix string, fetch FetchFunc) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET "+HealthPath, func(w http.ResponseWriter, _ *http.Request) {
 		_, _ = w.Write([]byte("ok\n"))
@@ -42,7 +42,7 @@ func NewHandler(tokenFile, filePrefix string, fetch FetchFunc) http.Handler {
 			http.Error(w, "upstream unavailable", http.StatusBadGateway)
 			return
 		}
-		content, err := file.Encode(kpi.MapToExportRecord(kpis))
+		content, err := file.Encode(kpi.MapToExportRecord(keyPrefix, kpis))
 		if err != nil {
 			logging.Error("export: encoding failed", "error", err)
 			http.Error(w, "internal error", http.StatusInternalServerError)

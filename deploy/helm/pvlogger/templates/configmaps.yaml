@@ -156,4 +156,7 @@ data:
   REST_PORT: {{ .Values.dataAccessor.port | quote }}
   REST_PATH: {{ .Values.kpiExporter.restPath | quote }}
   KPI_FILE_PREFIX: {{ .Values.kpiExporter.filePrefix | quote }}
+  {{- if .Values.kpiExportServe.enabled }}
+  KPI_KEY_PREFIX: {{ required "kpiExporter.keyPrefix is required: the receiver's JSON key prefix (ADR-0021)" .Values.kpiExporter.keyPrefix | quote }}
+  {{- end }}
 {{- end }}

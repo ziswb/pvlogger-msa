@@ -4,6 +4,8 @@ import (
 	"math"
 	"os"
 	"testing"
+
+	"pvlogger-kpi-exporter/internal/file"
 )
 
 func TestMain(m *testing.M) {
@@ -23,7 +25,7 @@ func TestMapToExportRecord_PowerConversion(t *testing.T) {
 		DailyEnergyConsumed: 9.0,
 	}
 
-	record := MapToExportRecord(kpis)
+	record := MapToExportRecord("site", kpis)
 
 	if record.CurrentData.ProdAktW != 5500 {
 		t.Errorf("ProdAktW: expected 5500, got %f", record.CurrentData.ProdAktW)
@@ -45,7 +47,7 @@ func TestMapToExportRecord_ConsumptionIsMeasuredConsumption(t *testing.T) {
 		OwnConsumption:    2.5,
 	}
 
-	record := MapToExportRecord(kpis)
+	record := MapToExportRecord("site", kpis)
 
 	// Was export + import (= 0 W here); now the measured consumption.
 	expected := 2500.0
@@ -62,7 +64,7 @@ func TestMapToExportRecord_DailyEnergyConversion(t *testing.T) {
 		DailyEnergyConsumed: 8.3,
 	}
 
-	record := MapToExportRecord(kpis)
+	record := MapToExportRecord("site", kpis)
 
 	if record.CurrentDayData.ProdTagWh != 12500 {
 		t.Errorf("ProdTagWh: expected 12500, got %f", record.CurrentDayData.ProdTagWh)
@@ -81,7 +83,7 @@ func TestMapToExportRecord_DailyEnergyConversion(t *testing.T) {
 func TestMapToExportRecord_ZeroValues(t *testing.T) {
 	kpis := &Values{}
 
-	record := MapToExportRecord(kpis)
+	record := MapToExportRecord("site", kpis)
 
 	if record.CurrentData.ProdAktW != 0 {
 		t.Errorf("ProdAktW: expected 0, got %f", record.CurrentData.ProdAktW)
@@ -108,7 +110,7 @@ func TestMapToExportRecord_FractionalValues(t *testing.T) {
 		OwnConsumption:   0.321,
 	}
 
-	record := MapToExportRecord(kpis)
+	record := MapToExportRecord("site", kpis)
 
 	if math.Abs(record.CurrentData.ProdAktW-123.0) > 0.001 {
 		t.Errorf("ProdAktW: expected 123.0, got %f", record.CurrentData.ProdAktW)
@@ -130,9 +132,41 @@ func TestMapToExportRecord_HasTimestamp(t *testing.T) {
 		CreatedAt: 1709208000000,
 	}
 
-	record := MapToExportRecord(kpis)
+	record := MapToExportRecord("site", kpis)
 
 	if record.LastUpdateTime == "" {
 		t.Error("LastUpdateTime should not be empty")
+	}
+}
+
+// The receiver's contract (ADR-0021): key names, their order and the number
+// format. The expected text is what the exporter produced before the key prefix
+// became configuration (backlog 63), with the prefix swapped for "site".
+func TestExportRecord_WireFormat(t *testing.T) {
+	v := &Values{CreatedAt: 1760994900123, SolarPower: 4.25, SolarToGridPower: 1.5, GridToHousePower: 0.125,
+		OwnConsumption: 2.75, DailyEnergyYield: 21.5, DailyEnergyExported: 9.25, DailyEnergyImported: 3.0625,
+		DailyEnergyConsumed: 15.3125}
+	got, err := file.Encode(MapToExportRecord("site", v))
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := `{
+  "lastUpdateTime": "2025-10-20 23:15:00",
+  "currentData": {
+    "site_prod_akt_w": 4250,
+    "site_verk_akt_w": 1500,
+    "site_kauf_akt_w": 125,
+    "site_verb_akt_w": 2750
+  },
+  "currentDayData": {
+    "site_prod_tag_wh": 21500,
+    "site_verk_tag_wh": 9250,
+    "site_kauf_tag_wh": 3062.5,
+    "site_verb_tag_wh": 15312.5
+  }
+}
+`
+	if string(got) != want {
+		t.Fatalf("wire format changed:\n got: %s\nwant: %s", got, want)
 	}
 }

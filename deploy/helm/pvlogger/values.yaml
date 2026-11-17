@@ -66,7 +66,7 @@ frontend:
   enabled: true
   image:
     repository: "pvlogger-frontend"
-    tag: "3.15.0"
+    tag: "3.15.1"
   replicas: 1
   port: 8085
   resources:
@@ -258,10 +258,13 @@ kpiExporter:
   uid: 1000
   image:
     repository: "pvlogger-kpi-exporter"
-    tag: "3.5.3"
+    tag: "3.6.0"
   restPath: "/v1/read-latest-kpi"
   # Name prefix of the export file the receiver gets (ADR-0021).
   filePrefix: "pv_export"
+  # Prefix of the JSON value keys (<keyPrefix>_prod_akt_w, ...): the receiver's,
+  # part of its contract (ADR-0021). Site value, required with kpiExportServe.
+  keyPrefix: ""
 
 # The token-protected KPI export endpoint behind its own Tailscale ingress
 # (ADR-0021). Off by default.

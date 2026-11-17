@@ -29,7 +29,7 @@ Optional components, all off by default except the network policies:
 | FusionSolar API jobs | `fusionsolar.enabled`, `fusionsolarAuth.enabled` | `secrets.fusionsolarPassword`, `fusionsolar.username`/`stationCode`/`devTypeId`, `fusionsolarAuth.username`/`fsHost` |
 | Ingress (Traefik + cert-manager) | `ingress.enabled`, `ingress.traefik.enabled` | `ingress.traefik.host`, `ingress.traefik.clusterIssuer` (unless `ingress.traefik.tls` is false: plain HTTP, dev only) |
 | Ingress (Tailscale operator) | `ingress.enabled`, `ingress.tailscale.enabled` | `ingress.tailscale.hostname` |
-| KPI export endpoint | `kpiExportServe.enabled` | `secrets.kpiExportToken`, `kpiExportServe.tailscaleHostname`/`tailscaleTag` |
+| KPI export endpoint | `kpiExportServe.enabled` | `secrets.kpiExportToken`, `kpiExportServe.tailscaleHostname`/`tailscaleTag`, `kpiExporter.keyPrefix` (the receiver's JSON key prefix, ADR-0021; no default) |
 | Nightly DB dump to NFS | `dbBackup.enabled` | `dbBackup.persistence.nfsServer`/`nfsPath` |
 | Data-freshness heartbeat | `heartbeat.enabled` | `secrets.heartbeatPingUrl` |
 | Image pre-pull on every node | `imagePrepull.enabled` | Kubernetes with image volumes |

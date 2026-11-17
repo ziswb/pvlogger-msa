@@ -475,6 +475,10 @@
         },
         "filePrefix": {
           "type": "string"
+        },
+        "keyPrefix": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_]*$"
         }
       }
     },

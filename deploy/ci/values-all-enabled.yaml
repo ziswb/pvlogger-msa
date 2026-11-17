@@ -33,6 +33,9 @@ fusionsolar:
   stationCode: "NE=0"
   devTypeId: "0"
 
+kpiExporter:
+  keyPrefix: "ci"
+
 kpiExportServe:
   enabled: true
   tailscaleHostname: "ci-export"

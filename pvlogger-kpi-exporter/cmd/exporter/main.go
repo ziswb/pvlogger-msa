@@ -40,7 +40,7 @@ func export() {
 	if err != nil {
 		logging.Fatal("failed to fetch KPIs", "error", err)
 	}
-	record := kpi.MapToExportRecord(kpis)
+	record := kpi.MapToExportRecord(cfg.KeyPrefix, kpis)
 	if err := file.WriteJSON(&record, cfg.ExportPath, kpi.FileName(cfg.FilePrefix, kpis.CreatedAt)); err != nil {
 		logging.Fatal("failed to write KPI export file", "error", err)
 	}
@@ -51,7 +51,7 @@ func export() {
 
 func runServe() {
 	cfg := config.LoadServe()
-	handler := serve.NewHandler(cfg.TokenFile, cfg.FilePrefix, func() (*kpi.Values, error) { return kpi.FetchKpis(cfg) })
+	handler := serve.NewHandler(cfg.TokenFile, cfg.FilePrefix, cfg.KeyPrefix, func() (*kpi.Values, error) { return kpi.FetchKpis(cfg) })
 	listen(cfg.HTTPPort, handler, nil)
 }
 

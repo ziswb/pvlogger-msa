@@ -57,7 +57,7 @@ The test and dev Postgres versions should match production's major version.
    it is cheap and pins a regression to one commit.
 6. **Behaviour checks**. These go beyond "tests pass" because they break quietly:
    - `scripts/upgrade-check/capture.sh after` and `compare.sh before after` must report everything identical:
-     REST and error responses, the kpi-exporter `pv_*` JSON and its file name (the receiver's relay depends
+     REST and error responses, the kpi-exporter `<keyPrefix>_*` JSON and its file name (the receiver's relay depends
      on it, ADR-0021), the first `/livedata` frame, Prometheus metric names, Flyway history and schema,
      dashboard screenshots (pixels) and the live browser check. Read `snapshot-log-findings.txt` too.
    - Flyway or migration changes: `scripts/upgrade-check/flyway-takeover.sh before` (old jars migrate, new jars

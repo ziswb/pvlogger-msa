@@ -1,6 +1,6 @@
 # pvlogger-kpi-exporter
 
-Exports the latest KPI row as the `pv_*` JSON file an external PV-comparison
+Exports the latest KPI row as the `<keyPrefix>_*` JSON file an external PV-comparison
 platform reads (the prefix is the receiver's, part of the export contract).
 One binary, three modes (`KPI_EXPORTER_MODE`, ADR-0021):
 
@@ -21,6 +21,7 @@ nothing syncs its files any more, and it is retired after about 2026-11-06 (back
 | `TZ` | all | — (required, e.g. `Europe/Zurich`) |
 | `KPI_EXPORT_PATH` | export, relay | — (required) |
 | `KPI_FILE_PREFIX` | export, serve | — (required) |
+| `KPI_KEY_PREFIX` | export, serve | — (required): the receiver's JSON key prefix, `<prefix>_prod_akt_w` … (ADR-0021) |
 | `REST_HOST` / `REST_PORT` / `REST_PATH` / `REST_PROTOCOL` | export, serve | `localhost` / `8083` / `/v1/read-latest-kpi` / `http` |
 | `HTTP_PORT` | serve, relay | `8080` |
 | `KPI_EXPORT_TOKEN_FILE` | serve | `/etc/pvlogger-export/token` (read per request) |

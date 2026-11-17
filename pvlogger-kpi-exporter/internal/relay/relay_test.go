@@ -26,7 +26,7 @@ func upstream(t *testing.T, token string, values *kpi.Values) *httptest.Server {
 	if err := os.WriteFile(tf, []byte(token), 0600); err != nil {
 		t.Fatal(err)
 	}
-	srv := httptest.NewServer(serve.NewHandler(tf, "site", func() (*kpi.Values, error) { return values, nil }))
+	srv := httptest.NewServer(serve.NewHandler(tf, "pv", "site", func() (*kpi.Values, error) { return values, nil }))
 	t.Cleanup(srv.Close)
 	return srv
 }
@@ -49,7 +49,7 @@ func TestRelay_WritesTodaysFileAndReturnsIt(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d: %s", rec.Code, rec.Body)
 	}
-	written, err := os.ReadFile(filepath.Join(dir, "site-2025-10-20_23-15-00.123.json"))
+	written, err := os.ReadFile(filepath.Join(dir, "pv-2025-10-20_23-15-00.123.json"))
 	if err != nil {
 		t.Fatalf("expected today's file name: %v", err)
 	}
@@ -66,7 +66,7 @@ func TestRelay_WritesTodaysFileAndReturnsIt(t *testing.T) {
 func TestRelay_RunsTheCleanup(t *testing.T) {
 	up := upstream(t, "s3cret", &kpi.Values{CreatedAt: 1760994900123})
 	dir := t.TempDir()
-	old := filepath.Join(dir, "site-2025-10-18_10-00-00.000.json")
+	old := filepath.Join(dir, "pv-2025-10-18_10-00-00.000.json")
 	if err := os.WriteFile(old, []byte("{}"), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -137,7 +137,7 @@ func TestRelay_RejectsUnsafeFileNames(t *testing.T) {
 
 func TestRelay_RejectsNonJSONBody(t *testing.T) {
 	up := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Content-Disposition", `attachment; filename="site-x.json"`)
+		w.Header().Set("Content-Disposition", `attachment; filename="pv-x.json"`)
 		_, _ = w.Write([]byte("<html>login</html>"))
 	}))
 	defer up.Close()

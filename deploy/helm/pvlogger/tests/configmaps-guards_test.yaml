@@ -37,3 +37,24 @@ tests:
     asserts:
       - failedTemplate:
           errorPattern: "fusionsolar.stationCode is required"
+
+  # ADR-0021: the receiver's JSON key prefix has no default; a deployment
+  # without it must not serve keys the receiver does not know.
+  - it: needs the key prefix when the export endpoint is on
+    set:
+      kpiExportServe.enabled: true
+    asserts:
+      - failedTemplate:
+          errorPattern: "kpiExporter.keyPrefix is required"
+
+  - it: passes the key prefix to the exporter
+    set:
+      kpiExportServe.enabled: true
+      kpiExporter.keyPrefix: "site"
+    documentSelector:
+      path: metadata.name
+      value: exporter-config
+    asserts:
+      - equal:
+          path: data.KPI_KEY_PREFIX
+          value: "site"

@@ -90,7 +90,7 @@ _None._
    startup was too slow for K8s jobs — dropped them. Must be solved: plan and
    recommended approach are backlog item 29; the rewrite history also
    resolves the rationale GAP in ADR-0002.
-5. ~~**Who consumes the kpi-exporter output** (`pv_*` JSON on OneDrive, every
+5. ~~**Who consumes the kpi-exporter output** (`<keyPrefix>_*` JSON on OneDrive, every
    5 min)?~~ Answered 2026-08-07: a third party (the receiver) who runs a small
    platform comparing the energy/PV data of several private PV installations. Promoted to CONTEXT.md component table; format and
    cadence are a de-facto external contract.

@@ -14,6 +14,7 @@ const (
 type Config struct {
 	ExportPath   string
 	FilePrefix   string
+	KeyPrefix    string // the receiver's JSON key prefix (ADR-0021)
 	RestHost     string
 	RestPort     string
 	RestPath     string
@@ -47,6 +48,7 @@ func Load() *Config {
 	c := &Config{
 		ExportPath: env.GetEnvChecked("KPI_EXPORT_PATH"),
 		FilePrefix: env.GetEnvChecked("KPI_FILE_PREFIX"),
+		KeyPrefix:  env.GetEnvChecked("KPI_KEY_PREFIX"),
 	}
 	dataAccessor(c)
 	return c
@@ -56,6 +58,7 @@ func Load() *Config {
 func LoadServe() *Config {
 	c := &Config{
 		FilePrefix: env.GetEnvChecked("KPI_FILE_PREFIX"),
+		KeyPrefix:  env.GetEnvChecked("KPI_KEY_PREFIX"),
 		HTTPPort:   env.GetEnv("HTTP_PORT", "8080"),
 		TokenFile:  env.GetEnv("KPI_EXPORT_TOKEN_FILE", "/etc/pvlogger-export/token"),
 	}
