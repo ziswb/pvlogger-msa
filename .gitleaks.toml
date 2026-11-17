@@ -67,8 +67,8 @@ description = "E-mail address (commits use the GitHub noreply address)"
 regex = '''\b[A-Za-z0-9._%+-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,}\b'''
 keywords = ["@"]
   [[rules.allowlists]]
-  description = "noreply and documentation domains"
-  regexes = ['''@users\.noreply\.github\.com$''', '''^noreply@anthropic\.com$''', '''@example\.(?:com|org|net)$''', '''@localhost$''']
+  description = "noreply and documentation domains; Dependabot's sign-off (support@github.com)"
+  regexes = ['''@users\.noreply\.github\.com$''', '''^noreply@anthropic\.com$''', '''^support@github\.com$''', '''@example\.(?:com|org|net)$''', '''@localhost$''']
 
 [allowlist]
 description = "Generated, vendored and third-party files; known non-secret lines"
