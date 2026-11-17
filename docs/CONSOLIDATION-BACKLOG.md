@@ -179,6 +179,7 @@ next release; it changes nothing for them.
 
     Done by item 52: old 3 (service hosts derived from the release) and 5 (site values out of the templates). Old 2
     (secret management) continues as item 54.
+
 ## Done (resolved, superseded or moot)
 
 1. ~~**masterdata-server prod config DB-name mismatch**~~
@@ -1665,4 +1666,22 @@ next release; it changes nothing for them.
     built all images (three JVM builds in parallel, no lock timeout; the collision was intermittent, so this only
     shows no regression); every resource came up; `tilt trigger uncategorized` left the namespace and the PVC in
     place (both still from 2026-11-15, all pods running); `uncategorized` no longer lists a Namespace.
+
+65. ~~🟡 **Dependabot: kin-openapi and oapi-codegen in the fusionsolar code generator**~~ (added 2026-11-17, from the
+    first push after the launch: 10 open alerts, 1 critical, 5 high, 3 moderate, 1 low)
+
+    All ten are in `pvlogger-fusionsolar/go.mod`: nine in `github.com/getkin/kin-openapi` v0.133.0 (fixed by
+    v0.149.0; the critical one is a fail-open authentication bypass in `openapi3filter`'s `ValidationHandler`), one
+    in `github.com/oapi-codegen/oapi-codegen/v2` v2.5.1 (fixed by v2.7.1). Neither is linked into a binary: both come
+    only from the `tool` directive for `oapi-codegen`, which generates `internal/model/*.gen.go` from the checked-in
+    FusionSolar spec (`go list -deps ./...` lists neither). Exposure is running the generator on a hostile spec;
+    production is not affected. Fix: bump the tool and kin-openapi, regenerate, check the generated code, test, lint.
+
+    **Resolved 2026-11-17.** The `tool` is oapi-codegen v2.8.2 and kin-openapi v0.153.0 (`go get -tool`, `go mod
+    tidy`); the go-yit `replace` stays. The generated files are left as v2.5.1's output: v2.8.2 regenerates the same
+    behaviour (`http.MethodPost` for `"POST"`, added `GetJSON200()`-style getters, the spec's descriptions as doc
+    comments, an unused `BearerAuthScopes` constant gone) but a different binary, which would need an image bump for
+    nothing. Regenerate with the next real fusionsolar change (note in `internal/openapi/README.md`). Verified: the
+    linux/arm64 binary built from the new go.mod/go.sum is byte-identical to the one from the old (so no image or chart
+    release), `make test` and `make lint` pass, `go list -deps ./...` still lists neither module.
 

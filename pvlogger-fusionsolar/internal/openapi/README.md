@@ -1,5 +1,10 @@
 # Steps Taken
 
+> **Generator version (2026-11-17, backlog 65):** the `tool` is oapi-codegen v2.8.2 (with kin-openapi v0.153.0) for
+> the Dependabot alerts on v2.5.1/v0.133.0; neither is linked into the binary. `internal/model/*.gen.go` are still
+> v2.5.1's output, kept on purpose: v2.8.2 produces the same behaviour (plus getters and fuller doc comments) but a
+> different binary, so regenerate together with the next real fusionsolar change and its image bump.
+
 ```bash
 go mod init pvlogger
 go get -tool github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest
