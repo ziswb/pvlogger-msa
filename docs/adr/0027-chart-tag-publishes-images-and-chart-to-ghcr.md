@@ -1,6 +1,8 @@
 # 0027 — The chart tag publishes the images and the chart to GHCR
 
-- Status: accepted (2026-11-16); backlog item 53 part 2
+- Status: accepted (2026-11-16); backlog item 53 part 2. Since 2026-11-17 the
+  repository and its packages are public and production pulls through a GHCR
+  pull-through cache; `scripts/build.sh` left the release steps
 - Date: 2026-11-16
 
 ## Context

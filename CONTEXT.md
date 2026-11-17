@@ -186,10 +186,11 @@ All three are dumped nightly by the chart's db-backup CronJob (`dbBackup.enabled
 
 ## Build, versioning & deployment (summary)
 
-- Images are built by `scripts/build.sh` and pushed to the private registry
-  `<registry-host>:5000` (`DOCKER_REGISTRY`, set outside the repo in
-  `~/.config/pvlogger/local.env`). **A service's version is the `LABEL version` in its
-  Dockerfile** ([ADR-0003](docs/adr/0003-image-versioning-and-deployment.md)).
+- Images are built by the release workflow: a `chart/vX.Y.Z` tag publishes every
+  pinned image (amd64 + arm64) and the chart to `ghcr.io/ziswb`
+  ([ADR-0027](docs/adr/0027-chart-tag-publishes-images-and-chart-to-ghcr.md)); production
+  pulls them through a pull-through cache in front of GHCR. **A service's version is the
+  `LABEL version` in its Dockerfile** ([ADR-0003](docs/adr/0003-image-versioning-and-deployment.md)).
 - **Deployed** versions are pinned in the chart's `values.yaml` in this repo; a
   **chart version** (`chart/vX.Y.Z`) names that set, and the infrastructure repo
   pins the chart version it installs (ADR-0024, supersedes the deployment part

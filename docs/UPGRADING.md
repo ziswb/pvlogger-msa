@@ -69,10 +69,10 @@ The test and dev Postgres versions should match production's major version.
    (ADR-0003), and the same commit sets that tag in `deploy/helm/pvlogger/values.yaml` and bumps `version` in
    `Chart.yaml` (ADR-0024; the chart's bump is the highest among its changes, see the chart README). CI
    (`chart.yml` via `ci.yml`, `scripts/check-chart-tags.sh`) fails when a Dockerfile and its chart tag disagree. A dependency or base-image change counts, even without code changes. Otherwise
-   `scripts/build-all.sh` skips the image ("version already in registry"). Never use `-f` for this: it would
-   overwrite the tag production runs and take away the rollback target. Patch for dependency/base-only changes,
+   the release workflow skips the image (the version is already on GHCR, ADR-0027) and production keeps the old
+   build. Released versions are never overwritten, so the old tag stays the rollback target. Patch for dependency/base-only changes,
    minor for a runtime or framework major (JDK, Angular). Before committing, check the tags are free:
-   `curl -I https://<registry-host>:5000/v2/bziswiler/<module>/manifests/<version>` → 404.
+   `docker manifest inspect ghcr.io/ziswb/<module>:<version>` → `manifest unknown`.
 8. **Report**: what changed (from → to), what was skipped and why, how each item was tested, what can only
    be checked in production (real Modbus device, FusionSolar API, K8s deploy), and the rollout and rollback notes
    (the chart version to tag and pin in the infrastructure repo).

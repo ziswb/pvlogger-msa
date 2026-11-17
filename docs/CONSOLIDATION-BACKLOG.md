@@ -15,7 +15,8 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
 **Status 2026-11-17.** Chart 4.2.1 deployed (Helm revision 94): items 60 and 62 closed, the pre-launch code review's
 findings in production. Next: the publication launch checklist.
 Later the same day: item 63 closed (third history rewrite, repository recreated, chart 5.0.0 deployed as Helm
-revision 95); the launch's fresh-clone `tilt up` passed on amd64 (follow-ups: item 64).
+revision 95); the launch's fresh-clone `tilt up` passed on amd64 (follow-ups: item 64). The repository went public;
+item 53 closed: production pulls chart and images from GHCR through a pull-through cache (Helm revision 96).
 
 **Status 2026-11-16.** Chart 3.0.2 is deployed (Helm revision 87; heartbeat retry and digest pins of item 60, every
 image as pinned in `values.yaml`; the first heartbeat run hit the startup race and its retry got through). Chart 4.0.0
@@ -25,8 +26,7 @@ collector and heartbeat runs completed. The repo is on GitHub, private until the
 
 In order:
 
-- **Item 53 part 2:** release workflow live (ADR-0027, first run `chart/v4.0.1` green); open: package visibility
-  at the publication launch, then production via a GHCR pull-through cache.
+- **Item 64:** the fresh-clone Tilt follow-ups.
 - **From about 2027-01-25:** item 42, drop the unused `modbus_response_data` indexes.
 - Item 45 stays open until the next drain + power-off of the primary's node.
 
@@ -152,31 +152,6 @@ next release; it changes nothing for them.
     the next drain + power-off of the primary's node** (the case from 10:23): pass = no kubelet restart of the data
     accessor, at most one failed fast run, DB errors (`An I/O error occurred`, SQLState 08006) for at most ~60 s.
 
-53. 🟡 **CI and releases on GitHub Actions** (added 2026-11-14)
-
-    On push/PR: Gradle build + tests (Testcontainers), Go build + lint, frontend build, gitleaks with the repo's
-    `.gitleaks.toml`. On a release tag (`<module>/vX.Y.Z`): multi-arch images (amd64 + arm64) and the chart as an
-    OCI artifact to GHCR. Infrastructure then pulls from GHCR through the private registry acting as a pull-through
-    cache. Replaces the manual build-and-push steps of the release flow; update CLAUDE.md and the release-flow docs.
-
-    *Part 1 done 2026-11-15:* `.github/workflows/` `jvm.yml` (`./gradlew build -x makeGoBuild`, Testcontainers),
-    `go.yml` (`make test` + `make lint` since `0919594`, golangci-lint pinned to the local version), `frontend.yml` (`npm ci` +
-    `npm run build:ci`), `gitleaks.yml` (full history, pinned + checksummed binary). Path filters per stack,
-    superseded runs cancelled, actions pinned to commit SHAs. Open: part 2, tag-triggered GHCR releases
-    (`ghcr.io/ziswb/pvlogger-<module>`, chart `oci://ghcr.io/ziswb/charts/pvlogger`), after item 52.
-
-    *Part 2 in code 2026-11-16 (ADR-0027):* `.github/workflows/release.yml`. The chart tag `chart/vX.Y.Z` is the one
-    trigger (no per-module tags): it checks tag on `main`, `Chart.yaml` version and `scripts/check-chart-tags.sh`,
-    then publishes every pinned image not yet on GHCR as `ghcr.io/ziswb/<module>:<version>` (bare names, ADR-0026)
-    for amd64 + arm64, then the chart. Existing versions are kept, never overwritten; `workflow_dispatch` takes an
-    existing tag. The Gradle and Angular build stages now run `FROM --platform=$BUILDPLATFORM` (platform-independent
-    output; checked: an amd64 masterdata image cross-built on arm64 starts its JVM). No image bump: the native
-    build produces the same JAR. Chart README "Release" and CLAUDE.md updated; chart 4.0.1 (its README only, nothing
-    to deploy). First run 2026-11-16 on tag `chart/v4.0.1`, green in 10.5 min: all ten images published with
-    `linux/amd64` + `linux/arm64` (plus the provenance attestation entry), then the chart `pvlogger:4.0.1`; GHCR
-    answered the presence check of a not-yet-existing package as expected. Open: each GHCR package's visibility at the publication launch, then production
-    pulls from GHCR through the private registry as a pull-through cache (infrastructure), and `scripts/build.sh`
-    leaves the release steps.
 54. ⚪ **Chart: `existingSecret` instead of secrets in values** (added 2026-11-15, from the item 52 grill)
 
     The chart renders its Secrets (Postgres, FusionSolar, heartbeat URL, KPI export token) from values, so the
@@ -1216,6 +1191,38 @@ next release; it changes nothing for them.
     comments. Checked live: Helm revision 81 `deployed` on `pvlogger-1.0.0` without app version, no Deployment pod
     recreated (0 restarts), the first fast-collector and heartbeat runs after the upgrade `Completed`, `db-config`
     labels as expected.
+
+53. ~~🟡 **CI and releases on GitHub Actions**~~ (added 2026-11-14)
+
+    On push/PR: Gradle build + tests (Testcontainers), Go build + lint, frontend build, gitleaks with the repo's
+    `.gitleaks.toml`. On a release tag (`<module>/vX.Y.Z`): multi-arch images (amd64 + arm64) and the chart as an
+    OCI artifact to GHCR. Infrastructure then pulls from GHCR through the private registry acting as a pull-through
+    cache. Replaces the manual build-and-push steps of the release flow; update CLAUDE.md and the release-flow docs.
+
+    *Part 1 done 2026-11-15:* `.github/workflows/` `jvm.yml` (`./gradlew build -x makeGoBuild`, Testcontainers),
+    `go.yml` (`make test` + `make lint` since `0919594`, golangci-lint pinned to the local version), `frontend.yml` (`npm ci` +
+    `npm run build:ci`), `gitleaks.yml` (full history, pinned + checksummed binary). Path filters per stack,
+    superseded runs cancelled, actions pinned to commit SHAs. Open: part 2, tag-triggered GHCR releases
+    (`ghcr.io/ziswb/pvlogger-<module>`, chart `oci://ghcr.io/ziswb/charts/pvlogger`), after item 52.
+
+    *Part 2 in code 2026-11-16 (ADR-0027):* `.github/workflows/release.yml`. The chart tag `chart/vX.Y.Z` is the one
+    trigger (no per-module tags): it checks tag on `main`, `Chart.yaml` version and `scripts/check-chart-tags.sh`,
+    then publishes every pinned image not yet on GHCR as `ghcr.io/ziswb/<module>:<version>` (bare names, ADR-0026)
+    for amd64 + arm64, then the chart. Existing versions are kept, never overwritten; `workflow_dispatch` takes an
+    existing tag. The Gradle and Angular build stages now run `FROM --platform=$BUILDPLATFORM` (platform-independent
+    output; checked: an amd64 masterdata image cross-built on arm64 starts its JVM). No image bump: the native
+    build produces the same JAR. Chart README "Release" and CLAUDE.md updated; chart 4.0.1 (its README only, nothing
+    to deploy). First run 2026-11-16 on tag `chart/v4.0.1`, green in 10.5 min: all ten images published with
+    `linux/amd64` + `linux/arm64` (plus the provenance attestation entry), then the chart `pvlogger:4.0.1`; GHCR
+    answered the presence check of a not-yet-existing package as expected. Open: each GHCR package's visibility at the publication launch, then production
+    pulls from GHCR through the private registry as a pull-through cache (infrastructure), and `scripts/build.sh`
+    leaves the release steps.
+
+    *Done 2026-11-17:* the repository and its eleven GHCR packages are public. Production pulls the chart and the
+    images from GHCR through a second registry instance that mirrors `ghcr.io` (infrastructure ADR-0033; the push
+    registry cannot proxy per path). The first deploy through it was chart 5.0.0 as Helm revision 96: every image
+    replaced by its CI build (same versions), all pods ready, the KPI export and both ingresses answering.
+    `scripts/build.sh` left the release steps; it stays for pushing a test image to a registry of your own.
 
 50. 🔴 **Charts stay empty when the dashboard loads in a hidden tab** (added 2026-11-13)
 

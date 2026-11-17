@@ -76,12 +76,13 @@ Steps ([ADR-0027](../../../docs/adr/0027-chart-tag-publishes-images-and-chart-to
 4. The installation pins that chart version and deploys it (in this project: the
    private infrastructure repository).
 
-Until production pulls from GHCR, it still gets its images from a private
-registry: `scripts/build.sh <module>` (or `scripts/build-all.sh`) builds and
-pushes them there before step 4. The registry comes from `DOCKER_REGISTRY` in
-`~/.config/pvlogger/local.env`; the platform defaults to `linux/arm64`
-(`PVLOGGER_PLATFORM` overrides it). It refuses to overwrite an existing tag
-without `-f`.
+This project's production installs the chart and the images from GHCR through
+a pull-through cache, so a release needs no build on the workstation. To run
+images that are not released, `scripts/build.sh <module>` (or
+`scripts/build-all.sh`) builds and pushes them to a registry of your own
+(`DOCKER_REGISTRY` in `~/.config/pvlogger/local.env`; the platform defaults to
+`linux/arm64`, `PVLOGGER_PLATFORM` overrides it) and refuses to overwrite an
+existing tag without `-f`; point `global.imageRegistry` at it.
 
 `PersistentVolume`s have `Retain`: uninstalling the release leaves the dumps on
 the NFS export.
