@@ -238,6 +238,16 @@ next release; it changes nothing for them.
     `fs_device_real_kpi`. Should any bad response be referenced elsewhere, the last delete fails and the transaction
     rolls back. Real `devkpi` responses hold one row per inverter, so `count(*) > 10` selects only the bad ones.
 
+    **Prerequisite: the `fs_response` foreign key indexes.** None of the six referencing columns had an index, so
+    the last delete checked each RESTRICT key with a sequential scan of every referencing table, per deleted row:
+    hours instead of seconds (found by the infrastructure side while it ran). The operator created them by hand on
+    2026-11-19; migration `002_fs_response_fk_indexes.sql` adds them with the same names (`if not exists`,
+    `concurrently`, tern `disable-tx`), a no-op there. On any other database run the `MIGRATE` job first, or
+    create them with the statements in that migration. The sixth,
+    `fs_response_to_station_extended_data_response_id`, duplicates the leading column of that table's primary
+    key; it stays so that every database has the same schema as production.
+    The migration ships with the next fusionsolar release after 3.6.0 (no release of its own).
+
     ```sql
     begin;
     create temp table bad on commit drop as
@@ -263,6 +273,24 @@ next release; it changes nothing for them.
       run fail on it, and the job does not move past it. If that happens, add a skip (e.g. after N runs without
       progress, or a configurable start date) instead of chasing the data.
     - Close this item once the operator confirms the deploy, the cleanup and a few runs that each moved one day.
+67. ⚪ **Data accessor: the foreign keys to `modbus_response_data` have no index** (added 2026-11-19, from item 66)
+
+    The same pattern as fsdata's `fs_response` (item 66). Found by applying every Flyway migration to an empty
+    PostgreSQL 18 and listing the foreign keys whose columns lead no index: all six in the data accessor schema,
+    `response_id` in `modbus_register_{integer,uinteger,short,ushort,string}_values` and
+    `modbus_characteristic_curve_data`, all `on delete restrict`. V11's `(register_address, response_id)` indexes
+    do not lead with `response_id`, so they don't help. The masterdata schema has no foreign keys.
+
+    Latent today: nothing deletes from or updates the key of `modbus_response_data` (the only bulk removal, the
+    legacy `pvlogger-database/migration` script, uses `TRUNCATE ... CASCADE`, which checks no rows). An index on
+    each would cost disk and write time on the largest tables for no current reader. **Do it before any retention
+    or cleanup that deletes from `modbus_response_data`:** a Flyway migration with `create index concurrently`
+    (Flyway: a migration of its own, outside a transaction) on the tables the delete touches. Otherwise each
+    deleted response scans those tables once.
+
+    Also seen, equally latent: fsdata's `fk_response_to_station_extended_data` `(collect_time, type)` to
+    `fs_station_extended_data` has no leading index either. The jobs only upsert that table and never change its
+    key.
 
 ## Done (resolved, superseded or moot)
 
