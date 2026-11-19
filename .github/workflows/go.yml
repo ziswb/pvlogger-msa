@@ -15,6 +15,18 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # fusionsolar's repository test runs its fsdata queries against this
+    # (FSDATA_TEST_DSN; skipped without it). Same image tag as the JVM
+    # Testcontainers tests (docs/UPGRADING.md, Test/dev DB row).
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_PASSWORD: test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -30,5 +42,7 @@ jobs:
           install-only: true
       - name: Test
         run: make test
+        env:
+          FSDATA_TEST_DSN: postgres://postgres:test@localhost:5432/postgres?sslmode=disable
       - name: Lint
         run: make lint

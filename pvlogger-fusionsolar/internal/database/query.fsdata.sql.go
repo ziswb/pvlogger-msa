@@ -11,6 +11,44 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countFormer5MinDeviceRealKpiPerDay = `-- name: CountFormer5MinDeviceRealKpiPerDay :many
+SELECT (to_timestamp(collect_time / 1000.0) AT TIME ZONE $1::text)::date AS day,
+       count(DISTINCT ("devId", collect_time))                                      AS row_count
+FROM fs_device_real_kpi
+WHERE type = 'DEVICE_5_MIN_KPI'
+  AND collect_time is not null
+GROUP BY 1
+`
+
+type CountFormer5MinDeviceRealKpiPerDayRow struct {
+	Day      pgtype.Date
+	RowCount int64
+}
+
+// One row per day, so the job's memory does not grow with the history (backlog 66:
+// the per-row variant was OOMKilled at 50Mi). The day is the site day (zone =
+// the process's TZ). DISTINCT: a refetched day must not count twice
+// (fs_device_real_kpi has no unique key).
+func (q *Queries) CountFormer5MinDeviceRealKpiPerDay(ctx context.Context, zone string) ([]CountFormer5MinDeviceRealKpiPerDayRow, error) {
+	rows, err := q.db.Query(ctx, countFormer5MinDeviceRealKpiPerDay, zone)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CountFormer5MinDeviceRealKpiPerDayRow
+	for rows.Next() {
+		var i CountFormer5MinDeviceRealKpiPerDayRow
+		if err := rows.Scan(&i.Day, &i.RowCount); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getFsIds = `-- name: GetFsIds :many
 SELECT id
 FROM fs_response
@@ -433,39 +471,6 @@ func (q *Queries) InsertFsStationRealKpi(ctx context.Context, arg InsertFsStatio
 		arg.Type,
 	)
 	return err
-}
-
-const selectFormer5MinDeviceRealKpi = `-- name: SelectFormer5MinDeviceRealKpi :many
-SELECT DISTINCT "devId", collect_time
-FROM fs_device_real_kpi
-WHERE type = 'DEVICE_5_MIN_KPI'
-  AND collect_time is not null
-`
-
-type SelectFormer5MinDeviceRealKpiRow struct {
-	DevId       pgtype.Int8
-	CollectTime pgtype.Int8
-}
-
-// DISTINCT: a refetched day must not count twice (fs_device_real_kpi has no unique key).
-func (q *Queries) SelectFormer5MinDeviceRealKpi(ctx context.Context) ([]SelectFormer5MinDeviceRealKpiRow, error) {
-	rows, err := q.db.Query(ctx, selectFormer5MinDeviceRealKpi)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []SelectFormer5MinDeviceRealKpiRow
-	for rows.Next() {
-		var i SelectFormer5MinDeviceRealKpiRow
-		if err := rows.Scan(&i.DevId, &i.CollectTime); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
 }
 
 const updateFsResponseToStationExtendedData = `-- name: UpdateFsResponseToStationExtendedData :exec

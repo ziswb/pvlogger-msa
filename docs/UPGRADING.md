@@ -33,7 +33,7 @@ It covers libraries, major versions and tooling (JDK, Go, Gradle, Node/Angular, 
 | CI | `.github/workflows/*.yml`: action SHAs (+ tag comment; Dependabot proposes these weekly in one grouped PR, `.github/dependabot.yml`), `java-version`, golangci-lint `version`, `node-version`, Helm `version`, `KUBECONFORM_VERSION` + `KUBECONFORM_SHA256`, `HELM_UNITTEST_VERSION` + `HELM_UNITTEST_SHA256`, `GITLEAKS_VERSION` + `GITLEAKS_SHA256` (`go-version-file: go.work` follows by itself) |
 | Chart images | `deploy/helm/pvlogger/values.yaml`: `dbBackup.image` (Postgres client, same major as production), `heartbeat.image` (curl), `imagePrepull.holdImage` (pause) |
 | Tilt | `deploy/dev/postgres.yaml` (dev Postgres image), the Tiltfile's `version_settings` constraint |
-| Test/dev DB | Testcontainers `postgres:18` (3 test bases), `pvlogger-database/docker/docker-compose.yaml`, `pvlogger-database/scripts/run-db-container.sh`, `deploy/dev/postgres.yaml` |
+| Test/dev DB | Testcontainers `postgres:18` (3 test bases), the `postgres` service in `.github/workflows/go.yml` (fusionsolar's repository test), `pvlogger-database/docker/docker-compose.yaml`, `pvlogger-database/scripts/run-db-container.sh`, `deploy/dev/postgres.yaml` |
 
 Not in scope here: the CNPG/PostgreSQL server version and the cluster setup. Those belong to the `infrastructure` repo.
 The test and dev Postgres versions should match production's major version.

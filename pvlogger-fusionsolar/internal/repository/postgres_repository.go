@@ -22,29 +22,33 @@ func (r *PostgresRepository) queries() *database.Queries {
 	return database.New(r.db.Conn)
 }
 
+// SelectFormer5MinDeviceRealKpi counts the stored 5-minute KPI rows per site
+// day. The database aggregates, so the job reads one row per day, not one per
+// data point (backlog 66). The key is the day in the process's zone (TZ, the
+// site zone in the chart) as midnight UTC: the form
+// determineNextCollectionDate walks and sends to FusionSolar.
 func (r *PostgresRepository) SelectFormer5MinDeviceRealKpi(ctx context.Context) (map[time.Time]int, error) {
-	kpi, err := r.queries().SelectFormer5MinDeviceRealKpi(ctx)
+	days, err := r.queries().CountFormer5MinDeviceRealKpiPerDay(ctx, SiteZone())
 	if err != nil {
 		return nil, err
 	}
-	collectTimes := make([]int64, 0, len(kpi))
-	for _, row := range kpi {
-		collectTimes = append(collectTimes, row.CollectTime.Int64)
+	dts := make(map[time.Time]int, len(days))
+	for _, row := range days {
+		d := row.Day.Time
+		dts[time.Date(d.Year(), d.Month(), d.Day(), 0, 0, 0, 0, time.UTC)] = int(row.RowCount)
 	}
-	return CountPerDay(collectTimes), nil
+	return dts, nil
 }
 
-// CountPerDay counts 5-minute KPI rows per day. The key is the row's day in the
-// process's zone (TZ, the site zone in the chart), stored as midnight UTC: the
-// form determineNextCollectionDate walks and sends to FusionSolar.
-func CountPerDay(collectTimes []int64) map[time.Time]int {
-	dts := make(map[time.Time]int)
-	for _, ms := range collectTimes {
-		t := time.UnixMilli(ms)
-		d := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.UTC)
-		dts[d]++
+// SiteZone is the IANA name of the process's zone, for PostgreSQL's AT TIME
+// ZONE. Go names time.Local after TZ when it is set; without TZ it is "Local"
+// (from /etc/localtime, whose name Go does not know) and the days are counted
+// in UTC.
+func SiteZone() string {
+	if name := time.Local.String(); name != "" && name != "Local" {
+		return name
 	}
-	return dts
+	return "UTC"
 }
 
 func (r *PostgresRepository) InsertFsResponse(ctx context.Context, input FsResponseInput) (int32, error) {

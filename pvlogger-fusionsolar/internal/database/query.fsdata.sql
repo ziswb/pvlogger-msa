@@ -24,12 +24,17 @@ INSERT INTO fs_station_real_kpi (day_income,
                                  type)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);
 
--- name: SelectFormer5MinDeviceRealKpi :many
--- DISTINCT: a refetched day must not count twice (fs_device_real_kpi has no unique key).
-SELECT DISTINCT "devId", collect_time
+-- name: CountFormer5MinDeviceRealKpiPerDay :many
+-- One row per day, so the job's memory does not grow with the history (backlog 66:
+-- the per-row variant was OOMKilled at 50Mi). The day is the site day (zone =
+-- the process's TZ). DISTINCT: a refetched day must not count twice
+-- (fs_device_real_kpi has no unique key).
+SELECT (to_timestamp(collect_time / 1000.0) AT TIME ZONE sqlc.arg(zone)::text)::date AS day,
+       count(DISTINCT ("devId", collect_time))                                      AS row_count
 FROM fs_device_real_kpi
 WHERE type = 'DEVICE_5_MIN_KPI'
-  AND collect_time is not null;
+  AND collect_time is not null
+GROUP BY 1;
 
 -- name: InsertFsResponseParamsDevice :exec
 INSERT INTO fs_response_params_device ("current_time", dev_ids, dev_type_id, response)

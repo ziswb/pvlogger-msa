@@ -66,6 +66,9 @@ jobs:
               - "**/Makefile"
               - ".golangci.yml"
               - ".github/workflows/go.yml"
+              # Embedded in fusionsolar (migrations, sqlc queries) and run by its
+              # repository test against the go.yml Postgres service.
+              - "pvlogger-fusionsolar/internal/database/**/*.sql"
               # Read by the Go drift tests (paths_drift_test.go,
               # masterdata_drift_test.go, raw_kpi_drift_test.go).
               - "pvlogger-shared-rest/src/main/kotlin/**/rest/*Paths.kt"

@@ -15,9 +15,10 @@ import (
 )
 
 // fakeRepo keeps the inserted device KPI rows in memory. Its
-// SelectFormer5MinDeviceRealKpi applies the SQL query's filter (type
-// DEVICE_5_MIN_KPI, collect_time not null, distinct per device and time) and
-// the repository's day counting.
+// SelectFormer5MinDeviceRealKpi does in Go what the SQL query does (type
+// DEVICE_5_MIN_KPI, collect_time not null, distinct per device and time,
+// counted per day in the process's zone); the repository's database test
+// checks the query against the same rules.
 type fakeRepo struct {
 	nextID     int32
 	deviceRows []repository.DeviceRealKpiInput
@@ -63,7 +64,12 @@ func (r *fakeRepo) SelectFormer5MinDeviceRealKpi(context.Context) (map[time.Time
 		seen[key] = true
 		collectTimes = append(collectTimes, row.CollectTime.Int64)
 	}
-	return repository.CountPerDay(collectTimes), nil
+	counts := map[time.Time]int{}
+	for _, ms := range collectTimes {
+		t := time.UnixMilli(ms)
+		counts[time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.UTC)]++
+	}
+	return counts, nil
 }
 
 // withSiteZone runs the test in a zone east of UTC, as the chart's TZ does in

@@ -232,6 +232,17 @@ next release; it changes nothing for them.
     - Regression tests: `pvlogger-fusionsolar/internal/fusionsolar/device_5_minutes_kpi_save_test.go`.
     - No `MIGRATE` run needed: the `collect_time` column already exists.
 
+    *3.6.0 was OOMKilled, fixed in fusionsolar 3.6.1, chart 5.1.1.* Deployed 2026-11-19 17:23 (chart 5.1.0), cleanup
+    done; after the unsuspend at 20:17 every attempt was OOMKilled at the 50Mi limit right after start. The gap search
+    read one row per stored data point since 2022-10-25 (`DISTINCT "devId", collect_time`, ~680 000 rows of two
+    `pgtype.Int8`, plus copies) and counted the days in Go; the 3.5.x query (one column) had only just fit, and both
+    grow by ~570 rows a day. Now PostgreSQL counts per day (`CountFormer5MinDeviceRealKpiPerDay`, the site zone passed
+    as `AT TIME ZONE`, from `TZ`): one row per day. Measured with 687 000 rows: 331 KiB allocated for the whole call.
+    The 50Mi limit stays. New test `internal/repository/postgres_repository_db_test.go` runs the query against
+    PostgreSQL 18 (site-day boundaries in winter and summer, refetched rows, wrong type or no `collect_time`) and
+    compares it with the previous Go counting; it needs `FSDATA_TEST_DSN`, which CI sets for a `postgres:18` service
+    in `go.yml` (skipped locally without it). 3.6.1 also ships migration 002.
+
     *Cleanup, run once by the operator* (psql on `fsdata`, before or after the deploy: the fixed job ignores
     `DEVICE_REAL_KPI` rows). Checked against `migrations/001_baseline.sql`: six tables reference `fs_response`, all
     `on delete restrict`; the job writes only to `fs_response`, `fs_response_params_device` and
