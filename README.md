@@ -87,6 +87,8 @@ See [CONTEXT.md](CONTEXT.md) for the domain vocabulary and data flow, and
   chart pins, for amd64 and arm64, and the chart itself to GHCR; released
   versions are never overwritten
   ([ADR-0027](docs/adr/0027-chart-tag-publishes-images-and-chart-to-ghcr.md)).
+  Only `chart/v*` tags are releases; the `pvlogger_*` tags mark releases from
+  before the chart (2025), the `archive/*` tags keep retired branches.
 - **Public code, private configuration**, enforced by a three-layer leak guard
   (see below).
 - **AI-assisted.** Much of the recent work was done with Claude Code as a pair
