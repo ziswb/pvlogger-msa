@@ -214,6 +214,16 @@ with sunrise-sunset on 2026-08-27).
     `PvloggerServiceTargetDown` fired all night. Tilt has no Prometheus, so the test missed
     it. Chart 3.0.1 adds `allow-metrics-from-prometheus` (namespace
     `networkPolicies.prometheus.namespace`, Prometheus pods only, the three metrics ports).
+65. ~~**Published images carried a site name**~~ — **fixed 2026-11-19**. The pre-launch review
+    of 2026-11-19 pulled the published images anonymously from GHCR and found a site name
+    (the page title, and the KPI key prefix of backlog 63) in three versions built before the
+    2026-11-17 history rewrite: `pvlogger-kpi-exporter:3.5.3`, `pvlogger-frontend:3.14.2` and
+    `:3.15.0`. The rewrite had covered git only. Production ran later versions; the owner
+    deleted the three versions on GHCR, and the site's pull-through cache never held them
+    (checked: neither GHCR nor the cache serves them). Every other published version is clean.
+    `scripts/scan-published-images.py` now checks published image contents with the private
+    blocklist; it is optional and run by hand, after a release or when an image is suspect
+    (UPGRADING.md, `.githooks/README.md`). The git hooks remain the main guard.
 
 ## Withdrawn
 
