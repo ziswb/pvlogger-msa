@@ -133,6 +133,11 @@ This repository contains no site configuration. Hosts, network details, site
 identifiers and credentials live in a separate private infrastructure repository and
 appear here only as placeholders such as `<db-host>` or `<tailnet>`.
 
+The platform underneath, k3s, the central host, ingress, certificates and
+monitoring, is public too: the Ansible collection
+[homelab-platform](https://github.com/ziswb/homelab-platform), which the same
+private repository pins and configures.
+
 ## License
 
 Apache License 2.0, see [LICENSE](LICENSE) and [NOTICE](NOTICE).
