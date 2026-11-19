@@ -254,14 +254,14 @@ next release; it changes nothing for them.
     commit;  -- or rollback; if a count is off
     ```
 
-    *Left open (decide after the refill has run a while):*
-    - **Catch-up speed.** One day per run, 4 runs a day: 2026-01-31 to today (~290 days) takes ~73 days. Several
-      days per run would be faster, but FusionSolar limits call frequency per interface and the limit for
-      `getDevFiveMinutes` is not documented here; nothing reads the table, so the slow catch-up is accepted.
-    - **How far back FusionSolar serves 5-minute data** is unknown (2026-01-31 was still served on 2026-11-19). If a
-      day is no longer served, or stays below 200 rows (an outage day), every run now fails on it: visible, but the
-      job cannot move past that day. A skip (e.g. after N runs without progress, or a configurable start date) would
-      then be needed.
+    *Decided by the operator 2026-11-19:*
+    - **Catch-up speed: one day per run stays.** 2026-01-31 to today (~290 days) takes ~73 days at 4 runs a day.
+      To go faster, the operator starts the job by hand; most of the time that is not needed.
+    - **How far back FusionSolar serves 5-minute data does not matter:** the site's own data comes straight from
+      the inverter, dongle and smart meter (the Modbus collectors). A day FusionSolar no longer serves is simply
+      missing. Consequence to keep in mind: such a day (or one that stays below 200 rows, an outage day) makes every
+      run fail on it, and the job does not move past it. If that happens, add a skip (e.g. after N runs without
+      progress, or a configurable start date) instead of chasing the data.
     - Close this item once the operator confirms the deploy, the cleanup and a few runs that each moved one day.
 
 ## Done (resolved, superseded or moot)
