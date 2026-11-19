@@ -55,4 +55,5 @@ readers need a chart they can install on their own, while the site specifics
   imported (its commit messages carry site context).
 - Until the release workflow publishes `oci://ghcr.io/ziswb/charts/pvlogger`
   (backlog 53), infrastructure extracts the chart from a local clone at the
-  pinned tag (infrastructure ADR-0032).
+  pinned tag; the site pins the chart version (a decision in the private site
+  repository).
