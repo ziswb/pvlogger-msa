@@ -140,7 +140,7 @@ fusionsolar:
   enabled: false
   image:
     repository: "pvlogger-fusionsolar"
-    tag: "3.6.0"
+    tag: "3.6.1"
   # Site values: the FusionSolar API account, plant and devices.
   username: ""
   stationCode: ""
