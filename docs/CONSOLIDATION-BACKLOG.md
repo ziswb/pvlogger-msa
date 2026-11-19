@@ -152,6 +152,34 @@ next release; it changes nothing for them.
     the next drain + power-off of the primary's node** (the case from 10:23): pass = no kubelet restart of the data
     accessor, at most one failed fast run, DB errors (`An I/O error occurred`, SQLState 08006) for at most ~60 s.
 
+50. 🔴 **Charts stay empty when the dashboard loads in a hidden tab** (added 2026-11-13)
+
+    Seen mostly in the iPhone Home Screen app and in Safari, sometimes in Firefox, and in Chrome on a tab restored in
+    the background: the KPI tiles show current values, the charts stay empty (no axes, no lines) until a force
+    reload. Reproduced in Chrome by opening the dashboard as a real background tab over CDP (Playwright fakes
+    `visible`) and switching to it: the charts never filled, not even with the next live values.
+
+    Cause: since frontend 3.13.1 (`82969de3`) `AppBus.kpiValues` emits on animation frames, so a chart component gets
+    its first value — and with it its `chartOptions` with series — one frame after `ngOnInit`, and in a hidden tab
+    only once it is shown. If Highcharts loaded before that (always in a hidden tab; a race in a visible one, made
+    likelier by the cached chunk since item 47), highcharts-angular creates the chart from `{}`. Highcharts'
+    `chart.update()` without `oneToOne` updates existing series only and silently ignores the rest, so every later
+    update is lost.
+
+    Fix: each chart component builds its full options synchronously in `ngOnInit` (`getChart(Date.now())`) before
+    subscribing, so the chart always starts with its series. Each chart spec renders the chart with an `AppBus`
+    that never emits (`renderedSeriesInHiddenTab`) and checks the legend shows all series; red before the fix.
+
+    *Status 2026-11-13:* implemented, not released. `ng test` 70/70 green, `ng build` OK; the CDP background-tab
+    repro against a local dev server shows axes while hidden and all lines 3 s after switching to the tab.
+
+    *Status 2026-11-13:* live with frontend 3.13.10 (`bf75c0e8`, `d725afcc`). `/` serves
+    `main-6AKHNOJ4.js`, `/v1/daydata` → `200`. The CDP background-tab repro against the live site, 3 runs: axes while
+    hidden, all lines 3 s after switching to the tab (on 3.13.9 they stayed empty for good). Open until the owner
+    confirms the iPhone Home Screen app.
+
+    *Moved back to Open 2026-11-19:* it had been filed under Done while still waiting for that confirmation.
+
 54. ⚪ **Chart: `existingSecret` instead of secrets in values** (added 2026-11-15, from the item 52 grill)
 
     The chart renders its Secrets (Postgres, FusionSolar, heartbeat URL, KPI export token) from values, so the
@@ -1213,33 +1241,7 @@ next release; it changes nothing for them.
     replaced by its CI build (same versions), all pods ready, the KPI export and both ingresses answering.
     `scripts/build.sh` left the release steps; it stays for pushing a test image to a registry of your own.
 
-50. 🔴 **Charts stay empty when the dashboard loads in a hidden tab** (added 2026-11-13)
-
-    Seen mostly in the iPhone Home Screen app and in Safari, sometimes in Firefox, and in Chrome on a tab restored in
-    the background: the KPI tiles show current values, the charts stay empty (no axes, no lines) until a force
-    reload. Reproduced in Chrome by opening the dashboard as a real background tab over CDP (Playwright fakes
-    `visible`) and switching to it: the charts never filled, not even with the next live values.
-
-    Cause: since frontend 3.13.1 (`82969de3`) `AppBus.kpiValues` emits on animation frames, so a chart component gets
-    its first value — and with it its `chartOptions` with series — one frame after `ngOnInit`, and in a hidden tab
-    only once it is shown. If Highcharts loaded before that (always in a hidden tab; a race in a visible one, made
-    likelier by the cached chunk since item 47), highcharts-angular creates the chart from `{}`. Highcharts'
-    `chart.update()` without `oneToOne` updates existing series only and silently ignores the rest, so every later
-    update is lost.
-
-    Fix: each chart component builds its full options synchronously in `ngOnInit` (`getChart(Date.now())`) before
-    subscribing, so the chart always starts with its series. Each chart spec renders the chart with an `AppBus`
-    that never emits (`renderedSeriesInHiddenTab`) and checks the legend shows all series; red before the fix.
-
-    *Status 2026-11-13:* implemented, not released. `ng test` 70/70 green, `ng build` OK; the CDP background-tab
-    repro against a local dev server shows axes while hidden and all lines 3 s after switching to the tab.
-
-    *Status 2026-11-13:* live with frontend 3.13.10 (`bf75c0e8`, `d725afcc`; infrastructure `6e9ea9e`). `/` serves
-    `main-6AKHNOJ4.js`, `/v1/daydata` → `200`. The CDP background-tab repro against the live site, 3 runs: axes while
-    hidden, all lines 3 s after switching to the tab (on 3.13.9 they stayed empty for good). Open until the owner
-    confirms the iPhone Home Screen app.
-
-51. 🟡 **Prepare the repo for publication on GitHub** (added 2026-11-14)
+51. ~~🟡 **Prepare the repo for publication on GitHub**~~ (added 2026-11-14)
 
     Decision: this repo goes public as the working repo ("public-first"); site specifics (hosts, network, site
     identifiers, credentials) live only in the private infrastructure repo. To do before the first push:
@@ -1256,7 +1258,7 @@ next release; it changes nothing for them.
     (headless Chrome, 1280 px at 2x, `prefers-color-scheme` emulated), shown by the README in a `<picture>` that
     follows the reader's colour scheme.
 
-56. 🟡 **Go images hard-code arm64** (added 2026-11-15, found while rebuilding Tilt, item 23)
+56. ~~🟡 **Go images hard-code arm64**~~ (added 2026-11-15, found while rebuilding Tilt, item 23)
 
     Every Go Makefile except the KPI exporter's sets `GOARCH=arm64` in `LINUX_BUILD_OPTIONS`, and their Dockerfiles
     build in a `golang` stage of the target platform. On an amd64 host (a public user's `tilt up`, an amd64 CI
@@ -1274,6 +1276,9 @@ next release; it changes nothing for them.
     carries a `GOARCH=amd64` binary; `make build` passes in all eight Go modules. No image bump: an arm64 build
     produces the same binary, so the next release of each image carries the change. Open: `tilt up` on an amd64
     host (the user's call), then move to Done.
+
+    *Done 2026-11-19 (bookkeeping):* the launch's fresh-clone `tilt up` passed on amd64 on 2026-11-17 (see Next up),
+    and the release workflow builds every image for amd64 and arm64 (ADR-0027).
 
     *Done 2026-11-16:* `tilt up --context rancher-desktop` on an amd64 host (x86_64, Ubuntu, Rancher Desktop):
     every resource ok, the mock server serves the synthetic plant (no `exec format error` anywhere), fast collector
@@ -1545,7 +1550,7 @@ next release; it changes nothing for them.
     mock's Kubernetes name) are with item 55, the bare Go module paths and the backfill's 02–04 minutes stay as
     they are (dev only, works through `go.work`).
 
-61. 🔴 **Modbus replies are not matched to their request** (added 2026-11-16, reported from the infrastructure
+61. ~~🔴 **Modbus replies are not matched to their request**~~ (added 2026-11-16, reported from the infrastructure
     side; one occurrence so far)
 
     Production, 2026-11-16 13:02 local, `pv-full-data-collector` 0.8.7: reading register 32106 (accumulated energy
