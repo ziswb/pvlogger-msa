@@ -27,7 +27,6 @@ collector and heartbeat runs completed. The repo is on GitHub, private until the
 
 In order:
 
-- **Item 66 (2026-11-19):** deploy fusionsolar 3.6.0 (chart 5.1.0), run the cleanup SQL, unsuspend `dev5minkpi`.
 - **From about 2027-01-25:** item 42, drop the unused `modbus_response_data` indexes.
 - Item 45 stays open until the next drain + power-off of the primary's node.
 
@@ -208,82 +207,6 @@ next release; it changes nothing for them.
 
     Done by item 52: old 3 (service hosts derived from the release) and 5 (site values out of the templates). Old 2
     (secret management) continues as item 54.
-66. 🔴 **FusionSolar `dev5minkpi` refetched 2026-01-31 on every run since the Go port** (added 2026-11-19, reported
-    by the infrastructure side, its backlog 104)
-
-    Since 2026-02-01 every run (4 a day) fetched 2026-01-31 again. `insertDeviceFiveMinutesKpi` stored the rows as
-    `DEVICE_REAL_KPI` and without `collect_time` (the insert had no such column), so the gap search
-    (`SelectFormer5MinDeviceRealKpi`: `DEVICE_5_MIN_KPI` with a `collect_time`) never saw them. Unchanged since the
-    Go port (`3d292bc`, 2026-01-26); the last good day, 2026-01-30, was written by the Kotlin job. Every run
-    succeeded, so nothing alerted, and the hardening-round-2 check above counted it as succeeded. About 1 100
-    responses with ~630 000 mislabelled rows piled up in `fs_device_real_kpi`. Nothing reads that table (only
-    `pvlogger-database` migration scripts mention it), so no figure anyone sees was wrong. The CronJob is suspended
-    on the cluster until the fix is deployed.
-
-    *Fixed in fusionsolar 3.6.0, chart 5.1.0:*
-    - The 5-minute rows are stored as `DEVICE_5_MIN_KPI` with their `collect_time`. The real-time KPIs (`devkpi`)
-      keep `collect_time` NULL: their reply has no collect time, and the gap search does not read them.
-    - The gap search counts distinct `(devId, collect_time)`: the table has no unique key, so a refetched day would
-      otherwise count twice.
-    - Only days that are over are fetched. Before, the running day was a candidate: after a few hours it reached
-      200 rows, counted as collected, and its rest was never fetched.
-    - A run that adds no new row for its day fails (the Job fails and alerts); a day still below 200 rows after a
-      run that added some logs a warning and is fetched again by the next run.
-    - Regression tests: `pvlogger-fusionsolar/internal/fusionsolar/device_5_minutes_kpi_save_test.go`.
-    - No `MIGRATE` run needed: the `collect_time` column already exists.
-
-    *3.6.0 was OOMKilled, fixed in fusionsolar 3.6.1, chart 5.1.1.* Deployed 2026-11-19 17:23 (chart 5.1.0), cleanup
-    done; after the unsuspend at 20:17 every attempt was OOMKilled at the 50Mi limit right after start. The gap search
-    read one row per stored data point since 2022-10-25 (`DISTINCT "devId", collect_time`, ~680 000 rows of two
-    `pgtype.Int8`, plus copies) and counted the days in Go; the 3.5.x query (one column) had only just fit, and both
-    grow by ~570 rows a day. Now PostgreSQL counts per day (`CountFormer5MinDeviceRealKpiPerDay`, the site zone passed
-    as `AT TIME ZONE`, from `TZ`): one row per day. Measured with 687 000 rows: 331 KiB allocated for the whole call.
-    The 50Mi limit stays. New test `internal/repository/postgres_repository_db_test.go` runs the query against
-    PostgreSQL 18 (site-day boundaries in winter and summer, refetched rows, wrong type or no `collect_time`) and
-    compares it with the previous Go counting; it needs `FSDATA_TEST_DSN`, which CI sets for a `postgres:18` service
-    in `go.yml` (skipped locally without it). 3.6.1 also ships migration 002.
-
-    *Cleanup, run once by the operator* (psql on `fsdata`, before or after the deploy: the fixed job ignores
-    `DEVICE_REAL_KPI` rows). Checked against `migrations/001_baseline.sql`: six tables reference `fs_response`, all
-    `on delete restrict`; the job writes only to `fs_response`, `fs_response_params_device` and
-    `fs_device_real_kpi`. Should any bad response be referenced elsewhere, the last delete fails and the transaction
-    rolls back. Real `devkpi` responses hold one row per inverter, so `count(*) > 10` selects only the bad ones.
-
-    **Prerequisite: the `fs_response` foreign key indexes.** None of the six referencing columns had an index, so
-    the last delete checked each RESTRICT key with a sequential scan of every referencing table, per deleted row:
-    hours instead of seconds (found by the infrastructure side while it ran). The operator created them by hand on
-    2026-11-19; migration `002_fs_response_fk_indexes.sql` adds them with the same names (`if not exists`,
-    `concurrently`, tern `disable-tx`), a no-op there. On any other database run the `MIGRATE` job first, or
-    create them with the statements in that migration. The sixth,
-    `fs_response_to_station_extended_data_response_id`, duplicates the leading column of that table's primary
-    key; it stays so that every database has the same schema as production.
-    The migration ships with the next fusionsolar release after 3.6.0 (no release of its own).
-
-    ```sql
-    begin;
-    create temp table bad on commit drop as
-      select response from fs_device_real_kpi
-      where type = 'DEVICE_REAL_KPI' and collect_time is null
-      group by response having count(*) > 10;
-    select count(*) as bad_responses from bad;                                     -- expect ~1 100
-    select count(*) as bad_rows from fs_device_real_kpi
-      where response in (select response from bad);                                -- expect ~630 000
-    select min(response), max(response) from bad;                                  -- the reported id range
-    delete from fs_device_real_kpi where response in (select response from bad);
-    delete from fs_response_params_device where response in (select response from bad);
-    delete from fs_response where id in (select response from bad);
-    commit;  -- or rollback; if a count is off
-    ```
-
-    *Decided by the operator 2026-11-19:*
-    - **Catch-up speed: one day per run stays.** 2026-01-31 to today (~290 days) takes ~73 days at 4 runs a day.
-      To go faster, the operator starts the job by hand; most of the time that is not needed.
-    - **How far back FusionSolar serves 5-minute data does not matter:** the site's own data comes straight from
-      the inverter, dongle and smart meter (the Modbus collectors). A day FusionSolar no longer serves is simply
-      missing. Consequence to keep in mind: such a day (or one that stays below 200 rows, an outage day) makes every
-      run fail on it, and the job does not move past it. If that happens, add a skip (e.g. after N runs without
-      progress, or a configurable start date) instead of chasing the data.
-    - Close this item once the operator confirms the deploy, the cleanup and a few runs that each moved one day.
 67. ⚪ **Data accessor: the foreign keys to `modbus_response_data` have no index** (added 2026-11-19, from item 66)
 
     The same pattern as fsdata's `fs_response` (item 66). Found by applying every Flyway migration to an empty
@@ -1784,4 +1707,84 @@ next release; it changes nothing for them.
     nothing. Regenerate with the next real fusionsolar change (note in `internal/openapi/README.md`). Verified: the
     linux/arm64 binary built from the new go.mod/go.sum is byte-identical to the one from the old (so no image or chart
     release), `make test` and `make lint` pass, `go list -deps ./...` still lists neither module.
+66. ~~🔴 **FusionSolar `dev5minkpi` refetched 2026-01-31 on every run since the Go port**~~ (added 2026-11-19, reported
+    by the infrastructure side, its backlog 104)
 
+    Since 2026-02-01 every run (4 a day) fetched 2026-01-31 again. `insertDeviceFiveMinutesKpi` stored the rows as
+    `DEVICE_REAL_KPI` and without `collect_time` (the insert had no such column), so the gap search
+    (`SelectFormer5MinDeviceRealKpi`: `DEVICE_5_MIN_KPI` with a `collect_time`) never saw them. Unchanged since the
+    Go port (`3d292bc`, 2026-01-26); the last good day, 2026-01-30, was written by the Kotlin job. Every run
+    succeeded, so nothing alerted, and the hardening-round-2 check above counted it as succeeded. About 1 100
+    responses with ~630 000 mislabelled rows piled up in `fs_device_real_kpi`. Nothing reads that table (only
+    `pvlogger-database` migration scripts mention it), so no figure anyone sees was wrong. The CronJob is suspended
+    on the cluster until the fix is deployed.
+
+    *Fixed in fusionsolar 3.6.0, chart 5.1.0:*
+    - The 5-minute rows are stored as `DEVICE_5_MIN_KPI` with their `collect_time`. The real-time KPIs (`devkpi`)
+      keep `collect_time` NULL: their reply has no collect time, and the gap search does not read them.
+    - The gap search counts distinct `(devId, collect_time)`: the table has no unique key, so a refetched day would
+      otherwise count twice.
+    - Only days that are over are fetched. Before, the running day was a candidate: after a few hours it reached
+      200 rows, counted as collected, and its rest was never fetched.
+    - A run that adds no new row for its day fails (the Job fails and alerts); a day still below 200 rows after a
+      run that added some logs a warning and is fetched again by the next run.
+    - Regression tests: `pvlogger-fusionsolar/internal/fusionsolar/device_5_minutes_kpi_save_test.go`.
+    - No `MIGRATE` run needed: the `collect_time` column already exists.
+
+    *3.6.0 was OOMKilled, fixed in fusionsolar 3.6.1, chart 5.1.1.* Deployed 2026-11-19 17:23 (chart 5.1.0), cleanup
+    done; after the unsuspend at 20:17 every attempt was OOMKilled at the 50Mi limit right after start. The gap search
+    read one row per stored data point since 2022-10-25 (`DISTINCT "devId", collect_time`, ~680 000 rows of two
+    `pgtype.Int8`, plus copies) and counted the days in Go; the 3.5.x query (one column) had only just fit, and both
+    grow by ~570 rows a day. Now PostgreSQL counts per day (`CountFormer5MinDeviceRealKpiPerDay`, the site zone passed
+    as `AT TIME ZONE`, from `TZ`): one row per day. Measured with 687 000 rows: 331 KiB allocated for the whole call.
+    The 50Mi limit stays. New test `internal/repository/postgres_repository_db_test.go` runs the query against
+    PostgreSQL 18 (site-day boundaries in winter and summer, refetched rows, wrong type or no `collect_time`) and
+    compares it with the previous Go counting; it needs `FSDATA_TEST_DSN`, which CI sets for a `postgres:18` service
+    in `go.yml` (skipped locally without it). 3.6.1 also ships migration 002.
+
+    *Cleanup, run once by the operator* (psql on `fsdata`, before or after the deploy: the fixed job ignores
+    `DEVICE_REAL_KPI` rows). Checked against `migrations/001_baseline.sql`: six tables reference `fs_response`, all
+    `on delete restrict`; the job writes only to `fs_response`, `fs_response_params_device` and
+    `fs_device_real_kpi`. Should any bad response be referenced elsewhere, the last delete fails and the transaction
+    rolls back. Real `devkpi` responses hold one row per inverter, so `count(*) > 10` selects only the bad ones.
+
+    **Prerequisite: the `fs_response` foreign key indexes.** None of the six referencing columns had an index, so
+    the last delete checked each RESTRICT key with a sequential scan of every referencing table, per deleted row:
+    hours instead of seconds (found by the infrastructure side while it ran). The operator created them by hand on
+    2026-11-19; migration `002_fs_response_fk_indexes.sql` adds them with the same names (`if not exists`,
+    `concurrently`, tern `disable-tx`), a no-op there. On any other database run the `MIGRATE` job first, or
+    create them with the statements in that migration. The sixth,
+    `fs_response_to_station_extended_data_response_id`, duplicates the leading column of that table's primary
+    key; it stays so that every database has the same schema as production.
+    The migration ships with the next fusionsolar release after 3.6.0 (no release of its own).
+
+    ```sql
+    begin;
+    create temp table bad on commit drop as
+      select response from fs_device_real_kpi
+      where type = 'DEVICE_REAL_KPI' and collect_time is null
+      group by response having count(*) > 10;
+    select count(*) as bad_responses from bad;                                     -- expect ~1 100
+    select count(*) as bad_rows from fs_device_real_kpi
+      where response in (select response from bad);                                -- expect ~630 000
+    select min(response), max(response) from bad;                                  -- the reported id range
+    delete from fs_device_real_kpi where response in (select response from bad);
+    delete from fs_response_params_device where response in (select response from bad);
+    delete from fs_response where id in (select response from bad);
+    commit;  -- or rollback; if a count is off
+    ```
+
+    *Decided by the operator 2026-11-19:*
+    - **Catch-up speed: one day per run stays.** 2026-01-31 to today (~290 days) takes ~73 days at 4 runs a day.
+      To go faster, the operator starts the job by hand; most of the time that is not needed.
+    - **How far back FusionSolar serves 5-minute data does not matter:** the site's own data comes straight from
+      the inverter, dongle and smart meter (the Modbus collectors). A day FusionSolar no longer serves is simply
+      missing. Consequence to keep in mind: such a day (or one that stays below 200 rows, an outage day) makes every
+      run fail on it, and the job does not move past it. If that happens, add a skip (e.g. after N runs without
+      progress, or a configurable start date) instead of chasing the data.
+
+    **Resolved 2026-11-19.** Chart 5.1.1 (fusionsolar 3.6.1) deployed, the cleanup run (with the foreign key indexes
+    created first), the CronJob unsuspended. Confirmed by the infrastructure side from the Job logs: three runs in a
+    row each stored one new day (2026-01-31, 02-01, 02-02; 569 rows each, ~23 s), all Complete, none OOMKilled. The
+    catch-up continues at 4 runs a day. Migration 002 is in the image; the `MIGRATE` job is optional (it only records
+    version 2, the indexes exist) and runs with a later deploy. Follow-up: item 67.
