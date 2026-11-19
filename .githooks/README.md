@@ -13,6 +13,12 @@ credentials) must not enter it, in files or in commit messages. Three layers:
    outside the repo. A hit names the placeholder to use, never the value.
 3. **Agent rules** in [`CLAUDE.md`](../CLAUDE.md).
 
+Published images are outside the hooks' reach: they are built from a working tree.
+Optionally, after a release or whenever an image is suspect, the maintainer scans them
+by hand with the same blocklist: `scripts/scan-published-images.py` (see its header;
+judged false positives go into a private allowlist, `git config pvlogger.imagescanAllow`).
+Nothing runs it automatically.
+
 The hooks run both checks:
 
 | Hook | Scans |

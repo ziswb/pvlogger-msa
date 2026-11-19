@@ -7,7 +7,9 @@ It covers libraries, major versions and tooling (JDK, Go, Gradle, Node/Angular, 
 
 - Work on a branch. Nothing is pushed, merged or deployed without the owner's go-ahead.
   Rollout: the owner tags the chart (`chart/vX.Y.Z`, ADR-0024) and the sibling `infrastructure` repo bumps its
-  pinned chart version; the owner watches the first CronJob runs.
+  pinned chart version; the owner watches the first CronJob runs. Optional, by hand: once the release workflow
+  has published the images, `scripts/scan-published-images.py` checks their contents with the private blocklist,
+  which the git hooks never see (security finding 65).
 - **Major versions and toolchain changes need approval first.** Before any work, present a table with
   one row per major/toolchain bump: from → to, pros, cons/breaking changes, risk (low/med/high),
   and the effort expected. The owner picks which ones go ahead. Patch and minor bumps don't need approval.
