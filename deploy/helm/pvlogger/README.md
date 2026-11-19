@@ -89,9 +89,32 @@ the NFS export.
 
 ## Upgrading
 
+Each major release and what an existing install has to change; minor and patch
+releases need nothing.
+
+**To 5.0.0:** `kpiExporter.keyPrefix` (the receiver's JSON key prefix,
+[ADR-0021](../../../docs/adr/0021-kpi-export-api-contract.md)) is new and
+required when `kpiExportServe.enabled` is true. It has no default: set it to the
+prefix the receiver expects. Installs without the KPI export endpoint change
+nothing.
+
 **To 4.0.0** ([ADR-0026](../../../docs/adr/0026-image-names-registry-carries-owner-ghcr-default.md)):
 the image repositories lost their owner prefix (`bziswiler/pvlogger-frontend` is
 now `pvlogger-frontend`), and `global.imageRegistry` defaults to `ghcr.io/ziswb`.
 An install that set `global.imageRegistry: <registry-host>` sets
 `<registry-host>/bziswiler` instead to keep pulling the same images. Nothing
 else changed since 3.0.2.
+
+**To 3.0.0:** the chart creates `fusionsolar-token-secret` itself (without
+data, kept on uninstall); the token job only reads and updates it instead of
+creating it (backlog 58). Where that Secret already exists, Helm refuses to take
+it over until it carries Helm's ownership metadata: the label
+`app.kubernetes.io/managed-by: Helm` and the annotations
+`meta.helm.sh/release-name: <release>` and
+`meta.helm.sh/release-namespace: <namespace>`. Add them once before the upgrade;
+the token in it is kept. No values changed.
+
+**To 2.0.0:** `networkPolicies.kubeletCidr` is removed, together with the
+NetworkPolicy that admitted the whole pod network to the app ports (backlog 57).
+Kubelet probes pass without it. Drop the key from your values; since 4.2.0 the
+values schema rejects unknown keys.
