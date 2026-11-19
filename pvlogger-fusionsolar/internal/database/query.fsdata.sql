@@ -25,7 +25,8 @@ INSERT INTO fs_station_real_kpi (day_income,
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);
 
 -- name: SelectFormer5MinDeviceRealKpi :many
-SELECT collect_time
+-- DISTINCT: a refetched day must not count twice (fs_device_real_kpi has no unique key).
+SELECT DISTINCT "devId", collect_time
 FROM fs_device_real_kpi
 WHERE type = 'DEVICE_5_MIN_KPI'
   AND collect_time is not null;
@@ -44,12 +45,12 @@ INSERT INTO fs_device_real_kpi (a_i, a_u, ab_u, active_power, b_i, b_u, bc_u, c_
                                 pv22_i, pv22_u, pv23_i, pv23_u, pv24_i, pv24_u, pv25_i, pv25_u, pv26_i, pv26_u, pv27_i,
                                 pv27_u, pv28_i, pv28_u, pv2_i, pv2_u, pv3_i, pv3_u, pv4_i, pv4_u, pv5_i, pv5_u, pv6_i,
                                 pv6_u, pv7_i, pv7_u, pv8_i, pv8_u, pv9_i, pv9_u, reactive_power, response, run_state,
-                                temperature, total_cap, type)
+                                temperature, total_cap, type, collect_time)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24,
         $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41, $42, $43, $44, $45, $46,
         $47, $48, $49, $50, $51, $52, $53, $54, $55, $56, $57, $58, $59, $60, $61, $62, $63, $64, $65, $66, $67, $68,
         $69, $70, $71, $72, $73, $74, $75, $76, $77, $78, $79, $80, $81, $82, $83, $84, $85, $86, $87, $88, $89, $90,
-        $91, $92) ON CONFLICT DO NOTHING;
+        $91, $92, $93) ON CONFLICT DO NOTHING;
 
 -- name: InsertFsResponseParamsExtended :exec
 INSERT INTO fs_response_params_extended (collect_time, "current_time", response, station_codes)

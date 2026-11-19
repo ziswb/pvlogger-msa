@@ -169,4 +169,7 @@ type DeviceRealKpiInput struct {
 	Temperature   pgtype.Float8
 	TotalCap      pgtype.Float8
 	Type          string
+	// CollectTime is the data point's time (epoch ms); only the 5-minute KPIs
+	// carry one, the real-time KPIs leave it NULL.
+	CollectTime pgtype.Int8
 }

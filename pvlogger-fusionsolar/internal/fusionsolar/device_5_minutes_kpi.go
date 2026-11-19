@@ -3,6 +3,7 @@ package fusionsolar
 import (
 	"context"
 	"errors"
+	"fmt"
 	"pv-logger/logging"
 	"pvlogger-fusionsolar/internal/model"
 	"pvlogger-fusionsolar/internal/repository"
@@ -12,23 +13,62 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func (f *FusionSolarAccess) FetchDevFiveMinutesData() (*model.DeviceFiveMinutesKpiResponse, error) {
-	logging.Info("fetching device 5 minutes KPI data")
+// minRowsPerDay marks a day as collected: a full day has 288 rows per inverter.
+const minRowsPerDay = 200
+
+// CollectDevFiveMinutesKpis fetches the oldest day whose 5-minute KPIs are
+// missing, stores them and checks that the day moved forward. A run that
+// stores nothing new for its day fails: otherwise the job refetches the same
+// day forever while every run succeeds (backlog 66).
+func (f *FusionSolarAccess) CollectDevFiveMinutesKpis() error {
+	before, err := f.repo.SelectFormer5MinDeviceRealKpi(f.db.Ctx)
+	if err != nil {
+		return err
+	}
+	day := determineNextCollectionDate(before, time.Now())
+	if day == nil {
+		logging.Info("no device 5 minutes KPIs to fetch")
+		return nil
+	}
+	response, err := f.fetchDevFiveMinutesData(*day)
+	if err != nil {
+		return err
+	}
+	if err := f.SaveDev5MinKPIs(response); err != nil {
+		return err
+	}
+	after, err := f.repo.SelectFormer5MinDeviceRealKpi(f.db.Ctx)
+	if err != nil {
+		return err
+	}
+	return checkCollectionProgress(*day, before[*day], after[*day])
+}
+
+// checkCollectionProgress fails when a run stored no new row for its day and
+// warns when the day is still incomplete (the next run fetches it again).
+func checkCollectionProgress(day time.Time, before, after int) error {
+	dayStr := day.Format(time.DateOnly)
+	if after <= before {
+		return fmt.Errorf("device 5 minutes KPIs for %s: no new rows stored (%d before and after); "+
+			"the next run would fetch the same day again", dayStr, before)
+	}
+	if after < minRowsPerDay {
+		logging.Warn("device 5 minutes KPIs: day still incomplete, the next run fetches it again",
+			"day", dayStr, "rows", after, "needed", minRowsPerDay)
+		return nil
+	}
+	logging.Info("device 5 minutes KPIs collected", "day", dayStr, "rows", after)
+	return nil
+}
+
+func (f *FusionSolarAccess) fetchDevFiveMinutesData(day time.Time) (*model.DeviceFiveMinutesKpiResponse, error) {
+	logging.Info("fetching device 5 minutes KPI data", "day", day.Format(time.DateOnly))
 	client, err := f.newClient()
 	if err != nil {
 		return nil, err
 	}
-	formerKPIs, err := f.repo.SelectFormer5MinDeviceRealKpi(f.db.Ctx)
-	if err != nil {
-		return nil, err
-	}
-	nextCollectionDate := determineNextCollectionDate(formerKPIs)
-	if nextCollectionDate == nil {
-		logging.Info("no device 5 minutes KPIs to fetch")
-		return nil, nil
-	}
 	fiveMinutesKpiJSONRequestBody := model.DeviceFiveMinutesKpiJSONRequestBody{
-		CollectTime: nextCollectionDate.UnixMilli(),
+		CollectTime: day.UnixMilli(),
 		DevTypeId:   sharedmodel.InverterDeviceType.Int(),
 		DevIds:      f.cfg.Fs.DevIds,
 	}
@@ -57,7 +97,7 @@ func (f *FusionSolarAccess) SaveDev5MinKPIs(response *model.DeviceFiveMinutesKpi
 	if err != nil {
 		return err
 	}
-	logging.Info("device real KPI response saved successfully")
+	logging.Info("device five minutes KPI response saved successfully")
 	return nil
 }
 
@@ -87,13 +127,16 @@ func (f *FusionSolarAccess) insertDeviceFiveMinutesKpiResponseBasicParams(respon
 	return err
 }
 
-func determineNextCollectionDate(records map[time.Time]int) *time.Time {
+// determineNextCollectionDate returns the oldest day with fewer than
+// minRowsPerDay rows, among the days that are over by now: a day still running
+// would count as collected after a few hours and never be completed.
+func determineNextCollectionDate(records map[time.Time]int, now time.Time) *time.Time {
 	walker := time.Date(2022, 10, 25, 0, 0, 0, 0, time.UTC)
-	for walker.Before(time.Now()) {
-		if records[walker] < 200 {
+	for !walker.Add(24 * time.Hour).After(now) {
+		if records[walker] < minRowsPerDay {
 			return &walker
 		}
-		walker = walker.Add(time.Hour * 24)
+		walker = walker.Add(24 * time.Hour)
 	}
 	return nil
 }
@@ -196,7 +239,8 @@ func (f *FusionSolarAccess) insertDeviceFiveMinutesKpi(responseId int32, respons
 			RunState:      repository.ToPgInt4(d.DataItemMap.RunState),
 			Temperature:   repository.ToPgFloat8(d.DataItemMap.Temperature),
 			TotalCap:      repository.ToPgFloat8(d.DataItemMap.TotalCap),
-			Type:          model.DeviceRealKpi.String(),
+			Type:          model.Device5MinKpi.String(),
+			CollectTime:   pgtype.Int8{Valid: true, Int64: d.CollectTime},
 		}
 		err := f.repo.InsertDeviceRealKpi(f.db.Ctx, input)
 		if err != nil {

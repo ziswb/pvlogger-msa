@@ -77,11 +77,7 @@ func runStationYearKpi(access *fusionsolar.FusionSolarAccess) {
 }
 
 func runDevice5MinKpi(access *fusionsolar.FusionSolarAccess) {
-	response, err := access.FetchDevFiveMinutesData()
-	if err != nil {
-		logging.Fatal("failed to fetch device 5 minutes kpi", "error", err)
-	}
-	if err := access.SaveDev5MinKPIs(response); err != nil {
-		logging.Fatal("failed to save device 5 minutes kpi response", "error", err)
+	if err := access.CollectDevFiveMinutesKpis(); err != nil {
+		logging.Fatal("failed to collect device 5 minutes kpi", "error", err)
 	}
 }

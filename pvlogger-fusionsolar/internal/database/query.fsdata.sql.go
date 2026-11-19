@@ -80,12 +80,12 @@ INSERT INTO fs_device_real_kpi (a_i, a_u, ab_u, active_power, b_i, b_u, bc_u, c_
                                 pv22_i, pv22_u, pv23_i, pv23_u, pv24_i, pv24_u, pv25_i, pv25_u, pv26_i, pv26_u, pv27_i,
                                 pv27_u, pv28_i, pv28_u, pv2_i, pv2_u, pv3_i, pv3_u, pv4_i, pv4_u, pv5_i, pv5_u, pv6_i,
                                 pv6_u, pv7_i, pv7_u, pv8_i, pv8_u, pv9_i, pv9_u, reactive_power, response, run_state,
-                                temperature, total_cap, type)
+                                temperature, total_cap, type, collect_time)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24,
         $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41, $42, $43, $44, $45, $46,
         $47, $48, $49, $50, $51, $52, $53, $54, $55, $56, $57, $58, $59, $60, $61, $62, $63, $64, $65, $66, $67, $68,
         $69, $70, $71, $72, $73, $74, $75, $76, $77, $78, $79, $80, $81, $82, $83, $84, $85, $86, $87, $88, $89, $90,
-        $91, $92) ON CONFLICT DO NOTHING
+        $91, $92, $93) ON CONFLICT DO NOTHING
 `
 
 type InsertFsDeviceRealKpiParams struct {
@@ -181,6 +181,7 @@ type InsertFsDeviceRealKpiParams struct {
 	Temperature   pgtype.Float8
 	TotalCap      pgtype.Float8
 	Type          string
+	CollectTime   pgtype.Int8
 }
 
 func (q *Queries) InsertFsDeviceRealKpi(ctx context.Context, arg InsertFsDeviceRealKpiParams) error {
@@ -277,6 +278,7 @@ func (q *Queries) InsertFsDeviceRealKpi(ctx context.Context, arg InsertFsDeviceR
 		arg.Temperature,
 		arg.TotalCap,
 		arg.Type,
+		arg.CollectTime,
 	)
 	return err
 }
@@ -434,25 +436,31 @@ func (q *Queries) InsertFsStationRealKpi(ctx context.Context, arg InsertFsStatio
 }
 
 const selectFormer5MinDeviceRealKpi = `-- name: SelectFormer5MinDeviceRealKpi :many
-SELECT collect_time
+SELECT DISTINCT "devId", collect_time
 FROM fs_device_real_kpi
 WHERE type = 'DEVICE_5_MIN_KPI'
   AND collect_time is not null
 `
 
-func (q *Queries) SelectFormer5MinDeviceRealKpi(ctx context.Context) ([]pgtype.Int8, error) {
+type SelectFormer5MinDeviceRealKpiRow struct {
+	DevId       pgtype.Int8
+	CollectTime pgtype.Int8
+}
+
+// DISTINCT: a refetched day must not count twice (fs_device_real_kpi has no unique key).
+func (q *Queries) SelectFormer5MinDeviceRealKpi(ctx context.Context) ([]SelectFormer5MinDeviceRealKpiRow, error) {
 	rows, err := q.db.Query(ctx, selectFormer5MinDeviceRealKpi)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []pgtype.Int8
+	var items []SelectFormer5MinDeviceRealKpiRow
 	for rows.Next() {
-		var collect_time pgtype.Int8
-		if err := rows.Scan(&collect_time); err != nil {
+		var i SelectFormer5MinDeviceRealKpiRow
+		if err := rows.Scan(&i.DevId, &i.CollectTime); err != nil {
 			return nil, err
 		}
-		items = append(items, collect_time)
+		items = append(items, i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

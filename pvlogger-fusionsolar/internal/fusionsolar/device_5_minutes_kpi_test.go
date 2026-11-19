@@ -6,7 +6,7 @@ import (
 )
 
 func TestDetermineNextCollectionDate_EmptyMap(t *testing.T) {
-	result := determineNextCollectionDate(map[time.Time]int{})
+	result := determineNextCollectionDate(map[time.Time]int{}, time.Now())
 	if result == nil {
 		t.Fatal("expected non-nil result for empty map")
 	}
@@ -23,7 +23,7 @@ func TestDetermineNextCollectionDate_AllDaysComplete(t *testing.T) {
 		records[walker] = 200
 		walker = walker.Add(time.Hour * 24)
 	}
-	result := determineNextCollectionDate(records)
+	result := determineNextCollectionDate(records, time.Now())
 	if result != nil {
 		t.Errorf("expected nil when all days are complete, got %v", *result)
 	}
@@ -40,7 +40,7 @@ func TestDetermineNextCollectionDate_FirstDayIncomplete(t *testing.T) {
 	firstDay := time.Date(2022, 10, 25, 0, 0, 0, 0, time.UTC)
 	records[firstDay] = 100
 
-	result := determineNextCollectionDate(records)
+	result := determineNextCollectionDate(records, time.Now())
 	if result == nil {
 		t.Fatal("expected non-nil result")
 	}
@@ -63,7 +63,7 @@ func TestDetermineNextCollectionDate_GapInMiddle(t *testing.T) {
 		walker = walker.Add(time.Hour * 24)
 	}
 
-	result := determineNextCollectionDate(records)
+	result := determineNextCollectionDate(records, time.Now())
 	if result == nil {
 		t.Fatal("expected non-nil result")
 	}
@@ -79,7 +79,7 @@ func TestDetermineNextCollectionDate_Exactly200IsComplete(t *testing.T) {
 
 	nextDay := day.Add(time.Hour * 24)
 
-	result := determineNextCollectionDate(records)
+	result := determineNextCollectionDate(records, time.Now())
 	if result == nil {
 		t.Fatal("expected non-nil result")
 	}
@@ -94,7 +94,7 @@ func TestDetermineNextCollectionDate_199IsIncomplete(t *testing.T) {
 	day := time.Date(2022, 10, 25, 0, 0, 0, 0, time.UTC)
 	records[day] = 199
 
-	result := determineNextCollectionDate(records)
+	result := determineNextCollectionDate(records, time.Now())
 	if result == nil {
 		t.Fatal("expected non-nil result")
 	}
@@ -104,7 +104,7 @@ func TestDetermineNextCollectionDate_199IsIncomplete(t *testing.T) {
 }
 
 func TestDetermineNextCollectionDate_NilMap(t *testing.T) {
-	result := determineNextCollectionDate(nil)
+	result := determineNextCollectionDate(nil, time.Now())
 	if result == nil {
 		t.Fatal("expected non-nil result for nil map")
 	}
@@ -115,7 +115,7 @@ func TestDetermineNextCollectionDate_NilMap(t *testing.T) {
 }
 
 func TestDetermineNextCollectionDate_ReturnsUTCTime(t *testing.T) {
-	result := determineNextCollectionDate(map[time.Time]int{})
+	result := determineNextCollectionDate(map[time.Time]int{}, time.Now())
 	if result == nil {
 		t.Fatal("expected non-nil result")
 	}

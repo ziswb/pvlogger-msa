@@ -27,13 +27,24 @@ func (r *PostgresRepository) SelectFormer5MinDeviceRealKpi(ctx context.Context) 
 	if err != nil {
 		return nil, err
 	}
-	dts := make(map[time.Time]int)
-	for _, dt := range kpi {
-		t := time.UnixMilli(dt.Int64)
-		d := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.UTC)
-		dts[d] = dts[d] + 1
+	collectTimes := make([]int64, 0, len(kpi))
+	for _, row := range kpi {
+		collectTimes = append(collectTimes, row.CollectTime.Int64)
 	}
-	return dts, nil
+	return CountPerDay(collectTimes), nil
+}
+
+// CountPerDay counts 5-minute KPI rows per day. The key is the row's day in the
+// process's zone (TZ, the site zone in the chart), stored as midnight UTC: the
+// form determineNextCollectionDate walks and sends to FusionSolar.
+func CountPerDay(collectTimes []int64) map[time.Time]int {
+	dts := make(map[time.Time]int)
+	for _, ms := range collectTimes {
+		t := time.UnixMilli(ms)
+		d := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.UTC)
+		dts[d]++
+	}
+	return dts
 }
 
 func (r *PostgresRepository) InsertFsResponse(ctx context.Context, input FsResponseInput) (int32, error) {
@@ -258,6 +269,7 @@ func (r *PostgresRepository) InsertDeviceRealKpi(ctx context.Context, input Devi
 		Temperature:   input.Temperature,
 		TotalCap:      input.TotalCap,
 		Type:          input.Type,
+		CollectTime:   input.CollectTime,
 	}
 	err := r.queries().InsertFsDeviceRealKpi(ctx, params)
 	if err != nil {

@@ -27,6 +27,7 @@ collector and heartbeat runs completed. The repo is on GitHub, private until the
 
 In order:
 
+- **Item 66 (2026-11-19):** deploy fusionsolar 3.6.0 (chart 5.1.0), run the cleanup SQL, unsuspend `dev5minkpi`.
 - **From about 2027-01-25:** item 42, drop the unused `modbus_response_data` indexes.
 - Item 45 stays open until the next drain + power-off of the primary's node.
 
@@ -207,6 +208,61 @@ next release; it changes nothing for them.
 
     Done by item 52: old 3 (service hosts derived from the release) and 5 (site values out of the templates). Old 2
     (secret management) continues as item 54.
+66. 🔴 **FusionSolar `dev5minkpi` refetched 2026-01-31 on every run since the Go port** (added 2026-11-19, reported
+    by the infrastructure side, its backlog 104)
+
+    Since 2026-02-01 every run (4 a day) fetched 2026-01-31 again. `insertDeviceFiveMinutesKpi` stored the rows as
+    `DEVICE_REAL_KPI` and without `collect_time` (the insert had no such column), so the gap search
+    (`SelectFormer5MinDeviceRealKpi`: `DEVICE_5_MIN_KPI` with a `collect_time`) never saw them. Unchanged since the
+    Go port (`3d292bc`, 2026-01-26); the last good day, 2026-01-30, was written by the Kotlin job. Every run
+    succeeded, so nothing alerted, and the hardening-round-2 check above counted it as succeeded. About 1 100
+    responses with ~630 000 mislabelled rows piled up in `fs_device_real_kpi`. Nothing reads that table (only
+    `pvlogger-database` migration scripts mention it), so no figure anyone sees was wrong. The CronJob is suspended
+    on the cluster until the fix is deployed.
+
+    *Fixed in fusionsolar 3.6.0, chart 5.1.0:*
+    - The 5-minute rows are stored as `DEVICE_5_MIN_KPI` with their `collect_time`. The real-time KPIs (`devkpi`)
+      keep `collect_time` NULL: their reply has no collect time, and the gap search does not read them.
+    - The gap search counts distinct `(devId, collect_time)`: the table has no unique key, so a refetched day would
+      otherwise count twice.
+    - Only days that are over are fetched. Before, the running day was a candidate: after a few hours it reached
+      200 rows, counted as collected, and its rest was never fetched.
+    - A run that adds no new row for its day fails (the Job fails and alerts); a day still below 200 rows after a
+      run that added some logs a warning and is fetched again by the next run.
+    - Regression tests: `pvlogger-fusionsolar/internal/fusionsolar/device_5_minutes_kpi_save_test.go`.
+    - No `MIGRATE` run needed: the `collect_time` column already exists.
+
+    *Cleanup, run once by the operator* (psql on `fsdata`, before or after the deploy: the fixed job ignores
+    `DEVICE_REAL_KPI` rows). Checked against `migrations/001_baseline.sql`: six tables reference `fs_response`, all
+    `on delete restrict`; the job writes only to `fs_response`, `fs_response_params_device` and
+    `fs_device_real_kpi`. Should any bad response be referenced elsewhere, the last delete fails and the transaction
+    rolls back. Real `devkpi` responses hold one row per inverter, so `count(*) > 10` selects only the bad ones.
+
+    ```sql
+    begin;
+    create temp table bad on commit drop as
+      select response from fs_device_real_kpi
+      where type = 'DEVICE_REAL_KPI' and collect_time is null
+      group by response having count(*) > 10;
+    select count(*) as bad_responses from bad;                                     -- expect ~1 100
+    select count(*) as bad_rows from fs_device_real_kpi
+      where response in (select response from bad);                                -- expect ~630 000
+    select min(response), max(response) from bad;                                  -- the reported id range
+    delete from fs_device_real_kpi where response in (select response from bad);
+    delete from fs_response_params_device where response in (select response from bad);
+    delete from fs_response where id in (select response from bad);
+    commit;  -- or rollback; if a count is off
+    ```
+
+    *Left open (decide after the refill has run a while):*
+    - **Catch-up speed.** One day per run, 4 runs a day: 2026-01-31 to today (~290 days) takes ~73 days. Several
+      days per run would be faster, but FusionSolar limits call frequency per interface and the limit for
+      `getDevFiveMinutes` is not documented here; nothing reads the table, so the slow catch-up is accepted.
+    - **How far back FusionSolar serves 5-minute data** is unknown (2026-01-31 was still served on 2026-11-19). If a
+      day is no longer served, or stays below 200 rows (an outage day), every run now fails on it: visible, but the
+      job cannot move past that day. A skip (e.g. after N runs without progress, or a configurable start date) would
+      then be needed.
+    - Close this item once the operator confirms the deploy, the cleanup and a few runs that each moved one day.
 
 ## Done (resolved, superseded or moot)
 
