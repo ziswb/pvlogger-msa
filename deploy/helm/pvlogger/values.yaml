@@ -285,6 +285,7 @@ kpiExportServe:
 # Nightly pg_dump of the three databases to an NFS export. Off by default.
 dbBackup:
   enabled: false
+  # renovate: datasource=docker depName=postgres
   image: "postgres:18.6-trixie@sha256:e3d24f6906d0760bf4da0dae872415391ededefad23fd471c47dc53b0ddf3c42"
   schedule: "15 2 * * *"
   # Where pg_dump connects, e.g. a read-only standby. Empty: database.host.
@@ -361,6 +362,7 @@ ingress:
 # repo digest, and a digest reference would then need the registry.
 imagePrepull:
   enabled: false
+  # renovate: datasource=docker depName=docker.io/rancher/mirrored-pause
   holdImage: "docker.io/rancher/mirrored-pause:3.10.2"
 
 # Data-freshness heartbeat to a healthchecks.io-style ping URL
@@ -368,6 +370,7 @@ imagePrepull:
 # images lack, hence its own image. Off by default.
 heartbeat:
   enabled: false
+  # renovate: datasource=docker depName=docker.io/curlimages/curl
   image: "docker.io/curlimages/curl:8.23.0@sha256:3fb7e13e5d179a845c97d78204f3f1064d1907037f26a3ebf91710571151fd93"
   schedule: "*/5 * * * *"
   maxAgeSeconds: 600

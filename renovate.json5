@@ -1,0 +1,94 @@
+// Renovate for this repository (ADR-0028). It opens PRs and never merges; the
+// owner reviews, merges and releases (chart tag, ADR-0024/0027). Weekly, and
+// grouped the way docs/UPGRADING.md groups updates: one PR per ecosystem for
+// patch and minor, each major on its own and only after the owner ticks it on
+// the Dependency Dashboard, toolchain changes (Go, Gradle) likewise.
+//
+// Dependabot keeps the GitHub Actions pins (.github/dependabot.yml); the CI
+// tool versions and the test/dev Postgres follow docs/UPGRADING.md by hand.
+{
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
+  extends: ['config:recommended'],
+
+  enabledManagers: ['dockerfile', 'gradle', 'gradle-wrapper', 'gomod', 'npm', 'custom.regex'],
+
+  customManagers: [
+    {
+      // The chart's third-party images (the service images are this repo's
+      // own, set by the release). Each carries the comment above it.
+      customType: 'regex',
+      description: "The chart's third-party images",
+      managerFilePatterns: ['/^deploy/helm/pvlogger/values\\.yaml$/'],
+      matchStrings: [
+        '#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)[^\\n]*\\n[^\\n]*?["\\s][a-z0-9][a-z0-9._/-]*:(?<currentValue>[^\\s"\'@]+)(?:@(?<currentDigest>sha256:[a-f0-9]{64}))?',
+      ],
+    },
+  ],
+
+  schedule: ['* 0-5 * * 1'],
+  automerge: false,
+  platformAutomerge: false,
+  // Go: keep go.sum tidy with the module change.
+  postUpdateOptions: ['gomodTidy'],
+  // Stable releases only.
+  ignoreUnstable: true,
+
+  packageRules: [
+    // --- groups: patch and minor per ecosystem (docs/UPGRADING.md) -------------
+    {
+      matchManagers: ['gradle'],
+      matchUpdateTypes: ['minor', 'patch'],
+      groupName: 'JVM libraries',
+    },
+    {
+      matchManagers: ['gomod'],
+      matchDepTypes: ['require', 'indirect'],
+      matchUpdateTypes: ['minor', 'patch'],
+      groupName: 'Go modules',
+    },
+    {
+      matchManagers: ['npm'],
+      matchUpdateTypes: ['minor', 'patch'],
+      groupName: 'Frontend (npm)',
+    },
+    {
+      // Every FROM is pinned as tag@digest; a new digest for the same tag
+      // (a rebuilt base) is a patch of every image built on it.
+      matchManagers: ['dockerfile'],
+      matchUpdateTypes: ['minor', 'patch', 'digest'],
+      groupName: 'Base images',
+    },
+    {
+      matchManagers: ['custom.regex'],
+      matchUpdateTypes: ['minor', 'patch', 'digest'],
+      groupName: 'Chart images',
+    },
+    {
+      // Postgres client for pg_dump: the same major as production, which the
+      // owner moves (docs/UPGRADING.md).
+      matchDepNames: ['postgres'],
+      matchManagers: ['custom.regex'],
+      matchUpdateTypes: ['major'],
+      enabled: false,
+    },
+
+    // --- held on the Dependency Dashboard until the owner ticks them -----------
+    {
+      matchUpdateTypes: ['major'],
+      dependencyDashboardApproval: true,
+    },
+    {
+      // Toolchain changes need the owner's approval first (docs/UPGRADING.md):
+      // the Go version (go directive, toolchain line, the golang image) beyond
+      // a patch, and Gradle itself.
+      matchDepNames: ['go', 'golang'],
+      matchUpdateTypes: ['minor'],
+      dependencyDashboardApproval: true,
+      groupName: 'Go toolchain',
+    },
+    {
+      matchManagers: ['gradle-wrapper'],
+      dependencyDashboardApproval: true,
+    },
+  ],
+}

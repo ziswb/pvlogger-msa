@@ -5,6 +5,12 @@ It covers libraries, major versions and tooling (JDK, Go, Gradle, Node/Angular, 
 
 ## Ground rules
 
+- **Renovate proposes most updates** (ADR-0028, `renovate.json5`): weekly, one PR per ecosystem for
+  patch and minor (JVM libraries, Go modules, frontend npm, base images, chart images), majors and toolchain
+  changes held on its Dependency Dashboard until the owner ticks them there. That replaces the inventory and
+  the approval table below for what it covers; the checks (CI, the before/after capture for a runtime
+  change) still apply before a merge. What it does not cover stays manual: the CI tool versions and
+  checksums, the JDK language level, the test/dev Postgres. Dependabot keeps the GitHub Actions pins.
 - Work on a branch. Nothing is pushed, merged or deployed without the owner's go-ahead.
   Rollout: the owner tags the chart (`chart/vX.Y.Z`, ADR-0024) and the sibling `infrastructure` repo bumps its
   pinned chart version; the owner watches the first CronJob runs. Optional, by hand: once the release workflow
