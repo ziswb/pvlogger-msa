@@ -34,6 +34,7 @@ old one. Half a page max; the point is the *why*. Template: see
 - [0025 — One synthetic plant in Go feeds the mock server and the history backfill](0025-synthetic-plant-in-go-mock-and-backfill.md)
 - [0026 — Image names: the registry value carries the owner; the default is GHCR](0026-image-names-registry-carries-owner-ghcr-default.md)
 - [0027 — The chart tag publishes the images and the chart to GHCR](0027-chart-tag-publishes-images-and-chart-to-ghcr.md)
+- [0028 — Renovate proposes dependency updates, grouped per ecosystem](0028-renovate-proposes-grouped-updates.md)
 
 ## Candidate ADRs (implicit decisions worth writing down)
 
