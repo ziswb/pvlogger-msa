@@ -49,5 +49,6 @@ release the owner tags (ADR-0024, ADR-0027).
 - A merged update changes nothing in production by itself: it ships with the
   next chart tag.
 - Dependabot's security updates for Go, npm and Gradle would duplicate
-  Renovate's PRs; turn them off (Settings → Code security) and keep the alerts,
-  which Renovate reads for its own vulnerability PRs.
+  Renovate's PRs; they stay off (`gh api repos/{owner}/{repo}/automated-security-fixes`
+  answers `"enabled": false`) and the alerts stay on, which Renovate reads for
+  its own vulnerability PRs.
