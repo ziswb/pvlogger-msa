@@ -52,6 +52,15 @@
       groupName: 'Frontend (npm)',
     },
     {
+      // TypeScript follows Angular's peer range (Angular 22: >=6.0 <6.1), so a
+      // minor or major of it alone breaks the install; `ng update` moves it
+      // with the Angular major (docs/UPGRADING.md). Patches stay in the group.
+      matchManagers: ['npm'],
+      matchDepNames: ['typescript'],
+      matchUpdateTypes: ['minor', 'major'],
+      enabled: false,
+    },
+    {
       // Every FROM is pinned as tag@digest; a new digest for the same tag
       // (a rebuilt base) is a patch of every image built on it.
       matchManagers: ['dockerfile'],
