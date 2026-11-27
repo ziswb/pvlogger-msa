@@ -71,7 +71,9 @@ skipping versions already there — ADR-0027) and
 `gitleaks.yml` (every push/PR, full history, rules from `main`). Actions are pinned to commit SHAs with the tag
 as a comment; bump them together with the tools they mirror (JDK, Go, golangci-lint, Node,
 Helm, kubeconform, helm-unittest, gitleaks; see docs/UPGRADING.md). Dependabot (`.github/dependabot.yml`) opens one grouped
-PR per week for the action pins only.
+PR per week for the action pins only. Everything else is Renovate's (`renovate.json5`, ADR-0028): weekly, one PR
+per ecosystem for patch/minor (JVM libraries, Go modules, frontend npm, base images, the chart's third-party
+images), majors held on its Dependency Dashboard issue; it never merges.
 
 ### Local Development
 

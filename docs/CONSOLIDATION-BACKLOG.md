@@ -12,6 +12,18 @@ Legend: 🔴 likely defect · 🟡 inconsistency worth consolidating · ⚪ cosm
 
 ## Next up
 
+**Status 2026-11-27.** Production runs chart 5.1.1 (Helm revision 102, 2026-11-19): fusionsolar 3.6.1 with the
+`dev5minkpi` fix (item 66 closed); item 65 closed the same week. `main` is at chart 5.1.2, untagged: Renovate's
+marker comments on the chart's third-party images (ADR-0028), no rendered change. Renovate runs since 2026-11-26.
+
+In order:
+
+- Item 50 waits for the owner's confirmation on the iPhone Home Screen app.
+- Item 45 stays open until the next drain + power-off of the primary's node.
+- **From about 2027-01-25:** item 42, drop the unused `modbus_response_data` indexes.
+
+Everything else open here is low priority hygiene (items 54, 55, 67).
+
 **Status 2026-11-17.** Chart 4.2.1 deployed (Helm revision 94): items 60 and 62 closed, the pre-launch code review's
 findings in production. Next: the publication launch checklist.
 Later the same day: item 63 closed (third history rewrite, repository recreated, chart 5.0.0 deployed as Helm
@@ -24,13 +36,6 @@ image as pinned in `values.yaml`; the first heartbeat run hit the startup race a
 (ADR-0026 image names, nothing else) deployed 2026-11-16 08:50 (revision 88) with `imageRegistry:
 <registry-host>/bziswiler` from the infrastructure values: the same images as before, no pod restarted, the next fast
 collector and heartbeat runs completed. The repo is on GitHub, private until the publication launch.
-
-In order:
-
-- **From about 2027-01-25:** item 42, drop the unused `modbus_response_data` indexes.
-- Item 45 stays open until the next drain + power-off of the primary's node.
-
-Everything else open here is low priority hygiene (items 54, 55).
 
 ### Status 2026-10-21 (end of the 2026-10-20 session)
 

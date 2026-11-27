@@ -42,5 +42,5 @@ old one. Half a page max; the point is the *why*. Template: see
   deliberately doesn't (writes `fsdata` directly, migrations via tern per ADR-0022). Confirm as a rule +
   documented exception, or schedule consolidation.
 - **Hand-rolled Modbus TCP** in `pvlogger-shared-modbus` instead of a library
-  (the vendored `simonvetter_modbus` / `go-modbus` checkouts were evaluated and
-  not adopted — why?).
+  (the libraries `simonvetter/modbus` and `things-go/go-modbus` were evaluated
+  and not adopted — why?).

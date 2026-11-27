@@ -1,6 +1,7 @@
 # 0028 — Renovate proposes dependency updates, grouped per ecosystem
 
-- Status: accepted (2026-11-26)
+- Status: applied 2026-11-26 (accepted the same day; Renovate's GitHub app
+  installed, `renovate.json5` on `main` with chart 5.1.2)
 - Date: 2026-11-26
 
 ## Context
