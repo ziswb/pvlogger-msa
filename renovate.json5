@@ -71,6 +71,22 @@
       matchUpdateTypes: ['major'],
       enabled: false,
     },
+    {
+      // In-repo modules: required at v0.0.0 and resolved by
+      // `replace ... => ../<dir>` (and go.work). Nothing to look up; without
+      // this the Dashboard reports a failed lookup for every go.mod.
+      matchManagers: ['gomod'],
+      matchDepNames: ['pv-logger', 'pvlogger-shared-modbus'],
+      enabled: false,
+    },
+    {
+      // go-yit is held by a `replace` in pvlogger-fusionsolar/go.mod for
+      // openapi-generator compatibility; moving it is a deliberate change.
+      matchManagers: ['gomod'],
+      matchDepNames: ['github.com/dprotaso/go-yit'],
+      matchDepTypes: ['replace'],
+      enabled: false,
+    },
 
     // --- held on the Dependency Dashboard until the owner ticks them -----------
     {
